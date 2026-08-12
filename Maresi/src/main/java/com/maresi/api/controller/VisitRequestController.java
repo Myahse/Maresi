@@ -1,0 +1,77 @@
+package com.maresi.api.controller;
+
+import com.maresi.api.contracts.ControllerSupport;
+import com.maresi.api.contracts.ExceptionUtils;
+import com.maresi.api.contracts.FunctionalError;
+import com.maresi.api.contracts.Request;
+import com.maresi.api.contracts.Response;
+import com.maresi.api.contracts.Validate;
+import com.maresi.api.service.VisitRequestService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/visit-requests")
+@Tag(name = "Visit requests", description = "Demandes de visite / réservation")
+@SecurityRequirement(name = "bearerAuth")
+public class VisitRequestController {
+  private final VisitRequestService visitRequestService;
+  private final FunctionalError functionalError;
+  private final ExceptionUtils exceptionUtils;
+
+  public VisitRequestController(
+      VisitRequestService visitRequestService,
+      FunctionalError functionalError,
+      ExceptionUtils exceptionUtils) {
+    this.visitRequestService = visitRequestService;
+    this.functionalError = functionalError;
+    this.exceptionUtils = exceptionUtils;
+  }
+
+  @PostMapping
+  public ResponseEntity<Response<Map<String, Object>>> create(
+      @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.runCreated(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return visitRequestService.create(request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
+  @GetMapping
+  public ResponseEntity<Response<Map<String, Object>>> getMine(Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> visitRequestService.listMine(loc), loc, exceptionUtils);
+  }
+
+  @GetMapping("/owner")
+  public ResponseEntity<Response<Map<String, Object>>> getForOwner(Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> visitRequestService.listForOwner(loc), loc, exceptionUtils);
+  }
+
+  @PatchMapping("/{id}/status")
+  public ResponseEntity<Response<Map<String, Object>>> updateStatus(
+      @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return visitRequestService.updateStatus(id, request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+}

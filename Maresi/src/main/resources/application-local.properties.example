@@ -1,0 +1,14 @@
+# Copy to application-local.properties and set your pgAdmin PostgreSQL credentials.
+# Spring Boot loads this file automatically (see application.properties).
+
+server.port=4000
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/Maresi
+spring.datasource.username=postgres
+spring.datasource.password=
+
+# Use real database auth (register/login stored in PostgreSQL)
+maresi.dev-auth-bypass=false
+
+maresi.jwt.secret=change-this-in-production
+maresi.jwt.expires-in=7d

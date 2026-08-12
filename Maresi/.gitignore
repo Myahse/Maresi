@@ -1,0 +1,10 @@
+# Java / Spring Boot
+target/
+
+# Local DB credentials (copy from application-local.properties.example)
+src/main/resources/application-local.properties
+
+# Uploads & env
+uploads/*
+!uploads/.gitkeep
+.env

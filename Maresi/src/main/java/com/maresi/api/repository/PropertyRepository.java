@@ -1,0 +1,139 @@
+package com.maresi.api.repository;
+
+import java.math.BigDecimal;
+import java.sql.Array;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class PropertyRepository {
+  private static final String SELECT_JOIN =
+      """
+      SELECT p.*, u.full_name AS owner_name, u.email AS owner_email, u.phone AS owner_phone
+      FROM properties p
+      JOIN users u ON p.owner_id = u.id
+      """;
+
+  private final JdbcTemplate jdbc;
+
+  public PropertyRepository(JdbcTemplate jdbc) {
+    this.jdbc = jdbc;
+  }
+
+  public List<Map<String, Object>> findAll(
+      String location, BigDecimal minPrice, BigDecimal maxPrice, String propertyType, UUID ownerId) {
+    StringBuilder sql = new StringBuilder(SELECT_JOIN).append(" WHERE p.is_active = true");
+    List<Object> params = new ArrayList<>();
+    if (ownerId != null) {
+      sql.append(" AND p.owner_id = ?");
+      params.add(ownerId);
+    }
+    if (location != null && !location.isBlank()) {
+      sql.append(" AND p.location ILIKE ?");
+      params.add("%" + location + "%");
+    }
+    if (minPrice != null) {
+      sql.append(" AND p.price >= ?");
+      params.add(minPrice);
+    }
+    if (maxPrice != null) {
+      sql.append(" AND p.price <= ?");
+      params.add(maxPrice);
+    }
+    if (propertyType != null && !propertyType.isBlank()) {
+      sql.append(" AND p.property_type = ?");
+      params.add(propertyType);
+    }
+    sql.append(" ORDER BY p.created_at DESC");
+    return jdbc.query(sql.toString(), (rs, rowNum) -> RowMaps.property(rs), params.toArray());
+  }
+
+  public Optional<Map<String, Object>> findById(UUID id) {
+    return jdbc.query(
+            SELECT_JOIN + " WHERE p.id = ?",
+            (rs, rowNum) -> RowMaps.property(rs),
+            id)
+        .stream()
+        .findFirst();
+  }
+
+  public Map<String, Object> create(
+      UUID ownerId,
+      String title,
+      String description,
+      BigDecimal price,
+      String location,
+      String propertyType,
+      List<String> images) {
+    return jdbc.execute(
+        (Connection conn) -> {
+          Array imageArray = conn.createArrayOf("text", images != null ? images.toArray() : new String[0]);
+          try (var ps =
+              conn.prepareStatement(
+                  """
+                  INSERT INTO properties (owner_id, title, description, price, location, property_type, images)
+                  VALUES (?, ?, ?, ?, ?, ?, ?)
+                  RETURNING *
+                  """)) {
+            ps.setObject(1, ownerId);
+            ps.setString(2, title);
+            ps.setString(3, description);
+            ps.setBigDecimal(4, price);
+            ps.setString(5, location);
+            ps.setString(6, propertyType);
+            ps.setArray(7, imageArray);
+            try (var rs = ps.executeQuery()) {
+              if (rs.next()) return RowMaps.property(rs);
+              throw new IllegalStateException("Insert failed");
+            }
+          }
+        });
+  }
+
+  public Map<String, Object> update(UUID id, Map<String, Object> data) {
+    List<String> keys = List.of("title", "description", "price", "location", "property_type", "images", "is_active");
+    List<String> updateKeys = new ArrayList<>();
+    List<Object> updateValues = new ArrayList<>();
+    for (String key : keys) {
+      if (data.containsKey(key)) {
+        updateKeys.add(key);
+        updateValues.add(data.get(key));
+      }
+    }
+    if (updateKeys.isEmpty()) {
+      return findById(id).orElse(null);
+    }
+    return jdbc.execute(
+        (Connection conn) -> {
+          List<String> sets = updateKeys.stream().map(k -> k + " = ?").toList();
+          String sql = "UPDATE properties SET " + String.join(", ", sets) + " WHERE id = ? RETURNING *";
+          try (var ps = conn.prepareStatement(sql)) {
+            int idx = 1;
+            for (int i = 0; i < updateValues.size(); i++) {
+              Object v = updateValues.get(i);
+              if ("images".equals(updateKeys.get(i)) && v instanceof List<?> list) {
+                String[] arr = list.stream().map(Object::toString).toArray(String[]::new);
+                ps.setArray(idx++, conn.createArrayOf("text", arr));
+              } else {
+                ps.setObject(idx++, v);
+              }
+            }
+            ps.setObject(idx, id);
+            try (var rs = ps.executeQuery()) {
+              if (rs.next()) return RowMaps.property(rs);
+              return null;
+            }
+          }
+        });
+  }
+
+  public boolean remove(UUID id) {
+    return jdbc.update("DELETE FROM properties WHERE id = ?", id) > 0;
+  }
+}

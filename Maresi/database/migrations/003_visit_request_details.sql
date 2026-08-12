@@ -1,0 +1,14 @@
+-- Extended visit / reservation fields
+ALTER TABLE visit_requests
+  ADD COLUMN IF NOT EXISTS check_in DATE,
+  ADD COLUMN IF NOT EXISTS check_out DATE,
+  ADD COLUMN IF NOT EXISTS visit_date DATE,
+  ADD COLUMN IF NOT EXISTS visit_time VARCHAR(20),
+  ADD COLUMN IF NOT EXISTS guests_count INTEGER DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50),
+  ADD COLUMN IF NOT EXISTS owner_note TEXT;
+
+ALTER TABLE properties
+  ADD COLUMN IF NOT EXISTS bedrooms INTEGER,
+  ADD COLUMN IF NOT EXISTS max_guests INTEGER,
+  ADD COLUMN IF NOT EXISTS virtual_tour_url TEXT;

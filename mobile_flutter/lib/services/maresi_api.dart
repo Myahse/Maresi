@@ -1,0 +1,62 @@
+import 'package:maresi_mobile/models/app_notification.dart';
+import 'package:maresi_mobile/models/payment.dart';
+import 'package:maresi_mobile/models/property.dart';
+import 'package:maresi_mobile/models/property_rating.dart';
+import 'package:maresi_mobile/models/user.dart';
+import 'package:maresi_mobile/models/visit_request.dart';
+
+/// Shared API surface for live backend and mock data.
+abstract class MaresiApi {
+  Future<List<AppNotification>> listNotifications();
+  Future<void> markNotificationRead(String id);
+  Future<void> markAllNotificationsRead();
+
+  Future<List<Property>> listProperties({
+    String? location,
+    int? minPrice,
+    int? maxPrice,
+    String? propertyType,
+  });
+
+  Future<Property> getProperty(String id);
+  Future<List<Favorite>> listFavorites();
+  Future<void> addFavorite(Property property);
+  Future<void> removeFavorite(String propertyId);
+  bool isFavorite(String propertyId);
+  void clearSessionCache();
+
+  Future<AuthResponse> login({
+    required String email,
+    required String password,
+  });
+
+  Future<AuthResponse> register({
+    required String email,
+    required String password,
+    required String fullName,
+    required UserRole role,
+  });
+
+  Future<Property> createProperty({
+    required String title,
+    required String description,
+    required int price,
+    required String location,
+    required String propertyType,
+    List<String> imagePaths = const [],
+  });
+
+  Future<VisitRequest> createVisitRequest(VisitRequestPayload payload);
+
+  Future<List<VisitRequest>> listMyVisitRequests();
+
+  Future<OwnerSubscription> getMySubscription();
+
+  Future<Payment> startSubscriptionPayment();
+
+  Future<Payment> startReservationPayment(String visitRequestId);
+
+  Future<PropertyRatingsResult> getPropertyRatings(String propertyId);
+
+  Future<PropertyRating> submitPropertyRating(String propertyId, SubmitRatingPayload payload);
+}

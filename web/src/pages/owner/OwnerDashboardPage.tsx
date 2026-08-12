@@ -1,0 +1,141 @@
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
+import { getProperties, deleteProperty, getOwnerVisitRequests } from "@/services/api";
+import type { Property, VisitRequest } from "@/types";
+
+export function OwnerDashboardPage() {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [visits, setVisits] = useState<VisitRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      setError("");
+      try {
+        const [allProps, myVisits] = await Promise.all([getProperties(), getOwnerVisitRequests()]);
+        setProperties(allProps.filter((p) => p.owner_id === user.id));
+        setVisits(myVisits);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : t("owner.failedLoad"));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [user]);
+
+  const handleAdd = () => {
+    navigate("/owner/new");
+  };
+
+  const handleEdit = (id: string) => {
+    navigate(`/owner/edit/${id}`);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm(t("owner.deleteConfirm"))) return;
+    try {
+      await deleteProperty(id);
+      setProperties((prev) => prev.filter((p) => p.id !== id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("owner.deleteFailed"));
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-muted-foreground">
+          {t("owner.mustLogin")}{" "}
+          <Link to="/login" className="text-primary hover:underline">
+            {t("owner.signIn")}
+          </Link>
+          .
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold">{t("owner.title")}</h1>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate("/owner/subscription")}>
+            {t("payments.subscriptionNav")}
+          </Button>
+          <Button onClick={handleAdd}>{t("owner.addProperty")}</Button>
+        </div>
+      </div>
+      {error && <p className="text-destructive">{error}</p>}
+      {loading ? (
+        <p className="text-muted-foreground">{t("common.loading")}</p>
+      ) : properties.length === 0 ? (
+        <p className="text-muted-foreground">
+          {t("owner.empty")}{" "}
+          <button type="button" className="text-primary hover:underline" onClick={handleAdd}>
+            {t("owner.addFirst")}
+          </button>
+          .
+        </p>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {properties.map((p) => (
+            <Card key={p.id}>
+              <CardHeader className="flex flex-row items-center justify-between gap-2">
+                <CardTitle className="text-base">{p.title}</CardTitle>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => handleEdit(p.id)}>
+                    {t("common.edit")}
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDelete(p.id)}>
+                    {t("common.delete")}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-1 text-sm text-muted-foreground">
+                <p>
+                  {p.location} · {p.property_type}
+                </p>
+                <p>${Number(p.price).toLocaleString()}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-xl font-semibold">{t("owner.visitRequests")}</h2>
+          <Button variant="outline" size="sm" onClick={() => navigate("/owner/visits")}>
+            {t("owner.manageVisits")}
+          </Button>
+        </div>
+        {visits.length === 0 ? (
+          <p className="text-muted-foreground">{t("owner.noVisits")}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {t("owner.pendingCount", {
+              count: visits.filter((v) => v.status === "pending").length,
+            })}
+          </p>
+        )}
+      </section>
+    </div>
+  );
+}
+
