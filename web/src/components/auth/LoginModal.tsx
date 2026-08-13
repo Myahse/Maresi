@@ -24,6 +24,7 @@ export function LoginModal({ open, tab, onTabChange, onClose }: LoginModalProps)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState<"client" | "owner">("client");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,6 +34,7 @@ export function LoginModal({ open, tab, onTabChange, onClose }: LoginModalProps)
     setEmail("");
     setPassword("");
     setFullName("");
+    setPhone("");
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -55,7 +57,13 @@ export function LoginModal({ open, tab, onTabChange, onClose }: LoginModalProps)
     setLoading(true);
     setError("");
     try {
-      await register({ email, password, full_name: fullName, role });
+      await register({
+        email,
+        password,
+        full_name: fullName,
+        role,
+        phone: phone.trim() || undefined,
+      });
       reset();
       onClose();
     } catch (err) {
@@ -152,6 +160,16 @@ export function LoginModal({ open, tab, onTabChange, onClose }: LoginModalProps)
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="modal-reg-phone">{t("register.phoneOptional")}</Label>
+              <Input
+                id="modal-reg-phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
               />
             </div>
             <div className="flex gap-4 text-sm">

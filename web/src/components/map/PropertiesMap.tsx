@@ -42,8 +42,8 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
     : ABIDJAN_CENTER;
 
   return (
-    <div className={className ?? "h-full w-full min-h-[280px]"}>
-      <MapContainer center={center} zoom={12} className="h-full w-full z-0" scrollWheelZoom>
+    <div className={`relative z-0 isolate ${className ?? "h-full w-full min-h-[280px]"}`}>
+      <MapContainer center={center} zoom={12} className="h-full w-full !z-0" scrollWheelZoom>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

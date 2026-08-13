@@ -27,8 +27,28 @@ REST API for the Maresi residence listing platform. Port **4000**.
    Maresi/database/pgadmin-full-setup.sql
    ```
 4. Press **F5** (Execute). You should see tables: `users`, `properties`, `favorites`, `visit_requests`, `notifications`, etc.
+5. (Optional) Also run `Maresi/database/migrations/004_visit_request_id_card.sql` if that column is missing.
 
-### 3. Connect the API
+### 3. Load demo data (mock seed)
+
+In the same Query Tool, open and execute:
+
+```
+Maresi/database/seed-demo.sql
+```
+
+Demo accounts (password for all: `Password123!`):
+
+| Email | Role |
+|-------|------|
+| `client@maresi.app` | client |
+| `owner@maresi.app` | owner (Aminata K.) |
+| `owner2@maresi.app` | owner |
+| `owner3@maresi.app` | owner |
+
+This inserts 4 Abidjan sample listings. Safe to re-run (upserts on fixed IDs/emails).
+
+### 4. Connect the API
 
 ```bash
 cd Maresi
@@ -59,7 +79,9 @@ mvn spring-boot:run
 
 Health: `GET http://localhost:4000/api/health` → `{"ok":true}`
 
-Register users from the Flutter app (Client or Owner). Data is stored in your PostgreSQL database.
+Register users from the web/Flutter apps, or log in with the demo accounts from `seed-demo.sql`. Data is stored in your PostgreSQL database.
+
+**Local web:** from `web/`, run `npm run dev` (Vite proxies `/api` → `http://localhost:4000`).
 
 ---
 

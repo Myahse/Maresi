@@ -11,13 +11,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
-  // Dev-only shortcut: skip auth redirects so you can navigate directly.
-  // In production builds, this will be false and auth remains enforced.
-  const bypassAuth = import.meta.env.DEV;
-  if (bypassAuth) {
-    return <>{children}</>;
-  }
-
   if (loading) {
     return (
       <div className="min-h-[40vh] flex items-center justify-center">

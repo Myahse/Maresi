@@ -54,6 +54,11 @@
   }
 }
 
+/* Keep Leaflet panes inside the map stacking context so modals (z-1100) stay on top */
+.leaflet-container {
+  z-index: 0 !important;
+}
+
 @layer utilities {
   .hide-scrollbar {
     -ms-overflow-style: none;

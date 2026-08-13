@@ -20,7 +20,8 @@ maresi/
 
 1. In **pgAdmin**, create a database named `Maresi`.
 2. Open **Query Tool** on that database and execute `Maresi/database/pgadmin-full-setup.sql`.
-3. Copy `Maresi/src/main/resources/application-local.properties.example` to `application-local.properties` and set your PostgreSQL username/password.
+3. Execute `Maresi/database/seed-demo.sql` for Abidjan sample listings + demo users (`client@maresi.app` / `Password123!`).
+4. Copy `Maresi/src/main/resources/application-local.properties.example` to `application-local.properties` and set your PostgreSQL username/password.
 
 See [Maresi/README.md](Maresi/README.md) for details.
 
@@ -47,7 +48,9 @@ npm install
 npm run dev
 ```
 
-Runs at `http://localhost:3000` with API proxy to `:4000`.
+Runs at `http://localhost:3000` with API proxy to `:4000`. The web client talks to the real Spring API (Peya `{ data }` / `{ item|items }` envelope).
+
+**Vercel (static SPA only):** Root Directory `web`, Build `npm run build`, Output `dist`. Optional env `VITE_API_URL` when you have a public API (localhost Spring is not reachable from Vercel).
 
 ### 4. Flutter mobile app
 
