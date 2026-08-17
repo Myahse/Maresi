@@ -1,0 +1,7 @@
+target/
+uploads/
+.mvn/
+*.iml
+.idea/
+.env
+src/main/resources/application-local.properties

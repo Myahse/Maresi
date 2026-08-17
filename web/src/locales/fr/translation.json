@@ -135,7 +135,9 @@
       "addProperty": "Ajouter un bien",
       "addPropertyDesc": "Publier une nouvelle résidence",
       "validateVisits": "Valider les demandes",
-      "validateVisitsDesc": "Accepter ou refuser les réservations"
+      "validateVisitsDesc": "Accepter ou refuser les réservations",
+      "subscription": "Abonnement",
+      "subscriptionDesc": "Activez votre forfait pour publier des résidences"
     }
   },
   "wizard": {

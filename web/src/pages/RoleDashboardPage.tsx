@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
-import { Search, Heart, Calendar, Building2, PlusCircle, LayoutDashboard } from "lucide-react";
+import { Search, Heart, Calendar, Building2, PlusCircle, LayoutDashboard, CreditCard } from "lucide-react";
 
 export function RoleDashboardPage() {
   const { t } = useTranslation();
@@ -42,6 +42,13 @@ export function RoleDashboardPage() {
       description: t("dashboard.cards.myPropertiesDesc"),
       icon: Building2,
       route: "/owner",
+    },
+    {
+      id: "subscription",
+      title: t("dashboard.cards.subscription"),
+      description: t("dashboard.cards.subscriptionDesc"),
+      icon: CreditCard,
+      route: "/owner/subscription",
     },
     {
       id: "add",

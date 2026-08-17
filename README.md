@@ -38,7 +38,7 @@ mvn spring-boot:run
 
 API: `http://localhost:4000` — Health: `GET /api/health`
 
-See [Maresi/README.md](Maresi/README.md) for details.
+See [Maresi/README.md](Maresi/README.md) for details. For **Neon + Render + Vercel**, see [DEPLOY.md](DEPLOY.md).
 
 ### 3. Web app
 

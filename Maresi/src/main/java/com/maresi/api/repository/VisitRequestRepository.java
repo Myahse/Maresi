@@ -32,16 +32,16 @@ public class VisitRequestRepository {
           user_id, property_id, message, check_in, check_out,
           visit_date, visit_time, guests_count, contact_phone, id_card
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, CAST(? AS date), CAST(? AS date), CAST(? AS date), ?, ?, ?, ?)
         RETURNING *
         """,
         (rs, rowNum) -> RowMaps.visitRequest(rs),
         userId,
         propertyId,
         message,
-        checkIn,
-        checkOut,
-        visitDate,
+        checkIn != null ? checkIn.toString() : null,
+        checkOut != null ? checkOut.toString() : null,
+        visitDate != null ? visitDate.toString() : null,
         visitTime,
         guestsCount != null ? guestsCount : 1,
         contactPhone,

@@ -116,6 +116,10 @@ ALTER TABLE properties
   ADD COLUMN IF NOT EXISTS bedrooms INTEGER,
   ADD COLUMN IF NOT EXISTS max_guests INTEGER;
 
+-- ========== 004_visit_request_id_card.sql ==========
+ALTER TABLE visit_requests
+  ADD COLUMN IF NOT EXISTS id_card VARCHAR(50);
+
 -- ========== 004_phone_otp_auth.sql ==========
 ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
 ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;

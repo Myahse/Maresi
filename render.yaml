@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: maresi-api
+    runtime: docker
+    rootDir: Maresi
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: "4000"
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: DEV_AUTH_BYPASS
+        value: "false"
+      - key: SMS_PROVIDER
+        value: mock
+      - key: UPLOAD_DIR
+        value: uploads
+      - key: GENIUSPAY_API_KEY
+        sync: false
+      - key: GENIUSPAY_API_SECRET
+        sync: false
+      - key: GENIUSPAY_WEBHOOK_SECRET
+        sync: false
+      - key: OWNER_SUBSCRIPTION_FCFA
+        value: "10000"
+      - key: RESERVATION_COMMISSION_PERCENT
+        value: "10"
+      - key: PAYMENT_SUCCESS_URL
+        sync: false
+      - key: PAYMENT_ERROR_URL
+        sync: false

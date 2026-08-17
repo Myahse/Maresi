@@ -135,7 +135,9 @@
       "addProperty": "Add property",
       "addPropertyDesc": "List a new residence",
       "validateVisits": "Validate requests",
-      "validateVisitsDesc": "Accept or decline visit & stay requests"
+      "validateVisitsDesc": "Accept or decline visit & stay requests",
+      "subscription": "Subscription",
+      "subscriptionDesc": "Activate your owner plan to publish listings"
     }
   },
   "wizard": {
