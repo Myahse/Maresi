@@ -5,7 +5,6 @@ import com.maresi.api.service.FunctionalRollbackException;
 import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.transaction.TransactionSystemException;
@@ -22,14 +21,14 @@ public class ExceptionUtils {
   public void dataAccessException(ResponseBase response, Locale locale, Exception e) {
     e.printStackTrace();
     response.setHasError(true);
-    response.setStatus(technicalError.dbQueryRefused(safeMessage(e), locale));
-    log.warn("DataAccessException: {}", safeMessage(e));
+    response.setStatus(technicalError.dbQueryRefused(rootCauseSummary(e), locale));
+    log.warn("DataAccessException: {}", rootCauseSummary(e));
   }
 
   public void cannotCreateTransaction(ResponseBase response, Locale locale, Exception e) {
     e.printStackTrace();
     response.setHasError(true);
-    response.setStatus(technicalError.dbNotConnect(safeMessage(e), locale));
+    response.setStatus(technicalError.dbNotConnect(rootCauseSummary(e), locale));
   }
 
   public void transactionSystem(ResponseBase response, Locale locale, Exception e) {
@@ -91,11 +90,7 @@ public class ExceptionUtils {
     return null;
   }
 
-  private static String safeMessage(Exception e) {
-    return e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-  }
-
-  private static String rootCauseSummary(Throwable t) {
+  private static FunctionalRollbackException findRollback(Throwable t) {
     Throwable root = t;
     int guard = 0;
     while (root.getCause() != null && root.getCause() != root && guard++ < 20) {
