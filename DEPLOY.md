@@ -4,7 +4,7 @@
 
 | Piece | Host |
 |-------|------|
-| Postgres | Neon project `maresi` |
+| Postgres | Neon project [green-resonance](https://console.neon.tech/app/projects/green-resonance-11944400) (`neondb`) |
 | Spring API | Render (`render.yaml` + `Maresi/Dockerfile`) |
 | Web (client PWA) | Vercel (root `web`) |
 | Host app | Vercel (root `host`) |
@@ -12,11 +12,11 @@
 
 ## 1. Neon
 
-Project: **maresi** (already created, schema + demo seed applied).
+Production Postgres is [this Neon project](https://console.neon.tech/app/projects/green-resonance-11944400/branches/br-purple-surf-ayjhvuju/tables?database=neondb) (`green-resonance-11944400`, database **neondb**). Do not use the older `mute-base-31303142` project.
 
-1. Open [Neon Console](https://console.neon.tech) → project **maresi**.
-2. Copy the **pooled** connection string (`…-pooler…`, includes `sslmode=require`).
-3. Use it as `DATABASE_URL` on Render (do not commit it).
+1. SQL Editor → database **neondb** → run `Maresi/database/pgadmin-full-setup.sql`, then `Maresi/database/seed-demo.sql`.
+2. **Connect** → copy the **pooled** string (`…-pooler…`, `/neondb`, `sslmode=require`).
+3. Set that as `DATABASE_URL` on Render (do not commit it). Then redeploy.
 
 Demo logins (password `Password123!`): `client@maresi.app`, `owner@maresi.app`, `admin@maresi.app`.
 
@@ -78,7 +78,7 @@ Login: owners only (`owner@maresi.app`).
 
 Login: `admin@maresi.app`.
 
-`host_applications` is on the Neon project **maresi**. For a fresh local Postgres, run `Maresi/database/migrations/007_host_applications.sql` (or `pgadmin-full-setup.sql`).
+For a fresh local Postgres, run `Maresi/database/pgadmin-full-setup.sql` then `seed-demo.sql`.
 
 ## Local vs production
 
