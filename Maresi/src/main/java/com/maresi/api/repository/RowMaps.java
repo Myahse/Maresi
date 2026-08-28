@@ -20,6 +20,7 @@ public final class RowMaps {
     m.put("full_name", rs.getString("full_name"));
     m.put("role", rs.getString("role"));
     m.put("phone", rs.getString("phone"));
+    putIfPresent(rs, m, "created_at");
     return m;
   }
 
@@ -115,6 +116,8 @@ public final class RowMaps {
     m.put("checkout_url", rs.getString("checkout_url"));
     m.put("created_at", toIso(rs.getTimestamp("created_at")));
     m.put("updated_at", toIso(rs.getTimestamp("updated_at")));
+    putIfPresent(rs, m, "user_email");
+    putIfPresent(rs, m, "user_name");
     return m;
   }
 
@@ -128,6 +131,9 @@ public final class RowMaps {
     m.put("last_payment_id", rs.getObject("last_payment_id"));
     m.put("created_at", toIso(rs.getTimestamp("created_at")));
     m.put("updated_at", toIso(rs.getTimestamp("updated_at")));
+    putIfPresent(rs, m, "user_email");
+    putIfPresent(rs, m, "user_name");
+    putIfPresent(rs, m, "user_role");
     return m;
   }
 

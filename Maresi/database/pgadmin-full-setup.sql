@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS payments (
   owner_amount DECIMAL(12, 2) NOT NULL DEFAULT 0,
   currency VARCHAR(10) NOT NULL DEFAULT 'XOF',
   status VARCHAR(20) NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'expired')),
+    CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'expired', 'refunded')),
   provider VARCHAR(30) NOT NULL DEFAULT 'geniuspay',
   provider_reference VARCHAR(100),
   checkout_url TEXT,
@@ -219,4 +219,9 @@ DROP TRIGGER IF EXISTS host_applications_updated_at ON host_applications;
 CREATE TRIGGER host_applications_updated_at
   BEFORE UPDATE ON host_applications
   FOR EACH ROW EXECUTE PROCEDURE update_updated_at();
+
+-- ========== 008_payment_refunded.sql ==========
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_status_check;
+ALTER TABLE payments ADD CONSTRAINT payments_status_check
+  CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'expired', 'refunded'));
 

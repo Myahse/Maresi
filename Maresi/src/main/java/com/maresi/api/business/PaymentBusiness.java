@@ -319,7 +319,27 @@ public class PaymentBusiness {
           normalizedEvent.contains("fail")
               || normalizedEvent.contains("expired")
               || "failed".equalsIgnoreCase(text(data, "status"));
+      boolean refunded =
+          normalizedEvent.contains("refund")
+              || "refunded".equalsIgnoreCase(text(data, "status"));
 
+      if (refunded) {
+        if ("refunded".equals(String.valueOf(payment.get("status")))) {
+          response.setItem(payment);
+          response.setStatus(functionalError.success("Webhook deja traite", locale));
+          return response;
+        }
+        Map<String, Object> refundedPayment = payments.markRefunded(paymentId).orElse(null);
+        if (refundedPayment == null) {
+          response.setItem(payment);
+          response.setStatus(functionalError.success("Webhook ignore", locale));
+          return response;
+        }
+        applyRefundSideEffects(refundedPayment);
+        response.setItem(refundedPayment);
+        response.setStatus(functionalError.success("Paiement rembourse", locale));
+        return response;
+      }
       if (success) {
         if ("completed".equals(String.valueOf(payment.get("status")))) {
           response.setItem(payment);
@@ -393,6 +413,23 @@ public class PaymentBusiness {
             propertyId);
       }
       realtime.publish("payment.completed", payment, userId, ownerId, true);
+    }
+  }
+
+  private void applyRefundSideEffects(Map<String, Object> payment) {
+    UUID userId = UUID.fromString(payment.get("user_id").toString());
+    String type = String.valueOf(payment.get("type"));
+    if ("subscription".equals(type)) {
+      subscriptions.setInactive(userId);
+      notifications.create(
+          userId, "payment", "Paiement rembourse", "Votre abonnement hote a ete rembourse.", null);
+      return;
+    }
+    if ("reservation".equals(type) && payment.get("visit_request_id") != null) {
+      UUID visitId = UUID.fromString(payment.get("visit_request_id").toString());
+      visitRequests.updateStatusById(visitId, "awaiting_payment");
+      notifications.create(
+          userId, "payment", "Paiement rembourse", "Votre reservation a ete remboursee.", null);
     }
   }
 

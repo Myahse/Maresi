@@ -239,6 +239,30 @@ export function getAdminHostApplications(status?: string) {
   return api.get<import("@/types").HostApplication[]>(`/admin/host-applications${q}`);
 }
 
+export function getAdminOverview() {
+  return api.get<import("@/types").AdminOverview>(`/admin/overview`);
+}
+
+export function getAdminUsers() {
+  return api.get<import("@/types").User[]>(`/admin/users`);
+}
+
+export function getAdminPayments() {
+  return api.get<import("@/types").Payment[]>(`/admin/payments`);
+}
+
+export function getAdminSubscriptions() {
+  return api.get<import("@/types").OwnerSubscription[]>(`/admin/subscriptions`);
+}
+
+export function patchAdminSubscription(userId: string, body: { status: string; days?: number }) {
+  return api.patch<import("@/types").OwnerSubscription>(`/admin/subscriptions/${userId}`, body);
+}
+
+export function patchAdminPayment(id: string, body: { action: "cancel" | "refund" }) {
+  return api.patch<import("@/types").Payment>(`/admin/payments/${id}`, body);
+}
+
 export function reviewHostApplication(
   id: string,
   status: "approved" | "rejected",

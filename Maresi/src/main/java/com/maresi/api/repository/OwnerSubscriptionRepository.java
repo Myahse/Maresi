@@ -62,6 +62,19 @@ public class OwnerSubscriptionRepository {
         lastPaymentId);
   }
 
+  public Map<String, Object> setInactive(UUID userId) {
+    ensureRow(userId);
+    return jdbc.queryForObject(
+        """
+        UPDATE owner_subscriptions
+        SET status = 'inactive', expires_at = NOW(), updated_at = NOW()
+        WHERE user_id = ?
+        RETURNING *
+        """,
+        (rs, rowNum) -> RowMaps.ownerSubscription(rs),
+        userId);
+  }
+
   public Map<String, Object> ensureRow(UUID userId) {
     Optional<Map<String, Object>> existing = findByUser(userId);
     if (existing.isPresent()) return existing.get();

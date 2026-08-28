@@ -15,6 +15,7 @@
 Production Postgres is [this Neon project](https://console.neon.tech/app/projects/green-resonance-11944400/branches/br-purple-surf-ayjhvuju/tables?database=neondb) (`green-resonance-11944400`, database **neondb**). Do not use the older `mute-base-31303142` project.
 
 1. SQL Editor → database **neondb** → run `Maresi/database/pgadmin-full-setup.sql`, then `Maresi/database/seed-demo.sql`.
+   If the database already has tables, also run `Maresi/database/migrations/008_payment_refunded.sql`.
 2. **Connect** → copy the **pooled** string (`…-pooler…`, `/neondb`, `sslmode=require`).
 3. Set that as `DATABASE_URL` on Render (do not commit it). Then redeploy.
 

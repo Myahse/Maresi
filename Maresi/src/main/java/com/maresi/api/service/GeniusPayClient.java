@@ -116,6 +116,28 @@ public class GeniusPayClient {
     }
   }
 
+  public boolean refundPayment(String reference) {
+    if (reference == null || reference.isBlank()) return false;
+    try {
+      AppProperties.GeniusPay gp = requireKeys();
+      String encoded = URLEncoder.encode(reference, StandardCharsets.UTF_8).replace("+", "%20");
+      HttpRequest request =
+          HttpRequest.newBuilder()
+              .uri(URI.create(trimSlash(gp.getBaseUrl()) + "/payments/" + encoded + "/refund"))
+              .timeout(Duration.ofSeconds(30))
+              .header("Content-Type", "application/json")
+              .header("X-API-Key", gp.getApiKey())
+              .header("X-API-Secret", gp.getApiSecret())
+              .POST(HttpRequest.BodyPublishers.ofString("{}", StandardCharsets.UTF_8))
+              .build();
+      HttpResponse<String> response =
+          httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+      return response.statusCode() < 400;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
   public boolean verifyWebhookSignature(String rawBody, String signature, String timestamp) {
     String secret = props.getGeniuspay().getWebhookSecret();
     if (secret == null || secret.isBlank()) {

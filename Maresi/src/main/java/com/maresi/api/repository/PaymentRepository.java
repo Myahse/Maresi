@@ -112,7 +112,21 @@ public class PaymentRepository {
             """
             UPDATE payments
             SET status = 'failed', updated_at = NOW()
-            WHERE id = ? AND status <> 'completed'
+            WHERE id = ? AND status <> 'completed' AND status <> 'refunded'
+            RETURNING *
+            """,
+            (rs, rowNum) -> RowMaps.payment(rs),
+            id)
+        .stream()
+        .findFirst();
+  }
+
+  public Optional<Map<String, Object>> markRefunded(UUID id) {
+    return jdbc.query(
+            """
+            UPDATE payments
+            SET status = 'refunded', updated_at = NOW()
+            WHERE id = ? AND status = 'completed'
             RETURNING *
             """,
             (rs, rowNum) -> RowMaps.payment(rs),

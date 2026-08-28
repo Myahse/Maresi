@@ -6,6 +6,7 @@ export interface User {
   full_name: string;
   role: UserRole;
   phone?: string;
+  created_at?: string;
 }
 
 export interface Property {
@@ -97,6 +98,8 @@ export interface Payment {
   provider_reference?: string;
   checkout_url?: string;
   created_at?: string;
+  user_email?: string;
+  user_name?: string;
 }
 
 export interface OwnerSubscription {
@@ -105,8 +108,24 @@ export interface OwnerSubscription {
   status: "inactive" | "active" | "expired";
   starts_at?: string;
   expires_at?: string;
-  price_fcfa: number;
-  active: boolean;
+  price_fcfa?: number;
+  active?: boolean;
+  user_email?: string;
+  user_name?: string;
+  user_role?: string;
+}
+
+export interface AdminOverview {
+  users: number;
+  clients: number;
+  owners: number;
+  admins: number;
+  payments: number;
+  payments_completed: number;
+  payments_pending: number;
+  revenue_completed: number;
+  subscriptions_active: number;
+  host_applications_pending: number;
 }
 
 export interface PropertyRating {
