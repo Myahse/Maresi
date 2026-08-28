@@ -90,7 +90,11 @@ public class ExceptionUtils {
     return null;
   }
 
-  private static FunctionalRollbackException findRollback(Throwable t) {
+  private static String safeMessage(Exception e) {
+    return e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+  }
+
+  private static String rootCauseSummary(Throwable t) {
     Throwable root = t;
     int guard = 0;
     while (root.getCause() != null && root.getCause() != root && guard++ < 20) {
