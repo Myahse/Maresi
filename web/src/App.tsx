@@ -10,18 +10,17 @@ import { AllPropertiesPage } from "@/pages/AllPropertiesPage";
 import { PropertyDetailsPage } from "@/pages/PropertyDetailsPage";
 import { FavoritesPage } from "@/pages/FavoritesPage";
 import { VisitRequestsPage } from "@/pages/VisitRequestsPage";
-import { OwnerDashboardPage } from "@/pages/owner/OwnerDashboardPage";
-import { PropertyEditPage } from "@/pages/owner/PropertyEditPage";
-import { OwnerVisitsPage } from "@/pages/owner/OwnerVisitsPage";
 import { ReservationPage } from "@/pages/ReservationPage";
 import { PaymentSuccessPage, PaymentErrorPage } from "@/pages/PaymentResultPages";
-import { OwnerSubscriptionPage } from "@/pages/owner/OwnerSubscriptionPage";
+import { BecomeHostPage } from "@/pages/BecomeHostPage";
 import { AppSplash } from "@/components/layout/AppSplash";
+import { ClientRealtimeBridge } from "@/components/realtime/ClientRealtimeBridge";
 
 function App() {
   return (
     <>
       <AppSplash />
+      <ClientRealtimeBridge />
       <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainLayout />}>
@@ -40,11 +39,7 @@ function App() {
           <Route path="favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
           <Route path="payments/success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
           <Route path="payments/error" element={<ProtectedRoute><PaymentErrorPage /></ProtectedRoute>} />
-          <Route path="owner" element={<ProtectedRoute><OwnerDashboardPage /></ProtectedRoute>} />
-          <Route path="owner/subscription" element={<ProtectedRoute><OwnerSubscriptionPage /></ProtectedRoute>} />
-          <Route path="owner/new" element={<ProtectedRoute><PropertyEditPage /></ProtectedRoute>} />
-          <Route path="owner/edit/:id" element={<ProtectedRoute><PropertyEditPage /></ProtectedRoute>} />
-          <Route path="owner/visits" element={<ProtectedRoute><OwnerVisitsPage /></ProtectedRoute>} />
+          <Route path="become-host" element={<ProtectedRoute><BecomeHostPage /></ProtectedRoute>} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

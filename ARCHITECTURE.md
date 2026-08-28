@@ -1,192 +1,187 @@
-# Residence Listing Platform — Architecture
+# Maresi — Architecture
 
-## Overview
+Residence rental marketplace (Abidjan first). One Spring Boot API, three Vite apps, one Flutter app, PostgreSQL.
 
-Monorepo-style project: shared backend (Java Spring Boot REST API), web app (React + Vite + TypeScript + shadcn), and mobile apps (Expo + Flutter). PostgreSQL for persistence; JWT for auth.
+Product: [PRD.md](PRD.md) · Deploy: [DEPLOY.md](DEPLOY.md) · Schema: [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) · Agent rules: [AGENT.md](AGENT.md)
+
+---
+
+## Layout (do not rename deploy roots)
+
+Vercel and Render are wired to these folder names. Keep them.
 
 ```
 maresi/
-├── Maresi/                  # Java Spring Boot API
-├── web/                     # React + Vite + TypeScript + shadcn
-├── mobile/                  # Expo React Native
-├── mobile_flutter/          # Flutter mobile app
-├── ARCHITECTURE.md
-├── DATABASE_SCHEMA.md
-└── README.md
+├── Maresi/              # Spring Boot API — port 4000 — Render root
+│   ├── src/main/java/com/maresi/api/
+│   ├── src/main/resources/
+│   ├── database/        # schema.sql, migrations 002–007, seed-demo.sql
+│   └── Dockerfile
+├── web/                 # Client listing PWA — port 3000 — Vercel root
+├── host/                # Host operations — port 3001 — Vercel root
+├── admin/               # Admin approvals — port 3002 — Vercel root
+├── mobile_flutter/      # Flutter (Android / iOS)
+├── pom.xml              # Maven parent (module: Maresi)
+└── render.yaml
 ```
+
+Root markdown (`PRD.md`, `PLAN.md`, `CHECKPOINT.md`, this file) is product/ops docs, not a second backend.
+
+There is **no** Express or Expo app in this repo.
 
 ---
 
-## 1. Backend (Node.js + Express)
-
-**Stack:** Node.js, Express, PostgreSQL (pg), JWT (jsonwebtoken), bcrypt, multer (uploads).
-
-**Structure (MVC):**
+## Runtime
 
 ```
-Maresi/
+                    ┌──────────── web :3000  (clients)
+                    │
+Browser / PWA  ─────┼──────────── host :3001  (owners)
+                    │
+                    └──────────── admin :3002 (staff)
+                                      │
+                         REST /api/*  │  STOMP /ws
+                                      ▼
+                            Spring API :4000
+                                      │
+                          ┌───────────┴───────────┐
+                          ▼                       ▼
+                     PostgreSQL              GeniusPay
+                     (Neon)                  (payments)
+```
+
+Flutter talks to the same API (`API_URL`; emulator default `http://10.0.2.2:4000`).
+
+---
+
+## 1. API (`Maresi/`)
+
+**Stack:** Java 17, Spring Boot 3.3, Security (JWT), JDBC (no JPA), WebSocket/STOMP, springdoc OpenAPI.
+
+**Layering (keep this order):**
+
+| Layer | Package | Job |
+|-------|---------|-----|
+| HTTP | `controller` | Map routes, envelope, locale |
+| Use-case | `service` + `business` | Rules, orchestration |
+| Data | `repository` + `RowMaps` | Parameterized SQL |
+| Auth | `security` | JWT parse/sign, `ROLE_*` |
+| Live | `realtime` | STOMP publish after writes |
+| Config | `config` | Security, CORS, WS, DB, OpenAPI |
+
+```
+com.maresi.api
+├── controller/     Auth, Property, Favorite, VisitRequest, Notification,
+│                   Payment, Subscription, HostApplication, AdminHostApplication,
+│                   GeniusPayWebhook, Health
+├── business/
+├── service/        Facade + GeniusPayClient, SmsService, FileStorageService, OtpService
+├── repository/
+├── realtime/       WebSocketConfig is in config/; publisher + STOMP JWT interceptor
+├── security/
 ├── config/
-│   └── database.js          # PostgreSQL connection pool
-├── controllers/
-│   ├── authController.js
-│   ├── propertyController.js
-│   ├── favoriteController.js
-│   └── visitRequestController.js
-├── middleware/
-│   ├── auth.js              # JWT verify, attach user
-│   └── upload.js            # Multer for property images
-├── models/
-│   ├── User.js
-│   ├── Property.js
-│   ├── Favorite.js
-│   └── VisitRequest.js
-├── routes/
-│   ├── auth.js
-│   ├── properties.js
-│   ├── favorites.js
-│   └── visitRequests.js
-├── services/
-│   ├── authService.js
-│   └── propertyService.js
-├── utils/
-│   └── errors.js
-├── .env.example
-├── package.json
-└── server.js
+├── contracts/      Request / Response envelope, ControllerSupport
+├── dto/
+└── exception/
 ```
 
-**API surface:**
+**Envelope:** `{ hasError, status, item | items, count }`. Controllers use `ControllerSupport.run` / `runCreated`.
 
-- **Auth:** `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout` (optional; client drops token).
-- **Properties:** `GET /api/properties`, `GET /api/properties/:id`, `POST /api/properties`, `PUT /api/properties/:id`, `DELETE /api/properties/:id` (owner only).
-- **Favorites:** `GET /api/favorites`, `POST /api/favorites`, `DELETE /api/favorites/:propertyId`.
-- **Visit requests:** `POST /api/visit-requests`, `GET /api/visit-requests` (owner: for own properties; user: own requests).
+**Auth:** `Authorization: Bearer`. Public: `/api/health`, `/api/auth/**`, `/api/webhooks/**`, `/ws/**`, `GET /api/properties`. `/api/admin/**` requires `ROLE_ADMIN`.
 
-Protected routes use `auth` middleware; owner-only use role check (`role === 'owner'` or `user.id === property.owner_id`).
+**Roles:** `client` | `owner` | `admin`. Register always inserts `client`. Admin approval sets `owner`.
+
+**Realtime (STOMP over SockJS at `/ws`):** JWT on CONNECT. Destinations:
+
+- `/user/queue/events` — the authenticated user
+- `/topic/host.{ownerId}` — that host’s visit/payment events
+- `/topic/admin` — host applications + domain events for staff
+
+Events: `host.application.submitted`, `host.application.reviewed`, `visit.created`, `visit.status_changed`, `payment.completed`.
+
+**Payments:** GeniusPay only. Subscription `OWNER_SUBSCRIPTION_FCFA` (default 10 000). Reservation commission `RESERVATION_COMMISSION_PERCENT` (default 10%). Webhook: `POST /api/webhooks/geniuspay`.
+
+**Uploads:** local disk `UPLOAD_DIR` (fragile on free Render).
 
 ---
 
-## 2. Web App (React + Vite + TypeScript + shadcn)
+## 2. Client PWA (`web/`)
 
-**Stack:** React 18, Vite, TypeScript, React Router, shadcn/ui, **Tailwind CSS** (styling).
+Listings, favorites, visits, reservation checkout, become-host. **No owner CRUD.**
 
-**Structure:**
+Port **3000**. Vite proxies `/api` and `/ws` to `:4000`. Production: `VITE_API_URL`, `VITE_WS_URL`, `VITE_HOST_APP_URL`.
 
 ```
-web/
-├── public/
-├── src/
-│   ├── components/
-│   │   ├── ui/              # shadcn components
-│   │   ├── layout/
-│   │   │   ├── Header.tsx
-│   │   │   ├── Footer.tsx
-│   │   │   └── ProtectedRoute.tsx
-│   │   ├── property/
-│   │   │   ├── PropertyCard.tsx
-│   │   │   ├── PropertyFilters.tsx
-│   │   │   └── PropertyForm.tsx
-│   │   └── auth/
-│   │       └── LoginForm.tsx, RegisterForm.tsx
-│   ├── pages/
-│   │   ├── LandingPage.tsx
-│   │   ├── LoginPage.tsx
-│   │   ├── RegisterPage.tsx
-│   │   ├── DashboardPage.tsx
-│   │   ├── PropertyDetailsPage.tsx
-│   │   ├── FavoritesPage.tsx
-│   │   └── owner/
-│   │       ├── OwnerDashboardPage.tsx
-│   │       └── PropertyEditPage.tsx
-│   ├── hooks/
-│   │   ├── useAuth.ts
-│   │   └── useApi.ts
-│   ├── services/
-│   │   ├── api.ts
-│   │   └── auth.ts
-│   ├── types/
-│   │   └── index.ts
-│   ├── layouts/
-│   │   ├── MainLayout.tsx
-│   │   └── AuthLayout.tsx
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── index.css
-├── index.html
-├── package.json
-├── tailwind.config.js
-├── vite.config.ts
-└── tsconfig.json
+web/src/
+├── pages/           Landing, browse, details, reserve, dashboard, visits,
+│                    favorites, become-host, payment result
+├── components/      layout, property cards/filters, map, ratings, visit cards, realtime
+├── context/         Auth, AuthModal, Currency
+├── services/        api.ts (envelope unwrap), auth.ts
+├── hooks/           useAuth, useRealtime
+└── locales/         en + fr
 ```
 
-**Design:** Green primary, white secondary; mobile-first; all styling via **Tailwind** utility classes (and CSS variables in `index.css` for theme tokens); shadcn-style components use Tailwind.
+Signup has no role picker. `/become-host` submits `POST /api/host-applications`.
 
 ---
 
-## 3. Mobile App (Expo React Native)
+## 3. Host app (`host/`)
 
-**Stack:** Expo SDK, React Navigation, TypeScript.
+Owners only (login rejects other roles). Listings CRUD, visit inbox, subscription, payment return.
 
-**Structure:**
+Port **3001**. Env: `VITE_API_URL`, `VITE_WS_URL`. Subscribes to `/topic/host.{userId}`.
 
 ```
-mobile/
-├── src/
-│   ├── screens/
-│   │   ├── LoginScreen.tsx
-│   │   ├── RegisterScreen.tsx
-│   │   ├── HomeScreen.tsx
-│   │   ├── PropertyDetailsScreen.tsx
-│   │   ├── FavoritesScreen.tsx
-│   │   ├── ProfileScreen.tsx
-│   │   └── owner/
-│   │       ├── OwnerDashboardScreen.tsx
-│   │       └── PropertyEditScreen.tsx
-│   ├── components/
-│   │   ├── PropertyCard.tsx
-│   │   └── ...
-│   ├── navigation/
-│   │   ├── AppNavigator.tsx
-│   │   └── types.ts
-│   ├── services/
-│   │   ├── api.ts
-│   │   └── auth.ts
-│   ├── hooks/
-│   │   └── useAuth.ts
-│   └── types/
-│       └── index.ts
-├── app.json
-├── package.json
-└── tsconfig.json
+host/src/
+├── pages/           Login, owner dashboard, new/edit listing, visits,
+│                    subscription, payment result
+├── components/      layout, PropertyCreationWizard, VisitRequestCard, HostRealtimeBridge
+└── (shared-style)   services, hooks, i18n, ui primitives
 ```
 
-**Screens:** Login, Register, Home (listings), Property Details, Favorites, Profile, Owner dashboard & property edit. Same API base URL as web; JWT in header.
+---
+
+## 4. Admin app (`admin/`)
+
+Admins only. Host-application queue (filter, approve/reject, note) and live `/topic/admin` feed.
+
+Port **3002**. Env: `VITE_API_URL`, `VITE_WS_URL`.
+
+```
+admin/src/
+├── pages/           Login, AdminApplicationsPage
+├── components/      layout (header/footer), ui button/input/card
+└── hooks/           useRealtime → /topic/admin
+```
 
 ---
 
-## 4. Authentication Flow
+## 5. Flutter (`mobile_flutter/`)
 
-1. **Guest:** Sees landing only; no access to `/properties` or other protected data.
-2. **Register/Login:** Email + password → backend returns JWT.
-3. **Client:** Stores JWT (web: memory/localStorage; mobile: secure store). All API calls send `Authorization: Bearer <token>`.
-4. **Owner:** Same as client; backend allows `POST/PUT/DELETE` on properties only when `user.id === property.owner_id` (and optionally `role === 'owner'`).
+Live API by default. `--dart-define=USE_MOCK=true` for demos. Mirror web flows (auth, listings, favorites, visits, payments) when the contract changes. Flutter still has a Client/Owner picker; **the API ignores it** and always creates `client`.
 
 ---
 
-## 5. Data Flow
+## 6. Roles vs surfaces
 
-- **Web/Mobile → Backend:** REST JSON; multipart for image uploads.
-- **Backend → PostgreSQL:** Connection pool; parameterized queries to avoid SQL injection.
-- **Images:** Stored on disk (e.g. `Maresi/uploads`) or cloud (S3); DB stores URLs/paths.
+| Role | `web/` | `host/` | `admin/` |
+|------|--------|---------|----------|
+| Guest | Landing, browse, details | — | — |
+| Client | Favorites, visits, pay, become-host | Blocked | Blocked |
+| Owner | Same as client + link to host app | Listings, visits, subscription | Blocked |
+| Admin | Not the admin UI | Blocked | Application queue |
+
+Visit states: `pending` → `accepted` / `declined` → `awaiting_payment` → `confirmed`.
 
 ---
 
-## 6. Roles Summary
+## 7. Local loop
 
-| Role   | Landing | Listings | Details | Favorites | Visit request | Manage own properties |
-|--------|---------|----------|---------|-----------|---------------|------------------------|
-| Guest  | ✅      | ❌       | ❌      | ❌        | ❌            | ❌                     |
-| Client | ✅      | ✅       | ✅      | ✅        | ✅            | ❌                     |
-| Owner  | ✅      | ✅       | ✅      | ✅        | ✅            | ✅                     |
+1. Postgres: `pgadmin-full-setup.sql` then `seed-demo.sql` (or Neon).
+2. `cd Maresi && mvn spring-boot:run`
+3. `cd web && npm run dev` → :3000
+4. `cd host && npm run dev` → :3001
+5. `cd admin && npm run dev` → :3002
 
-Next: see `DATABASE_SCHEMA.md` for tables and relations.
+Demo password `Password123!`: `client@maresi.app`, `owner@maresi.app`, `admin@maresi.app`.

@@ -18,7 +18,6 @@ export function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<"client" | "owner">("client");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,7 +29,7 @@ export function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      await register({ email, password, full_name: fullName, role, phone: phone || undefined });
+      await register({ email, password, full_name: fullName, phone: phone || undefined });
       navigate("/properties", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : t("register.failed"));
@@ -80,31 +79,6 @@ export function RegisterPage() {
               required
               minLength={6}
             />
-          </div>
-          <div className="space-y-2">
-            <Label>{t("register.iAmA")}</Label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="role"
-                  checked={role === "client"}
-                  onChange={() => setRole("client")}
-                  className="text-primary"
-                />
-                {t("register.client")}
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="role"
-                  checked={role === "owner"}
-                  onChange={() => setRole("owner")}
-                  className="text-primary"
-                />
-                {t("register.owner")}
-              </label>
-            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="phone">{t("register.phoneOptional")}</Label>

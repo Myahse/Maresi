@@ -25,7 +25,6 @@ export function LoginModal({ open, tab, onTabChange, onClose }: LoginModalProps)
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [role, setRole] = useState<"client" | "owner">("client");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -61,7 +60,6 @@ export function LoginModal({ open, tab, onTabChange, onClose }: LoginModalProps)
         email,
         password,
         full_name: fullName,
-        role,
         phone: phone.trim() || undefined,
       });
       reset();
@@ -171,16 +169,6 @@ export function LoginModal({ open, tab, onTabChange, onClose }: LoginModalProps)
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
-            </div>
-            <div className="flex gap-4 text-sm">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" checked={role === "client"} onChange={() => setRole("client")} />
-                {t("register.client")}
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" checked={role === "owner"} onChange={() => setRole("owner")} />
-                {t("register.owner")}
-              </label>
             </div>
             <Button type="submit" className="w-full bg-brand hover:bg-brand-dark rounded-full" disabled={loading}>
               {loading ? t("common.creatingAccount") : t("register.submit")}

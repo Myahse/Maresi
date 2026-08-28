@@ -43,7 +43,7 @@ public class AuthController {
   }
 
   @PostMapping("/register")
-  @Operation(summary = "Créer un compte (client ou propriétaire)")
+  @Operation(summary = "Créer un compte client")
   public ResponseEntity<Response<Map<String, Object>>> register(
       @RequestBody Request<AuthRegisterDataDto> request, Locale locale) {
     Locale loc = ControllerSupport.locale(locale);

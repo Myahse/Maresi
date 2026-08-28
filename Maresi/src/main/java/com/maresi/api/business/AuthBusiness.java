@@ -62,7 +62,7 @@ public class AuthBusiness {
     String password = str(body.get("password"));
     String fullName = str(body.get("fullName"));
     if (fullName == null) fullName = str(body.get("full_name"));
-    String role = "owner".equals(str(body.get("role"))) ? "owner" : "client";
+    String role = "client";
     String phone = str(body.get("phone"));
 
     if (email == null || password == null || fullName == null) {
@@ -185,7 +185,7 @@ public class AuthBusiness {
     String fullName = str(body.get("fullName"));
     if (fullName == null) fullName = str(body.get("full_name"));
     if (fullName == null) fullName = "Dev User";
-    String role = "owner".equals(str(body.get("role"))) ? "owner" : "client";
+    String role = "client";
     String phone = str(body.get("phone"));
     Map<String, Object> user = new HashMap<>();
     user.put("id", DEV_USER_ID);

@@ -29,7 +29,9 @@ public class SecurityConfig {
     "/v3/api-docs",
     "/v3/api-docs/**",
     "/webjars/**",
-    "/uploads/**"
+    "/uploads/**",
+    "/ws",
+    "/ws/**"
   };
 
   @Bean
@@ -51,6 +53,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/properties", "/api/properties/**")
                     .permitAll()
+                    .requestMatchers("/api/admin/**")
+                    .hasRole("ADMIN")
                     .anyRequest()
                     .authenticated())
         .exceptionHandling(

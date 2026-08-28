@@ -15,7 +15,7 @@ public class AuthRegisterDataDto {
   @Schema(example = "Jean Dupont")
   private String fullName;
 
-  @Schema(example = "client", allowableValues = {"client", "owner"})
+  @Schema(example = "client", allowableValues = {"client"})
   private String role;
 
   @Schema(example = "+2250700000000")

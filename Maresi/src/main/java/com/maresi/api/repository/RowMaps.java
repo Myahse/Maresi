@@ -131,6 +131,25 @@ public final class RowMaps {
     return m;
   }
 
+  public static Map<String, Object> hostApplication(ResultSet rs) throws SQLException {
+    Map<String, Object> m = new LinkedHashMap<>();
+    m.put("id", rs.getObject("id"));
+    m.put("user_id", rs.getObject("user_id"));
+    m.put("full_name", rs.getString("full_name"));
+    m.put("phone", rs.getString("phone"));
+    m.put("city", rs.getString("city"));
+    m.put("message", rs.getString("message"));
+    m.put("id_card", rs.getString("id_card"));
+    m.put("status", rs.getString("status"));
+    m.put("admin_note", rs.getString("admin_note"));
+    m.put("reviewed_by", rs.getObject("reviewed_by"));
+    m.put("reviewed_at", toIso(rs.getTimestamp("reviewed_at")));
+    m.put("created_at", toIso(rs.getTimestamp("created_at")));
+    m.put("updated_at", toIso(rs.getTimestamp("updated_at")));
+    putIfPresent(rs, m, "user_email");
+    return m;
+  }
+
   private static void putIfPresent(ResultSet rs, Map<String, Object> m, String col) throws SQLException {
     try {
       Object v = rs.getObject(col);

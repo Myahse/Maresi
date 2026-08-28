@@ -7,6 +7,7 @@ import com.maresi.api.contracts.FunctionalError;
 import com.maresi.api.contracts.Request;
 import com.maresi.api.contracts.Response;
 import com.maresi.api.exception.ApiException;
+import com.maresi.api.realtime.RealtimeEventPublisher;
 import com.maresi.api.repository.NotificationRepository;
 import com.maresi.api.repository.OwnerSubscriptionRepository;
 import com.maresi.api.repository.PaymentRepository;
@@ -36,6 +37,7 @@ public class PaymentBusiness {
   private final UserRepository users;
   private final NotificationRepository notifications;
   private final GeniusPayClient geniusPay;
+  private final RealtimeEventPublisher realtime;
   private final AppProperties props;
   private final FunctionalError functionalError;
   private final ObjectMapper objectMapper;
@@ -47,6 +49,7 @@ public class PaymentBusiness {
       UserRepository users,
       NotificationRepository notifications,
       GeniusPayClient geniusPay,
+      RealtimeEventPublisher realtime,
       AppProperties props,
       FunctionalError functionalError,
       ObjectMapper objectMapper) {
@@ -56,6 +59,7 @@ public class PaymentBusiness {
     this.users = users;
     this.notifications = notifications;
     this.geniusPay = geniusPay;
+    this.realtime = realtime;
     this.props = props;
     this.functionalError = functionalError;
     this.objectMapper = objectMapper;
@@ -308,6 +312,7 @@ public class PaymentBusiness {
           "Abonnement active",
           "Votre abonnement proprietaire Maresi est actif pendant 30 jours.",
           null);
+      realtime.publish("payment.completed", payment, userId, userId, true);
       return;
     }
 
@@ -325,8 +330,9 @@ public class PaymentBusiness {
           "Reservation payee",
           "Votre paiement a ete confirme. La reservation est validee.",
           propertyId);
+      UUID ownerId = null;
       if (visit != null && visit.get("property_owner_id") != null) {
-        UUID ownerId = UUID.fromString(visit.get("property_owner_id").toString());
+        ownerId = UUID.fromString(visit.get("property_owner_id").toString());
         notifications.create(
             ownerId,
             "payment",
@@ -334,6 +340,7 @@ public class PaymentBusiness {
             "Le client a paye la reservation. Commission plateforme deduite du montant.",
             propertyId);
       }
+      realtime.publish("payment.completed", payment, userId, ownerId, true);
     }
   }
 

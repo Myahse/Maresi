@@ -26,8 +26,7 @@ REST API for the Maresi residence listing platform. Port **4000**.
    ```
    Maresi/database/pgadmin-full-setup.sql
    ```
-4. Press **F5** (Execute). You should see tables: `users`, `properties`, `favorites`, `visit_requests`, `notifications`, etc.
-5. (Optional) Also run `Maresi/database/migrations/004_visit_request_id_card.sql` if that column is missing.
+4. Press **F5** (Execute). You should see tables including `users`, `properties`, `visit_requests`, `payments`, `host_applications`.
 
 ### 3. Load demo data (mock seed)
 

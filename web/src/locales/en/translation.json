@@ -42,7 +42,8 @@
     "logout": "Logout",
     "login": "Login",
     "register": "Register",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "becomeHost": "Become a host"
   },
   "footer": {
     "copyright": "© {{year}} Maresi. All rights reserved.",
@@ -52,7 +53,7 @@
     "services": "Services",
     "serviceListings": "Property listings",
     "serviceVisits": "Visit requests",
-    "serviceOwner": "Owner management",
+    "serviceOwner": "Become a host",
     "contact": "Contact",
     "addressLine1": "Plateau, Abidjan",
     "addressLine2": "Côte d'Ivoire",
@@ -69,7 +70,7 @@
     "browseTitle": "Browse listings",
     "browseText": "Create an account to see available properties, filter by location and price, and save favorites.",
     "listTitle": "List your property",
-    "listText": "Register as an owner to add residences, set prices and manage visit requests.",
+    "listText": "Apply to become a host. After admin approval, manage listings in the host app.",
     "ctaHint": "You need to register or sign in to access the listings.",
     "registerNow": "Register now",
     "dedicatedServices": "Dedicated services",
@@ -104,7 +105,7 @@
   },
   "register": {
     "title": "Create an account",
-    "description": "Register as a client to browse or as an owner to list properties.",
+    "description": "Create a client account to browse residences and request visits.",
     "fullName": "Full name",
     "emailPlaceholder": "you@example.com",
     "iAmA": "I am a",
@@ -122,7 +123,7 @@
     "noneFound": "No properties found.",
     "hub": "Your dashboard",
     "hello": "Hello, {{name}}",
-    "subtitle": "Quick access to browse, favorites, visits and owner tools.",
+    "subtitle": "Quick access to browse, favorites, visits, and becoming a host.",
     "cards": {
       "browse": "Browse listings",
       "browseDesc": "Search residences on the map and grid",
@@ -137,7 +138,9 @@
       "validateVisits": "Validate requests",
       "validateVisitsDesc": "Accept or decline visit & stay requests",
       "subscription": "Subscription",
-      "subscriptionDesc": "Activate your owner plan to publish listings"
+      "subscriptionDesc": "Activate your owner plan to publish listings",
+      "becomeHost": "Become a host",
+      "becomeHostDesc": "Apply to list residences on Maresi"
     }
   },
   "wizard": {
@@ -358,5 +361,33 @@
     "label": "Language",
     "en": "English",
     "fr": "Français"
+  },
+  "hostApply": {
+    "title": "Become a host",
+    "hint": "Tell us about yourself. An admin will review your request before you can list residences.",
+    "phone": "Phone",
+    "city": "City",
+    "idCard": "ID card number",
+    "message": "Why do you want to host?",
+    "submit": "Send application",
+    "failed": "Could not send the application",
+    "pending": "Application pending",
+    "pendingHint": "We will notify you when an admin reviews it.",
+    "approved": "You are approved as a host.",
+    "openHostApp": "Open host app",
+    "rejected": "Your application was declined. You can apply again."
+  },
+  "admin": {
+    "title": "Host applications",
+    "empty": "No applications yet.",
+    "approve": "Approve",
+    "reject": "Reject",
+    "note": "Admin note",
+    "live": "Live events",
+    "wrongRole": "Sign in with an admin account.",
+    "filter": "Status"
+  },
+  "hostGate": {
+    "wrongRole": "This app is for approved hosts. Apply from the client site."
   }
 }

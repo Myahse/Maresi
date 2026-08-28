@@ -75,4 +75,18 @@ public class UserRepository {
         role,
         phone);
   }
+
+  public Optional<Map<String, Object>> updateRole(UUID id, String role) {
+    return jdbc.query(
+            """
+            UPDATE users SET role = ?, updated_at = NOW()
+            WHERE id = ?
+            RETURNING id, email, full_name, role, phone
+            """,
+            (rs, rowNum) -> RowMaps.userPublic(rs),
+            role,
+            id)
+        .stream()
+        .findFirst();
+  }
 }

@@ -48,20 +48,9 @@ export function Header() {
             <Heart className="h-4 w-4" />
             {t("header.favorites")}
           </Link>
-          {user?.role === "owner" && (
-            <>
-              <Link to="/owner" className={navLinkClass} onClick={() => setMenuOpen(false)}>
-                {t("header.myProperties")}
-              </Link>
-              <Link
-                to="/owner/subscription"
-                className={navLinkClass}
-                onClick={() => setMenuOpen(false)}
-              >
-                {t("payments.subscriptionNav")}
-              </Link>
-            </>
-          )}
+          <Link to="/become-host" className={navLinkClass} onClick={() => setMenuOpen(false)}>
+            {t("header.becomeHost")}
+          </Link>
         </>
       )}
     </>
@@ -93,24 +82,13 @@ export function Header() {
             <Heart className="h-4 w-4" />
             {t("header.favorites")}
           </Link>
-          {user?.role === "owner" && (
-            <>
-              <Link
-                to="/owner"
-                className="text-sm font-semibold text-gray-700 hover:text-brand"
-                onClick={() => setMenuOpen(false)}
-              >
-                {t("header.myProperties")}
-              </Link>
-              <Link
-                to="/owner/subscription"
-                className="text-sm font-semibold text-gray-700 hover:text-brand"
-                onClick={() => setMenuOpen(false)}
-              >
-                {t("payments.subscriptionNav")}
-              </Link>
-            </>
-          )}
+          <Link
+            to="/become-host"
+            className="text-sm font-semibold text-gray-700 hover:text-brand"
+            onClick={() => setMenuOpen(false)}
+          >
+            {t("header.becomeHost")}
+          </Link>
         </>
       )}
     </>

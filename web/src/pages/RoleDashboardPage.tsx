@@ -2,15 +2,14 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
-import { Search, Heart, Calendar, Building2, PlusCircle, LayoutDashboard, CreditCard } from "lucide-react";
+import { Search, Heart, Calendar, Home, LayoutDashboard } from "lucide-react";
 
 export function RoleDashboardPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isOwner = user?.role === "owner";
 
-  const clientCards = [
+  const cards = [
     {
       id: "browse",
       title: t("dashboard.cards.browse"),
@@ -32,41 +31,14 @@ export function RoleDashboardPage() {
       icon: Calendar,
       route: "/visits",
     },
-  ];
-
-  const ownerCards = [
-    ...clientCards,
     {
-      id: "properties",
-      title: t("dashboard.cards.myProperties"),
-      description: t("dashboard.cards.myPropertiesDesc"),
-      icon: Building2,
-      route: "/owner",
-    },
-    {
-      id: "subscription",
-      title: t("dashboard.cards.subscription"),
-      description: t("dashboard.cards.subscriptionDesc"),
-      icon: CreditCard,
-      route: "/owner/subscription",
-    },
-    {
-      id: "add",
-      title: t("dashboard.cards.addProperty"),
-      description: t("dashboard.cards.addPropertyDesc"),
-      icon: PlusCircle,
-      route: "/owner/new",
-    },
-    {
-      id: "validate",
-      title: t("dashboard.cards.validateVisits"),
-      description: t("dashboard.cards.validateVisitsDesc"),
-      icon: Calendar,
-      route: "/owner/visits",
+      id: "host",
+      title: t("dashboard.cards.becomeHost"),
+      description: t("dashboard.cards.becomeHostDesc"),
+      icon: Home,
+      route: "/become-host",
     },
   ];
-
-  const cards = isOwner ? ownerCards : clientCards;
 
   return (
     <div className="font-jakarta min-h-screen bg-brand flex flex-col">

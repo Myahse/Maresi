@@ -8,6 +8,8 @@
 --   a1111111-1111-1111-1111-111111111001  owner@maresi.app   (Aminata K.)
 --   a1111111-1111-1111-1111-111111111002  owner2@maresi.app  (Jean-Marc D.)
 --   a1111111-1111-1111-1111-111111111003  owner3@maresi.app  (Sophie N.)
+-- Admin
+--   a1111111-1111-1111-1111-111111111000  admin@maresi.app
 -- Client
 --   a1111111-1111-1111-1111-111111111011  client@maresi.app
 -- Extra raters
@@ -18,6 +20,14 @@
 
 INSERT INTO users (id, email, password_hash, full_name, role, phone)
 VALUES
+  (
+    'a1111111-1111-1111-1111-111111111000',
+    'admin@maresi.app',
+    '$2b$10$PS4YwTioVGTzzL9RCljDLOYOquNjW8L4.VSSuxgo7GDNUy/DSgowC',
+    'Maresi Admin',
+    'admin',
+    '+2250700000000'
+  ),
   (
     'a1111111-1111-1111-1111-111111111001',
     'owner@maresi.app',

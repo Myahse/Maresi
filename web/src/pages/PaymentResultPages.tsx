@@ -13,7 +13,7 @@ export function PaymentSuccessPage() {
           <Link to="/visits">{t("visits.viewMine")}</Link>
         </Button>
         <Button asChild variant="outline" className="rounded-full">
-          <Link to="/owner/subscription">{t("payments.viewSubscription")}</Link>
+          <Link to="/dashboard">{t("header.dashboard")}</Link>
         </Button>
       </div>
     </div>

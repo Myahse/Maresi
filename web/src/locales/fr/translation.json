@@ -42,7 +42,8 @@
     "logout": "Déconnexion",
     "login": "Connexion",
     "register": "S'inscrire",
-    "dashboard": "Tableau de bord"
+    "dashboard": "Tableau de bord",
+    "becomeHost": "Devenir hôte"
   },
   "footer": {
     "copyright": "© {{year}} Maresi. Tous droits réservés.",
@@ -52,7 +53,7 @@
     "services": "Services",
     "serviceListings": "Annonces immobilières",
     "serviceVisits": "Demandes de visite",
-    "serviceOwner": "Espace propriétaire",
+    "serviceOwner": "Devenir hôte",
     "contact": "Contact",
     "addressLine1": "Plateau, Abidjan",
     "addressLine2": "Côte d'Ivoire",
@@ -69,7 +70,7 @@
     "browseTitle": "Parcourir les annonces",
     "browseText": "Créez un compte pour voir les biens disponibles, filtrer par lieu et prix, et enregistrer des favoris.",
     "listTitle": "Publiez votre bien",
-    "listText": "Inscrivez-vous en tant que propriétaire pour ajouter des résidences, fixer les prix et gérer les demandes de visite.",
+    "listText": "Demandez à devenir hôte. Après validation admin, gérez vos annonces dans l'app hôte.",
     "ctaHint": "Inscrivez-vous ou connectez-vous pour accéder aux annonces.",
     "registerNow": "S'inscrire maintenant",
     "dedicatedServices": "Services dédiés",
@@ -104,7 +105,7 @@
   },
   "register": {
     "title": "Créer un compte",
-    "description": "Inscrivez-vous comme client pour parcourir ou comme propriétaire pour publier des biens.",
+    "description": "Créez un compte client pour parcourir les résidences et demander des visites.",
     "fullName": "Nom complet",
     "emailPlaceholder": "vous@exemple.com",
     "iAmA": "Je suis",
@@ -122,7 +123,7 @@
     "noneFound": "Aucun bien trouvé.",
     "hub": "Votre espace",
     "hello": "Bonjour, {{name}}",
-    "subtitle": "Accès rapide au parcours, favoris, visites et outils propriétaire.",
+    "subtitle": "Accès rapide aux annonces, favoris, visites et demande hôte.",
     "cards": {
       "browse": "Parcourir les annonces",
       "browseDesc": "Rechercher sur la carte et la grille",
@@ -137,7 +138,9 @@
       "validateVisits": "Valider les demandes",
       "validateVisitsDesc": "Accepter ou refuser les réservations",
       "subscription": "Abonnement",
-      "subscriptionDesc": "Activez votre forfait pour publier des résidences"
+      "subscriptionDesc": "Activez votre forfait pour publier des résidences",
+      "becomeHost": "Devenir hôte",
+      "becomeHostDesc": "Demandez à publier des résidences sur Maresi"
     }
   },
   "wizard": {
@@ -358,5 +361,33 @@
     "label": "Langue",
     "en": "English",
     "fr": "Français"
+  },
+  "hostApply": {
+    "title": "Devenir hôte",
+    "hint": "Présentez-vous. Un admin validera votre demande avant de publier des résidences.",
+    "phone": "Téléphone",
+    "city": "Ville",
+    "idCard": "N° pièce d'identité",
+    "message": "Pourquoi voulez-vous être hôte ?",
+    "submit": "Envoyer la demande",
+    "failed": "Impossible d'envoyer la demande",
+    "pending": "Demande en attente",
+    "pendingHint": "Nous vous préviendrons après examen par un admin.",
+    "approved": "Vous êtes validé comme hôte.",
+    "openHostApp": "Ouvrir l'app hôte",
+    "rejected": "Votre demande a été refusée. Vous pouvez réessayer."
+  },
+  "admin": {
+    "title": "Demandes hôte",
+    "empty": "Aucune demande.",
+    "approve": "Accepter",
+    "reject": "Refuser",
+    "note": "Note admin",
+    "live": "Événements en direct",
+    "wrongRole": "Connectez-vous avec un compte admin.",
+    "filter": "Statut"
+  },
+  "hostGate": {
+    "wrongRole": "Cette app est réservée aux hôtes validés. Faites la demande depuis le site client."
   }
 }

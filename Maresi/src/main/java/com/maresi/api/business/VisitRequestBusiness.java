@@ -3,6 +3,7 @@ package com.maresi.api.business;
 import com.maresi.api.contracts.FunctionalError;
 import com.maresi.api.contracts.Request;
 import com.maresi.api.contracts.Response;
+import com.maresi.api.realtime.RealtimeEventPublisher;
 import com.maresi.api.repository.NotificationRepository;
 import com.maresi.api.repository.PropertyRepository;
 import com.maresi.api.repository.VisitRequestRepository;
@@ -19,16 +20,19 @@ public class VisitRequestBusiness {
   private final VisitRequestRepository visitRequests;
   private final PropertyRepository properties;
   private final NotificationRepository notifications;
+  private final RealtimeEventPublisher realtime;
   private final FunctionalError functionalError;
 
   public VisitRequestBusiness(
       VisitRequestRepository visitRequests,
       PropertyRepository properties,
       NotificationRepository notifications,
+      RealtimeEventPublisher realtime,
       FunctionalError functionalError) {
     this.visitRequests = visitRequests;
     this.properties = properties;
     this.notifications = notifications;
+    this.realtime = realtime;
     this.functionalError = functionalError;
   }
 
@@ -85,6 +89,9 @@ public class VisitRequestBusiness {
             idCard);
 
     notifyVisitRequestSubmitted(user.id(), listingId, String.valueOf(property.get("title")));
+    UUID ownerId =
+        property.get("owner_id") != null ? UUID.fromString(property.get("owner_id").toString()) : null;
+    realtime.publish("visit.created", created, user.id(), ownerId, true);
 
     response.setItem(created);
     response.setStatus(functionalError.success("Demande de visite", locale));
@@ -141,6 +148,7 @@ public class VisitRequestBusiness {
     } else {
       notifyVisitRequestStatusUpdated(requesterId, listingId, status);
     }
+    realtime.publish("visit.status_changed", updated, requesterId, owner.id(), true);
     response.setItem(updated);
     response.setStatus(functionalError.success("Statut mis a jour", locale));
     return response;

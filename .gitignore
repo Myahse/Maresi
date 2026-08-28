@@ -3,6 +3,8 @@ node_modules/
 
 # Build output
 web/dist/
+host/dist/
+admin/dist/
 dist/
 build/
 target/

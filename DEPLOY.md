@@ -6,7 +6,9 @@
 |-------|------|
 | Postgres | Neon project `maresi` |
 | Spring API | Render (`render.yaml` + `Maresi/Dockerfile`) |
-| Web (Vite PWA) | Vercel (root `web`) |
+| Web (client PWA) | Vercel (root `web`) |
+| Host app | Vercel (root `host`) |
+| Admin app | Vercel (root `admin`) |
 
 ## 1. Neon
 
@@ -16,7 +18,7 @@ Project: **maresi** (already created, schema + demo seed applied).
 2. Copy the **pooled** connection string (`…-pooler…`, includes `sslmode=require`).
 3. Use it as `DATABASE_URL` on Render (do not commit it).
 
-Demo logins (password `Password123!`): `client@maresi.app`, `owner@maresi.app`.
+Demo logins (password `Password123!`): `client@maresi.app`, `owner@maresi.app`, `admin@maresi.app`.
 
 ## 2. Render (API)
 
@@ -43,16 +45,40 @@ Demo logins (password `Password123!`): `client@maresi.app`, `owner@maresi.app`.
 
 Free Render services sleep when idle; first request after sleep can take ~30–60s.
 
-## 3. Vercel (web)
+## 3. Vercel (three apps)
+
+Same build for each: `npm run build`, output `dist`. Redeploy after changing `VITE_*` (baked at build time).
+
+### Client (`web/`)
 
 | Setting | Value |
 |---------|--------|
 | Root Directory | `web` |
-| Build | `npm run build` |
-| Output | `dist` |
-| Env | `VITE_API_URL=https://YOUR-RENDER-APP.onrender.com/api` |
+| Env | `VITE_API_URL=https://maresi.onrender.com/api` |
+| Env | `VITE_WS_URL=https://maresi.onrender.com/ws` |
+| Env | `VITE_HOST_APP_URL=https://YOUR-HOST-APP.vercel.app` |
 
-Redeploy after setting `VITE_API_URL` (it is baked in at build time).
+### Host (`host/`)
+
+| Setting | Value |
+|---------|--------|
+| Root Directory | `host` |
+| Env | `VITE_API_URL=https://maresi.onrender.com/api` |
+| Env | `VITE_WS_URL=https://maresi.onrender.com/ws` |
+
+Login: owners only (`owner@maresi.app`).
+
+### Admin (`admin/`)
+
+| Setting | Value |
+|---------|--------|
+| Root Directory | `admin` |
+| Env | `VITE_API_URL=https://maresi.onrender.com/api` |
+| Env | `VITE_WS_URL=https://maresi.onrender.com/ws` |
+
+Login: `admin@maresi.app`.
+
+`host_applications` is on the Neon project **maresi**. For a fresh local Postgres, run `Maresi/database/migrations/007_host_applications.sql` (or `pgadmin-full-setup.sql`).
 
 ## Local vs production
 

@@ -88,7 +88,7 @@ export function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <Link to="/owner" className={linkClass}>
+                    <Link to="/become-host" className={linkClass}>
                       {t("footer.serviceOwner")}
                     </Link>
                   </li>
