@@ -6,6 +6,7 @@ import com.maresi.api.config.AppProperties;
 import com.maresi.api.exception.ApiException;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -36,13 +37,7 @@ public class GeniusPayClient {
       String successUrl,
       String errorUrl,
       Map<String, Object> metadata) {
-    AppProperties.GeniusPay gp = props.getGeniuspay();
-    if (gp.getApiKey() == null
-        || gp.getApiKey().isBlank()
-        || gp.getApiSecret() == null
-        || gp.getApiSecret().isBlank()) {
-      throw ApiException.of(503, "Genius Pay is not configured");
-    }
+    AppProperties.GeniusPay gp = requireKeys();
 
     Map<String, Object> body = new LinkedHashMap<>();
     body.put("amount", amount);
@@ -73,9 +68,7 @@ public class GeniusPayClient {
       JsonNode data = root.has("data") ? root.get("data") : root;
       Map<String, Object> result = new LinkedHashMap<>();
       result.put("reference", text(data, "reference", "id", "transaction_id"));
-      result.put(
-          "checkout_url",
-          text(data, "checkout_url", "payment_url"));
+      result.put("checkout_url", text(data, "checkout_url", "payment_url"));
       result.put("status", text(data, "status"));
       result.put("raw", objectMapper.convertValue(data, Map.class));
       if (result.get("checkout_url") == null || String.valueOf(result.get("checkout_url")).isBlank()) {
@@ -86,6 +79,40 @@ public class GeniusPayClient {
       throw e;
     } catch (Exception e) {
       throw ApiException.of(502, "Genius Pay request failed: " + e.getMessage());
+    }
+  }
+
+  public Map<String, Object> getPayment(String reference) {
+    AppProperties.GeniusPay gp = requireKeys();
+    if (reference == null || reference.isBlank()) {
+      throw ApiException.of(400, "Genius Pay reference is missing");
+    }
+    try {
+      String encoded = URLEncoder.encode(reference, StandardCharsets.UTF_8).replace("+", "%20");
+      HttpRequest request =
+          HttpRequest.newBuilder()
+              .uri(URI.create(trimSlash(gp.getBaseUrl()) + "/payments/" + encoded))
+              .timeout(Duration.ofSeconds(30))
+              .header("X-API-Key", gp.getApiKey())
+              .header("X-API-Secret", gp.getApiSecret())
+              .GET()
+              .build();
+      HttpResponse<String> response =
+          httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+      if (response.statusCode() >= 400) {
+        throw ApiException.of(502, "Genius Pay error: " + truncate(response.body()));
+      }
+      JsonNode root = objectMapper.readTree(response.body());
+      JsonNode data = root.has("data") ? root.get("data") : root;
+      Map<String, Object> result = new LinkedHashMap<>();
+      result.put("reference", text(data, "reference", "id", "transaction_id"));
+      result.put("status", text(data, "status"));
+      result.put("raw", objectMapper.convertValue(data, Map.class));
+      return result;
+    } catch (ApiException e) {
+      throw e;
+    } catch (Exception e) {
+      throw ApiException.of(502, "Genius Pay lookup failed: " + e.getMessage());
     }
   }
 
@@ -108,6 +135,17 @@ public class GeniusPayClient {
     } catch (Exception e) {
       return false;
     }
+  }
+
+  private AppProperties.GeniusPay requireKeys() {
+    AppProperties.GeniusPay gp = props.getGeniuspay();
+    if (gp.getApiKey() == null
+        || gp.getApiKey().isBlank()
+        || gp.getApiSecret() == null
+        || gp.getApiSecret().isBlank()) {
+      throw ApiException.of(503, "Genius Pay is not configured");
+    }
+    return gp;
   }
 
   private static String text(JsonNode node, String... keys) {

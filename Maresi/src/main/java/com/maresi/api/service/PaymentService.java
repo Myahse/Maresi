@@ -32,6 +32,11 @@ public class PaymentService {
     return paymentBusiness.startReservationPayment(request, locale);
   }
 
+  public Response<Map<String, Object>> confirmByReference(
+      Request<Map<String, Object>> request, Locale locale) {
+    return paymentBusiness.confirmByReference(request, locale);
+  }
+
   public Response<Map<String, Object>> handleWebhook(
       String rawBody, String signature, String timestamp, String event, Locale locale) {
     return paymentBusiness.handleWebhook(rawBody, signature, timestamp, event, locale);

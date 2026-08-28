@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -227,6 +228,63 @@ public class PaymentBusiness {
     return response;
   }
 
+  public Response<Map<String, Object>> confirmByReference(
+      Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Object rawRef = request.getData() == null ? null : request.getData().get("reference");
+    String reference = rawRef == null ? null : rawRef.toString().trim();
+    if (reference == null || reference.isBlank()) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("reference", locale));
+      return response;
+    }
+
+    Map<String, Object> payment = payments.findByProviderReference(reference).orElse(null);
+    if (payment == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Paiement introuvable", locale));
+      return response;
+    }
+    if (!user.id().toString().equals(String.valueOf(payment.get("user_id")))) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Paiement non autorise", locale));
+      return response;
+    }
+
+    if ("completed".equals(String.valueOf(payment.get("status")))) {
+      response.setItem(payment);
+      response.setStatus(functionalError.success("Paiement deja confirme", locale));
+      return response;
+    }
+
+    Map<String, Object> remote = geniusPay.getPayment(reference);
+    String remoteStatus = remote.get("status") == null ? "" : String.valueOf(remote.get("status"));
+    UUID paymentId = UUID.fromString(payment.get("id").toString());
+
+    if (isPaidStatus(remoteStatus)) {
+      Optional<Map<String, Object>> completed = payments.markCompleted(paymentId);
+      if (completed.isPresent()) {
+        applyPaymentSideEffects(completed.get());
+        response.setItem(completed.get());
+      } else {
+        response.setItem(payments.findById(paymentId).orElse(payment));
+      }
+      response.setStatus(functionalError.success("Paiement confirme", locale));
+      return response;
+    }
+    if (isFailedStatus(remoteStatus)) {
+      Map<String, Object> failedPayment = payments.markFailed(paymentId).orElse(payment);
+      response.setItem(failedPayment);
+      response.setStatus(functionalError.success("Paiement echoue", locale));
+      return response;
+    }
+
+    response.setItem(payment);
+    response.setStatus(functionalError.success("Paiement encore en attente", locale));
+    return response;
+  }
+
   public Response<Map<String, Object>> handleWebhook(
       String rawBody, String signature, String timestamp, String event, Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
@@ -392,6 +450,18 @@ public class PaymentBusiness {
     } catch (Exception e) {
       return null;
     }
+  }
+
+  private static boolean isPaidStatus(String status) {
+    if (status == null || status.isBlank()) return false;
+    String s = status.toLowerCase(Locale.ROOT);
+    return s.contains("complet") || "paid".equals(s) || "success".equals(s) || "succeeded".equals(s);
+  }
+
+  private static boolean isFailedStatus(String status) {
+    if (status == null || status.isBlank()) return false;
+    String s = status.toLowerCase(Locale.ROOT);
+    return s.contains("fail") || s.contains("expir") || s.contains("cancel");
   }
 
   private static String text(JsonNode node, String... keys) {

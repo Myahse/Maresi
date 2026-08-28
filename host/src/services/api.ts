@@ -213,6 +213,10 @@ export function startReservationPayment(visitRequestId: string) {
   return api.post<import("@/types").Payment>(`/payments/reservation`, { visitRequestId });
 }
 
+export function confirmPayment(reference: string) {
+  return api.post<import("@/types").Payment>(`/payments/confirm`, { reference });
+}
+
 export function submitHostApplication(payload: {
   full_name: string;
   phone: string;

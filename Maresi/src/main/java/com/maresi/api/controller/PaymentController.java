@@ -61,4 +61,19 @@ public class PaymentController {
         loc,
         exceptionUtils);
   }
+
+  @PostMapping("/confirm")
+  public ResponseEntity<Response<Map<String, Object>>> confirm(
+      @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return paymentService.confirmByReference(request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
 }
