@@ -128,8 +128,8 @@ public class PaymentBusiness {
             amount,
             "Abonnement proprietaire Maresi (1 mois)",
             customer,
-            props.getPayments().getSuccessUrl(),
-            props.getPayments().getErrorUrl(),
+            props.getPayments().getHostSuccessUrl(),
+            props.getPayments().getHostErrorUrl(),
             metadata);
 
     payment =
@@ -163,7 +163,7 @@ public class PaymentBusiness {
       response.setStatus(functionalError.dataNotFound("Demande introuvable", locale));
       return response;
     }
-    if (!user.id().toString().equals(String.valueOf(visit.get("user_id")))) {
+    if (!sameId(user.id(), visit.get("user_id"))) {
       response.setHasError(true);
       response.setStatus(functionalError.disallowed("Paiement non autorise", locale));
       return response;
@@ -231,7 +231,6 @@ public class PaymentBusiness {
   public Response<Map<String, Object>> confirmByReference(
       Request<Map<String, Object>> request, Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
-    AuthUser user = SecurityUtils.requireUser();
     Object rawRef = request.getData() == null ? null : request.getData().get("reference");
     String reference = rawRef == null ? null : rawRef.toString().trim();
     if (reference == null || reference.isBlank()) {
@@ -244,11 +243,6 @@ public class PaymentBusiness {
     if (payment == null) {
       response.setHasError(true);
       response.setStatus(functionalError.dataNotFound("Paiement introuvable", locale));
-      return response;
-    }
-    if (!user.id().toString().equals(String.valueOf(payment.get("user_id")))) {
-      response.setHasError(true);
-      response.setStatus(functionalError.disallowed("Paiement non autorise", locale));
       return response;
     }
 
@@ -450,6 +444,11 @@ public class PaymentBusiness {
     } catch (Exception e) {
       return null;
     }
+  }
+
+  private static boolean sameId(Object a, Object b) {
+    if (a == null || b == null) return false;
+    return a.toString().equalsIgnoreCase(b.toString());
   }
 
   private static boolean isPaidStatus(String status) {

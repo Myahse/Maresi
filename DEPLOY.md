@@ -37,8 +37,10 @@ Demo logins (password `Password123!`): `client@maresi.app`, `owner@maresi.app`, 
 | `GENIUSPAY_API_KEY` | from GeniusPay |
 | `GENIUSPAY_API_SECRET` | from GeniusPay |
 | `GENIUSPAY_WEBHOOK_SECRET` | from GeniusPay |
-| `PAYMENT_SUCCESS_URL` | `https://YOUR-VERCEL-APP/payments/success` |
-| `PAYMENT_ERROR_URL` | `https://YOUR-VERCEL-APP/payments/error` |
+| `PAYMENT_SUCCESS_URL` | Client Vercel: `https://YOUR-CLIENT-APP.vercel.app/payments/success` |
+| `PAYMENT_ERROR_URL` | Client Vercel: `https://YOUR-CLIENT-APP.vercel.app/payments/error` |
+| `PAYMENT_HOST_SUCCESS_URL` | Host Vercel: `https://YOUR-HOST-APP.vercel.app/payments/success` |
+| `PAYMENT_HOST_ERROR_URL` | Host Vercel: `https://YOUR-HOST-APP.vercel.app/payments/error` |
 
 4. Deploy. Health check: `GET https://YOUR-RENDER-APP.onrender.com/api/health`
 5. GeniusPay webhook URL: `https://YOUR-RENDER-APP.onrender.com/api/webhooks/geniuspay`

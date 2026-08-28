@@ -37,8 +37,8 @@ function App() {
           <Route path="dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="visits" element={<ProtectedRoute><VisitRequestsPage /></ProtectedRoute>} />
           <Route path="favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
-          <Route path="payments/success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
-          <Route path="payments/error" element={<ProtectedRoute><PaymentErrorPage /></ProtectedRoute>} />
+          <Route path="payments/success" element={<PaymentSuccessPage />} />
+          <Route path="payments/error" element={<PaymentErrorPage />} />
           <Route path="become-host" element={<ProtectedRoute><BecomeHostPage /></ProtectedRoute>} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

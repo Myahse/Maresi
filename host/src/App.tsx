@@ -28,8 +28,8 @@ function App() {
             <Route path="owner/new" element={<ProtectedRoute roles={["owner"]}><PropertyEditPage /></ProtectedRoute>} />
             <Route path="owner/edit/:id" element={<ProtectedRoute roles={["owner"]}><PropertyEditPage /></ProtectedRoute>} />
             <Route path="owner/visits" element={<ProtectedRoute roles={["owner"]}><OwnerVisitsPage /></ProtectedRoute>} />
-            <Route path="payments/success" element={<ProtectedRoute roles={["owner"]}><PaymentSuccessPage /></ProtectedRoute>} />
-            <Route path="payments/error" element={<ProtectedRoute roles={["owner"]}><PaymentErrorPage /></ProtectedRoute>} />
+            <Route path="payments/success" element={<PaymentSuccessPage />} />
+            <Route path="payments/error" element={<PaymentErrorPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

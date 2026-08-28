@@ -175,6 +175,8 @@ public class AppProperties {
     private int reservationCommissionPercent = 10;
     private String successUrl = "http://localhost:3000/payments/success";
     private String errorUrl = "http://localhost:3000/payments/error";
+    private String hostSuccessUrl = "";
+    private String hostErrorUrl = "";
 
     public long getOwnerSubscriptionFcfa() {
       return ownerSubscriptionFcfa;
@@ -206,6 +208,27 @@ public class AppProperties {
 
     public void setErrorUrl(String errorUrl) {
       this.errorUrl = errorUrl;
+    }
+
+    public String getHostSuccessUrl() {
+      return firstUrl(hostSuccessUrl, successUrl);
+    }
+
+    public void setHostSuccessUrl(String hostSuccessUrl) {
+      this.hostSuccessUrl = hostSuccessUrl;
+    }
+
+    public String getHostErrorUrl() {
+      return firstUrl(hostErrorUrl, errorUrl);
+    }
+
+    public void setHostErrorUrl(String hostErrorUrl) {
+      this.hostErrorUrl = hostErrorUrl;
+    }
+
+    private static String firstUrl(String preferred, String fallback) {
+      if (preferred != null && !preferred.isBlank()) return preferred;
+      return fallback;
     }
   }
 }

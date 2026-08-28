@@ -34,3 +34,7 @@ services:
         sync: false
       - key: PAYMENT_ERROR_URL
         sync: false
+      - key: PAYMENT_HOST_SUCCESS_URL
+        sync: false
+      - key: PAYMENT_HOST_ERROR_URL
+        sync: false
