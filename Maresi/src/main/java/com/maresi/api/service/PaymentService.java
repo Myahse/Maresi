@@ -41,6 +41,11 @@ public class PaymentService {
     return paymentBusiness.startWalletTopup(request, locale);
   }
 
+  public Response<Map<String, Object>> startPayout(
+      Request<Map<String, Object>> request, Locale locale) {
+    return paymentBusiness.startPayout(request, locale);
+  }
+
   public Response<Map<String, Object>> confirmByReference(
       Request<Map<String, Object>> request, Locale locale) {
     return paymentBusiness.confirmByReference(request, locale);

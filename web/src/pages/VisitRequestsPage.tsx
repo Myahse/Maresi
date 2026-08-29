@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getMyVisitRequests, updateVisitRequestStatus } from "@/services/api";
+import { getMyVisitRequests, startReservationPayment, updateVisitRequestStatus } from "@/services/api";
 import { VisitRequestCard } from "@/components/visit/VisitRequestCard";
 import { Button } from "@/components/ui/button";
 import { usePriceFormatter } from "@/context/CurrencyContext";
@@ -33,11 +33,35 @@ export function VisitRequestsPage() {
     reload();
   }, []);
 
-  const markPaid = async (visitId: string) => {
+  const canCancel = (status: VisitRequest["status"]) =>
+    status === "pending" ||
+    status === "awaiting_payment" ||
+    status === "payment_sent" ||
+    status === "confirmed";
+
+  const cancelStay = async (visitId: string) => {
+    if (!window.confirm(t("visits.cancelConfirm"))) return;
     setActingId(visitId);
     setError("");
     try {
-      await updateVisitRequestStatus(visitId, "payment_sent");
+      await updateVisitRequestStatus(visitId, "cancelled");
+      await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("visits.cancelConfirm"));
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const payStay = async (visitId: string) => {
+    setActingId(visitId);
+    setError("");
+    try {
+      const payment = await startReservationPayment(visitId);
+      if (payment.checkout_url) {
+        window.location.href = payment.checkout_url;
+        return;
+      }
       await reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : t("payments.payFailed"));
@@ -66,36 +90,29 @@ export function VisitRequestsPage() {
                     <p className="text-sm font-semibold text-gray-900">
                       {t("payments.payHostAmount")}: {formatPrice(stayAmount(v))}
                     </p>
-                    <p className="text-xs text-gray-600">{t("payments.payHostHint")}</p>
-                    <div className="flex flex-col gap-2">
-                      {v.wave_payment_url && (
-                        <Button asChild className="rounded-full bg-brand hover:bg-brand-dark">
-                          <a href={v.wave_payment_url} target="_blank" rel="noreferrer">
-                            {t("payments.payWave")}
-                          </a>
-                        </Button>
-                      )}
-                      {v.orange_money_url && (
-                        <Button asChild variant="outline" className="rounded-full">
-                          <a href={v.orange_money_url} target="_blank" rel="noreferrer">
-                            {t("payments.payOrange")}
-                          </a>
-                        </Button>
-                      )}
-                      {!v.wave_payment_url && !v.orange_money_url && v.owner_phone && (
-                        <a href={`tel:${v.owner_phone}`} className="text-sm text-brand hover:underline">
-                          {t("payments.callHost")}: {v.owner_phone}
-                        </a>
-                      )}
-                      <Button
-                        className="w-full rounded-full"
-                        variant="outline"
-                        disabled={actingId === v.id}
-                        onClick={() => void markPaid(v.id)}
-                      >
-                        {actingId === v.id ? t("common.saving") : t("payments.iPaidHost")}
-                      </Button>
-                    </div>
+                    <p className="text-xs text-gray-600">{t("payments.payMaresiHint")}</p>
+                    <Button
+                      className="w-full rounded-full bg-brand hover:bg-brand-dark"
+                      disabled={actingId === v.id}
+                      onClick={() => void payStay(v.id)}
+                    >
+                      {actingId === v.id ? t("common.saving") : t("payments.payReservation")}
+                    </Button>
+                  </div>
+                )}
+                {canCancel(v.status) && (
+                  <div className="pt-2">
+                    {(v.status === "confirmed" || v.status === "payment_sent") && (
+                      <p className="text-xs text-gray-500 mb-2">{t("visits.cancelPaidHint")}</p>
+                    )}
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-full"
+                      disabled={actingId === v.id}
+                      onClick={() => void cancelStay(v.id)}
+                    >
+                      {actingId === v.id ? t("common.saving") : t("visits.cancelCta")}
+                    </Button>
                   </div>
                 )}
               </VisitRequestCard>

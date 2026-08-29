@@ -62,7 +62,8 @@ export type VisitRequestStatus =
   | "declined"
   | "awaiting_payment"
   | "payment_sent"
-  | "confirmed";
+  | "confirmed"
+  | "cancelled";
 
 export interface VisitRequest {
   id: string;
@@ -93,7 +94,7 @@ export interface VisitRequest {
 export interface Payment {
   id: string;
   user_id: string;
-  type: "subscription" | "reservation" | "commission" | "wallet_topup";
+  type: "subscription" | "reservation" | "commission" | "wallet_topup" | "payout";
   visit_request_id?: string;
   amount: number;
   commission_amount: number;
@@ -108,7 +109,7 @@ export interface Payment {
 
 export interface WalletLedgerEntry {
   id: string;
-  entry_type: "topup" | "commission" | "subscription";
+  entry_type: "topup" | "commission" | "subscription" | "stay" | "payout";
   direction: "credit" | "debit";
   amount: number;
   balance_after: number;

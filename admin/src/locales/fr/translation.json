@@ -285,7 +285,8 @@
       "accepted": "Acceptée",
       "declined": "Refusée",
       "awaiting_payment": "Paiement requis",
-      "confirmed": "Confirmée"
+      "confirmed": "Confirmée",
+      "cancelled": "Annulée"
     }
   },
   "payments": {

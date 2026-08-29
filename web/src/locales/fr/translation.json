@@ -289,14 +289,19 @@
       "pending": "En attente",
       "accepted": "Acceptée",
       "declined": "Refusée",
-      "awaiting_payment": "Paiement à l'hôte",
+      "awaiting_payment": "Payer Maresi",
       "payment_sent": "Paiement déclaré",
-      "confirmed": "Confirmée"
-    }
+      "confirmed": "Confirmée",
+      "cancelled": "Annulée"
+    },
+    "cancelCta": "Annuler la réservation",
+    "cancelConfirm": "Annuler cette réservation ?",
+    "cancelPaidHint": "Si vous avez déjà payé, le remboursement part vers vous et le montant est retiré du portefeuille de l'hôte, sauf s'il a déjà retiré."
   },
   "payments": {
-    "payHostAmount": "À payer à l'hôte",
+    "payHostAmount": "À payer",
     "payHostHint": "Ouvrez Wave ou Orange Money, puis indiquez que vous avez payé. L'hôte confirmera.",
+    "payMaresiHint": "Payez Maresi via GeniusPay. L'hôte reçoit le montant intégral sur son portefeuille, puis peut retirer.",
     "payWave": "Payer avec Wave",
     "payOrange": "Payer avec Orange Money",
     "callHost": "Appeler l'hôte",

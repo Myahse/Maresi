@@ -26,10 +26,12 @@ services:
         sync: false
       - key: GENIUSPAY_WEBHOOK_SECRET
         sync: false
+      - key: GENIUSPAY_PAYOUT_WALLET_ID
+        sync: false
       - key: OWNER_SUBSCRIPTION_FCFA
         value: "10000"
       - key: RESERVATION_COMMISSION_PERCENT
-        value: "10"
+        value: "0"
       - key: PAYMENT_SUCCESS_URL
         sync: false
       - key: PAYMENT_ERROR_URL

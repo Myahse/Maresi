@@ -217,6 +217,14 @@ export function startWalletTopup(amount: number) {
   return api.post<import("@/types").Payment>(`/payments/wallet-topup`, { amount });
 }
 
+export function startWalletPayout(payload: {
+  amount: number;
+  provider: "wave" | "orange_money";
+  phone: string;
+}) {
+  return api.post<import("@/types").Payment>(`/payments/payout`, payload);
+}
+
 export function startReservationPayment(visitRequestId: string) {
   return api.post<import("@/types").Payment>(`/payments/reservation`, { visitRequestId });
 }

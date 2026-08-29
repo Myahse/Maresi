@@ -29,7 +29,7 @@ export function Header() {
         {t("dashboard.cards.validateVisits")}
       </Link>
       <Link to="/owner/subscription" className={navLinkClass} onClick={() => setMenuOpen(false)}>
-        {t("payments.subscriptionNav")}
+        {t("payments.walletNav")}
       </Link>
     </>
   );
@@ -68,7 +68,7 @@ export function Header() {
           <div className="absolute top-16 left-0 right-0 bg-white p-4 flex flex-col gap-3">
             <Link to="/owner" onClick={() => setMenuOpen(false)}>{t("owner.title")}</Link>
             <Link to="/owner/visits" onClick={() => setMenuOpen(false)}>{t("dashboard.cards.validateVisits")}</Link>
-            <Link to="/owner/subscription" onClick={() => setMenuOpen(false)}>{t("payments.subscriptionNav")}</Link>
+            <Link to="/owner/subscription" onClick={() => setMenuOpen(false)}>{t("payments.walletNav")}</Link>
             <button type="button" onClick={handleLogout}>{t("header.logout")}</button>
           </div>
         </div>

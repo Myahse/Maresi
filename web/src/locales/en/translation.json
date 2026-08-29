@@ -289,14 +289,19 @@
       "pending": "Pending validation",
       "accepted": "Accepted",
       "declined": "Declined",
-      "awaiting_payment": "Pay the host",
+      "awaiting_payment": "Pay Maresi",
       "payment_sent": "Payment declared",
-      "confirmed": "Confirmed"
-    }
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled"
+    },
+    "cancelCta": "Cancel reservation",
+    "cancelConfirm": "Cancel this reservation?",
+    "cancelPaidHint": "If you already paid, we refund you and take the amount back from the host wallet, unless they have already withdrawn."
   },
   "payments": {
-    "payHostAmount": "Pay the host",
+    "payHostAmount": "Amount due",
     "payHostHint": "Open Wave or Orange Money, then mark that you paid. The host will confirm.",
+    "payMaresiHint": "Pay Maresi via GeniusPay. The host receives the full amount in their wallet, then can withdraw.",
     "payWave": "Pay with Wave",
     "payOrange": "Pay with Orange Money",
     "callHost": "Call the host",

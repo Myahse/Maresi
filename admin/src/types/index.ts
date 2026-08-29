@@ -61,7 +61,8 @@ export type VisitRequestStatus =
   | "declined"
   | "awaiting_payment"
   | "payment_sent"
-  | "confirmed";
+  | "confirmed"
+  | "cancelled";
 
 export interface VisitRequest {
   id: string;

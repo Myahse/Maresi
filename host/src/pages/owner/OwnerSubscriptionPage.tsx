@@ -6,6 +6,7 @@ import {
   getMySubscription,
   startCommissionSettlement,
   startSubscriptionPayment,
+  startWalletPayout,
   startWalletTopup,
 } from "@/services/api";
 import { usePriceFormatter } from "@/context/CurrencyContext";
@@ -16,6 +17,8 @@ const TOPUP_AMOUNTS = [5000, 10000, 25000, 50000];
 function ledgerLabel(t: (key: string) => string, entry: WalletLedgerEntry) {
   if (entry.entry_type === "topup") return t("payments.ledgerTopup");
   if (entry.entry_type === "commission") return t("payments.ledgerCommission");
+  if (entry.entry_type === "stay") return t("payments.ledgerStay");
+  if (entry.entry_type === "payout") return t("payments.ledgerPayout");
   return t("payments.ledgerSubscription");
 }
 
@@ -27,7 +30,12 @@ export function OwnerSubscriptionPage() {
   const [paying, setPaying] = useState(false);
   const [settling, setSettling] = useState(false);
   const [topping, setTopping] = useState<number | null>(null);
+  const [payoutAmount, setPayoutAmount] = useState("");
+  const [payoutPhone, setPayoutPhone] = useState("");
+  const [payoutProvider, setPayoutProvider] = useState<"wave" | "orange_money">("wave");
+  const [payoutBusy, setPayoutBusy] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     getMySubscription()
@@ -67,6 +75,35 @@ export function OwnerSubscriptionPage() {
       setError(e instanceof Error ? e.message : t("payments.payFailed"));
     } finally {
       setSettling(false);
+    }
+  };
+
+  const handlePayout = async () => {
+    const amount = Number(payoutAmount);
+    if (!amount || amount < 200) {
+      setError(t("payments.payoutMin"));
+      return;
+    }
+    if (!payoutPhone.trim()) {
+      setError(t("payments.payoutPhoneRequired"));
+      return;
+    }
+    setPayoutBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      await startWalletPayout({
+        amount,
+        provider: payoutProvider,
+        phone: payoutPhone.trim(),
+      });
+      setPayoutAmount("");
+      setNotice(t("payments.payoutRequested"));
+      setSub(await getMySubscription());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("payments.payFailed"));
+    } finally {
+      setPayoutBusy(false);
     }
   };
 
@@ -125,6 +162,51 @@ export function OwnerSubscriptionPage() {
                   {topping === amount ? t("common.saving") : `${t("payments.walletTopup")} ${formatPrice(amount)}`}
                 </Button>
               ))}
+            </div>
+            <div className="rounded-xl border border-gray-200 p-3 space-y-3">
+              <p className="text-sm font-semibold text-gray-900">{t("payments.payoutTitle")}</p>
+              <p className="text-xs text-gray-600">{t("payments.payoutHint")}</p>
+              <input
+                type="number"
+                min={200}
+                className="w-full rounded-xl border border-input px-3 py-2 text-sm"
+                placeholder={t("payments.payoutAmount")}
+                value={payoutAmount}
+                onChange={(e) => setPayoutAmount(e.target.value)}
+              />
+              <input
+                type="tel"
+                className="w-full rounded-xl border border-input px-3 py-2 text-sm"
+                placeholder={t("payments.payoutPhone")}
+                value={payoutPhone}
+                onChange={(e) => setPayoutPhone(e.target.value)}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant={payoutProvider === "wave" ? "default" : "outline"}
+                  className="rounded-full"
+                  onClick={() => setPayoutProvider("wave")}
+                >
+                  Wave
+                </Button>
+                <Button
+                  type="button"
+                  variant={payoutProvider === "orange_money" ? "default" : "outline"}
+                  className="rounded-full"
+                  onClick={() => setPayoutProvider("orange_money")}
+                >
+                  Orange Money
+                </Button>
+              </div>
+              <Button
+                className="w-full rounded-full bg-brand hover:bg-brand-dark"
+                disabled={payoutBusy || balance < 200}
+                onClick={() => void handlePayout()}
+              >
+                {payoutBusy ? t("common.saving") : t("payments.payoutCta")}
+              </Button>
+              {notice && <p className="text-sm text-emerald-700">{notice}</p>}
             </div>
           </div>
 

@@ -4,15 +4,18 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { getProperties, deleteProperty, getOwnerVisitRequests } from "@/services/api";
-import type { Property, VisitRequest } from "@/types";
+import { getProperties, deleteProperty, getOwnerVisitRequests, getMySubscription } from "@/services/api";
+import { usePriceFormatter } from "@/context/CurrencyContext";
+import type { OwnerSubscription, Property, VisitRequest } from "@/types";
 
 export function OwnerDashboardPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { formatPrice } = usePriceFormatter();
   const [properties, setProperties] = useState<Property[]>([]);
   const [visits, setVisits] = useState<VisitRequest[]>([]);
+  const [wallet, setWallet] = useState<OwnerSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -25,9 +28,14 @@ export function OwnerDashboardPage() {
       setLoading(true);
       setError("");
       try {
-        const [allProps, myVisits] = await Promise.all([getProperties(), getOwnerVisitRequests()]);
+        const [allProps, myVisits, sub] = await Promise.all([
+          getProperties(),
+          getOwnerVisitRequests(),
+          getMySubscription().catch(() => null),
+        ]);
         setProperties(allProps.filter((p) => p.owner_id === user.id));
         setVisits(myVisits);
+        setWallet(sub);
       } catch (e) {
         setError(e instanceof Error ? e.message : t("owner.failedLoad"));
       } finally {
@@ -76,11 +84,25 @@ export function OwnerDashboardPage() {
         <h1 className="text-2xl font-bold">{t("owner.title")}</h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => navigate("/owner/subscription")}>
-            {t("payments.subscriptionNav")}
+            {t("payments.walletNav")}
           </Button>
           <Button onClick={handleAdd}>{t("owner.addProperty")}</Button>
         </div>
       </div>
+      <Card className="border-2 border-brand/20">
+        <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
+          <CardTitle className="text-base">{t("payments.walletTitle")}</CardTitle>
+          <Button size="sm" className="rounded-full bg-brand hover:bg-brand-dark" onClick={() => navigate("/owner/subscription")}>
+            {t("payments.walletManage")}
+          </Button>
+        </CardHeader>
+        <CardContent className="flex items-end justify-between gap-4">
+          <span className="text-sm text-muted-foreground">{t("payments.walletBalance")}</span>
+          <span className="text-2xl font-bold text-brand">
+            {formatPrice(Number(wallet?.wallet_balance ?? 0))}
+          </span>
+        </CardContent>
+      </Card>
       {error && <p className="text-destructive">{error}</p>}
       {loading ? (
         <p className="text-muted-foreground">{t("common.loading")}</p>

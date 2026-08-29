@@ -95,8 +95,13 @@ public class PaymentBusiness {
     item.put("free_listings_left", left);
     item.put("free_listings_limit", PropertyBusiness.FREE_LISTINGS);
     item.put("commission_due", payments.sumPendingAccruedCommission(user.id()));
-    item.put("wallet_balance", wallets.balance(user.id()));
-    item.put("wallet_ledger", wallets.ledger(user.id(), 12));
+    try {
+      item.put("wallet_balance", wallets.balance(user.id()));
+      item.put("wallet_ledger", wallets.ledger(user.id(), 12));
+    } catch (Exception e) {
+      item.put("wallet_balance", BigDecimal.ZERO);
+      item.put("wallet_ledger", List.of());
+    }
     response.setItem(item);
     response.setStatus(functionalError.success("Abonnement", locale));
     return response;
@@ -172,11 +177,71 @@ public class PaymentBusiness {
   public Response<Map<String, Object>> startReservationPayment(
       Request<Map<String, Object>> request, Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
-    response.setHasError(true);
-    response.setStatus(
-        functionalError.invalidData(
-            "Le client paie l'hote via Wave ou Orange Money. GeniusPay n'est plus utilise pour les reservations.",
-            locale));
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> body = request.getData() == null ? Map.of() : request.getData();
+    UUID visitId = uuid(body.get("visitRequestId"));
+    if (visitId == null) visitId = uuid(body.get("visit_request_id"));
+    if (visitId == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("visitRequestId", locale));
+      return response;
+    }
+    Map<String, Object> visit = visitRequests.findById(visitId).orElse(null);
+    if (visit == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Reservation introuvable", locale));
+      return response;
+    }
+    if (!sameId(visit.get("user_id"), user.id())) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Action non autorisee", locale));
+      return response;
+    }
+    if (!"awaiting_payment".equals(String.valueOf(visit.get("status")))) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Cette reservation n'attend pas de paiement", locale));
+      return response;
+    }
+    BigDecimal amount = computeReservationAmount(visit);
+    if (amount.compareTo(BigDecimal.valueOf(200)) < 0) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Montant minimum 200 XOF", locale));
+      return response;
+    }
+    Map<String, Object> metadata = new HashMap<>();
+    metadata.put("type", "reservation");
+    metadata.put("user_id", user.id().toString());
+    metadata.put("visit_request_id", visitId.toString());
+    Map<String, Object> payment =
+        payments.create(
+            user.id(),
+            "reservation",
+            visitId,
+            amount,
+            BigDecimal.ZERO,
+            amount,
+            "XOF",
+            "pending",
+            null,
+            null,
+            metadata);
+    metadata.put("payment_id", payment.get("id").toString());
+    Map<String, Object> customer = customerFor(user);
+    Map<String, Object> gp =
+        geniusPay.createCheckoutPayment(
+            amount,
+            "Reservation Maresi",
+            customer,
+            props.getPayments().getSuccessUrl(),
+            props.getPayments().getErrorUrl(),
+            metadata);
+    payment =
+        payments.updateCheckout(
+            UUID.fromString(payment.get("id").toString()),
+            String.valueOf(gp.get("reference")),
+            String.valueOf(gp.get("checkout_url")));
+    response.setItem(payment);
+    response.setStatus(functionalError.success("Checkout reservation", locale));
     return response;
   }
 
@@ -304,61 +369,189 @@ public class PaymentBusiness {
     return response;
   }
 
-  public void accrueHostCommission(Map<String, Object> visit) {
-    if (visit == null || visit.get("property_owner_id") == null) return;
-    UUID ownerId = UUID.fromString(visit.get("property_owner_id").toString());
-    UUID visitId = UUID.fromString(visit.get("id").toString());
-    BigDecimal amount = computeReservationAmount(visit);
-    int percent = props.getPayments().getReservationCommissionPercent();
-    BigDecimal commission =
-        amount
-            .multiply(BigDecimal.valueOf(percent))
-            .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-    if (commission.compareTo(BigDecimal.ZERO) <= 0) return;
+  public Response<Map<String, Object>> startPayout(
+      Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    if (!"owner".equals(user.role())) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Retrait reserve aux hotes", locale));
+      return response;
+    }
+    Map<String, Object> body = request.getData() == null ? Map.of() : request.getData();
+    BigDecimal amount = toMoney(body.get("amount"));
+    if (amount == null) amount = BigDecimal.valueOf(intVal(body.get("amount"), 0));
+    amount = amount.setScale(2, RoundingMode.HALF_UP);
+    if (amount.compareTo(BigDecimal.valueOf(200)) < 0) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Retrait minimum 200 XOF", locale));
+      return response;
+    }
+    String provider = str(body.get("provider"));
+    if (provider == null || !Set.of("wave", "orange_money").contains(provider)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Destination: wave ou orange_money", locale));
+      return response;
+    }
+    String phone = normalizeCiPhone(str(body.get("phone")));
+    if (phone == null) {
+      Map<String, Object> dbUser = users.findById(user.id()).orElse(null);
+      phone = dbUser == null ? null : normalizeCiPhone(str(dbUser.get("phone")));
+    }
+    if (phone == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("phone", locale));
+      return response;
+    }
+    Optional<Map<String, Object>> debit =
+        wallets.tryDebit(user.id(), amount, "payout", null, null, "Retrait " + provider);
+    if (debit.isEmpty()) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Solde portefeuille insuffisant", locale));
+      return response;
+    }
     Map<String, Object> metadata = new HashMap<>();
-    metadata.put("type", "commission");
-    metadata.put("visit_request_id", visitId.toString());
-    metadata.put("commission_percent", percent);
-    metadata.put("stay_amount", amount);
-    Optional<Map<String, Object>> walletPaid =
-        wallets.tryDebit(
-            ownerId, commission, "commission", null, visitId, "Commission 10% reservation");
-    if (walletPaid.isPresent()) {
-      Map<String, Object> paid =
-          payments.create(
-              ownerId,
-              "commission",
-              visitId,
-              commission,
-              commission,
-              amount.subtract(commission),
-              "XOF",
-              "completed",
-              "wallet",
-              null,
-              null,
+    metadata.put("type", "payout");
+    metadata.put("user_id", user.id().toString());
+    metadata.put("provider", provider);
+    metadata.put("phone", phone);
+    Map<String, Object> payment =
+        payments.create(
+            user.id(),
+            "payout",
+            null,
+            amount,
+            BigDecimal.ZERO,
+            amount,
+            "XOF",
+            "pending",
+            "geniuspay",
+            null,
+            null,
+            metadata);
+    metadata.put("payment_id", payment.get("id").toString());
+    try {
+      String name =
+          users.findById(user.id()).map(u -> str(u.get("full_name"))).orElse(user.email());
+      Map<String, Object> gp =
+          geniusPay.createPayout(
+              amount,
+              name,
+              phone,
+              provider,
+              "Retrait portefeuille Maresi",
+              payment.get("id").toString(),
               metadata);
+      payment =
+          payments.updateCheckout(
+              UUID.fromString(payment.get("id").toString()),
+              String.valueOf(gp.get("reference")),
+              null);
+      String gpStatus = str(gp.get("status"));
+      if (isPaidStatus(gpStatus)) {
+        payment = payments.markCompleted(UUID.fromString(payment.get("id").toString())).orElse(payment);
+        applyPaymentSideEffects(payment);
+      } else if (isFailedStatus(gpStatus)) {
+        wallets.credit(user.id(), amount, "payout", uuid(payment.get("id")), null, "Retrait echoue, solde recrédité");
+        payment = payments.markFailed(UUID.fromString(payment.get("id").toString())).orElse(payment);
+        response.setHasError(true);
+        response.setItem(payment);
+        response.setStatus(functionalError.invalidData("Le retrait n'a pas abouti", locale));
+        return response;
+      }
+    } catch (RuntimeException e) {
+      wallets.credit(user.id(), amount, "payout", uuid(payment.get("id")), null, "Retrait echoue, solde recrédité");
+      payments.markFailed(UUID.fromString(payment.get("id").toString()));
+      throw e;
+    }
+    response.setItem(payment);
+    response.setStatus(functionalError.success("Retrait initie", locale));
+    return response;
+  }
+
+  private static String str(Object v) {
+    if (v == null) return null;
+    String s = v.toString().trim();
+    return s.isEmpty() ? null : s;
+  }
+
+  private static String normalizeCiPhone(String raw) {
+    if (raw == null) return null;
+    String compact = raw.replaceAll("[\\s.-]", "");
+    if (compact.isEmpty()) return null;
+    if (compact.startsWith("+")) return compact;
+    if (compact.startsWith("225")) return "+" + compact;
+    if (compact.startsWith("00225")) return "+" + compact.substring(2);
+    return "+225" + compact.replaceFirst("^0", "");
+  }
+
+  public void accrueHostCommission(Map<String, Object> visit) {
+    // Stays are paid in full to the host wallet. No reservation commission.
+  }
+
+  /**
+   * Refund a paid stay when the guest cancels. Host wallet is taken first so we only
+   * refund if they have not already withdrawn.
+   *
+   * @return error message, or null if there was nothing to refund / refund succeeded
+   */
+  public String refundPaidStayOnCancel(Map<String, Object> visit) {
+    if (visit == null || visit.get("id") == null) return null;
+    UUID visitId = UUID.fromString(visit.get("id").toString());
+    payments.abandonPendingReservations(visitId);
+    Map<String, Object> payment = payments.findCompletedReservation(visitId).orElse(null);
+    if (payment == null) return null;
+
+    BigDecimal amount = toMoney(payment.get("amount"));
+    if (amount == null) amount = toMoney(payment.get("owner_amount"));
+    UUID paymentId = uuid(payment.get("id"));
+    UUID ownerId =
+        visit.get("property_owner_id") == null
+            ? null
+            : UUID.fromString(visit.get("property_owner_id").toString());
+
+    if (ownerId != null && amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+      Optional<Map<String, Object>> debit =
+          wallets.tryDebit(
+              ownerId, amount, "stay", paymentId, visitId, "Annulation client");
+      if (debit.isEmpty()) {
+        return "L'hote a deja retire. Un remboursement automatique n'est plus possible. Contactez le support.";
+      }
+    }
+
+    String reference =
+        payment.get("provider_reference") == null
+            ? null
+            : String.valueOf(payment.get("provider_reference"));
+    if (reference != null && !reference.isBlank() && !geniusPay.refundPayment(reference)) {
+      if (ownerId != null && amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+        wallets.credit(
+            ownerId, amount, "stay", paymentId, visitId, "Annulation echouee, solde recrédité");
+      }
+      return "Le remboursement GeniusPay a echoue. Reessayez dans un instant.";
+    }
+
+    payments.markRefunded(paymentId);
+    UUID guestId = uuid(payment.get("user_id"));
+    UUID propertyId =
+        visit.get("property_id") == null ? null : UUID.fromString(visit.get("property_id").toString());
+    if (guestId != null) {
+      notifications.create(
+          guestId,
+          "payment",
+          "Reservation remboursee",
+          "Votre paiement a ete rembourse suite a l'annulation.",
+          propertyId);
+    }
+    if (ownerId != null) {
       notifications.create(
           ownerId,
-          "payment",
-          "Commission prelevee",
-          "10% ont ete debites de votre portefeuille Maresi.",
-          null);
-      realtime.publish("payment.completed", paid, ownerId, ownerId, true);
-      return;
+          "reservation",
+          "Reservation annulee",
+          "Le client a annule. Le montant a ete retire de votre portefeuille.",
+          propertyId);
     }
-    payments.create(
-        ownerId,
-        "commission",
-        visitId,
-        commission,
-        commission,
-        amount.subtract(commission),
-        "XOF",
-        "pending",
-        null,
-        null,
-        metadata);
+    return null;
   }
 
   public Response<Map<String, Object>> confirmByReference(
@@ -401,7 +594,13 @@ public class PaymentBusiness {
       return response;
     }
     if (isFailedStatus(remoteStatus)) {
+      if ("failed".equals(String.valueOf(payment.get("status")))) {
+        response.setItem(payment);
+        response.setStatus(functionalError.success("Paiement deja echoue", locale));
+        return response;
+      }
       Map<String, Object> failedPayment = payments.markFailed(paymentId).orElse(payment);
+      applyFailedSideEffects(failedPayment);
       response.setItem(failedPayment);
       response.setStatus(functionalError.success("Paiement echoue", locale));
       return response;
@@ -421,10 +620,16 @@ public class PaymentBusiness {
 
     try {
       JsonNode root = objectMapper.readTree(rawBody);
+      if (event == null || event.isBlank()) {
+        event = text(root, "event");
+      }
       JsonNode data = root.has("data") ? root.get("data") : root;
-      String reference = text(data, "reference", "id", "transaction_id");
+      JsonNode payoutNode = data.has("payout") ? data.get("payout") : data;
+      String reference = text(payoutNode, "reference", "id", "transaction_id");
+      if (reference == null) reference = text(data, "reference", "id", "transaction_id");
       String paymentIdFromMeta = null;
       JsonNode meta = data.get("metadata");
+      if (meta == null && payoutNode != null) meta = payoutNode.get("metadata");
       if (meta != null && meta.has("payment_id")) {
         paymentIdFromMeta = meta.get("payment_id").asText();
       }
@@ -447,14 +652,17 @@ public class PaymentBusiness {
       boolean success =
           normalizedEvent.contains("success")
               || normalizedEvent.contains("completed")
-              || "completed".equalsIgnoreCase(text(data, "status"));
+              || isPaidStatus(text(data, "status"))
+              || isPaidStatus(text(payoutNode, "status"));
       boolean failed =
           normalizedEvent.contains("fail")
               || normalizedEvent.contains("expired")
-              || "failed".equalsIgnoreCase(text(data, "status"));
+              || isFailedStatus(text(data, "status"))
+              || isFailedStatus(text(payoutNode, "status"));
       boolean refunded =
           normalizedEvent.contains("refund")
-              || "refunded".equalsIgnoreCase(text(data, "status"));
+              || "refunded".equalsIgnoreCase(text(data, "status"))
+              || "refunded".equalsIgnoreCase(text(payoutNode, "status"));
 
       if (refunded) {
         if ("refunded".equals(String.valueOf(payment.get("status")))) {
@@ -486,7 +694,18 @@ public class PaymentBusiness {
         return response;
       }
       if (failed) {
-        Map<String, Object> failedPayment = payments.markFailed(paymentId).orElse(payment);
+        if ("failed".equals(String.valueOf(payment.get("status")))) {
+          response.setItem(payment);
+          response.setStatus(functionalError.success("Webhook deja traite", locale));
+          return response;
+        }
+        Map<String, Object> failedPayment = payments.markFailed(paymentId).orElse(null);
+        if (failedPayment == null) {
+          response.setItem(payment);
+          response.setStatus(functionalError.success("Webhook ignore", locale));
+          return response;
+        }
+        applyFailedSideEffects(failedPayment);
         response.setItem(failedPayment);
         response.setStatus(functionalError.success("Paiement echoue", locale));
         return response;
@@ -545,6 +764,13 @@ public class PaymentBusiness {
       return;
     }
 
+    if ("payout".equals(type)) {
+      notifications.create(
+          userId, "payment", "Retrait envoye", "Votre retrait a ete envoye sur Wave ou Orange Money.", null);
+      realtime.publish("payment.completed", payment, userId, userId, true);
+      return;
+    }
+
     if ("reservation".equals(type) && payment.get("visit_request_id") != null) {
       UUID visitId = UUID.fromString(payment.get("visit_request_id").toString());
       visitRequests.updateStatusById(visitId, "confirmed");
@@ -562,15 +788,40 @@ public class PaymentBusiness {
       UUID ownerId = null;
       if (visit != null && visit.get("property_owner_id") != null) {
         ownerId = UUID.fromString(visit.get("property_owner_id").toString());
+        BigDecimal stayAmount = toMoney(payment.get("amount"));
+        if (stayAmount == null) stayAmount = toMoney(payment.get("owner_amount"));
+        if (stayAmount != null && stayAmount.compareTo(BigDecimal.ZERO) > 0) {
+          wallets.credit(
+              ownerId,
+              stayAmount,
+              "stay",
+              paymentId,
+              visitId,
+              "Sejour paye par le client");
+        }
         notifications.create(
             ownerId,
             "payment",
-            "Reservation confirmee",
-            "Le client a paye la reservation. Commission plateforme deduite du montant.",
+            "Paiement recu",
+            "Le client a paye. "
+                + (stayAmount == null ? "" : stayAmount + " XOF")
+                + " ont ete ajoutes a votre portefeuille.",
             propertyId);
       }
       realtime.publish("payment.completed", payment, userId, ownerId, true);
     }
+  }
+
+  private void applyFailedSideEffects(Map<String, Object> payment) {
+    if (payment == null) return;
+    if (!"payout".equals(String.valueOf(payment.get("type")))) return;
+    UUID userId = UUID.fromString(payment.get("user_id").toString());
+    BigDecimal amount = toMoney(payment.get("amount"));
+    if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+      wallets.credit(userId, amount, "payout", uuid(payment.get("id")), null, "Retrait echoue, solde recrédité");
+    }
+    notifications.create(
+        userId, "payment", "Retrait echoue", "Le retrait n'a pas abouti. Le solde a ete recrédité.", null);
   }
 
   private void applyRefundSideEffects(Map<String, Object> payment) {
@@ -587,9 +838,30 @@ public class PaymentBusiness {
     }
     if ("reservation".equals(type) && payment.get("visit_request_id") != null) {
       UUID visitId = UUID.fromString(payment.get("visit_request_id").toString());
-      visitRequests.updateStatusById(visitId, "awaiting_payment");
+      visitRequests.updateStatusById(visitId, "cancelled");
+      Map<String, Object> visit = visitRequests.findById(visitId).orElse(null);
+      if (visit != null && visit.get("property_owner_id") != null) {
+        BigDecimal take = toMoney(payment.get("amount"));
+        if (take == null) take = toMoney(payment.get("owner_amount"));
+        if (take != null && take.compareTo(BigDecimal.ZERO) > 0) {
+          UUID ownerId = UUID.fromString(visit.get("property_owner_id").toString());
+          BigDecimal available = take.min(wallets.balance(ownerId));
+          if (available.compareTo(BigDecimal.ZERO) > 0) {
+            wallets.tryDebit(ownerId, available, "stay", uuid(payment.get("id")), visitId, "Remboursement sejour");
+          }
+        }
+      }
       notifications.create(
           userId, "payment", "Paiement rembourse", "Votre reservation a ete remboursee.", null);
+      return;
+    }
+    if ("payout".equals(type)) {
+      BigDecimal amount = toMoney(payment.get("amount"));
+      if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+        wallets.credit(userId, amount, "payout", uuid(payment.get("id")), null, "Retrait rembourse");
+      }
+      notifications.create(
+          userId, "payment", "Retrait rembourse", "Le montant du retrait a ete recrédité.", null);
       return;
     }
     if ("wallet_topup".equals(type)) {

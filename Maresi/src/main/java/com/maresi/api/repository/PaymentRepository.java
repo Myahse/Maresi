@@ -141,13 +141,37 @@ public class PaymentRepository {
             """
             UPDATE payments
             SET status = 'failed', updated_at = NOW()
-            WHERE id = ? AND status <> 'completed' AND status <> 'refunded'
+            WHERE id = ? AND status = 'pending'
             RETURNING *
             """,
             (rs, rowNum) -> RowMaps.payment(rs),
             id)
         .stream()
         .findFirst();
+  }
+
+  public Optional<Map<String, Object>> findCompletedReservation(UUID visitRequestId) {
+    return jdbc.query(
+            """
+            SELECT * FROM payments
+            WHERE visit_request_id = ? AND type = 'reservation' AND status = 'completed'
+            ORDER BY created_at DESC
+            LIMIT 1
+            """,
+            (rs, rowNum) -> RowMaps.payment(rs),
+            visitRequestId)
+        .stream()
+        .findFirst();
+  }
+
+  public int abandonPendingReservations(UUID visitRequestId) {
+    return jdbc.update(
+        """
+        UPDATE payments
+        SET status = 'failed', updated_at = NOW()
+        WHERE visit_request_id = ? AND type = 'reservation' AND status = 'pending'
+        """,
+        visitRequestId);
   }
 
   public Optional<Map<String, Object>> markRefunded(UUID id) {

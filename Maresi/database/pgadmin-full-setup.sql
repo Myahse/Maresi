@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS visit_requests (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   property_id UUID NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
   message TEXT,
-  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'payment_sent', 'confirmed')),
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'payment_sent', 'confirmed', 'cancelled')),
   requested_at TIMESTAMPTZ DEFAULT NOW(),
   responded_at TIMESTAMPTZ
 );
@@ -146,7 +146,7 @@ CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at
 ALTER TABLE visit_requests DROP CONSTRAINT IF EXISTS visit_requests_status_check;
 ALTER TABLE visit_requests
   ADD CONSTRAINT visit_requests_status_check
-  CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'payment_sent', 'confirmed'));
+  CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'payment_sent', 'confirmed', 'cancelled'));
 
 CREATE TABLE IF NOT EXISTS payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -233,12 +233,12 @@ ALTER TABLE properties
 ALTER TABLE visit_requests DROP CONSTRAINT IF EXISTS visit_requests_status_check;
 ALTER TABLE visit_requests
   ADD CONSTRAINT visit_requests_status_check
-  CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'payment_sent', 'confirmed'));
+  CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'payment_sent', 'confirmed', 'cancelled'));
 
 ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_type_check;
 ALTER TABLE payments
   ADD CONSTRAINT payments_type_check
-  CHECK (type IN ('subscription', 'reservation', 'commission', 'wallet_topup'));
+  CHECK (type IN ('subscription', 'reservation', 'commission', 'wallet_topup', 'payout'));
 
 -- ========== 010_host_wallet.sql ==========
 CREATE TABLE IF NOT EXISTS wallets (
@@ -251,7 +251,7 @@ CREATE TABLE IF NOT EXISTS wallet_ledger (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   entry_type VARCHAR(30) NOT NULL
-    CHECK (entry_type IN ('topup', 'commission', 'subscription')),
+    CHECK (entry_type IN ('topup', 'commission', 'subscription', 'stay', 'payout')),
   direction VARCHAR(10) NOT NULL CHECK (direction IN ('credit', 'debit')),
   amount DECIMAL(12, 2) NOT NULL CHECK (amount > 0),
   balance_after DECIMAL(12, 2) NOT NULL,
@@ -277,4 +277,24 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(user_id);
+
+-- ========== 012_guest_pay_and_payout.sql ==========
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_type_check;
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_type_checka;
+ALTER TABLE payments
+  ADD CONSTRAINT payments_type_check
+  CHECK (type IN ('subscription', 'reservation', 'commission', 'wallet_topup', 'payout'));
+
+ALTER TABLE wallet_ledger DROP CONSTRAINT IF EXISTS wallet_ledger_entry_type_check;
+ALTER TABLE wallet_ledger
+  ADD CONSTRAINT wallet_ledger_entry_type_check
+  CHECK (entry_type IN ('topup', 'commission', 'subscription', 'stay', 'payout'));
+
+-- ========== 013_visit_cancelled.sql ==========
+ALTER TABLE visit_requests DROP CONSTRAINT IF EXISTS visit_requests_status_check;
+ALTER TABLE visit_requests
+  ADD CONSTRAINT visit_requests_status_check
+  CHECK (status IN (
+    'pending', 'accepted', 'declined', 'awaiting_payment', 'payment_sent', 'confirmed', 'cancelled'
+  ));
 

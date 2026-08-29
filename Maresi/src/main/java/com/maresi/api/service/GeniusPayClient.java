@@ -170,6 +170,107 @@ public class GeniusPayClient {
     return gp;
   }
 
+  public Map<String, Object> createPayout(
+      BigDecimal amount,
+      String recipientName,
+      String phone,
+      String provider,
+      String description,
+      String idempotencyKey,
+      Map<String, Object> metadata) {
+    AppProperties.GeniusPay gp = requireKeys();
+    String walletId = resolvePayoutWalletId(gp);
+    if (walletId == null || walletId.isBlank()) {
+      throw ApiException.of(503, "GeniusPay payout wallet is not configured");
+    }
+    String destProvider = "orange_money".equals(provider) ? "orange_money" : "wave";
+    Map<String, Object> recipient = new LinkedHashMap<>();
+    recipient.put("name", recipientName == null || recipientName.isBlank() ? "Hote Maresi" : recipientName);
+    recipient.put("phone", phone);
+    Map<String, Object> destination = new LinkedHashMap<>();
+    destination.put("type", "mobile_money");
+    destination.put("provider", destProvider);
+    destination.put("account", phone);
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("wallet_id", walletId);
+    body.put("recipient", recipient);
+    body.put("destination", destination);
+    body.put("amount", amount);
+    body.put("currency", "XOF");
+    body.put("description", description);
+    if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+      body.put("idempotency_key", idempotencyKey);
+    }
+    if (metadata != null && !metadata.isEmpty()) body.put("metadata", metadata);
+
+    try {
+      String json = objectMapper.writeValueAsString(body);
+      HttpRequest request =
+          HttpRequest.newBuilder()
+              .uri(URI.create(trimSlash(gp.getBaseUrl()) + "/payouts"))
+              .timeout(Duration.ofSeconds(30))
+              .header("Content-Type", "application/json")
+              .header("Authorization", "Bearer " + gp.getApiKey())
+              .header("X-API-Key", gp.getApiKey())
+              .header("X-API-Secret", gp.getApiSecret())
+              .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
+              .build();
+      HttpResponse<String> response =
+          httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+      if (response.statusCode() >= 400) {
+        throw ApiException.of(502, "Genius Pay payout error: " + truncate(response.body()));
+      }
+      JsonNode root = objectMapper.readTree(response.body());
+      JsonNode data = root.has("data") ? root.get("data") : root;
+      JsonNode payout = data.has("payout") ? data.get("payout") : data;
+      Map<String, Object> result = new LinkedHashMap<>();
+      result.put("reference", text(payout, "reference", "id"));
+      result.put("status", text(payout, "status"));
+      result.put("raw", objectMapper.convertValue(data, Map.class));
+      if (result.get("reference") == null || String.valueOf(result.get("reference")).isBlank()) {
+        throw ApiException.of(502, "Genius Pay did not return a payout reference");
+      }
+      return result;
+    } catch (ApiException e) {
+      throw e;
+    } catch (Exception e) {
+      throw ApiException.of(502, "Genius Pay payout failed: " + e.getMessage());
+    }
+  }
+
+  private String resolvePayoutWalletId(AppProperties.GeniusPay gp) {
+    if (gp.getPayoutWalletId() != null && !gp.getPayoutWalletId().isBlank()) {
+      return gp.getPayoutWalletId().trim();
+    }
+    try {
+      HttpRequest request =
+          HttpRequest.newBuilder()
+              .uri(URI.create(trimSlash(gp.getBaseUrl()) + "/wallets"))
+              .timeout(Duration.ofSeconds(20))
+              .header("Authorization", "Bearer " + gp.getApiKey())
+              .header("X-API-Key", gp.getApiKey())
+              .header("X-API-Secret", gp.getApiSecret())
+              .GET()
+              .build();
+      HttpResponse<String> response =
+          httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+      if (response.statusCode() >= 400) return null;
+      JsonNode root = objectMapper.readTree(response.body());
+      JsonNode data = root.has("data") ? root.get("data") : root;
+      JsonNode wallets = data.has("wallets") ? data.get("wallets") : data;
+      if (wallets != null && wallets.isArray() && wallets.size() > 0) {
+        for (JsonNode w : wallets) {
+          if ("payout".equalsIgnoreCase(text(w, "type")) && w.has("id")) {
+            return w.get("id").asText();
+          }
+        }
+        if (wallets.get(0).has("id")) return wallets.get(0).get("id").asText();
+      }
+    } catch (Exception ignored) {
+    }
+    return null;
+  }
+
   private static String text(JsonNode node, String... keys) {
     if (node == null) return null;
     for (String key : keys) {

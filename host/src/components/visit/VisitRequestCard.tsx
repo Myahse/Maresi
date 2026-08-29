@@ -10,6 +10,7 @@ const STATUS_STYLES: Record<VisitRequestStatus, string> = {
   awaiting_payment: "bg-sky-100 text-sky-800 border-sky-200",
   payment_sent: "bg-violet-100 text-violet-800 border-violet-200",
   confirmed: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  cancelled: "bg-gray-100 text-gray-700 border-gray-200",
 };
 
 interface VisitRequestCardProps {

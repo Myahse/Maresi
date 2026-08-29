@@ -52,11 +52,50 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  Future<void> _markPaid(VisitRequest visit) async {
+  bool _canCancel(String status) =>
+      status == 'pending' ||
+      status == 'awaiting_payment' ||
+      status == 'payment_sent' ||
+      status == 'confirmed';
+
+  Future<void> _cancelStay(VisitRequest visit) async {
+    final locale = context.read<LocaleProvider>();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(locale.t('visits.cancelCta')),
+        content: Text(locale.t('visits.cancelConfirm')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(locale.t('common.cancel'))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(locale.t('visits.cancelCta'))),
+        ],
+      ),
+    );
+    if (ok != true) return;
     setState(() => _actingId = visit.id);
     try {
-      await maresiApi.updateVisitRequestStatus(visit.id, 'payment_sent');
+      await maresiApi.updateVisitRequestStatus(visit.id, 'cancelled');
       if (!mounted) return;
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) setState(() => _actingId = null);
+    }
+  }
+
+  Future<void> _payStay(VisitRequest visit) async {
+    setState(() => _actingId = visit.id);
+    try {
+      final payment = await maresiApi.startReservationPayment(visit.id);
+      if (!mounted) return;
+      if (payment.checkoutUrl != null && payment.checkoutUrl!.isNotEmpty) {
+        await _openLink(payment.checkoutUrl!);
+        return;
+      }
       await _load();
     } catch (e) {
       if (!mounted) return;
@@ -125,34 +164,30 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
                                 ),
                                 if (visit.status == 'awaiting_payment') ...[
                                   const SizedBox(height: 8),
-                                  Text(locale.t('payments.payHostHint'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
+                                  Text(locale.t('payments.payMaresiHint'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
                                   const SizedBox(height: 12),
-                                  if (visit.wavePaymentUrl != null && visit.wavePaymentUrl!.isNotEmpty)
-                                    FilledButton(
-                                      onPressed: () => _openLink(visit.wavePaymentUrl!),
-                                      style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
-                                      child: Text(locale.t('payments.payWave')),
-                                    ),
-                                  if (visit.orangeMoneyUrl != null && visit.orangeMoneyUrl!.isNotEmpty) ...[
-                                    const SizedBox(height: 8),
-                                    OutlinedButton(
-                                      onPressed: () => _openLink(visit.orangeMoneyUrl!),
-                                      child: Text(locale.t('payments.payOrange')),
-                                    ),
-                                  ],
-                                  if ((visit.wavePaymentUrl == null || visit.wavePaymentUrl!.isEmpty) &&
-                                      (visit.orangeMoneyUrl == null || visit.orangeMoneyUrl!.isEmpty) &&
-                                      visit.ownerPhone != null) ...[
-                                    const SizedBox(height: 8),
-                                    Text('${locale.t('payments.callHost')}: ${visit.ownerPhone}'),
-                                  ],
-                                  const SizedBox(height: 8),
-                                  OutlinedButton(
-                                    onPressed: _actingId == visit.id ? null : () => _markPaid(visit),
+                                  FilledButton(
+                                    onPressed: _actingId == visit.id ? null : () => _payStay(visit),
+                                    style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
                                     child: Text(
                                       _actingId == visit.id
                                           ? locale.t('payments.paying')
-                                          : locale.t('payments.iPaidHost'),
+                                          : locale.t('payments.payReservation'),
+                                    ),
+                                  ),
+                                ],
+                                if (_canCancel(visit.status)) ...[
+                                  if (visit.status == 'confirmed' || visit.status == 'payment_sent') ...[
+                                    const SizedBox(height: 8),
+                                    Text(locale.t('visits.cancelPaidHint'), style: TextStyle(color: palette.textSecondary, fontSize: 12)),
+                                  ],
+                                  const SizedBox(height: 8),
+                                  OutlinedButton(
+                                    onPressed: _actingId == visit.id ? null : () => _cancelStay(visit),
+                                    child: Text(
+                                      _actingId == visit.id
+                                          ? locale.t('payments.paying')
+                                          : locale.t('visits.cancelCta'),
                                     ),
                                   ),
                                 ],

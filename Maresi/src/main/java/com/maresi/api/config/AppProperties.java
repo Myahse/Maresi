@@ -145,6 +145,7 @@ public class AppProperties {
     private String apiSecret = "";
     private String webhookSecret = "";
     private String baseUrl = "https://pay.genius.ci/api/v1/merchant";
+    private String payoutWalletId = "";
 
     public String getApiKey() {
       return apiKey;
@@ -177,11 +178,19 @@ public class AppProperties {
     public void setBaseUrl(String baseUrl) {
       this.baseUrl = baseUrl;
     }
+
+    public String getPayoutWalletId() {
+      return payoutWalletId;
+    }
+
+    public void setPayoutWalletId(String payoutWalletId) {
+      this.payoutWalletId = payoutWalletId;
+    }
   }
 
   public static class Payments {
     private long ownerSubscriptionFcfa = 10000;
-    private int reservationCommissionPercent = 10;
+    private int reservationCommissionPercent = 0;
     private String successUrl = "http://localhost:3000/payments/success";
     private String errorUrl = "http://localhost:3000/payments/error";
     private String hostSuccessUrl = "";

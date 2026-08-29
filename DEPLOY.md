@@ -15,7 +15,7 @@
 Production Postgres is [this Neon project](https://console.neon.tech/app/projects/green-resonance-11944400/branches/br-purple-surf-ayjhvuju/tables?database=neondb) (`green-resonance-11944400`, database **neondb**). Do not use the older `mute-base-31303142` project.
 
 1. SQL Editor → database **neondb** → run `Maresi/database/pgadmin-full-setup.sql`, then `Maresi/database/seed-demo.sql`.
-   If the database already has tables, also run `008_payment_refunded.sql`, `009_direct_host_pay.sql`, `010_host_wallet.sql`, and `011_push_subscriptions.sql`.
+   If the database already has tables, also run `008_payment_refunded.sql`, `009_direct_host_pay.sql`, `010_host_wallet.sql`, `011_push_subscriptions.sql`, `012_guest_pay_and_payout.sql`, and `013_visit_cancelled.sql`.
 2. **Connect** → copy the **pooled** string (`…-pooler…`, `/neondb`, `sslmode=require`).
 3. Set that as `DATABASE_URL` on Render (do not commit it). Then redeploy.
 
@@ -38,6 +38,7 @@ Demo logins (password `Password123!`): `client@maresi.app`, `owner@maresi.app`, 
 | `GENIUSPAY_API_KEY` | from GeniusPay |
 | `GENIUSPAY_API_SECRET` | from GeniusPay |
 | `GENIUSPAY_WEBHOOK_SECRET` | from GeniusPay |
+| `GENIUSPAY_PAYOUT_WALLET_ID` | GeniusPay payout wallet UUID (from `GET /wallets`, type `payout`) |
 | `PAYMENT_SUCCESS_URL` | Client Vercel: `https://YOUR-CLIENT-APP.vercel.app/payments/success` |
 | `PAYMENT_ERROR_URL` | Client Vercel: `https://YOUR-CLIENT-APP.vercel.app/payments/error` |
 | `PAYMENT_HOST_SUCCESS_URL` | Host Vercel: `https://YOUR-HOST-APP.vercel.app/payments/success` |

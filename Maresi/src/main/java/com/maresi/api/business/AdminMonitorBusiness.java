@@ -195,7 +195,18 @@ public class AdminMonitorBusiness {
     }
     if ("reservation".equals(type) && payment.get("visit_request_id") != null) {
       UUID visitId = UUID.fromString(payment.get("visit_request_id").toString());
-      visitRequests.updateStatusById(visitId, "awaiting_payment");
+      visitRequests.updateStatusById(visitId, "cancelled");
+      Map<String, Object> visit = visitRequests.findById(visitId).orElse(null);
+      if (visit != null && visit.get("property_owner_id") != null) {
+        BigDecimal take = toMoney(payment.get("amount"));
+        if (take != null && take.compareTo(BigDecimal.ZERO) > 0) {
+          UUID ownerId = UUID.fromString(visit.get("property_owner_id").toString());
+          BigDecimal available = take.min(wallets.balance(ownerId));
+          if (available.compareTo(BigDecimal.ZERO) > 0) {
+            wallets.tryDebit(ownerId, available, "stay", idOf(payment), visitId, "Remboursement sejour");
+          }
+        }
+      }
       notifications.create(
           userId, "payment", "Paiement rembourse", "Votre reservation a ete remboursee.", null);
       return;

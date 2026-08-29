@@ -11,6 +11,7 @@ import com.maresi.api.repository.VisitRequestRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -146,6 +147,9 @@ public class VisitRequestBusiness {
       return response;
     }
 
+    if ("cancelled".equals(status)) {
+      return guestCancel(id, current, user, locale);
+    }
     if ("payment_sent".equals(status)) {
       return guestMarkPaid(id, current, user, locale);
     }
@@ -180,8 +184,8 @@ public class VisitRequestBusiness {
       notifications.create(
           requesterId,
           "reservation",
-          "Paiement a l'hote",
-          "Votre demande a ete acceptee. Payez l'hote via Wave ou Orange Money.",
+          "Paiement Maresi",
+          "Votre demande a ete acceptee. Payez via GeniusPay. Le montant integral ira sur le portefeuille de l'hote.",
           listingId);
     } else {
       notifyVisitRequestStatusUpdated(requesterId, listingId, status);
@@ -190,6 +194,72 @@ public class VisitRequestBusiness {
     response.setItem(updated);
     response.setStatus(functionalError.success("Statut mis a jour", locale));
     return response;
+  }
+
+  private Response<Map<String, Object>> guestCancel(
+      UUID id, Map<String, Object> current, AuthUser user, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    if (!user.id().toString().equalsIgnoreCase(String.valueOf(current.get("user_id")))) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Action non autorisee", locale));
+      return response;
+    }
+    String currentStatus = String.valueOf(current.get("status"));
+    if ("cancelled".equals(currentStatus) || "declined".equals(currentStatus)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Cette reservation ne peut plus etre annulee", locale));
+      return response;
+    }
+    if (!List.of("pending", "awaiting_payment", "payment_sent", "confirmed").contains(currentStatus)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Cette reservation ne peut plus etre annulee", locale));
+      return response;
+    }
+    if ("confirmed".equals(currentStatus) || "payment_sent".equals(currentStatus)) {
+      if (stayHasStarted(current)) {
+        response.setHasError(true);
+        response.setStatus(
+            functionalError.invalidData("Le sejour a commence. L'annulation n'est plus possible.", locale));
+        return response;
+      }
+      String refundError = paymentBusiness.refundPaidStayOnCancel(current);
+      if (refundError != null) {
+        response.setHasError(true);
+        response.setStatus(functionalError.invalidData(refundError, locale));
+        return response;
+      }
+    } else {
+      payments.abandonPendingReservations(id);
+    }
+    Map<String, Object> updated = visitRequests.updateStatusById(id, "cancelled").orElse(current);
+    UUID listingId = UUID.fromString(updated.get("property_id").toString());
+    UUID ownerId =
+        current.get("property_owner_id") != null
+            ? UUID.fromString(current.get("property_owner_id").toString())
+            : null;
+    if (ownerId != null && !"confirmed".equals(currentStatus) && !"payment_sent".equals(currentStatus)) {
+      notifications.create(
+          ownerId,
+          "reservation",
+          "Reservation annulee",
+          "Le client a annule cette reservation.",
+          listingId);
+    }
+    realtime.publish("visit.status_changed", updated, user.id(), ownerId, true);
+    response.setItem(updated);
+    response.setStatus(functionalError.success("Reservation annulee", locale));
+    return response;
+  }
+
+  private static boolean stayHasStarted(Map<String, Object> visit) {
+    Object checkIn = visit.get("check_in");
+    if (checkIn == null) return false;
+    try {
+      LocalDate in = LocalDate.parse(String.valueOf(checkIn).substring(0, 10));
+      return !in.isAfter(LocalDate.now());
+    } catch (Exception e) {
+      return false;
+    }
   }
 
   private Response<Map<String, Object>> guestMarkPaid(
