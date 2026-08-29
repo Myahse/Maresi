@@ -185,7 +185,7 @@ public class VisitRequestBusiness {
           requesterId,
           "reservation",
           "Paiement Maresi",
-          "Votre demande a ete acceptee. Payez via GeniusPay. Le montant integral ira sur le portefeuille de l'hote.",
+          "Votre demande a ete acceptee. Payez via GeniusPay. L'hote recevra 90% sur son portefeuille. 10% restent a Maresi.",
           listingId);
     } else {
       notifyVisitRequestStatusUpdated(requesterId, listingId, status);

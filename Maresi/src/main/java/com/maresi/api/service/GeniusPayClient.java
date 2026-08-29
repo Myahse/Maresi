@@ -117,10 +117,19 @@ public class GeniusPayClient {
   }
 
   public boolean refundPayment(String reference) {
+    return refundPayment(reference, null);
+  }
+
+  public boolean refundPayment(String reference, BigDecimal amount) {
     if (reference == null || reference.isBlank()) return false;
     try {
       AppProperties.GeniusPay gp = requireKeys();
       String encoded = URLEncoder.encode(reference, StandardCharsets.UTF_8).replace("+", "%20");
+      Map<String, Object> body = new LinkedHashMap<>();
+      if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+        body.put("amount", amount);
+      }
+      String json = objectMapper.writeValueAsString(body);
       HttpRequest request =
           HttpRequest.newBuilder()
               .uri(URI.create(trimSlash(gp.getBaseUrl()) + "/payments/" + encoded + "/refund"))
@@ -128,7 +137,7 @@ public class GeniusPayClient {
               .header("Content-Type", "application/json")
               .header("X-API-Key", gp.getApiKey())
               .header("X-API-Secret", gp.getApiSecret())
-              .POST(HttpRequest.BodyPublishers.ofString("{}", StandardCharsets.UTF_8))
+              .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
               .build();
       HttpResponse<String> response =
           httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));

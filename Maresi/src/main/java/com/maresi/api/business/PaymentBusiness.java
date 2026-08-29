@@ -208,18 +208,21 @@ public class PaymentBusiness {
       response.setStatus(functionalError.invalidData("Montant minimum 200 XOF", locale));
       return response;
     }
+    BigDecimal commission = reservationCommission(amount);
+    BigDecimal ownerAmount = amount.subtract(commission);
     Map<String, Object> metadata = new HashMap<>();
     metadata.put("type", "reservation");
     metadata.put("user_id", user.id().toString());
     metadata.put("visit_request_id", visitId.toString());
+    metadata.put("commission_percent", props.getPayments().getReservationCommissionPercent());
     Map<String, Object> payment =
         payments.create(
             user.id(),
             "reservation",
             visitId,
             amount,
-            BigDecimal.ZERO,
-            amount,
+            commission,
+            ownerAmount,
             "XOF",
             "pending",
             null,
@@ -502,18 +505,17 @@ public class PaymentBusiness {
     Map<String, Object> payment = payments.findCompletedReservation(visitId).orElse(null);
     if (payment == null) return null;
 
-    BigDecimal amount = toMoney(payment.get("amount"));
-    if (amount == null) amount = toMoney(payment.get("owner_amount"));
+    BigDecimal refundAmount = stayOwnerShare(payment);
     UUID paymentId = uuid(payment.get("id"));
     UUID ownerId =
         visit.get("property_owner_id") == null
             ? null
             : UUID.fromString(visit.get("property_owner_id").toString());
 
-    if (ownerId != null && amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+    if (ownerId != null && refundAmount != null && refundAmount.compareTo(BigDecimal.ZERO) > 0) {
       Optional<Map<String, Object>> debit =
           wallets.tryDebit(
-              ownerId, amount, "stay", paymentId, visitId, "Annulation client");
+              ownerId, refundAmount, "stay", paymentId, visitId, "Annulation client");
       if (debit.isEmpty()) {
         return "L'hote a deja retire. Un remboursement automatique n'est plus possible. Contactez le support.";
       }
@@ -523,10 +525,12 @@ public class PaymentBusiness {
         payment.get("provider_reference") == null
             ? null
             : String.valueOf(payment.get("provider_reference"));
-    if (reference != null && !reference.isBlank() && !geniusPay.refundPayment(reference)) {
-      if (ownerId != null && amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+    if (reference != null
+        && !reference.isBlank()
+        && !geniusPay.refundPayment(reference, refundAmount)) {
+      if (ownerId != null && refundAmount != null && refundAmount.compareTo(BigDecimal.ZERO) > 0) {
         wallets.credit(
-            ownerId, amount, "stay", paymentId, visitId, "Annulation echouee, solde recrédité");
+            ownerId, refundAmount, "stay", paymentId, visitId, "Annulation echouee, solde recrédité");
       }
       return "Le remboursement GeniusPay a echoue. Reessayez dans un instant.";
     }
@@ -540,7 +544,7 @@ public class PaymentBusiness {
           guestId,
           "payment",
           "Reservation remboursee",
-          "Votre paiement a ete rembourse suite a l'annulation.",
+          "90% ont ete rembourses. La commission Maresi de 10% n'est pas remboursee.",
           propertyId);
     }
     if (ownerId != null) {
@@ -788,8 +792,7 @@ public class PaymentBusiness {
       UUID ownerId = null;
       if (visit != null && visit.get("property_owner_id") != null) {
         ownerId = UUID.fromString(visit.get("property_owner_id").toString());
-        BigDecimal stayAmount = toMoney(payment.get("amount"));
-        if (stayAmount == null) stayAmount = toMoney(payment.get("owner_amount"));
+        BigDecimal stayAmount = stayOwnerShare(payment);
         if (stayAmount != null && stayAmount.compareTo(BigDecimal.ZERO) > 0) {
           wallets.credit(
               ownerId,
@@ -797,7 +800,7 @@ public class PaymentBusiness {
               "stay",
               paymentId,
               visitId,
-              "Sejour paye par le client");
+              "Sejour paye par le client (90%)");
         }
         notifications.create(
             ownerId,
@@ -805,7 +808,7 @@ public class PaymentBusiness {
             "Paiement recu",
             "Le client a paye. "
                 + (stayAmount == null ? "" : stayAmount + " XOF")
-                + " ont ete ajoutes a votre portefeuille.",
+                + " (90%) ont ete ajoutes a votre portefeuille.",
             propertyId);
       }
       realtime.publish("payment.completed", payment, userId, ownerId, true);
@@ -841,8 +844,7 @@ public class PaymentBusiness {
       visitRequests.updateStatusById(visitId, "cancelled");
       Map<String, Object> visit = visitRequests.findById(visitId).orElse(null);
       if (visit != null && visit.get("property_owner_id") != null) {
-        BigDecimal take = toMoney(payment.get("amount"));
-        if (take == null) take = toMoney(payment.get("owner_amount"));
+        BigDecimal take = stayOwnerShare(payment);
         if (take != null && take.compareTo(BigDecimal.ZERO) > 0) {
           UUID ownerId = UUID.fromString(visit.get("property_owner_id").toString());
           BigDecimal available = take.min(wallets.balance(ownerId));
@@ -873,6 +875,24 @@ public class PaymentBusiness {
     if ("wallet".equals(String.valueOf(payment.get("provider")))) {
       creditWalletRefund(userId, payment);
     }
+  }
+
+  private BigDecimal reservationCommission(BigDecimal amount) {
+    if (amount == null) return BigDecimal.ZERO;
+    int percent = props.getPayments().getReservationCommissionPercent();
+    if (percent <= 0) return BigDecimal.ZERO;
+    return amount
+        .multiply(BigDecimal.valueOf(percent))
+        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+  }
+
+  private static BigDecimal stayOwnerShare(Map<String, Object> payment) {
+    BigDecimal owner = toMoney(payment.get("owner_amount"));
+    if (owner != null && owner.compareTo(BigDecimal.ZERO) > 0) return owner;
+    BigDecimal amount = toMoney(payment.get("amount"));
+    BigDecimal commission = toMoney(payment.get("commission_amount"));
+    if (amount != null && commission != null) return amount.subtract(commission).max(BigDecimal.ZERO);
+    return amount;
   }
 
   private BigDecimal computeReservationAmount(Map<String, Object> visit) {

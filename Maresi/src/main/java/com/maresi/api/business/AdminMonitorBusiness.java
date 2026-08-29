@@ -161,7 +161,7 @@ public class AdminMonitorBusiness {
       }
       String reference =
           payment.get("provider_reference") == null ? null : String.valueOf(payment.get("provider_reference"));
-      boolean providerOk = geniusPay.refundPayment(reference);
+      boolean providerOk = geniusPay.refundPayment(reference, stayOwnerShare(payment));
       Map<String, Object> refunded = payments.markRefunded(id).orElse(payment);
       applyRefundSideEffects(refunded);
       response.setItem(refunded);
@@ -198,7 +198,7 @@ public class AdminMonitorBusiness {
       visitRequests.updateStatusById(visitId, "cancelled");
       Map<String, Object> visit = visitRequests.findById(visitId).orElse(null);
       if (visit != null && visit.get("property_owner_id") != null) {
-        BigDecimal take = toMoney(payment.get("amount"));
+        BigDecimal take = stayOwnerShare(payment);
         if (take != null && take.compareTo(BigDecimal.ZERO) > 0) {
           UUID ownerId = UUID.fromString(visit.get("property_owner_id").toString());
           BigDecimal available = take.min(wallets.balance(ownerId));
@@ -240,6 +240,15 @@ public class AdminMonitorBusiness {
     } catch (Exception e) {
       return null;
     }
+  }
+
+  private static BigDecimal stayOwnerShare(Map<String, Object> payment) {
+    BigDecimal owner = toMoney(payment.get("owner_amount"));
+    if (owner != null && owner.compareTo(BigDecimal.ZERO) > 0) return owner;
+    BigDecimal amount = toMoney(payment.get("amount"));
+    BigDecimal commission = toMoney(payment.get("commission_amount"));
+    if (amount != null && commission != null) return amount.subtract(commission).max(BigDecimal.ZERO);
+    return amount;
   }
 
   private static BigDecimal toMoney(Object v) {

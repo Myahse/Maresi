@@ -344,7 +344,7 @@ class MockApiService implements MaresiApi {
     }
     final property = _findResidence(current.propertyId);
     final amount = property.price.toDouble();
-    final commission = 0.0;
+    final commission = amount * 0.1;
     _visitRequests[index] = VisitRequest(
       id: current.id,
       propertyId: current.propertyId,

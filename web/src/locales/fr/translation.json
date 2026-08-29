@@ -296,12 +296,12 @@
     },
     "cancelCta": "Annuler la réservation",
     "cancelConfirm": "Annuler cette réservation ?",
-    "cancelPaidHint": "Si vous avez déjà payé, le remboursement part vers vous et le montant est retiré du portefeuille de l'hôte, sauf s'il a déjà retiré."
+    "cancelPaidHint": "Si vous avez déjà payé, 90 % sont remboursés. La commission Maresi de 10 % n'est pas remboursée. Impossible si l'hôte a déjà retiré."
   },
   "payments": {
     "payHostAmount": "À payer",
     "payHostHint": "Ouvrez Wave ou Orange Money, puis indiquez que vous avez payé. L'hôte confirmera.",
-    "payMaresiHint": "Payez Maresi via GeniusPay. L'hôte reçoit le montant intégral sur son portefeuille, puis peut retirer.",
+    "payMaresiHint": "Payez Maresi via GeniusPay. L'hôte reçoit 90 % sur son portefeuille. 10 % restent à Maresi.",
     "payWave": "Payer avec Wave",
     "payOrange": "Payer avec Orange Money",
     "callHost": "Appeler l'hôte",

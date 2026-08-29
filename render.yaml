@@ -31,7 +31,7 @@ services:
       - key: OWNER_SUBSCRIPTION_FCFA
         value: "10000"
       - key: RESERVATION_COMMISSION_PERCENT
-        value: "0"
+        value: "10"
       - key: PAYMENT_SUCCESS_URL
         sync: false
       - key: PAYMENT_ERROR_URL

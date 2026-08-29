@@ -296,12 +296,12 @@
     },
     "cancelCta": "Cancel reservation",
     "cancelConfirm": "Cancel this reservation?",
-    "cancelPaidHint": "If you already paid, we refund you and take the amount back from the host wallet, unless they have already withdrawn."
+    "cancelPaidHint": "If you already paid, 90% is refunded. Maresi's 10% commission is not refunded. Not possible if the host has already withdrawn."
   },
   "payments": {
     "payHostAmount": "Amount due",
     "payHostHint": "Open Wave or Orange Money, then mark that you paid. The host will confirm.",
-    "payMaresiHint": "Pay Maresi via GeniusPay. The host receives the full amount in their wallet, then can withdraw.",
+    "payMaresiHint": "Pay Maresi via GeniusPay. The host receives 90% in their wallet. 10% stays with Maresi.",
     "payWave": "Pay with Wave",
     "payOrange": "Pay with Orange Money",
     "callHost": "Call the host",
