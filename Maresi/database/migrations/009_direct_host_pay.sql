@@ -10,6 +10,7 @@ ALTER TABLE visit_requests
   CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'payment_sent', 'confirmed'));
 
 ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_type_check;
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_type_checka;
 ALTER TABLE payments
   ADD CONSTRAINT payments_type_check
   CHECK (type IN ('subscription', 'reservation', 'commission'));

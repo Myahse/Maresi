@@ -8,6 +8,7 @@ import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
 import { Menu, X, Heart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HOST_APP_URL } from "@/lib/hostApp";
 
 const ALWAYS_VISIBLE_ROUTES = ["/properties"];
 
@@ -48,9 +49,15 @@ export function Header() {
             <Heart className="h-4 w-4" />
             {t("header.favorites")}
           </Link>
-          <Link to="/become-host" className={navLinkClass} onClick={() => setMenuOpen(false)}>
-            {t("header.becomeHost")}
-          </Link>
+          {user?.role === "owner" ? (
+            <a href={HOST_APP_URL} className={navLinkClass} onClick={() => setMenuOpen(false)}>
+              {t("header.openHostApp")}
+            </a>
+          ) : (
+            <Link to="/become-host" className={navLinkClass} onClick={() => setMenuOpen(false)}>
+              {t("header.becomeHost")}
+            </Link>
+          )}
         </>
       )}
     </>
@@ -82,13 +89,23 @@ export function Header() {
             <Heart className="h-4 w-4" />
             {t("header.favorites")}
           </Link>
-          <Link
-            to="/become-host"
-            className="text-sm font-semibold text-gray-700 hover:text-brand"
-            onClick={() => setMenuOpen(false)}
-          >
-            {t("header.becomeHost")}
-          </Link>
+          {user?.role === "owner" ? (
+            <a
+              href={HOST_APP_URL}
+              className="text-sm font-semibold text-gray-700 hover:text-brand"
+              onClick={() => setMenuOpen(false)}
+            >
+              {t("header.openHostApp")}
+            </a>
+          ) : (
+            <Link
+              to="/become-host"
+              className="text-sm font-semibold text-gray-700 hover:text-brand"
+              onClick={() => setMenuOpen(false)}
+            >
+              {t("header.becomeHost")}
+            </Link>
+          )}
         </>
       )}
     </>

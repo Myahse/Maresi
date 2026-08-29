@@ -1,6 +1,7 @@
 -- Host wallet: GeniusPay top-up, then Maresi debits commission / subscription.
 
 ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_type_check;
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_type_checka;
 ALTER TABLE payments
   ADD CONSTRAINT payments_type_check
   CHECK (type IN ('subscription', 'reservation', 'commission', 'wallet_topup'));

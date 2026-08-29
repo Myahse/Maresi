@@ -3,11 +3,13 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { Search, Heart, Calendar, Home, LayoutDashboard } from "lucide-react";
+import { openHostApp } from "@/lib/hostApp";
 
 export function RoleDashboardPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isOwner = user?.role === "owner";
 
   const cards = [
     {
@@ -33,10 +35,11 @@ export function RoleDashboardPage() {
     },
     {
       id: "host",
-      title: t("dashboard.cards.becomeHost"),
-      description: t("dashboard.cards.becomeHostDesc"),
+      title: isOwner ? t("dashboard.cards.openHost") : t("dashboard.cards.becomeHost"),
+      description: isOwner ? t("dashboard.cards.openHostDesc") : t("dashboard.cards.becomeHostDesc"),
       icon: Home,
       route: "/become-host",
+      external: isOwner,
     },
   ];
 
@@ -61,7 +64,7 @@ export function RoleDashboardPage() {
               title={card.title}
               description={card.description}
               icon={card.icon}
-              onClick={() => navigate(card.route)}
+              onClick={() => (card.external ? openHostApp() : navigate(card.route))}
             />
           ))}
         </div>

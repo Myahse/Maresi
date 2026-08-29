@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { useAuthModal } from "@/context/AuthModalContext";
+import { useAuth } from "@/hooks/useAuth";
+import { HOST_APP_URL } from "@/lib/hostApp";
 
 const SOCIAL = [
   {
@@ -19,6 +21,7 @@ const SOCIAL = [
 export function Footer() {
   const { t } = useTranslation();
   const { openRegister } = useAuthModal();
+  const { user } = useAuth();
   const year = new Date().getFullYear();
 
   const linkClass = "text-gray-200 hover:text-white transition-colors text-sm";
@@ -88,9 +91,15 @@ export function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <Link to="/become-host" className={linkClass}>
-                      {t("footer.serviceOwner")}
-                    </Link>
+                    {user?.role === "owner" ? (
+                      <a href={HOST_APP_URL} className={linkClass}>
+                        {t("header.openHostApp")}
+                      </a>
+                    ) : (
+                      <Link to="/become-host" className={linkClass}>
+                        {t("footer.serviceOwner")}
+                      </Link>
+                    )}
                   </li>
                 </ul>
               </div>

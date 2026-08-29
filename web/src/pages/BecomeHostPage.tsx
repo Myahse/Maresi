@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getMyHostApplication, submitHostApplication } from "@/services/api";
 import type { HostApplication } from "@/types";
-
-const HOST_APP_URL = import.meta.env.VITE_HOST_APP_URL ?? "http://localhost:3001";
+import { HOST_APP_URL, openHostApp } from "@/lib/hostApp";
 
 export function BecomeHostPage() {
   const { t } = useTranslation();
@@ -21,6 +20,12 @@ export function BecomeHostPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (user?.role === "owner") {
+      openHostApp();
+    }
+  }, [user?.role]);
 
   useEffect(() => {
     getMyHostApplication()

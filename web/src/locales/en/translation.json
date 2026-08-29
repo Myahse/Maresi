@@ -50,7 +50,8 @@
     "login": "Login",
     "register": "Register",
     "dashboard": "Dashboard",
-    "becomeHost": "Become a host"
+    "becomeHost": "Become a host",
+    "openHostApp": "Open host app"
   },
   "footer": {
     "copyright": "© {{year}} Maresi. All rights reserved.",
@@ -147,7 +148,9 @@
       "subscription": "Subscription",
       "subscriptionDesc": "Activate your owner plan to publish listings",
       "becomeHost": "Become a host",
-      "becomeHostDesc": "Apply to list residences on Maresi"
+      "becomeHostDesc": "Apply to list residences on Maresi",
+      "openHost": "Host app",
+      "openHostDesc": "Manage listings, bookings, and your wallet"
     }
   },
   "wizard": {
