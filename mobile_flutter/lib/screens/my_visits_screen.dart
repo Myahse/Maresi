@@ -17,7 +17,7 @@ class MyVisitsScreen extends StatefulWidget {
 class _MyVisitsScreenState extends State<MyVisitsScreen> {
   List<VisitRequest> _visits = [];
   bool _loading = true;
-  String? _payingId;
+  String? _actingId;
   String? _error;
 
   @override
@@ -47,27 +47,24 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
     }
   }
 
-  Future<void> _pay(VisitRequest visit) async {
-    setState(() => _payingId = visit.id);
+  Future<void> _openLink(String url) async {
+    final uri = Uri.parse(url);
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _markPaid(VisitRequest visit) async {
+    setState(() => _actingId = visit.id);
     try {
-      final payment = await maresiApi.startReservationPayment(visit.id);
+      await maresiApi.updateVisitRequestStatus(visit.id, 'payment_sent');
       if (!mounted) return;
-      if (payment.checkoutUrl != null && payment.checkoutUrl!.isNotEmpty) {
-        final uri = Uri.parse(payment.checkoutUrl!);
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.read<LocaleProvider>().t('payments.successSnack'))),
-        );
-        await _load();
-      }
+      await _load();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
     } finally {
-      if (mounted) setState(() => _payingId = null);
+      if (mounted) setState(() => _actingId = null);
     }
   }
 
@@ -127,14 +124,35 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
                                   style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
                                 ),
                                 if (visit.status == 'awaiting_payment') ...[
+                                  const SizedBox(height: 8),
+                                  Text(locale.t('payments.payHostHint'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
                                   const SizedBox(height: 12),
-                                  FilledButton(
-                                    onPressed: _payingId == visit.id ? null : () => _pay(visit),
-                                    style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                                  if (visit.wavePaymentUrl != null && visit.wavePaymentUrl!.isNotEmpty)
+                                    FilledButton(
+                                      onPressed: () => _openLink(visit.wavePaymentUrl!),
+                                      style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                                      child: Text(locale.t('payments.payWave')),
+                                    ),
+                                  if (visit.orangeMoneyUrl != null && visit.orangeMoneyUrl!.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    OutlinedButton(
+                                      onPressed: () => _openLink(visit.orangeMoneyUrl!),
+                                      child: Text(locale.t('payments.payOrange')),
+                                    ),
+                                  ],
+                                  if ((visit.wavePaymentUrl == null || visit.wavePaymentUrl!.isEmpty) &&
+                                      (visit.orangeMoneyUrl == null || visit.orangeMoneyUrl!.isEmpty) &&
+                                      visit.ownerPhone != null) ...[
+                                    const SizedBox(height: 8),
+                                    Text('${locale.t('payments.callHost')}: ${visit.ownerPhone}'),
+                                  ],
+                                  const SizedBox(height: 8),
+                                  OutlinedButton(
+                                    onPressed: _actingId == visit.id ? null : () => _markPaid(visit),
                                     child: Text(
-                                      _payingId == visit.id
+                                      _actingId == visit.id
                                           ? locale.t('payments.paying')
-                                          : locale.t('payments.payReservation'),
+                                          : locale.t('payments.iPaidHost'),
                                     ),
                                   ),
                                 ],

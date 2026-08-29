@@ -10,6 +10,7 @@ import { AdminUsersPage } from "@/pages/AdminUsersPage";
 import { AdminPaymentsPage } from "@/pages/AdminPaymentsPage";
 import { AdminSubscriptionsPage } from "@/pages/AdminSubscriptionsPage";
 import { AppSplash } from "@/components/layout/AppSplash";
+import { PushPrompt } from "@/components/realtime/PushPrompt";
 
 function AdminPage({ children }: { children: ReactNode }) {
   return <ProtectedRoute roles={["admin"]}>{children}</ProtectedRoute>;
@@ -19,6 +20,7 @@ function App() {
   return (
     <>
       <AppSplash />
+      <PushPrompt app="admin" />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<MainLayout />}>

@@ -32,6 +32,15 @@ public class PaymentService {
     return paymentBusiness.startReservationPayment(request, locale);
   }
 
+  public Response<Map<String, Object>> startCommissionSettlement(Locale locale) {
+    return paymentBusiness.startCommissionSettlement(locale);
+  }
+
+  public Response<Map<String, Object>> startWalletTopup(
+      Request<Map<String, Object>> request, Locale locale) {
+    return paymentBusiness.startWalletTopup(request, locale);
+  }
+
   public Response<Map<String, Object>> confirmByReference(
       Request<Map<String, Object>> request, Locale locale) {
     return paymentBusiness.confirmByReference(request, locale);

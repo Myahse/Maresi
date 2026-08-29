@@ -26,7 +26,7 @@ export function OwnerVisitsPage() {
     load();
   }, []);
 
-  const handleStatus = async (id: string, status: "accepted" | "declined", note?: string) => {
+  const handleStatus = async (id: string, status: "accepted" | "declined" | "confirmed", note?: string) => {
     setActingId(id);
     try {
       const updated = await updateVisitRequestStatus(id, status, note);
@@ -41,7 +41,8 @@ export function OwnerVisitsPage() {
   };
 
   const pending = visits.filter((v) => v.status === "pending");
-  const resolved = visits.filter((v) => v.status !== "pending");
+  const toConfirm = visits.filter((v) => v.status === "payment_sent");
+  const resolved = visits.filter((v) => v.status !== "pending" && v.status !== "payment_sent");
 
   return (
     <div className="font-jakarta container mx-auto px-4 py-8 max-w-3xl">
@@ -106,6 +107,26 @@ export function OwnerVisitsPage() {
                       </Button>
                     </div>
                   )}
+                </VisitRequestCard>
+              ))}
+            </section>
+          )}
+
+          {toConfirm.length > 0 && (
+            <section className="space-y-4">
+              <h2 className="font-semibold text-gray-900">
+                {t("owner.confirmReceiptTitle")} ({toConfirm.length})
+              </h2>
+              {toConfirm.map((v) => (
+                <VisitRequestCard key={v.id} visit={v} showRequester>
+                  <Button
+                    size="sm"
+                    className="rounded-full bg-brand hover:bg-brand-dark"
+                    disabled={actingId === v.id}
+                    onClick={() => void handleStatus(v.id, "confirmed")}
+                  >
+                    {t("owner.confirmReceipt")}
+                  </Button>
                 </VisitRequestCard>
               ))}
             </section>

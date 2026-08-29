@@ -39,9 +39,11 @@ public class PropertyService {
       String location,
       String propertyType,
       List<MultipartFile> images,
+      Map<String, Object> extras,
       String baseUrl,
       Locale locale) {
-    return propertyBusiness.create(title, description, price, location, propertyType, images, baseUrl, locale);
+    return propertyBusiness.create(
+        title, description, price, location, propertyType, images, extras, baseUrl, locale);
   }
 
   public Response<Map<String, Object>> update(

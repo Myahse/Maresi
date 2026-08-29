@@ -29,6 +29,8 @@ export interface Property {
   rating_count?: number;
   bedrooms?: number;
   max_guests?: number;
+  wave_payment_url?: string;
+  orange_money_url?: string;
 }
 
 export interface VisitRequestPayload {
@@ -36,8 +38,8 @@ export interface VisitRequestPayload {
   message?: string;
   check_in: string;
   check_out: string;
-  visit_date: string;
-  visit_time: string;
+  visit_date?: string;
+  visit_time?: string;
   guests_count: number;
   contact_phone: string;
   id_card: string;
@@ -59,6 +61,7 @@ export type VisitRequestStatus =
   | "accepted"
   | "declined"
   | "awaiting_payment"
+  | "payment_sent"
   | "confirmed";
 
 export interface VisitRequest {
@@ -81,12 +84,16 @@ export interface VisitRequest {
   requester_name?: string;
   requester_email?: string;
   owner_note?: string;
+  property_price?: number;
+  wave_payment_url?: string;
+  orange_money_url?: string;
+  owner_phone?: string;
 }
 
 export interface Payment {
   id: string;
   user_id: string;
-  type: "subscription" | "reservation";
+  type: "subscription" | "reservation" | "commission";
   visit_request_id?: string;
   amount: number;
   commission_amount: number;

@@ -12,6 +12,7 @@ export default defineConfig({
         "favicon.svg",
         "logo-mark.svg",
         "apple-touch-icon.png",
+        "push-handler.js",
       ],
       manifest: {
         name: "Maresi Host",
@@ -47,6 +48,7 @@ export default defineConfig({
       workbox: {
         navigateFallback: "/index.html",
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webp}"],
+        importScripts: ["/push-handler.js"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

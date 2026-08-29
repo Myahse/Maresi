@@ -31,6 +31,7 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
 
   String? _checkIn;
   String? _checkOut;
+  bool _includeVisit = false;
   String? _visitDate;
   String _visitTime = '10:00';
   final _guestsController = TextEditingController(text: '2');
@@ -97,6 +98,7 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
         if (_checkOut!.compareTo(_checkIn!) <= 0) return locale.t('reserve.errorCheckOutAfter');
         return null;
       case 1:
+        if (!_includeVisit) return null;
         if (_visitDate == null) return locale.t('reserve.errorVisitDate');
         if (!_isFutureDate(_visitDate)) return locale.t('reserve.errorVisitFuture');
         if (_visitTime.isEmpty) return locale.t('reserve.errorVisitTime');
@@ -145,8 +147,8 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
           propertyId: widget.property.id,
           checkIn: _checkIn!,
           checkOut: _checkOut!,
-          visitDate: _visitDate!,
-          visitTime: _visitTime,
+          visitDate: _includeVisit ? _visitDate : null,
+          visitTime: _includeVisit ? _visitTime : null,
           guestsCount: int.parse(_guestsController.text.trim()),
           contactPhone: _phoneController.text.trim(),
           idCard: _idCardController.text.trim(),
@@ -302,7 +304,14 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
           title: locale.t('reserve.visitTitle'),
           subtitle: locale.t('reserve.visitHint'),
         ),
-        const SizedBox(height: 20),
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          value: _includeVisit,
+          onChanged: _loading ? null : (v) => setState(() => _includeVisit = v ?? false),
+          title: Text(locale.t('reserve.addVisit')),
+        ),
+        if (_includeVisit) ...[
+        const SizedBox(height: 8),
         _DateField(
           label: locale.t('reserve.visitDate'),
           value: _visitDate,
@@ -322,6 +331,7 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
             onChanged: _loading ? null : (v) => setState(() => _visitTime = v ?? _visitTime),
           ),
         ),
+        ],
       ],
     );
   }
@@ -389,7 +399,10 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
         const SizedBox(height: 16),
         _ReviewRow(label: locale.t('reserve.residence'), value: widget.property.title),
         _ReviewRow(label: locale.t('reserve.stay'), value: '$_checkIn → $_checkOut'),
-        _ReviewRow(label: locale.t('reserve.visitSlot'), value: '$_visitDate · $_visitTime'),
+        _ReviewRow(
+          label: locale.t('reserve.visitSlot'),
+          value: _includeVisit ? '$_visitDate · $_visitTime' : locale.t('reserve.visitSkipped'),
+        ),
         _ReviewRow(label: locale.t('reserve.guests'), value: _guestsController.text.trim()),
         _ReviewRow(label: locale.t('reserve.phone'), value: _phoneController.text.trim()),
         _ReviewRow(label: locale.t('reserve.idCard'), value: _idCardController.text.trim()),

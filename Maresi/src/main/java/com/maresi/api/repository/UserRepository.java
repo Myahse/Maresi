@@ -1,5 +1,6 @@
 package com.maresi.api.repository;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -74,6 +75,13 @@ public class UserRepository {
         fullName,
         role,
         phone);
+  }
+
+  public List<UUID> findIdsByRole(String role) {
+    return jdbc.query(
+        "SELECT id FROM users WHERE role = ?",
+        (rs, rowNum) -> (UUID) rs.getObject("id"),
+        role);
   }
 
   public Optional<Map<String, Object>> updateRole(UUID id, String role) {

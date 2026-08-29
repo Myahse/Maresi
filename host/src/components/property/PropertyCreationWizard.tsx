@@ -39,6 +39,8 @@ export function PropertyCreationWizard({
   const [bedrooms, setBedrooms] = useState(initial?.bedrooms?.toString() ?? "1");
   const [max_guests, setMaxGuests] = useState(initial?.max_guests?.toString() ?? "2");
   const [virtual_tour_url, setVirtualTourUrl] = useState(initial?.virtual_tour_url ?? "");
+  const [wave_payment_url, setWavePaymentUrl] = useState(initial?.wave_payment_url ?? "");
+  const [orange_money_url, setOrangeMoneyUrl] = useState(initial?.orange_money_url ?? "");
   const [images, setImages] = useState<File[]>([]);
 
   const steps = [
@@ -63,6 +65,8 @@ export function PropertyCreationWizard({
         if (!isValidPrice(price)) return t("wizard.property.errors.price");
         if (!bedrooms || Number(bedrooms) < 1) return t("wizard.property.errors.bedrooms");
         if (!max_guests || Number(max_guests) < 1) return t("wizard.property.errors.guests");
+        if (wave_payment_url.trim() && !isValidUrl(wave_payment_url)) return t("wizard.property.errors.url");
+        if (orange_money_url.trim() && !isValidUrl(orange_money_url)) return t("wizard.property.errors.url");
         return null;
       case 3:
         if (!hasMinPropertyPhotos(images)) {
@@ -112,6 +116,8 @@ export function PropertyCreationWizard({
     formData.set("bedrooms", bedrooms);
     formData.set("max_guests", max_guests);
     if (virtual_tour_url.trim()) formData.set("virtual_tour_url", virtual_tour_url.trim());
+    if (wave_payment_url.trim()) formData.set("wave_payment_url", wave_payment_url.trim());
+    if (orange_money_url.trim()) formData.set("orange_money_url", orange_money_url.trim());
     images.forEach((f) => formData.append("images", f));
     try {
       await onSubmit(formData);
@@ -233,6 +239,27 @@ export function PropertyCreationWizard({
                 onChange={(e) => setMaxGuests(e.target.value)}
               />
             </div>
+          </div>
+          <p className="text-sm text-gray-600">{t("wizard.property.payHostHint")}</p>
+          <div className="space-y-2">
+            <Label htmlFor="wave">{t("wizard.property.waveUrl")}</Label>
+            <Input
+              id="wave"
+              type="url"
+              placeholder="https://pay.wave.com/..."
+              value={wave_payment_url}
+              onChange={(e) => setWavePaymentUrl(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="om">{t("wizard.property.orangeUrl")}</Label>
+            <Input
+              id="om"
+              type="url"
+              placeholder="https://..."
+              value={orange_money_url}
+              onChange={(e) => setOrangeMoneyUrl(e.target.value)}
+            />
           </div>
         </div>
       )}

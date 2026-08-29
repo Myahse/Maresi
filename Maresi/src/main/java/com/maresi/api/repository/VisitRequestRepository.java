@@ -52,9 +52,11 @@ public class VisitRequestRepository {
     return jdbc.query(
             """
             SELECT vr.*, p.title AS property_title, p.location, p.price AS property_price,
-                   p.owner_id AS property_owner_id
+                   p.owner_id AS property_owner_id, p.wave_payment_url, p.orange_money_url,
+                   u.phone AS owner_phone
             FROM visit_requests vr
             JOIN properties p ON vr.property_id = p.id
+            JOIN users u ON p.owner_id = u.id
             WHERE vr.id = ?
             """,
             (rs, rowNum) -> {
@@ -74,9 +76,12 @@ public class VisitRequestRepository {
   public List<Map<String, Object>> findByUser(UUID userId) {
     return jdbc.query(
         """
-        SELECT vr.*, p.title AS property_title, p.location
+        SELECT vr.*, p.title AS property_title, p.location, p.price AS property_price,
+               p.owner_id AS property_owner_id, p.wave_payment_url, p.orange_money_url,
+               u.phone AS owner_phone
         FROM visit_requests vr
         JOIN properties p ON vr.property_id = p.id
+        JOIN users u ON p.owner_id = u.id
         WHERE vr.user_id = ?
         ORDER BY vr.requested_at DESC
         """,

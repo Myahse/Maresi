@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ const TIME_SLOTS = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00
 export function ReservationPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { requireAuth } = useAuthModal();
@@ -33,6 +34,7 @@ export function ReservationPage() {
 
   const [check_in, setCheckIn] = useState("");
   const [check_out, setCheckOut] = useState("");
+  const [includeVisit, setIncludeVisit] = useState(searchParams.get("visit") === "1");
   const [visit_date, setVisitDate] = useState("");
   const [visit_time, setVisitTime] = useState("10:00");
   const [guests_count, setGuestsCount] = useState("2");
@@ -69,6 +71,7 @@ export function ReservationPage() {
         if (!isValidDateRange(check_in, check_out)) return t("wizard.reserve.errors.checkOutAfter");
         return null;
       case 1:
+        if (!includeVisit) return null;
         if (!visit_date) return t("wizard.reserve.errors.visitDate");
         if (!isFutureDate(visit_date)) return t("wizard.reserve.errors.visitFuture");
         if (!visit_time) return t("wizard.reserve.errors.visitTime");
@@ -117,8 +120,8 @@ export function ReservationPage() {
           propertyId: id,
           check_in,
           check_out,
-          visit_date,
-          visit_time,
+          visit_date: includeVisit ? visit_date : undefined,
+          visit_time: includeVisit ? visit_time : undefined,
           guests_count: Number(guests_count),
           contact_phone: contact_phone.trim(),
           id_card: id_card.trim(),
@@ -205,6 +208,16 @@ export function ReservationPage() {
         <div className="space-y-4">
           <h2 className="font-bold text-gray-900">{t("wizard.reserve.visitTitle")}</h2>
           <p className="text-sm text-gray-600">{t("wizard.reserve.visitHint")}</p>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-800">
+            <input
+              type="checkbox"
+              checked={includeVisit}
+              onChange={(e) => setIncludeVisit(e.target.checked)}
+            />
+            {t("wizard.reserve.addVisit")}
+          </label>
+          {includeVisit && (
+          <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="visit_date">{t("wizard.reserve.visitDate")} *</Label>
             <Input
@@ -224,6 +237,8 @@ export function ReservationPage() {
               ))}
             </Select>
           </div>
+          </div>
+          )}
         </div>
       )}
 
@@ -294,7 +309,7 @@ export function ReservationPage() {
             <div className="p-4">
               <dt className="text-gray-500">{t("wizard.reserve.visitSlot")}</dt>
               <dd className="font-semibold">
-                {visit_date} · {visit_time}
+                {includeVisit ? `${visit_date} · ${visit_time}` : t("wizard.reserve.visitSkipped")}
               </dd>
             </div>
             <div className="p-4 flex justify-between">

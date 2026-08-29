@@ -209,6 +209,14 @@ export function startSubscriptionPayment() {
   return api.post<import("@/types").Payment>(`/payments/subscription`, {});
 }
 
+export function startCommissionSettlement() {
+  return api.post<import("@/types").Payment>(`/payments/commission`, {});
+}
+
+export function startWalletTopup(amount: number) {
+  return api.post<import("@/types").Payment>(`/payments/wallet-topup`, { amount });
+}
+
 export function startReservationPayment(visitRequestId: string) {
   return api.post<import("@/types").Payment>(`/payments/reservation`, { visitRequestId });
 }
@@ -232,6 +240,18 @@ export function submitHostApplication(payload: {
     message: payload.message,
     id_card: payload.id_card,
   });
+}
+
+export function getVapidPublicKey() {
+  return api.get<{ public_key: string }>(`/push/vapid`);
+}
+
+export function subscribePush(payload: {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+  app: "web" | "host" | "admin";
+}) {
+  return api.post<{ id: string }>(`/push/subscribe`, payload);
 }
 
 export function getMyHostApplication() {

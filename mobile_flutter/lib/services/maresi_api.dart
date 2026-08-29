@@ -50,6 +50,8 @@ abstract class MaresiApi {
 
   Future<List<VisitRequest>> listMyVisitRequests();
 
+  Future<VisitRequest> updateVisitRequestStatus(String id, String status);
+
   Future<OwnerSubscription> getMySubscription();
 
   Future<Payment> startSubscriptionPayment();

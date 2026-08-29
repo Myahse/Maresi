@@ -30,6 +30,13 @@
     "creatingAccount": "Création du compte...",
     "user": "vous"
   },
+  "push": {
+    "title": "Activer les notifications",
+    "body": "Recevez une alerte pour les réservations et paiements, même si l’app est fermée.",
+    "enable": "Activer",
+    "later": "Plus tard",
+    "iosInstall": "Sur iPhone, ajoutez Maresi à l’écran d’accueil (Partager → Sur l’écran d’accueil), puis rouvrez l’app pour activer les notifications."
+  },
   "propertyTypes": {
     "apartment": "Appartement",
     "house": "Maison",
@@ -199,7 +206,9 @@
       "checkIn": "Arrivée",
       "checkOut": "Départ",
       "visitTitle": "Planifier une visite",
-      "visitHint": "Date et heure pour visiter le bien.",
+      "visitHint": "Optionnel. Vous pouvez réserver sans visiter.",
+      "addVisit": "Ajouter une visite sur place",
+      "visitSkipped": "Pas de visite",
       "visitDate": "Date de visite",
       "visitTime": "Heure souhaitée",
       "visitSlot": "Visite",
@@ -277,11 +286,18 @@
       "pending": "En attente",
       "accepted": "Acceptée",
       "declined": "Refusée",
-      "awaiting_payment": "Paiement requis",
+      "awaiting_payment": "Paiement à l'hôte",
+      "payment_sent": "Paiement déclaré",
       "confirmed": "Confirmée"
     }
   },
   "payments": {
+    "payHostAmount": "À payer à l'hôte",
+    "payHostHint": "Ouvrez Wave ou Orange Money, puis indiquez que vous avez payé. L'hôte confirmera.",
+    "payWave": "Payer avec Wave",
+    "payOrange": "Payer avec Orange Money",
+    "callHost": "Appeler l'hôte",
+    "iPaidHost": "J'ai payé l'hôte",
     "payReservation": "Payer ma réservation",
     "payFailed": "Échec du paiement",
     "loadFailed": "Impossible de charger l'abonnement",

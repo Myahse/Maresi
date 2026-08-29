@@ -12,3 +12,8 @@ maresi.dev-auth-bypass=false
 
 maresi.jwt.secret=change-this-in-production
 maresi.jwt.expires-in=7d
+
+# Web Push (npx web-push generate-vapid-keys)
+# maresi.push.vapid-public-key=
+# maresi.push.vapid-private-key=
+# maresi.push.subject=mailto:hello@maresi.app

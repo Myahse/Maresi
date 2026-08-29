@@ -59,9 +59,11 @@ export function PropertyDetailsPage() {
     });
   };
 
-  const handleReserve = () => {
+  const handleReserve = (withVisit = false) => {
     if (!id) return;
-    requireAuth(() => navigate(`/properties/${id}/reserve`));
+    requireAuth(() =>
+      navigate(withVisit ? `/properties/${id}/reserve?visit=1` : `/properties/${id}/reserve`)
+    );
   };
 
   if (loading) return <div className="container mx-auto px-4 py-8">{t("common.loading")}</div>;
@@ -173,8 +175,15 @@ export function PropertyDetailsPage() {
               <p className="text-xs text-gray-600 mt-1">{t("propertyDetails.reserveHint")}</p>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full rounded-full bg-brand hover:bg-brand-dark" onClick={handleReserve}>
+              <Button className="w-full rounded-full bg-brand hover:bg-brand-dark" onClick={() => handleReserve(false)}>
                 {t("propertyDetails.startReservation")}
+              </Button>
+              <Button
+                className="w-full rounded-full"
+                variant="outline"
+                onClick={() => handleReserve(true)}
+              >
+                {t("propertyDetails.requestVisit")}
               </Button>
               <button
                 type="button"

@@ -68,12 +68,23 @@ public class PropertyController {
       @RequestParam BigDecimal price,
       @RequestParam String location,
       @RequestParam(name = "property_type") String propertyType,
+      @RequestParam(required = false) BigDecimal latitude,
+      @RequestParam(required = false) BigDecimal longitude,
+      @RequestParam(required = false) Integer bedrooms,
+      @RequestParam(name = "max_guests", required = false) Integer maxGuests,
+      @RequestParam(name = "virtual_tour_url", required = false) String virtualTourUrl,
+      @RequestParam(name = "wave_payment_url", required = false) String wavePaymentUrl,
+      @RequestParam(name = "orange_money_url", required = false) String orangeMoneyUrl,
       @RequestPart(name = "images", required = false) List<MultipartFile> images,
       Locale locale) {
     Locale loc = ControllerSupport.locale(locale);
     String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+    Map<String, Object> extras = extraFields(
+        latitude, longitude, bedrooms, maxGuests, virtualTourUrl, wavePaymentUrl, orangeMoneyUrl);
     return ControllerSupport.runCreated(
-        () -> propertyService.create(title, description, price, location, propertyType, images, baseUrl, loc),
+        () ->
+            propertyService.create(
+                title, description, price, location, propertyType, images, extras, baseUrl, loc),
         loc,
         exceptionUtils);
   }
@@ -105,6 +116,13 @@ public class PropertyController {
       @RequestParam(required = false) String location,
       @RequestParam(name = "property_type", required = false) String propertyType,
       @RequestParam(required = false) Boolean is_active,
+      @RequestParam(required = false) BigDecimal latitude,
+      @RequestParam(required = false) BigDecimal longitude,
+      @RequestParam(required = false) Integer bedrooms,
+      @RequestParam(name = "max_guests", required = false) Integer maxGuests,
+      @RequestParam(name = "virtual_tour_url", required = false) String virtualTourUrl,
+      @RequestParam(name = "wave_payment_url", required = false) String wavePaymentUrl,
+      @RequestParam(name = "orange_money_url", required = false) String orangeMoneyUrl,
       @RequestPart(name = "images", required = false) List<MultipartFile> images,
       Locale locale) {
     Locale loc = ControllerSupport.locale(locale);
@@ -115,6 +133,8 @@ public class PropertyController {
     if (location != null) data.put("location", location);
     if (propertyType != null) data.put("property_type", propertyType);
     if (is_active != null) data.put("is_active", is_active);
+    data.putAll(
+        extraFields(latitude, longitude, bedrooms, maxGuests, virtualTourUrl, wavePaymentUrl, orangeMoneyUrl));
     String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
     return ControllerSupport.run(
         () -> propertyService.update(id, data, images, baseUrl, loc), loc, exceptionUtils);
@@ -125,5 +145,24 @@ public class PropertyController {
   public ResponseEntity<Response<Map<String, Object>>> remove(@PathVariable UUID id, Locale locale) {
     Locale loc = ControllerSupport.locale(locale);
     return ControllerSupport.run(() -> propertyService.remove(id, loc), loc, exceptionUtils);
+  }
+
+  private static Map<String, Object> extraFields(
+      BigDecimal latitude,
+      BigDecimal longitude,
+      Integer bedrooms,
+      Integer maxGuests,
+      String virtualTourUrl,
+      String wavePaymentUrl,
+      String orangeMoneyUrl) {
+    Map<String, Object> extras = new HashMap<>();
+    if (latitude != null) extras.put("latitude", latitude);
+    if (longitude != null) extras.put("longitude", longitude);
+    if (bedrooms != null) extras.put("bedrooms", bedrooms);
+    if (maxGuests != null) extras.put("max_guests", maxGuests);
+    if (virtualTourUrl != null && !virtualTourUrl.isBlank()) extras.put("virtual_tour_url", virtualTourUrl);
+    if (wavePaymentUrl != null && !wavePaymentUrl.isBlank()) extras.put("wave_payment_url", wavePaymentUrl);
+    if (orangeMoneyUrl != null && !orangeMoneyUrl.isBlank()) extras.put("orange_money_url", orangeMoneyUrl);
+    return extras;
   }
 }

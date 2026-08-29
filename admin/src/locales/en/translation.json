@@ -30,6 +30,13 @@
     "creatingAccount": "Creating account...",
     "user": "there"
   },
+  "push": {
+    "title": "Enable notifications",
+    "body": "Get alerts for bookings and payments even when the app is closed.",
+    "enable": "Enable",
+    "later": "Later",
+    "iosInstall": "On iPhone, add Maresi to the Home Screen (Share → Add to Home Screen), then open the app to enable notifications."
+  },
   "propertyTypes": {
     "apartment": "Apartment",
     "house": "House",

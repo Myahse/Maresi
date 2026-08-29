@@ -1,15 +1,26 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getMyVisitRequests, startReservationPayment } from "@/services/api";
+import { getMyVisitRequests, updateVisitRequestStatus } from "@/services/api";
 import { VisitRequestCard } from "@/components/visit/VisitRequestCard";
 import { Button } from "@/components/ui/button";
+import { usePriceFormatter } from "@/context/CurrencyContext";
 import type { VisitRequest } from "@/types";
+
+function stayAmount(visit: VisitRequest): number {
+  const unit = Number(visit.property_price ?? 0);
+  if (!visit.check_in || !visit.check_out) return unit;
+  const inDate = new Date(visit.check_in);
+  const outDate = new Date(visit.check_out);
+  const nights = Math.max(1, Math.round((outDate.getTime() - inDate.getTime()) / 86400000));
+  return unit * nights;
+}
 
 export function VisitRequestsPage() {
   const { t } = useTranslation();
+  const { formatPrice } = usePriceFormatter();
   const [visits, setVisits] = useState<VisitRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [payingId, setPayingId] = useState<string | null>(null);
+  const [actingId, setActingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const reload = () =>
@@ -22,20 +33,16 @@ export function VisitRequestsPage() {
     reload();
   }, []);
 
-  const handlePay = async (visitId: string) => {
-    setPayingId(visitId);
+  const markPaid = async (visitId: string) => {
+    setActingId(visitId);
     setError("");
     try {
-      const payment = await startReservationPayment(visitId);
-      if (payment.checkout_url) {
-        window.location.href = payment.checkout_url;
-        return;
-      }
+      await updateVisitRequestStatus(visitId, "payment_sent");
       await reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : t("payments.payFailed"));
     } finally {
-      setPayingId(null);
+      setActingId(null);
     }
   };
 
@@ -55,13 +62,41 @@ export function VisitRequestsPage() {
             <li key={v.id}>
               <VisitRequestCard visit={v}>
                 {v.status === "awaiting_payment" && (
-                  <Button
-                    className="w-full rounded-full bg-brand hover:bg-brand-dark"
-                    disabled={payingId === v.id}
-                    onClick={() => handlePay(v.id)}
-                  >
-                    {payingId === v.id ? t("common.saving") : t("payments.payReservation")}
-                  </Button>
+                  <div className="space-y-3 pt-2 border-t border-gray-100">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {t("payments.payHostAmount")}: {formatPrice(stayAmount(v))}
+                    </p>
+                    <p className="text-xs text-gray-600">{t("payments.payHostHint")}</p>
+                    <div className="flex flex-col gap-2">
+                      {v.wave_payment_url && (
+                        <Button asChild className="rounded-full bg-brand hover:bg-brand-dark">
+                          <a href={v.wave_payment_url} target="_blank" rel="noreferrer">
+                            {t("payments.payWave")}
+                          </a>
+                        </Button>
+                      )}
+                      {v.orange_money_url && (
+                        <Button asChild variant="outline" className="rounded-full">
+                          <a href={v.orange_money_url} target="_blank" rel="noreferrer">
+                            {t("payments.payOrange")}
+                          </a>
+                        </Button>
+                      )}
+                      {!v.wave_payment_url && !v.orange_money_url && v.owner_phone && (
+                        <a href={`tel:${v.owner_phone}`} className="text-sm text-brand hover:underline">
+                          {t("payments.callHost")}: {v.owner_phone}
+                        </a>
+                      )}
+                      <Button
+                        className="w-full rounded-full"
+                        variant="outline"
+                        disabled={actingId === v.id}
+                        onClick={() => void markPaid(v.id)}
+                      >
+                        {actingId === v.id ? t("common.saving") : t("payments.iPaidHost")}
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </VisitRequestCard>
             </li>

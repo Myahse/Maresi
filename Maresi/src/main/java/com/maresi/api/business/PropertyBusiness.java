@@ -20,7 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Component
 public class PropertyBusiness {
-  private static final int MIN_PROPERTY_PHOTOS = 12;
+  public static final int MIN_PROPERTY_PHOTOS = 12;
+  public static final int FREE_LISTINGS = 3;
 
   private final PropertyRepository properties;
   private final FileStorageService fileStorage;
@@ -84,12 +85,15 @@ public class PropertyBusiness {
       String location,
       String propertyType,
       List<MultipartFile> images,
+      Map<String, Object> extras,
       String baseUrl,
       Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
     AuthUser user = SecurityUtils.requireUser();
-    if (!subscriptions.isActive(user.id())) {
-      throw ApiException.of(402, "Abonnement proprietaire requis pour publier une residence");
+    long existing = properties.countByOwner(user.id());
+    if (existing >= FREE_LISTINGS && !subscriptions.isActive(user.id())) {
+      throw ApiException.of(
+          402, "Abonnement proprietaire requis a partir de " + (FREE_LISTINGS + 1) + " annonces");
     }
     long imageCount =
         images == null
@@ -107,7 +111,8 @@ public class PropertyBusiness {
             price,
             location,
             propertyType,
-            imageUrls);
+            imageUrls,
+            extras);
     response.setItem(created);
     response.setStatus(functionalError.success("Creation", locale));
     return response;

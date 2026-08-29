@@ -10,9 +10,11 @@ import com.maresi.api.repository.OwnerSubscriptionRepository;
 import com.maresi.api.repository.PaymentRepository;
 import com.maresi.api.repository.UserRepository;
 import com.maresi.api.repository.VisitRequestRepository;
+import com.maresi.api.repository.WalletRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
 import com.maresi.api.service.GeniusPayClient;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -29,6 +31,7 @@ public class AdminMonitorBusiness {
   private final VisitRequestRepository visitRequests;
   private final NotificationRepository notifications;
   private final UserRepository users;
+  private final WalletRepository wallets;
   private final GeniusPayClient geniusPay;
   private final FunctionalError functionalError;
 
@@ -39,6 +42,7 @@ public class AdminMonitorBusiness {
       VisitRequestRepository visitRequests,
       NotificationRepository notifications,
       UserRepository users,
+      WalletRepository wallets,
       GeniusPayClient geniusPay,
       FunctionalError functionalError) {
     this.monitor = monitor;
@@ -47,6 +51,7 @@ public class AdminMonitorBusiness {
     this.visitRequests = visitRequests;
     this.notifications = notifications;
     this.users = users;
+    this.wallets = wallets;
     this.geniusPay = geniusPay;
     this.functionalError = functionalError;
   }
@@ -178,6 +183,12 @@ public class AdminMonitorBusiness {
     String type = String.valueOf(payment.get("type"));
     if ("subscription".equals(type)) {
       subscriptions.setInactive(userId);
+      if ("wallet".equals(String.valueOf(payment.get("provider")))) {
+        BigDecimal amount = toMoney(payment.get("amount"));
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+          wallets.credit(userId, amount, "subscription", idOf(payment), null, "Remboursement");
+        }
+      }
       notifications.create(
           userId, "payment", "Paiement rembourse", "Votre abonnement hote a ete rembourse.", null);
       return;
@@ -187,7 +198,44 @@ public class AdminMonitorBusiness {
       visitRequests.updateStatusById(visitId, "awaiting_payment");
       notifications.create(
           userId, "payment", "Paiement rembourse", "Votre reservation a ete remboursee.", null);
+      return;
     }
+    if ("wallet_topup".equals(type)) {
+      BigDecimal amount = toMoney(payment.get("amount"));
+      if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+        BigDecimal take = amount.min(wallets.balance(userId));
+        if (take.compareTo(BigDecimal.ZERO) > 0) {
+          wallets.tryDebit(userId, take, "topup", idOf(payment), null, "Remboursement recharge");
+        }
+      }
+      notifications.create(
+          userId, "payment", "Paiement rembourse", "Votre recharge portefeuille a ete remboursee.", null);
+      return;
+    }
+    if ("wallet".equals(String.valueOf(payment.get("provider")))) {
+      BigDecimal amount = toMoney(payment.get("amount"));
+      if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+        String entry = "commission".equals(type) ? "commission" : "subscription";
+        wallets.credit(userId, amount, entry, idOf(payment), null, "Remboursement");
+      }
+    }
+  }
+
+  private static UUID idOf(Map<String, Object> payment) {
+    Object id = payment.get("id");
+    if (id == null) return null;
+    try {
+      return UUID.fromString(id.toString());
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private static BigDecimal toMoney(Object v) {
+    if (v == null) return null;
+    if (v instanceof BigDecimal bd) return bd;
+    if (v instanceof Number n) return BigDecimal.valueOf(n.doubleValue());
+    return new BigDecimal(v.toString());
   }
 
   private Response<Map<String, Object>> list(List<Map<String, Object>> items, String label, Locale locale) {

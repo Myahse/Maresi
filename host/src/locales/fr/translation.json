@@ -30,6 +30,13 @@
     "creatingAccount": "Création du compte...",
     "user": "vous"
   },
+  "push": {
+    "title": "Activer les notifications",
+    "body": "Recevez une alerte pour les réservations et paiements, même si l’app est fermée.",
+    "enable": "Activer",
+    "later": "Plus tard",
+    "iosInstall": "Sur iPhone, ajoutez Maresi à l’écran d’accueil (Partager → Sur l’écran d’accueil), puis rouvrez l’app pour activer les notifications."
+  },
   "propertyTypes": {
     "apartment": "Appartement",
     "house": "Maison",
@@ -160,7 +167,10 @@
       "locationTitle": "Où se situe le bien ?",
       "locationHint": "Ville, quartier et coordonnées optionnelles.",
       "pricingTitle": "Tarif et capacité",
-      "pricingHint": "Prix par nuit en XOF et nombre de voyageurs.",
+      "pricingHint": "Prix par nuit en XOF. Le client vous paie ce montant via Wave ou Orange Money. Maresi prélève 10 % après confirmation.",
+      "payHostHint": "Liens marchand optionnels. Sans lien, le client utilisera votre téléphone.",
+      "waveUrl": "Lien Wave (si vous êtes marchand)",
+      "orangeUrl": "Lien Orange Money (si vous êtes marchand)",
       "mediaTitle": "Photos et visite virtuelle",
       "mediaHint": "Ajoutez au moins {{count}} photos du lieu et un lien 360° optionnel.",
       "reviewTitle": "Vérifier et publier",
@@ -277,7 +287,8 @@
       "pending": "En attente",
       "accepted": "Acceptée",
       "declined": "Refusée",
-      "awaiting_payment": "Paiement requis",
+      "awaiting_payment": "Paiement à l'hôte",
+      "payment_sent": "Paiement déclaré",
       "confirmed": "Confirmée"
     }
   },
@@ -294,7 +305,7 @@
     "errorText": "Le paiement n'a pas abouti. Vous pouvez réessayer depuis Mes visites.",
     "viewSubscription": "Voir mon abonnement",
     "subscriptionTitle": "Abonnement propriétaire",
-    "subscriptionHint": "Publiez vos résidences avec un abonnement mensuel actif.",
+    "subscriptionHint": "Les 3 premières annonces sont gratuites. Rechargez le portefeuille Maresi : l’abonnement et la commission de 10 % sont prélevés automatiquement si le solde suffit.",
     "subscriptionNav": "Abonnement",
     "status": "Statut",
     "active": "Actif",
@@ -303,7 +314,21 @@
     "month": "mois",
     "expires": "Expire le",
     "subscribeCta": "Payer l'abonnement",
-    "alreadyActive": "Abonnement déjà actif"
+    "alreadyActive": "Abonnement déjà actif",
+    "freeListings": "Annonces gratuites",
+    "freeListingsValue": "{{left}} restantes sur {{limit}} ({{count}} publiées)",
+    "commissionDue": "Commission due",
+    "settleCommission": "Régler la commission",
+    "walletTitle": "Portefeuille Maresi",
+    "walletHint": "Rechargez via GeniusPay. Le loyer des clients reste payé à vous (Wave / Orange Money).",
+    "walletBalance": "Solde",
+    "walletTopup": "Recharger",
+    "subscribeWalletCta": "Payer avec le portefeuille",
+    "ledgerTitle": "Mouvements",
+    "ledgerEmpty": "Aucun mouvement pour le moment.",
+    "ledgerTopup": "Recharge",
+    "ledgerCommission": "Commission",
+    "ledgerSubscription": "Abonnement"
   },
   "ratings": {
     "title": "Avis",
@@ -353,7 +378,9 @@
     "accept": "Accepter",
     "decline": "Refuser",
     "confirmDecline": "Confirmer le refus",
-    "declineReasonPlaceholder": "Motif optionnel pour le client..."
+    "declineReasonPlaceholder": "Motif optionnel pour le client...",
+    "confirmReceiptTitle": "Paiements à confirmer",
+    "confirmReceipt": "J'ai reçu le paiement"
   },
   "propertyEdit": {
     "notFound": "Introuvable.",

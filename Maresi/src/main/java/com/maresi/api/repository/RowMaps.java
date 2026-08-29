@@ -42,6 +42,8 @@ public final class RowMaps {
     putIfPresent(rs, m, "rating_count");
     putIfPresent(rs, m, "bedrooms");
     putIfPresent(rs, m, "max_guests");
+    putIfPresent(rs, m, "wave_payment_url");
+    putIfPresent(rs, m, "orange_money_url");
     m.put("created_at", toIso(rs.getTimestamp("created_at")));
     m.put("updated_at", toIso(rs.getTimestamp("updated_at")));
     putIfPresent(rs, m, "owner_name");
@@ -97,6 +99,11 @@ public final class RowMaps {
     putIfPresent(rs, m, "location");
     putIfPresent(rs, m, "requester_name");
     putIfPresent(rs, m, "requester_email");
+    putIfPresent(rs, m, "property_price");
+    putIfPresent(rs, m, "property_owner_id");
+    putIfPresent(rs, m, "wave_payment_url");
+    putIfPresent(rs, m, "orange_money_url");
+    putIfPresent(rs, m, "owner_phone");
     return m;
   }
 
@@ -134,6 +141,29 @@ public final class RowMaps {
     putIfPresent(rs, m, "user_email");
     putIfPresent(rs, m, "user_name");
     putIfPresent(rs, m, "user_role");
+    return m;
+  }
+
+  public static Map<String, Object> wallet(ResultSet rs) throws SQLException {
+    Map<String, Object> m = new LinkedHashMap<>();
+    m.put("user_id", rs.getObject("user_id"));
+    m.put("balance", rs.getBigDecimal("balance"));
+    m.put("updated_at", toIso(rs.getTimestamp("updated_at")));
+    return m;
+  }
+
+  public static Map<String, Object> walletLedger(ResultSet rs) throws SQLException {
+    Map<String, Object> m = new LinkedHashMap<>();
+    m.put("id", rs.getObject("id"));
+    m.put("user_id", rs.getObject("user_id"));
+    m.put("entry_type", rs.getString("entry_type"));
+    m.put("direction", rs.getString("direction"));
+    m.put("amount", rs.getBigDecimal("amount"));
+    m.put("balance_after", rs.getBigDecimal("balance_after"));
+    m.put("payment_id", rs.getObject("payment_id"));
+    m.put("visit_request_id", rs.getObject("visit_request_id"));
+    m.put("note", rs.getString("note"));
+    m.put("created_at", toIso(rs.getTimestamp("created_at")));
     return m;
   }
 

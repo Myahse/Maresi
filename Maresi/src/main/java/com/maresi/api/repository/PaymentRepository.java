@@ -32,6 +32,34 @@ public class PaymentRepository {
       String providerReference,
       String checkoutUrl,
       Map<String, Object> metadata) {
+    return create(
+        userId,
+        type,
+        visitRequestId,
+        amount,
+        commissionAmount,
+        ownerAmount,
+        currency,
+        status,
+        "geniuspay",
+        providerReference,
+        checkoutUrl,
+        metadata);
+  }
+
+  public Map<String, Object> create(
+      UUID userId,
+      String type,
+      UUID visitRequestId,
+      BigDecimal amount,
+      BigDecimal commissionAmount,
+      BigDecimal ownerAmount,
+      String currency,
+      String status,
+      String provider,
+      String providerReference,
+      String checkoutUrl,
+      Map<String, Object> metadata) {
     String metadataJson = toJson(metadata);
     return jdbc.queryForObject(
         """
@@ -39,7 +67,7 @@ public class PaymentRepository {
           user_id, type, visit_request_id, amount, commission_amount, owner_amount,
           currency, status, provider, provider_reference, checkout_url, metadata
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'geniuspay', ?, ?, ?::jsonb)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
         RETURNING *
         """,
         (rs, rowNum) -> RowMaps.payment(rs),
@@ -51,6 +79,7 @@ public class PaymentRepository {
         ownerAmount,
         currency,
         status,
+        provider == null || provider.isBlank() ? "geniuspay" : provider,
         providerReference,
         checkoutUrl,
         metadataJson);
@@ -133,6 +162,42 @@ public class PaymentRepository {
             id)
         .stream()
         .findFirst();
+  }
+
+  public boolean hasUnpaidCommission(UUID userId) {
+    Long n =
+        jdbc.queryForObject(
+            """
+            SELECT COUNT(*) FROM payments
+            WHERE user_id = ? AND type = 'commission' AND status = 'pending'
+            """,
+            Long.class,
+            userId);
+    return n != null && n > 0;
+  }
+
+  public BigDecimal sumPendingAccruedCommission(UUID userId) {
+    BigDecimal n =
+        jdbc.queryForObject(
+            """
+            SELECT COALESCE(SUM(amount), 0) FROM payments
+            WHERE user_id = ? AND type = 'commission' AND status = 'pending'
+              AND checkout_url IS NULL
+            """,
+            BigDecimal.class,
+            userId);
+    return n == null ? BigDecimal.ZERO : n;
+  }
+
+  public int markPendingAccruedCompleted(UUID userId) {
+    return jdbc.update(
+        """
+        UPDATE payments
+        SET status = 'completed', updated_at = NOW()
+        WHERE user_id = ? AND type = 'commission' AND status = 'pending'
+          AND checkout_url IS NULL
+        """,
+        userId);
   }
 
   private String toJson(Map<String, Object> metadata) {

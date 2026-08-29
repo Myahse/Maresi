@@ -234,6 +234,18 @@ export function submitHostApplication(payload: {
   });
 }
 
+export function getVapidPublicKey() {
+  return api.get<{ public_key: string }>(`/push/vapid`);
+}
+
+export function subscribePush(payload: {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+  app: "web" | "host" | "admin";
+}) {
+  return api.post<{ id: string }>(`/push/subscribe`, payload);
+}
+
 export function getMyHostApplication() {
   return api.get<import("@/types").HostApplication>(`/host-applications/me`);
 }

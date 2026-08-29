@@ -47,6 +47,28 @@ public class PaymentController {
         () -> paymentService.startSubscription(loc), loc, exceptionUtils);
   }
 
+  @PostMapping("/commission")
+  public ResponseEntity<Response<Map<String, Object>>> startCommission(Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.runCreated(
+        () -> paymentService.startCommissionSettlement(loc), loc, exceptionUtils);
+  }
+
+  @PostMapping("/wallet-topup")
+  public ResponseEntity<Response<Map<String, Object>>> startWalletTopup(
+      @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.runCreated(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return paymentService.startWalletTopup(request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
   @PostMapping("/reservation")
   public ResponseEntity<Response<Map<String, Object>>> startReservation(
       @RequestBody Request<Map<String, Object>> request, Locale locale) {

@@ -10,12 +10,14 @@ import { OwnerSubscriptionPage } from "@/pages/owner/OwnerSubscriptionPage";
 import { PaymentSuccessPage, PaymentErrorPage } from "@/pages/PaymentResultPages";
 import { AppSplash } from "@/components/layout/AppSplash";
 import { HostRealtimeBridge } from "@/components/realtime/HostRealtimeBridge";
+import { PushPrompt } from "@/components/realtime/PushPrompt";
 
 function App() {
   return (
     <>
       <AppSplash />
       <HostRealtimeBridge />
+      <PushPrompt app="host" />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<MainLayout />}>

@@ -30,6 +30,13 @@
     "creatingAccount": "Creating account...",
     "user": "there"
   },
+  "push": {
+    "title": "Enable notifications",
+    "body": "Get alerts for bookings and payments even when the app is closed.",
+    "enable": "Enable",
+    "later": "Later",
+    "iosInstall": "On iPhone, add Maresi to the Home Screen (Share → Add to Home Screen), then open the app to enable notifications."
+  },
   "propertyTypes": {
     "apartment": "Apartment",
     "house": "House",
@@ -199,7 +206,9 @@
       "checkIn": "Check-in",
       "checkOut": "Check-out",
       "visitTitle": "Schedule a property visit",
-      "visitHint": "Pick a date and time to visit before or during your stay.",
+      "visitHint": "Optional. You can book without visiting first.",
+      "addVisit": "Add an in-person visit",
+      "visitSkipped": "No visit",
       "visitDate": "Visit date",
       "visitTime": "Preferred time",
       "visitSlot": "Visit",
@@ -277,11 +286,18 @@
       "pending": "Pending validation",
       "accepted": "Accepted",
       "declined": "Declined",
-      "awaiting_payment": "Payment required",
+      "awaiting_payment": "Pay the host",
+      "payment_sent": "Payment declared",
       "confirmed": "Confirmed"
     }
   },
   "payments": {
+    "payHostAmount": "Pay the host",
+    "payHostHint": "Open Wave or Orange Money, then mark that you paid. The host will confirm.",
+    "payWave": "Pay with Wave",
+    "payOrange": "Pay with Orange Money",
+    "callHost": "Call the host",
+    "iPaidHost": "I paid the host",
     "payReservation": "Pay my reservation",
     "payFailed": "Payment failed",
     "loadFailed": "Could not load subscription",

@@ -63,6 +63,11 @@ public class PropertyRepository {
         .findFirst();
   }
 
+  public long countByOwner(UUID ownerId) {
+    Long n = jdbc.queryForObject("SELECT COUNT(*) FROM properties WHERE owner_id = ?", Long.class, ownerId);
+    return n == null ? 0 : n;
+  }
+
   public Map<String, Object> create(
       UUID ownerId,
       String title,
@@ -70,15 +75,21 @@ public class PropertyRepository {
       BigDecimal price,
       String location,
       String propertyType,
-      List<String> images) {
+      List<String> images,
+      Map<String, Object> extras) {
+    Map<String, Object> extra = extras == null ? Map.of() : extras;
     return jdbc.execute(
         (Connection conn) -> {
           Array imageArray = conn.createArrayOf("text", images != null ? images.toArray() : new String[0]);
           try (var ps =
               conn.prepareStatement(
                   """
-                  INSERT INTO properties (owner_id, title, description, price, location, property_type, images)
-                  VALUES (?, ?, ?, ?, ?, ?, ?)
+                  INSERT INTO properties (
+                    owner_id, title, description, price, location, property_type, images,
+                    latitude, longitude, bedrooms, max_guests, virtual_tour_url,
+                    wave_payment_url, orange_money_url
+                  )
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                   RETURNING *
                   """)) {
             ps.setObject(1, ownerId);
@@ -88,6 +99,13 @@ public class PropertyRepository {
             ps.setString(5, location);
             ps.setString(6, propertyType);
             ps.setArray(7, imageArray);
+            ps.setObject(8, extra.get("latitude"));
+            ps.setObject(9, extra.get("longitude"));
+            ps.setObject(10, extra.get("bedrooms"));
+            ps.setObject(11, extra.get("max_guests"));
+            ps.setObject(12, extra.get("virtual_tour_url"));
+            ps.setObject(13, extra.get("wave_payment_url"));
+            ps.setObject(14, extra.get("orange_money_url"));
             try (var rs = ps.executeQuery()) {
               if (rs.next()) return RowMaps.property(rs);
               throw new IllegalStateException("Insert failed");
@@ -97,7 +115,22 @@ public class PropertyRepository {
   }
 
   public Map<String, Object> update(UUID id, Map<String, Object> data) {
-    List<String> keys = List.of("title", "description", "price", "location", "property_type", "images", "is_active");
+    List<String> keys =
+        List.of(
+            "title",
+            "description",
+            "price",
+            "location",
+            "property_type",
+            "images",
+            "is_active",
+            "latitude",
+            "longitude",
+            "bedrooms",
+            "max_guests",
+            "virtual_tour_url",
+            "wave_payment_url",
+            "orange_money_url");
     List<String> updateKeys = new ArrayList<>();
     List<Object> updateValues = new ArrayList<>();
     for (String key : keys) {

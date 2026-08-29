@@ -60,6 +60,7 @@ export type VisitRequestStatus =
   | "accepted"
   | "declined"
   | "awaiting_payment"
+  | "payment_sent"
   | "confirmed";
 
 export interface VisitRequest {
@@ -87,7 +88,7 @@ export interface VisitRequest {
 export interface Payment {
   id: string;
   user_id: string;
-  type: "subscription" | "reservation";
+  type: "subscription" | "reservation" | "commission" | "wallet_topup";
   visit_request_id?: string;
   amount: number;
   commission_amount: number;

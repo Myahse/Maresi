@@ -243,8 +243,8 @@ class MockApiService implements MaresiApi {
       status: 'awaiting_payment',
       checkIn: payload.checkIn,
       checkOut: payload.checkOut,
-      visitDate: payload.visitDate,
-      visitTime: payload.visitTime,
+      visitDate: payload.visitDate ?? '',
+      visitTime: payload.visitTime ?? '',
       guestsCount: payload.guestsCount,
       contactPhone: payload.contactPhone,
       idCard: payload.idCard,
@@ -272,6 +272,35 @@ class MockApiService implements MaresiApi {
     await _delay();
     if (_sessionUser == null) throw Exception('Authentification requise');
     return List.unmodifiable(_visitRequests);
+  }
+
+  @override
+  Future<VisitRequest> updateVisitRequestStatus(String id, String status) async {
+    await _delay();
+    final index = _visitRequests.indexWhere((v) => v.id == id);
+    if (index < 0) throw Exception('Demande introuvable');
+    final current = _visitRequests[index];
+    final updated = VisitRequest(
+      id: current.id,
+      propertyId: current.propertyId,
+      status: status,
+      checkIn: current.checkIn,
+      checkOut: current.checkOut,
+      visitDate: current.visitDate,
+      visitTime: current.visitTime,
+      guestsCount: current.guestsCount,
+      contactPhone: current.contactPhone,
+      idCard: current.idCard,
+      message: current.message,
+      propertyTitle: current.propertyTitle,
+      location: current.location,
+      propertyPrice: current.propertyPrice,
+      wavePaymentUrl: current.wavePaymentUrl,
+      orangeMoneyUrl: current.orangeMoneyUrl,
+      ownerPhone: current.ownerPhone,
+    );
+    _visitRequests[index] = updated;
+    return updated;
   }
 
   @override

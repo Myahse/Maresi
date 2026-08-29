@@ -30,6 +30,13 @@
     "creatingAccount": "Creating account...",
     "user": "there"
   },
+  "push": {
+    "title": "Enable notifications",
+    "body": "Get alerts for bookings and payments even when the app is closed.",
+    "enable": "Enable",
+    "later": "Later",
+    "iosInstall": "On iPhone, add Maresi to the Home Screen (Share → Add to Home Screen), then open the app to enable notifications."
+  },
   "propertyTypes": {
     "apartment": "Apartment",
     "house": "House",
@@ -160,7 +167,10 @@
       "locationTitle": "Where is it?",
       "locationHint": "City, neighborhood, and optional map coordinates.",
       "pricingTitle": "Pricing & capacity",
-      "pricingHint": "Set the nightly rate in XOF and how many guests you accept.",
+      "pricingHint": "Nightly price in XOF. Guests pay you this amount via Wave or Orange Money. Maresi takes 10% after you confirm receipt.",
+      "payHostHint": "Optional merchant links. Without a link, the guest will use your phone number.",
+      "waveUrl": "Wave link (if you are a merchant)",
+      "orangeUrl": "Orange Money link (if you are a merchant)",
       "mediaTitle": "Photos & virtual tour",
       "mediaHint": "Add at least {{count}} photos of the place and an optional 360° tour link.",
       "reviewTitle": "Review & publish",
@@ -277,7 +287,8 @@
       "pending": "Pending validation",
       "accepted": "Accepted",
       "declined": "Declined",
-      "awaiting_payment": "Payment required",
+      "awaiting_payment": "Pay the host",
+      "payment_sent": "Payment declared",
       "confirmed": "Confirmed"
     }
   },
@@ -294,7 +305,7 @@
     "errorText": "Payment did not complete. You can retry from My visits.",
     "viewSubscription": "View my subscription",
     "subscriptionTitle": "Owner subscription",
-    "subscriptionHint": "Publish residences with an active monthly subscription.",
+    "subscriptionHint": "The first 3 listings are free. Top up the Maresi wallet: subscription and the 10% commission are taken automatically when the balance is enough.",
     "subscriptionNav": "Subscription",
     "status": "Status",
     "active": "Active",
@@ -303,7 +314,21 @@
     "month": "month",
     "expires": "Expires",
     "subscribeCta": "Pay subscription",
-    "alreadyActive": "Subscription already active"
+    "alreadyActive": "Subscription already active",
+    "freeListings": "Free listings",
+    "freeListingsValue": "{{left}} left of {{limit}} ({{count}} published)",
+    "commissionDue": "Commission due",
+    "settleCommission": "Pay commission",
+    "walletTitle": "Maresi wallet",
+    "walletHint": "Top up via GeniusPay. Guest rent is still paid to you (Wave / Orange Money).",
+    "walletBalance": "Balance",
+    "walletTopup": "Top up",
+    "subscribeWalletCta": "Pay with wallet",
+    "ledgerTitle": "Activity",
+    "ledgerEmpty": "No activity yet.",
+    "ledgerTopup": "Top-up",
+    "ledgerCommission": "Commission",
+    "ledgerSubscription": "Subscription"
   },
   "ratings": {
     "title": "Reviews",
@@ -353,7 +378,9 @@
     "accept": "Accept",
     "decline": "Decline",
     "confirmDecline": "Confirm decline",
-    "declineReasonPlaceholder": "Optional reason for the client..."
+    "declineReasonPlaceholder": "Optional reason for the client...",
+    "confirmReceiptTitle": "Payments to confirm",
+    "confirmReceipt": "I received the payment"
   },
   "propertyEdit": {
     "notFound": "Not found.",

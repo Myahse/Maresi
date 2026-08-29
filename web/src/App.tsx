@@ -15,12 +15,14 @@ import { PaymentSuccessPage, PaymentErrorPage } from "@/pages/PaymentResultPages
 import { BecomeHostPage } from "@/pages/BecomeHostPage";
 import { AppSplash } from "@/components/layout/AppSplash";
 import { ClientRealtimeBridge } from "@/components/realtime/ClientRealtimeBridge";
+import { PushPrompt } from "@/components/realtime/PushPrompt";
 
 function App() {
   return (
     <>
       <AppSplash />
       <ClientRealtimeBridge />
+      <PushPrompt app="web" />
       <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainLayout />}>

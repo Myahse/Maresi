@@ -10,6 +10,7 @@ public class AppProperties {
   private Sms sms = new Sms();
   private GeniusPay geniuspay = new GeniusPay();
   private Payments payments = new Payments();
+  private Push push = new Push();
 
   public Jwt getJwt() {
     return jwt;
@@ -57,6 +58,14 @@ public class AppProperties {
 
   public void setPayments(Payments payments) {
     this.payments = payments;
+  }
+
+  public Push getPush() {
+    return push;
+  }
+
+  public void setPush(Push push) {
+    this.push = push;
   }
 
   public static class Jwt {
@@ -229,6 +238,43 @@ public class AppProperties {
     private static String firstUrl(String preferred, String fallback) {
       if (preferred != null && !preferred.isBlank()) return preferred;
       return fallback;
+    }
+  }
+
+  public static class Push {
+    private String vapidPublicKey = "";
+    private String vapidPrivateKey = "";
+    private String subject = "mailto:hello@maresi.app";
+
+    public String getVapidPublicKey() {
+      return vapidPublicKey;
+    }
+
+    public void setVapidPublicKey(String vapidPublicKey) {
+      this.vapidPublicKey = vapidPublicKey;
+    }
+
+    public String getVapidPrivateKey() {
+      return vapidPrivateKey;
+    }
+
+    public void setVapidPrivateKey(String vapidPrivateKey) {
+      this.vapidPrivateKey = vapidPrivateKey;
+    }
+
+    public String getSubject() {
+      return subject;
+    }
+
+    public void setSubject(String subject) {
+      this.subject = subject;
+    }
+
+    public boolean isConfigured() {
+      return vapidPublicKey != null
+          && !vapidPublicKey.isBlank()
+          && vapidPrivateKey != null
+          && !vapidPrivateKey.isBlank();
     }
   }
 }

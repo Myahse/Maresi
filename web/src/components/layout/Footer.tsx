@@ -24,7 +24,7 @@ export function Footer() {
   const linkClass = "text-gray-200 hover:text-white transition-colors text-sm";
 
   return (
-    <footer className="bg-white font-jakarta mt-auto">
+    <footer className="hidden md:block bg-white font-jakarta mt-auto">
       <div className="mx-4 sm:mx-8 mb-8">
         <div className="w-full bg-brand border border-gray-200 rounded-xl shadow-lg overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

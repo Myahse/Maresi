@@ -3,8 +3,8 @@ class VisitRequestPayload {
     required this.propertyId,
     required this.checkIn,
     required this.checkOut,
-    required this.visitDate,
-    required this.visitTime,
+    this.visitDate,
+    this.visitTime,
     required this.guestsCount,
     required this.contactPhone,
     required this.idCard,
@@ -14,8 +14,8 @@ class VisitRequestPayload {
   final String propertyId;
   final String checkIn;
   final String checkOut;
-  final String visitDate;
-  final String visitTime;
+  final String? visitDate;
+  final String? visitTime;
   final int guestsCount;
   final String contactPhone;
   final String idCard;
@@ -25,8 +25,8 @@ class VisitRequestPayload {
         'propertyId': propertyId,
         'check_in': checkIn,
         'check_out': checkOut,
-        'visit_date': visitDate,
-        'visit_time': visitTime,
+        if (visitDate != null && visitDate!.isNotEmpty) 'visit_date': visitDate,
+        if (visitTime != null && visitTime!.isNotEmpty) 'visit_time': visitTime,
         'guests_count': guestsCount,
         'contact_phone': contactPhone,
         'id_card': idCard,
@@ -49,6 +49,10 @@ class VisitRequest {
     this.message,
     this.propertyTitle,
     this.location,
+    this.propertyPrice,
+    this.wavePaymentUrl,
+    this.orangeMoneyUrl,
+    this.ownerPhone,
   });
 
   final String id;
@@ -64,6 +68,10 @@ class VisitRequest {
   final String? message;
   final String? propertyTitle;
   final String? location;
+  final num? propertyPrice;
+  final String? wavePaymentUrl;
+  final String? orangeMoneyUrl;
+  final String? ownerPhone;
 
   factory VisitRequest.fromJson(Map<String, dynamic> json) {
     return VisitRequest(
@@ -80,6 +88,10 @@ class VisitRequest {
       message: json['message'] as String?,
       propertyTitle: json['property_title'] as String? ?? json['propertyTitle'] as String?,
       location: json['location'] as String?,
+      propertyPrice: json['property_price'] as num?,
+      wavePaymentUrl: json['wave_payment_url'] as String?,
+      orangeMoneyUrl: json['orange_money_url'] as String?,
+      ownerPhone: json['owner_phone'] as String?,
     );
   }
 }

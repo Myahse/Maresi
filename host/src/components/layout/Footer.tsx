@@ -1,6 +1,6 @@
 export function Footer() {
   return (
-    <footer className="py-6 text-center text-sm text-gray-500">
+    <footer className="hidden md:block py-6 text-center text-sm text-gray-500">
       Maresi Host
     </footer>
   );

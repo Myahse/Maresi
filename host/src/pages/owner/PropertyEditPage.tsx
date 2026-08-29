@@ -31,6 +31,13 @@ export function PropertyEditPage() {
       if (isNew) await createProperty(formData);
       else await updateProperty(id!, formData);
       navigate("/owner", { replace: true });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      if (isNew && /abonnement|402/i.test(msg)) {
+        navigate("/owner/subscription", { replace: true });
+        return;
+      }
+      throw e;
     } finally {
       setLoading(false);
     }

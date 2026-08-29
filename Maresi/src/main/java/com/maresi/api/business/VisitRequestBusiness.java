@@ -5,10 +5,12 @@ import com.maresi.api.contracts.Request;
 import com.maresi.api.contracts.Response;
 import com.maresi.api.realtime.RealtimeEventPublisher;
 import com.maresi.api.repository.NotificationRepository;
+import com.maresi.api.repository.PaymentRepository;
 import com.maresi.api.repository.PropertyRepository;
 import com.maresi.api.repository.VisitRequestRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -20,6 +22,8 @@ public class VisitRequestBusiness {
   private final VisitRequestRepository visitRequests;
   private final PropertyRepository properties;
   private final NotificationRepository notifications;
+  private final PaymentRepository payments;
+  private final PaymentBusiness paymentBusiness;
   private final RealtimeEventPublisher realtime;
   private final FunctionalError functionalError;
 
@@ -27,11 +31,15 @@ public class VisitRequestBusiness {
       VisitRequestRepository visitRequests,
       PropertyRepository properties,
       NotificationRepository notifications,
+      PaymentRepository payments,
+      PaymentBusiness paymentBusiness,
       RealtimeEventPublisher realtime,
       FunctionalError functionalError) {
     this.visitRequests = visitRequests;
     this.properties = properties;
     this.notifications = notifications;
+    this.payments = payments;
+    this.paymentBusiness = paymentBusiness;
     this.realtime = realtime;
     this.functionalError = functionalError;
   }
@@ -51,9 +59,11 @@ public class VisitRequestBusiness {
       response.setStatus(functionalError.fieldEmpty("check_in, check_out", locale));
       return response;
     }
-    if (body.get("visit_date") == null || body.get("visit_time") == null) {
+    Object visitDate = body.get("visit_date");
+    String visitTime = str(body.get("visit_time"));
+    if (visitDate != null && (visitTime == null || visitTime.isBlank())) {
       response.setHasError(true);
-      response.setStatus(functionalError.fieldEmpty("visit_date, visit_time", locale));
+      response.setStatus(functionalError.fieldEmpty("visit_time", locale));
       return response;
     }
     if (body.get("contact_phone") == null) {
@@ -82,8 +92,8 @@ public class VisitRequestBusiness {
             str(body.get("message")),
             body.get("check_in"),
             body.get("check_out"),
-            body.get("visit_date"),
-            str(body.get("visit_time")),
+            visitDate,
+            visitTime,
             intOrNull(body.get("guests_count")),
             str(body.get("contact_phone")),
             idCard);
@@ -91,10 +101,18 @@ public class VisitRequestBusiness {
     notifyVisitRequestSubmitted(user.id(), listingId, String.valueOf(property.get("title")));
     UUID ownerId =
         property.get("owner_id") != null ? UUID.fromString(property.get("owner_id").toString()) : null;
+    if (ownerId != null) {
+      notifications.create(
+          ownerId,
+          "reservation",
+          "Nouvelle reservation",
+          "Un client a demande " + property.get("title") + ".",
+          listingId);
+    }
     realtime.publish("visit.created", created, user.id(), ownerId, true);
 
     response.setItem(created);
-    response.setStatus(functionalError.success("Demande de visite", locale));
+    response.setStatus(functionalError.success("Demande de reservation", locale));
     return response;
   }
 
@@ -119,17 +137,37 @@ public class VisitRequestBusiness {
   public Response<Map<String, Object>> updateStatus(
       UUID id, Request<Map<String, Object>> request, Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
-    AuthUser owner = SecurityUtils.requireUser();
+    AuthUser user = SecurityUtils.requireUser();
     String status = str(request.getData().get("status"));
+    Map<String, Object> current = visitRequests.findById(id).orElse(null);
+    if (current == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Demande introuvable", locale));
+      return response;
+    }
+
+    if ("payment_sent".equals(status)) {
+      return guestMarkPaid(id, current, user, locale);
+    }
+    if ("confirmed".equals(status)) {
+      return hostConfirmReceipt(id, current, user, request, locale);
+    }
     if (status == null || !List.of("pending", "accepted", "declined").contains(status)) {
       response.setHasError(true);
       response.setStatus(functionalError.invalidData("Statut invalide", locale));
       return response;
     }
+    if ("accepted".equals(status)
+        && payments.sumPendingAccruedCommission(user.id()).compareTo(BigDecimal.valueOf(200)) >= 0) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.disallowed("Reglez la commission Maresi avant d'accepter une reservation", locale));
+      return response;
+    }
     String storedStatus = "accepted".equals(status) ? "awaiting_payment" : status;
     Map<String, Object> updated =
         visitRequests
-            .updateStatus(id, storedStatus, owner.id(), str(request.getData().get("ownerNote")))
+            .updateStatus(id, storedStatus, user.id(), str(request.getData().get("ownerNote")))
             .orElse(null);
     if (updated == null) {
       response.setHasError(true);
@@ -142,15 +180,80 @@ public class VisitRequestBusiness {
       notifications.create(
           requesterId,
           "reservation",
-          "Paiement requis",
-          "Votre demande a ete acceptee. Payez pour confirmer la reservation.",
+          "Paiement a l'hote",
+          "Votre demande a ete acceptee. Payez l'hote via Wave ou Orange Money.",
           listingId);
     } else {
       notifyVisitRequestStatusUpdated(requesterId, listingId, status);
     }
-    realtime.publish("visit.status_changed", updated, requesterId, owner.id(), true);
+    realtime.publish("visit.status_changed", updated, requesterId, user.id(), true);
     response.setItem(updated);
     response.setStatus(functionalError.success("Statut mis a jour", locale));
+    return response;
+  }
+
+  private Response<Map<String, Object>> guestMarkPaid(
+      UUID id, Map<String, Object> current, AuthUser user, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    if (!user.id().toString().equalsIgnoreCase(String.valueOf(current.get("user_id")))) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Action non autorisee", locale));
+      return response;
+    }
+    if (!"awaiting_payment".equals(String.valueOf(current.get("status")))) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Cette reservation n'attend pas de paiement", locale));
+      return response;
+    }
+    Map<String, Object> updated = visitRequests.updateStatusById(id, "payment_sent").orElse(current);
+    UUID listingId = UUID.fromString(updated.get("property_id").toString());
+    UUID ownerId =
+        current.get("property_owner_id") != null
+            ? UUID.fromString(current.get("property_owner_id").toString())
+            : null;
+    if (ownerId != null) {
+      notifications.create(
+          ownerId,
+          "reservation",
+          "Paiement declare",
+          "Le client indique avoir paye. Confirmez la reception.",
+          listingId);
+    }
+    realtime.publish("visit.status_changed", updated, user.id(), ownerId, true);
+    response.setItem(updated);
+    response.setStatus(functionalError.success("Paiement declare", locale));
+    return response;
+  }
+
+  private Response<Map<String, Object>> hostConfirmReceipt(
+      UUID id, Map<String, Object> current, AuthUser user, Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    if (!"payment_sent".equals(String.valueOf(current.get("status")))) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Le client n'a pas encore declare le paiement", locale));
+      return response;
+    }
+    Map<String, Object> updated =
+        visitRequests
+            .updateStatus(id, "confirmed", user.id(), str(request.getData().get("ownerNote")))
+            .orElse(null);
+    if (updated == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Confirmation non autorisee", locale));
+      return response;
+    }
+    paymentBusiness.accrueHostCommission(current);
+    UUID requesterId = UUID.fromString(updated.get("user_id").toString());
+    UUID listingId = UUID.fromString(updated.get("property_id").toString());
+    notifications.create(
+        requesterId,
+        "reservation",
+        "Reservation confirmee",
+        "L'hote a confirme votre paiement. La reservation est validee.",
+        listingId);
+    realtime.publish("visit.status_changed", updated, requesterId, user.id(), true);
+    response.setItem(updated);
+    response.setStatus(functionalError.success("Reservation confirmee", locale));
     return response;
   }
 
@@ -158,7 +261,7 @@ public class VisitRequestBusiness {
     notifications.create(
         userId,
         "reservation",
-        "Demande de visite envoyee",
+        "Demande envoyee",
         "Votre demande pour " + propertyTitle + " a ete soumise.",
         listingId);
   }

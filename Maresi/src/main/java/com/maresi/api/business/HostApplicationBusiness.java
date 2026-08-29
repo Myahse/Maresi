@@ -87,6 +87,14 @@ public class HostApplicationBusiness {
         "Demande hote envoyee",
         "Votre demande pour devenir hote est en attente de validation.",
         null);
+    for (UUID adminId : users.findIdsByRole("admin")) {
+      notifications.create(
+          adminId,
+          "host_application",
+          "Nouvelle demande hote",
+          fullName.trim() + " souhaite devenir hote.",
+          null);
+    }
     realtime.publish("host.application.submitted", created, user.id(), null, true);
 
     response.setItem(created);

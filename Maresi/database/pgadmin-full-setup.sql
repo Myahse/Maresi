@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS visit_requests (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   property_id UUID NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
   message TEXT,
-  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'confirmed')),
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'payment_sent', 'confirmed')),
   requested_at TIMESTAMPTZ DEFAULT NOW(),
   responded_at TIMESTAMPTZ
 );
@@ -146,12 +146,12 @@ CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at
 ALTER TABLE visit_requests DROP CONSTRAINT IF EXISTS visit_requests_status_check;
 ALTER TABLE visit_requests
   ADD CONSTRAINT visit_requests_status_check
-  CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'confirmed'));
+  CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'payment_sent', 'confirmed'));
 
 CREATE TABLE IF NOT EXISTS payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type VARCHAR(30) NOT NULL CHECK (type IN ('subscription', 'reservation')),
+  type VARCHAR(30) NOT NULL CHECK (type IN ('subscription', 'reservation', 'commission', 'wallet_topup')),
   visit_request_id UUID REFERENCES visit_requests(id) ON DELETE SET NULL,
   amount DECIMAL(12, 2) NOT NULL,
   commission_amount DECIMAL(12, 2) NOT NULL DEFAULT 0,
@@ -224,4 +224,57 @@ CREATE TRIGGER host_applications_updated_at
 ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_status_check;
 ALTER TABLE payments ADD CONSTRAINT payments_status_check
   CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'expired', 'refunded'));
+
+-- ========== 009_direct_host_pay.sql ==========
+ALTER TABLE properties
+  ADD COLUMN IF NOT EXISTS wave_payment_url TEXT,
+  ADD COLUMN IF NOT EXISTS orange_money_url TEXT;
+
+ALTER TABLE visit_requests DROP CONSTRAINT IF EXISTS visit_requests_status_check;
+ALTER TABLE visit_requests
+  ADD CONSTRAINT visit_requests_status_check
+  CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'payment_sent', 'confirmed'));
+
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_type_check;
+ALTER TABLE payments
+  ADD CONSTRAINT payments_type_check
+  CHECK (type IN ('subscription', 'reservation', 'commission', 'wallet_topup'));
+
+-- ========== 010_host_wallet.sql ==========
+CREATE TABLE IF NOT EXISTS wallets (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  balance DECIMAL(12, 2) NOT NULL DEFAULT 0 CHECK (balance >= 0),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS wallet_ledger (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  entry_type VARCHAR(30) NOT NULL
+    CHECK (entry_type IN ('topup', 'commission', 'subscription')),
+  direction VARCHAR(10) NOT NULL CHECK (direction IN ('credit', 'debit')),
+  amount DECIMAL(12, 2) NOT NULL CHECK (amount > 0),
+  balance_after DECIMAL(12, 2) NOT NULL,
+  payment_id UUID REFERENCES payments(id) ON DELETE SET NULL,
+  visit_request_id UUID REFERENCES visit_requests(id) ON DELETE SET NULL,
+  note TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wallet_ledger_user ON wallet_ledger(user_id, created_at DESC);
+
+-- ========== 011_push_subscriptions.sql ==========
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL UNIQUE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  app VARCHAR(20) NOT NULL DEFAULT 'web'
+    CHECK (app IN ('web', 'host', 'admin')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(user_id);
 

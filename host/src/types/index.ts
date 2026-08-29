@@ -29,6 +29,8 @@ export interface Property {
   rating_count?: number;
   bedrooms?: number;
   max_guests?: number;
+  wave_payment_url?: string;
+  orange_money_url?: string;
 }
 
 export interface VisitRequestPayload {
@@ -36,8 +38,8 @@ export interface VisitRequestPayload {
   message?: string;
   check_in: string;
   check_out: string;
-  visit_date: string;
-  visit_time: string;
+  visit_date?: string;
+  visit_time?: string;
   guests_count: number;
   contact_phone: string;
   id_card: string;
@@ -59,6 +61,7 @@ export type VisitRequestStatus =
   | "accepted"
   | "declined"
   | "awaiting_payment"
+  | "payment_sent"
   | "confirmed";
 
 export interface VisitRequest {
@@ -81,12 +84,16 @@ export interface VisitRequest {
   requester_name?: string;
   requester_email?: string;
   owner_note?: string;
+  property_price?: number;
+  wave_payment_url?: string;
+  orange_money_url?: string;
+  owner_phone?: string;
 }
 
 export interface Payment {
   id: string;
   user_id: string;
-  type: "subscription" | "reservation";
+  type: "subscription" | "reservation" | "commission" | "wallet_topup";
   visit_request_id?: string;
   amount: number;
   commission_amount: number;
@@ -99,6 +106,16 @@ export interface Payment {
   created_at?: string;
 }
 
+export interface WalletLedgerEntry {
+  id: string;
+  entry_type: "topup" | "commission" | "subscription";
+  direction: "credit" | "debit";
+  amount: number;
+  balance_after: number;
+  note?: string;
+  created_at?: string;
+}
+
 export interface OwnerSubscription {
   id?: string;
   user_id?: string;
@@ -107,6 +124,12 @@ export interface OwnerSubscription {
   expires_at?: string;
   price_fcfa: number;
   active: boolean;
+  listings_count?: number;
+  free_listings_left?: number;
+  free_listings_limit?: number;
+  commission_due?: number;
+  wallet_balance?: number;
+  wallet_ledger?: WalletLedgerEntry[];
 }
 
 export interface PropertyRating {

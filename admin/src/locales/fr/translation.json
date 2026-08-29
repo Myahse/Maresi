@@ -30,6 +30,13 @@
     "creatingAccount": "Création du compte...",
     "user": "vous"
   },
+  "push": {
+    "title": "Activer les notifications",
+    "body": "Recevez une alerte pour les réservations et paiements, même si l’app est fermée.",
+    "enable": "Activer",
+    "later": "Plus tard",
+    "iosInstall": "Sur iPhone, ajoutez Maresi à l’écran d’accueil (Partager → Sur l’écran d’accueil), puis rouvrez l’app pour activer les notifications."
+  },
   "propertyTypes": {
     "apartment": "Appartement",
     "house": "Maison",
