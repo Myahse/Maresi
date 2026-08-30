@@ -169,6 +169,7 @@
       "basicsHint": "Give your listing a clear title and description.",
       "locationTitle": "Where is it?",
       "locationHint": "City, neighborhood, and optional map coordinates.",
+      "mapMissingToken": "Mapbox is unavailable. Add VITE_MAPBOX_TOKEN.",
       "pricingTitle": "Pricing & capacity",
       "pricingHint": "Set the nightly rate in XOF and how many guests you accept.",
       "mediaTitle": "Photos & virtual tour",

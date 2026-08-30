@@ -54,9 +54,8 @@
   }
 }
 
-/* Keep Leaflet panes inside the map stacking context so modals (z-1100) stay on top */
-.leaflet-container {
-  z-index: 0 !important;
+.mapboxgl-map {
+  z-index: 0;
 }
 
 @layer utilities {

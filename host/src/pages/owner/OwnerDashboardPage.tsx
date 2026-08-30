@@ -116,27 +116,37 @@ export function OwnerDashboardPage() {
         </p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {properties.map((p) => (
-            <Card key={p.id}>
-              <CardHeader className="flex flex-row items-center justify-between gap-2">
-                <CardTitle className="text-base">{p.title}</CardTitle>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(p.id)}>
-                    {t("common.edit")}
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleDelete(p.id)}>
-                    {t("common.delete")}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-1 text-sm text-muted-foreground">
-                <p>
-                  {p.location} · {p.property_type}
-                </p>
-                <p>${Number(p.price).toLocaleString()}</p>
-              </CardContent>
-            </Card>
-          ))}
+          {properties.map((p) => {
+            const cover = p.images?.[0];
+            return (
+              <Card key={p.id} className="overflow-hidden">
+                {cover ? (
+                  <img src={cover} alt={p.title} className="h-40 w-full object-cover" />
+                ) : (
+                  <div className="h-40 w-full bg-gray-100 flex items-center justify-center text-sm text-gray-500">
+                    {t("propertyDetails.noImage")}
+                  </div>
+                )}
+                <CardHeader className="flex flex-row items-center justify-between gap-2">
+                  <CardTitle className="text-base">{p.title}</CardTitle>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => handleEdit(p.id)}>
+                      {t("common.edit")}
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(p.id)}>
+                      {t("common.delete")}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-1 text-sm text-muted-foreground">
+                  <p>
+                    {p.location} · {p.property_type}
+                  </p>
+                  <p className="font-semibold text-brand">{formatPrice(Number(p.price))}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,8 @@ import { Select } from "@/components/ui/select";
 import { Stepper } from "@/components/ui/stepper";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { isValidPrice, isValidUrl, hasMinPropertyPhotos, MIN_PROPERTY_PHOTOS } from "@/lib/validation";
+import { LocationMapPicker } from "@/components/map/LocationMapPicker";
+import type { MapboxPlace } from "@/lib/mapbox";
 import type { Property } from "@/types";
 
 const PROPERTY_TYPES = ["apartment", "house", "studio"] as const;
@@ -33,6 +35,9 @@ export function PropertyCreationWizard({
   const [description, setDescription] = useState(initial?.description ?? "");
   const [property_type, setPropertyType] = useState(initial?.property_type ?? "apartment");
   const [location, setLocation] = useState(initial?.location ?? "");
+  const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
   const [latitude, setLatitude] = useState(initial?.latitude?.toString() ?? "");
   const [longitude, setLongitude] = useState(initial?.longitude?.toString() ?? "");
   const [price, setPrice] = useState(initial?.price?.toString() ?? "");
@@ -42,6 +47,14 @@ export function PropertyCreationWizard({
   const [wave_payment_url, setWavePaymentUrl] = useState(initial?.wave_payment_url ?? "");
   const [orange_money_url, setOrangeMoneyUrl] = useState(initial?.orange_money_url ?? "");
   const [images, setImages] = useState<File[]>([]);
+  const [coverIndex, setCoverIndex] = useState(0);
+  const [previews, setPreviews] = useState<string[]>([]);
+
+  useEffect(() => {
+    const urls = images.map((file) => URL.createObjectURL(file));
+    setPreviews(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [images]);
 
   const steps = [
     { id: "basics", label: t("wizard.property.steps.basics") },
@@ -59,7 +72,7 @@ export function PropertyCreationWizard({
         if (!description.trim()) return t("wizard.property.errors.description");
         return null;
       case 1:
-        if (!location.trim()) return t("wizard.property.errors.location");
+        if (!latitude || !longitude || !location.trim()) return t("wizard.property.errors.mapPin");
         return null;
       case 2:
         if (!isValidPrice(price)) return t("wizard.property.errors.price");
@@ -118,12 +131,26 @@ export function PropertyCreationWizard({
     if (virtual_tour_url.trim()) formData.set("virtual_tour_url", virtual_tour_url.trim());
     if (wave_payment_url.trim()) formData.set("wave_payment_url", wave_payment_url.trim());
     if (orange_money_url.trim()) formData.set("orange_money_url", orange_money_url.trim());
-    images.forEach((f) => formData.append("images", f));
+    const ordered = [...images];
+    if (coverIndex > 0 && coverIndex < ordered.length) {
+      const [cover] = ordered.splice(coverIndex, 1);
+      ordered.unshift(cover);
+    }
+    ordered.forEach((f) => formData.append("images", f));
     try {
       await onSubmit(formData);
     } catch (e) {
       setError(e instanceof Error ? e.message : t("propertyForm.saveFailed"));
     }
+  };
+
+  const applyPlace = (place: MapboxPlace) => {
+    setStreet(place.street);
+    setCity(place.city);
+    setCountry(place.country);
+    setLocation(place.label);
+    setLatitude(String(place.latitude));
+    setLongitude(String(place.longitude));
   };
 
   return (
@@ -168,39 +195,27 @@ export function PropertyCreationWizard({
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-gray-900">{t("wizard.property.locationTitle")}</h2>
           <p className="text-sm text-gray-600">{t("wizard.property.locationHint")}</p>
-          <div className="space-y-2">
-            <Label htmlFor="location">{t("propertyForm.location")} *</Label>
-            <Input
-              id="location"
-              placeholder={t("filters.locationPlaceholder")}
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="lat">{t("wizard.property.latitude")}</Label>
-              <Input
-                id="lat"
-                type="number"
-                step="any"
-                placeholder="5.322"
-                value={latitude}
-                onChange={(e) => setLatitude(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lng">{t("wizard.property.longitude")}</Label>
-              <Input
-                id="lng"
-                type="number"
-                step="any"
-                placeholder="-4.016"
-                value={longitude}
-                onChange={(e) => setLongitude(e.target.value)}
-              />
-            </div>
-          </div>
+          <LocationMapPicker latitude={latitude} longitude={longitude} onChange={applyPlace} />
+          {(street || city || country || location) && (
+            <dl className="rounded-2xl border border-gray-200 divide-y text-sm">
+              <div className="flex justify-between gap-4 p-3">
+                <dt className="text-gray-500">{t("wizard.property.street")}</dt>
+                <dd className="font-semibold text-right">{street || "—"}</dd>
+              </div>
+              <div className="flex justify-between gap-4 p-3">
+                <dt className="text-gray-500">{t("wizard.property.city")}</dt>
+                <dd className="font-semibold text-right">{city || "—"}</dd>
+              </div>
+              <div className="flex justify-between gap-4 p-3">
+                <dt className="text-gray-500">{t("wizard.property.country")}</dt>
+                <dd className="font-semibold text-right">{country || "—"}</dd>
+              </div>
+              <div className="flex justify-between gap-4 p-3">
+                <dt className="text-gray-500">{t("propertyForm.location")}</dt>
+                <dd className="font-semibold text-right">{location || "—"}</dd>
+              </div>
+            </dl>
+          )}
         </div>
       )}
 
@@ -274,12 +289,39 @@ export function PropertyCreationWizard({
               type="file"
               accept="image/*"
               multiple
-              onChange={(e) => setImages(Array.from(e.target.files || []))}
+              onChange={(e) => {
+                setImages(Array.from(e.target.files || []));
+                setCoverIndex(0);
+              }}
             />
             {images.length > 0 && (
               <p className={`text-xs ${hasMinPropertyPhotos(images) ? "text-emerald-600" : "text-gray-500"}`}>
                 {t("wizard.property.photosSelected", { count: images.length, min: MIN_PROPERTY_PHOTOS })}
               </p>
+            )}
+            {previews.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs text-gray-600">{t("wizard.property.coverHint")}</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {previews.map((src, idx) => (
+                    <button
+                      key={src}
+                      type="button"
+                      className={`relative overflow-hidden rounded-xl border-2 ${
+                        idx === coverIndex ? "border-brand" : "border-gray-200"
+                      }`}
+                      onClick={() => setCoverIndex(idx)}
+                    >
+                      <img src={src} alt="" className="h-24 w-full object-cover" />
+                      {idx === coverIndex && (
+                        <span className="absolute bottom-1 left-1 right-1 rounded-full bg-brand px-2 py-0.5 text-[10px] font-semibold text-white">
+                          {t("wizard.property.coverBadge")}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
           <div className="space-y-2">
@@ -330,6 +372,16 @@ export function PropertyCreationWizard({
               <dt className="text-gray-500">{t("common.photos")}</dt>
               <dd className="font-semibold">{images.length}</dd>
             </div>
+            {previews[coverIndex] && (
+              <div className="p-4 space-y-2">
+                <dt className="text-gray-500">{t("wizard.property.coverBadge")}</dt>
+                <img
+                  src={previews[coverIndex]}
+                  alt=""
+                  className="mt-2 h-32 w-full rounded-xl object-cover"
+                />
+              </div>
+            )}
           </dl>
         </div>
       )}

@@ -11,6 +11,7 @@ interface ImportMetaEnv {
   readonly VITE_WS_URL?: string;
   /** Host operations app origin. */
   readonly VITE_HOST_APP_URL?: string;
+  readonly VITE_MAPBOX_TOKEN?: string;
 }
 
 interface ImportMeta {

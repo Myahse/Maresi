@@ -169,6 +169,7 @@
       "basicsHint": "Titre et description clairs pour votre annonce.",
       "locationTitle": "Où se situe le bien ?",
       "locationHint": "Ville, quartier et coordonnées optionnelles.",
+      "mapMissingToken": "Carte Mapbox indisponible. Ajoutez VITE_MAPBOX_TOKEN.",
       "pricingTitle": "Tarif et capacité",
       "pricingHint": "Prix par nuit en XOF et nombre de voyageurs.",
       "mediaTitle": "Photos et visite virtuelle",
