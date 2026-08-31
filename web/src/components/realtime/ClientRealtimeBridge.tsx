@@ -38,7 +38,7 @@ export function ClientRealtimeBridge() {
 
   if (!toast) return null;
   return (
-    <div className="fixed bottom-4 right-4 z-[80] rounded-xl bg-gray-900 text-white text-sm px-4 py-3 shadow-lg">
+    <div className="fixed right-4 z-[80] above-mobile-nav rounded-xl bg-gray-900 text-white text-sm px-4 py-3 shadow-lg">
       {toast === "host-approved" && "Host account approved"}
       {toast === "host-rejected" && "Host application updated"}
       {toast === "visit.status_changed" && "Visit request updated"}

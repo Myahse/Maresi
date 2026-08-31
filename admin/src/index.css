@@ -76,6 +76,15 @@
     display: none;
   }
 
+  .above-mobile-nav {
+    bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  }
+  @media (min-width: 1024px) {
+    .above-mobile-nav {
+      bottom: 1rem;
+    }
+  }
+
   .splash-logo {
     animation: splash-rise 0.7s ease-out both;
   }

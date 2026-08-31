@@ -77,7 +77,7 @@ export function BottomNav() {
         </>
       )}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-border bg-card/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
         aria-label="Primary"
       >
         <ul className="grid grid-cols-5 h-16 items-end">
