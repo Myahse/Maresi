@@ -59,14 +59,13 @@
   }
   html {
     scroll-behavior: smooth;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: clip;
   }
   body {
-    @apply bg-background text-foreground antialiased min-h-screen;
+    @apply bg-background text-foreground antialiased;
     font-family: "Plus Jakarta Sans", system-ui, sans-serif;
-    overflow-x: hidden;
+    min-height: 100dvh;
+    overflow-x: clip;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }

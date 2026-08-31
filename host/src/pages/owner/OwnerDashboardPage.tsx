@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { getProperties, deleteProperty, getOwnerVisitRequests, getMySubscription } from "@/services/api";
+import { listingImageUrl } from "@/lib/media";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import type { OwnerSubscription, Property, VisitRequest } from "@/types";
 
@@ -117,11 +118,18 @@ export function OwnerDashboardPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {properties.map((p) => {
-            const cover = p.images?.[0];
+            const cover = listingImageUrl(p.images?.[0]);
             return (
               <Card key={p.id} className="overflow-hidden">
                 {cover ? (
-                  <img src={cover} alt={p.title} className="h-40 w-full object-cover" />
+                  <img
+                    src={cover}
+                    alt={p.title}
+                    className="h-40 w-full object-cover bg-muted"
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none";
+                    }}
+                  />
                 ) : (
                   <div className="h-40 w-full bg-muted flex items-center justify-center text-sm text-muted-foreground">
                     {t("propertyDetails.noImage")}

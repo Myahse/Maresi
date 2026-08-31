@@ -6,6 +6,7 @@ import type { Property } from "@/types";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { StarRating } from "@/components/rating/StarRating";
 import { cn } from "@/lib/utils";
+import { listingImageUrls } from "@/lib/media";
 
 interface PropertyCardProps {
   property: Property;
@@ -26,12 +27,9 @@ export function PropertyCard({
   const { t } = useTranslation();
   const { formatPrice } = usePriceFormatter();
   const navigate = useNavigate();
-  const photos =
-    property.images?.length > 0
-      ? property.images
-      : [
-          `https://placehold.co/640x400/0D9488/white?text=${encodeURIComponent(t("propertyDetails.noImage"))}`,
-        ];
+  const placeholder = `https://placehold.co/640x400/0D9488/white?text=${encodeURIComponent(t("propertyDetails.noImage"))}`;
+  const resolved = listingImageUrls(property.images);
+  const photos = resolved.length > 0 ? resolved : [placeholder];
   const [imageIndex, setImageIndex] = useState(0);
   const hasMultiple = photos.length > 1;
 
@@ -39,17 +37,21 @@ export function PropertyCard({
 
   const cardInner = (
     <>
-      <div className="relative group overflow-hidden">
+      <div className="relative group w-full overflow-hidden">
         <div
-          className="flex transition-transform duration-500 ease-in-out"
+          className="flex w-full transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${imageIndex * 100}%)` }}
         >
           {photos.map((photo, idx) => (
-            <div key={idx} className="w-full shrink-0">
+            <div key={idx} className="min-w-full w-full shrink-0">
               <img
                 src={photo}
                 alt={`${property.title} ${idx + 1}`}
-                className="w-full h-48 sm:h-52 md:h-56 object-cover"
+                className="w-full h-48 sm:h-52 md:h-56 object-cover bg-muted"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = placeholder;
+                }}
               />
             </div>
           ))}

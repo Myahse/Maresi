@@ -9,7 +9,7 @@ export function MainLayout() {
     <div className="min-h-screen flex flex-col">
       <DocumentTitle />
       <Header />
-      <main className="flex-1 overflow-x-hidden pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
+      <main className="flex-1 overflow-x-clip pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
         <Outlet />
       </main>
       <Footer />

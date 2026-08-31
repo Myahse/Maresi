@@ -199,7 +199,18 @@ public final class RowMaps {
     Array arr = rs.getArray(col);
     if (arr == null) return List.of();
     Object raw = arr.getArray();
-    if (raw instanceof String[] strings) return List.of(strings);
+    if (raw instanceof String[] strings) {
+      return List.of(strings);
+    }
+    if (raw instanceof Object[] objects) {
+      List<String> out = new ArrayList<>(objects.length);
+      for (Object value : objects) {
+        if (value == null) continue;
+        String text = value.toString().trim();
+        if (!text.isEmpty()) out.add(text);
+      }
+      return out;
+    }
     return List.of();
   }
 

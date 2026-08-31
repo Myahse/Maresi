@@ -56,7 +56,7 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
       style: MAPBOX_STYLE,
       center: first ? [first.longitude, first.latitude] : ABIDJAN_CENTER,
       zoom: 12,
-      cooperativeGestures: window.matchMedia("(max-width: 767px)").matches,
+      cooperativeGestures: true,
       dragRotate: false,
       pitchWithRotate: false,
       touchPitch: false,

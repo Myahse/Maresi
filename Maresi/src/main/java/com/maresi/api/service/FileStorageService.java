@@ -3,8 +3,11 @@ package com.maresi.api.service;
 import com.maresi.api.config.AppProperties;
 import com.maresi.api.exception.ApiException;
 import jakarta.annotation.PreDestroy;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,6 +15,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -19,12 +23,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
 import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -32,7 +42,11 @@ import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Service
 public class FileStorageService {
@@ -41,6 +55,8 @@ public class FileStorageService {
   private static final long MAX_BYTES = 5 * 1024 * 1024;
   private static final int MAX_OWNED_URLS = 40;
   private static final int R2_PUT_THREADS = 4;
+  private static final Pattern PROPERTY_KEY =
+      Pattern.compile("(?:^|/)(properties/[A-Za-z0-9._-]+)", Pattern.CASE_INSENSITIVE);
 
   private final Path propertyDir;
   private final Path identityDir;
@@ -57,7 +73,13 @@ public class FileStorageService {
       this.r2Executor = Executors.newFixedThreadPool(R2_PUT_THREADS);
       this.propertyDir = null;
       this.identityDir = null;
-      log.info("Image storage: Cloudflare R2 bucket={} public={}", r2.getBucket(), r2.resolvedPublicUrl());
+      if (isDirectPublicUrl()) {
+        log.info("Image storage: Cloudflare R2 bucket={} public={}", r2.getBucket(), r2.resolvedPublicUrl());
+      } else {
+        log.warn(
+            "Image storage: Cloudflare R2 bucket={} — R2_PUBLIC_URL is not a public r2.dev/custom domain; listing photos are served at /api/media/**",
+            r2.getBucket());
+      }
     } else {
       this.r2Client = null;
       this.r2Executor = null;
@@ -83,7 +105,7 @@ public class FileStorageService {
     }
     if (prepared.isEmpty()) return List.of();
     if (r2Client != null && prepared.size() > 1) {
-      return storePreparedOnR2Parallel(prepared);
+      return storePreparedOnR2Parallel(prepared, baseUrl);
     }
     List<String> urls = new ArrayList<>(prepared.size());
     for (PreparedImage image : prepared) {
@@ -101,21 +123,85 @@ public class FileStorageService {
 
   public List<String> acceptOwnedImageUrls(List<String> urls, String baseUrl) {
     if (urls == null || urls.isEmpty()) return List.of();
-    String prefix = ownedPropertyPrefix(baseUrl);
     List<String> accepted = new ArrayList<>();
     for (String raw : urls) {
       if (raw == null) continue;
       String url = raw.trim();
       if (url.isEmpty()) continue;
-      if (!url.startsWith(prefix)) {
+      String key = extractPropertyObjectKey(url);
+      if (key == null) {
         throw ApiException.of(400, "Invalid image URL");
       }
-      accepted.add(url);
+      accepted.add(browserUrlForKey(key, baseUrl));
     }
     if (accepted.size() > MAX_OWNED_URLS) {
       throw ApiException.of(400, "Too many images");
     }
     return accepted;
+  }
+
+  public void rewriteImageFields(List<Map<String, Object>> items) {
+    if (items == null) return;
+    String baseUrl = currentRequestBaseUrl();
+    for (Map<String, Object> item : items) {
+      rewriteImageFields(item, baseUrl);
+    }
+  }
+
+  public void rewriteImageFields(Map<String, Object> item) {
+    rewriteImageFields(item, currentRequestBaseUrl());
+  }
+
+  private void rewriteImageFields(Map<String, Object> item, String baseUrl) {
+    if (item == null) return;
+    Object raw = item.get("images");
+    if (!(raw instanceof List<?> list)) return;
+    List<String> next = new ArrayList<>(list.size());
+    for (Object value : list) {
+      if (value == null) continue;
+      String url = value.toString().trim();
+      if (url.isEmpty()) continue;
+      next.add(toBrowserUrl(url, baseUrl));
+    }
+    item.put("images", next);
+  }
+
+  public StoredMedia loadPublicPropertyImage(String rawKey) {
+    String key = extractPropertyObjectKey(rawKey);
+    if (key == null && rawKey != null) {
+      key = extractPropertyObjectKey("properties/" + rawKey.replaceFirst("^/+", ""));
+    }
+    if (key == null) return null;
+    if (r2Client != null) {
+      try {
+        GetObjectRequest request = GetObjectRequest.builder().bucket(r2.getBucket()).key(key).build();
+        try (ResponseInputStream<GetObjectResponse> in = r2Client.getObject(request)) {
+          String contentType = in.response().contentType();
+          if (contentType == null || contentType.isBlank()) {
+            contentType = contentTypeForKey(key);
+          }
+          return new StoredMedia(in.readAllBytes(), contentType);
+        }
+      } catch (NoSuchKeyException e) {
+        return null;
+      } catch (S3Exception e) {
+        if (e.statusCode() == 404) return null;
+        log.error("R2 get failed for key={}: {}", key, e.getMessage());
+        throw ApiException.of(500, "Failed to load file");
+      } catch (IOException e) {
+        log.error("R2 read failed for key={}: {}", key, e.getMessage());
+        throw ApiException.of(500, "Failed to load file");
+      }
+    }
+    if (propertyDir == null) return null;
+    Path target = propertyDir.resolve(key.substring(key.lastIndexOf('/') + 1)).normalize();
+    if (!target.startsWith(propertyDir) || !Files.isRegularFile(target)) return null;
+    try {
+      return new StoredMedia(Files.readAllBytes(target), contentTypeForKey(key));
+    } catch (IOException e) {
+      log.error("Disk read failed for key={}: {}", key, e.getMessage());
+      return null;
+    }
   }
 
   private PreparedImage prepareImage(MultipartFile file, String folder) {
@@ -137,7 +223,7 @@ public class FileStorageService {
 
   private String storePrepared(PreparedImage image, Path localDir, String baseUrl) {
     if (r2Client != null) {
-      return putOnR2(image);
+      return putOnR2(image, baseUrl);
     }
     Path target = localDir.resolve(image.key.substring(image.key.lastIndexOf('/') + 1));
     try {
@@ -148,10 +234,10 @@ public class FileStorageService {
     return baseUrl + "/" + uploadDirName + "/" + image.key;
   }
 
-  private List<String> storePreparedOnR2Parallel(List<PreparedImage> images) {
+  private List<String> storePreparedOnR2Parallel(List<PreparedImage> images, String baseUrl) {
     List<Callable<String>> tasks = new ArrayList<>(images.size());
     for (PreparedImage image : images) {
-      tasks.add(() -> putOnR2(image));
+      tasks.add(() -> putOnR2(image, baseUrl));
     }
     try {
       List<Future<String>> futures = r2Executor.invokeAll(tasks, 2, TimeUnit.MINUTES);
@@ -178,7 +264,7 @@ public class FileStorageService {
     }
   }
 
-  private String putOnR2(PreparedImage image) {
+  private String putOnR2(PreparedImage image, String baseUrl) {
     try {
       PutObjectRequest request =
           PutObjectRequest.builder()
@@ -189,7 +275,7 @@ public class FileStorageService {
               .cacheControl("public, max-age=31536000, immutable")
               .build();
       r2Client.putObject(request, RequestBody.fromBytes(image.bytes));
-      return r2.resolvedPublicUrl() + "/" + image.key;
+      return browserUrlForKey(image.key, baseUrl);
     } catch (ApiException e) {
       throw e;
     } catch (Exception e) {
@@ -198,11 +284,77 @@ public class FileStorageService {
     }
   }
 
-  private String ownedPropertyPrefix(String baseUrl) {
-    if (r2Client != null) {
-      return r2.resolvedPublicUrl() + "/properties/";
+  private String toBrowserUrl(String stored, String baseUrl) {
+    String key = extractPropertyObjectKey(stored);
+    if (key != null) {
+      return browserUrlForKey(key, baseUrl);
     }
-    return baseUrl + "/" + uploadDirName + "/properties/";
+    if (stored.startsWith("/") && !stored.startsWith("//")) {
+      String base = trimSlash(baseUrl);
+      return base.isEmpty() ? stored : base + stored;
+    }
+    return stored;
+  }
+
+  private String browserUrlForKey(String key, String baseUrl) {
+    if (r2Client != null && isDirectPublicUrl()) {
+      return r2.resolvedPublicUrl() + "/" + key;
+    }
+    String base = trimSlash(baseUrl);
+    if (base.isEmpty()) {
+      base = currentRequestBaseUrl();
+    }
+    if (r2Client != null) {
+      return (base.isEmpty() ? "" : base) + "/api/media/" + key;
+    }
+    return (base.isEmpty() ? "" : base) + "/" + uploadDirName + "/" + key;
+  }
+
+  private boolean isDirectPublicUrl() {
+    String url = r2.resolvedPublicUrl().toLowerCase(Locale.ROOT);
+    return !url.isBlank() && !url.contains("r2.cloudflarestorage.com");
+  }
+
+  static String extractPropertyObjectKey(String stored) {
+    if (stored == null || stored.isBlank()) return null;
+    String value = stored.trim();
+    try {
+      value = URLDecoder.decode(value, StandardCharsets.UTF_8);
+    } catch (IllegalArgumentException ignored) {
+      // keep original
+    }
+    value = value.replace('\\', '/');
+    int query = value.indexOf('?');
+    if (query >= 0) value = value.substring(0, query);
+    int hash = value.indexOf('#');
+    if (hash >= 0) value = value.substring(0, hash);
+    Matcher matcher = PROPERTY_KEY.matcher(value);
+    if (!matcher.find()) return null;
+    String key = matcher.group(1);
+    if (key.contains("..")) return null;
+    return key;
+  }
+
+  private static String currentRequestBaseUrl() {
+    var attrs = RequestContextHolder.getRequestAttributes();
+    if (attrs instanceof ServletRequestAttributes servletAttrs) {
+      HttpServletRequest request = servletAttrs.getRequest();
+      return ServletUriComponentsBuilder.fromContextPath(request).build().toUriString();
+    }
+    return "";
+  }
+
+  private static String trimSlash(String value) {
+    if (value == null) return "";
+    return value.trim().replaceAll("/+$", "");
+  }
+
+  private static String contentTypeForKey(String key) {
+    String lower = key.toLowerCase(Locale.ROOT);
+    if (lower.endsWith(".png")) return "image/png";
+    if (lower.endsWith(".gif")) return "image/gif";
+    if (lower.endsWith(".webp")) return "image/webp";
+    return "image/jpeg";
   }
 
   private static S3Client buildR2Client(AppProperties.R2 r2) {
@@ -244,7 +396,7 @@ public class FileStorageService {
   }
 
   private static String extensionFor(String contentType) {
-    return switch (contentType.toLowerCase(Locale.ROOT)) {
+    return switch (contentType.toLowerCase()) {
       case "image/png" -> ".png";
       case "image/gif" -> ".gif";
       case "image/webp" -> ".webp";
@@ -263,4 +415,6 @@ public class FileStorageService {
   }
 
   private record PreparedImage(byte[] bytes, String contentType, String key) {}
+
+  public record StoredMedia(byte[] bytes, String contentType) {}
 }

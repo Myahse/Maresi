@@ -1,3 +1,5 @@
+import 'package:maresi_mobile/utils/listing_image.dart';
+
 class Property {
   const Property({
     required this.id,
@@ -44,7 +46,10 @@ class Property {
       price: (json['price'] as num?)?.toInt() ?? 0,
       location: json['location'] as String? ?? '',
       propertyType: json['property_type'] as String? ?? json['propertyType'] as String? ?? '',
-      images: (json['images'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      images: (json['images'] as List<dynamic>?)
+              ?.map((e) => listingImageUrl(e.toString()))
+              .toList() ??
+          const [],
       isActive: json['is_active'] as bool? ?? json['isActive'] as bool? ?? true,
       ownerName: json['owner_name'] as String? ?? json['ownerName'] as String?,
       ownerEmail: json['owner_email'] as String? ?? json['ownerEmail'] as String?,
@@ -111,7 +116,10 @@ class Favorite {
       price: (json['price'] as num?)?.toInt(),
       location: json['location'] as String?,
       propertyType: json['property_type'] as String? ?? json['propertyType'] as String?,
-      images: (json['images'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      images: (json['images'] as List<dynamic>?)
+              ?.map((e) => listingImageUrl(e.toString()))
+              .toList() ??
+          const [],
     );
   }
 

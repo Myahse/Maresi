@@ -6,6 +6,7 @@ import com.maresi.api.contracts.Response;
 import com.maresi.api.repository.FavoriteRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
+import com.maresi.api.service.FileStorageService;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -14,10 +15,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class FavoriteBusiness {
   private final FavoriteRepository favorites;
+  private final FileStorageService fileStorage;
   private final FunctionalError functionalError;
 
-  public FavoriteBusiness(FavoriteRepository favorites, FunctionalError functionalError) {
+  public FavoriteBusiness(
+      FavoriteRepository favorites, FileStorageService fileStorage, FunctionalError functionalError) {
     this.favorites = favorites;
+    this.fileStorage = fileStorage;
     this.functionalError = functionalError;
   }
 
@@ -25,6 +29,7 @@ public class FavoriteBusiness {
     Response<Map<String, Object>> response = new Response<>();
     AuthUser user = SecurityUtils.requireUser();
     var items = favorites.findByUser(user.id());
+    fileStorage.rewriteImageFields(items);
     response.setItems(items);
     response.setCount((long) items.size());
     response.setStatus(functionalError.success("Favoris", locale));

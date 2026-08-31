@@ -30,6 +30,7 @@ public class SecurityConfig {
     "/v3/api-docs/**",
     "/webjars/**",
     "/uploads/**",
+    "/api/media/**",
     "/ws",
     "/ws/**"
   };

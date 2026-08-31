@@ -55,6 +55,7 @@ public class PropertyBusiness {
     boolean excludeReserved = ownerFilter == null;
     List<Map<String, Object>> items =
         properties.findAll(location, minPrice, maxPrice, propertyType, ownerFilter, excludeReserved);
+    fileStorage.rewriteImageFields(items);
     response.setItems(items);
     response.setCount((long) items.size());
     response.setStatus(functionalError.success("Annonces", locale));
@@ -67,6 +68,7 @@ public class PropertyBusiness {
         .findById(id)
         .map(
             property -> {
+              fileStorage.rewriteImageFields(property);
               response.setItem(property);
               response.setStatus(functionalError.success("Bien", locale));
               return response;
@@ -114,6 +116,7 @@ public class PropertyBusiness {
             propertyType,
             imageUrls,
             extras);
+    fileStorage.rewriteImageFields(created);
     response.setItem(created);
     response.setStatus(functionalError.success("Creation", locale));
     return response;
@@ -152,7 +155,9 @@ public class PropertyBusiness {
       data = new HashMap<>(data);
       data.put("images", merged);
     }
-    response.setItem(properties.update(id, data));
+    Map<String, Object> updated = properties.update(id, data);
+    fileStorage.rewriteImageFields(updated);
+    response.setItem(updated);
     response.setStatus(functionalError.success("Mise a jour", locale));
     return response;
   }

@@ -13,6 +13,7 @@ import { VirtualTourViewer } from "@/components/property/VirtualTourViewer";
 import { RatingsSection } from "@/components/rating/RatingsSection";
 import { StarRating } from "@/components/rating/StarRating";
 import { cn } from "@/lib/utils";
+import { listingImageUrls } from "@/lib/media";
 
 export function PropertyDetailsPage() {
   const { t } = useTranslation();
@@ -69,13 +70,22 @@ export function PropertyDetailsPage() {
   if (loading) return <div className="container mx-auto px-4 py-8">{t("common.loading")}</div>;
   if (!property) return <div className="container mx-auto px-4 py-8">{t("propertyDetails.notFound")}</div>;
 
-  const images = property.images?.length ? property.images : [placeholderImage];
+  const resolvedImages = listingImageUrls(property.images);
+  const images = resolvedImages.length ? resolvedImages : [placeholderImage];
 
   return (
     <div className="font-jakarta container mx-auto px-4 py-8 max-w-5xl">
-      <div className="rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-border aspect-video mb-3 bg-cover bg-center shadow-sm"
-        style={{ backgroundImage: `url(${images[activeImage]})` }}
-      />
+      <div className="rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-border aspect-video mb-3 bg-muted shadow-sm">
+        <img
+          src={images[activeImage]}
+          alt={property.title}
+          className="h-full w-full object-cover"
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = placeholderImage;
+          }}
+        />
+      </div>
       {images.length > 1 && (
         <div className="flex gap-2 mb-6 overflow-x-auto hide-scrollbar pb-1">
           {images.map((img, idx) => (
@@ -84,11 +94,12 @@ export function PropertyDetailsPage() {
               type="button"
               onClick={() => setActiveImage(idx)}
               className={cn(
-                "shrink-0 w-20 h-14 rounded-lg bg-cover bg-center border-2 transition-colors",
+                "shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-colors bg-muted",
                 idx === activeImage ? "border-brand ring-2 ring-brand/30" : "border-border"
               )}
-              style={{ backgroundImage: `url(${img})` }}
-            />
+            >
+              <img src={img} alt="" className="h-full w-full object-cover" />
+            </button>
           ))}
         </div>
       )}
