@@ -32,6 +32,18 @@ public class AdminMonitorService {
     return business.subscriptions(locale);
   }
 
+  public Response<Map<String, Object>> visits(Locale locale) {
+    return business.visits(locale);
+  }
+
+  public Response<Map<String, Object>> activity(Locale locale) {
+    return business.activity(locale);
+  }
+
+  public Response<Map<String, Object>> userTrail(UUID userId, Locale locale) {
+    return business.userTrail(userId, locale);
+  }
+
   public Response<Map<String, Object>> updateSubscription(
       UUID userId, Request<Map<String, Object>> request, Locale locale) {
     return business.updateSubscription(userId, request, locale);

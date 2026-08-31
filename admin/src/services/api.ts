@@ -226,6 +226,23 @@ export function getAdminOverview() {
   return api.get<import("@/types").AdminOverview>(`/admin/overview`);
 }
 
+export function getAdminVisits() {
+  return api.get<import("@/types").VisitRequest[]>(`/admin/visits`);
+}
+
+export function getAdminActivity() {
+  return api.get<import("@/types").AdminActivity[]>(`/admin/activity`);
+}
+
+export function getAdminUserTrail(userId: string) {
+  return api.get<{
+    user: import("@/types").User;
+    visits: import("@/types").VisitRequest[];
+    payments: import("@/types").Payment[];
+    activity: import("@/types").AdminActivity[];
+  }>(`/admin/users/${userId}`);
+}
+
 export function getAdminUsers() {
   return api.get<import("@/types").User[]>(`/admin/users`);
 }

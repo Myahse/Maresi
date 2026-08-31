@@ -65,6 +65,7 @@ export type VisitRequestStatus =
   | "accepted"
   | "declined"
   | "awaiting_agreement"
+  | "awaiting_key"
   | "awaiting_payment"
   | "payment_sent"
   | "confirmed"
@@ -96,6 +97,8 @@ export interface VisitRequest {
   agreement_full_name?: string;
   agreement_accepted?: boolean;
   agreement_signed_at?: string;
+  key_code?: string;
+  key_confirmed_at?: string;
   owner_note?: string;
   property_price?: number;
   wave_payment_url?: string;

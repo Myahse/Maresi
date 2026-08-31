@@ -359,7 +359,8 @@
       "accepted": "Acceptée",
       "declined": "Refusée",
       "awaiting_agreement": "Signer l'engagement",
-      "awaiting_payment": "Payer Maresi",
+      "awaiting_key": "Donner le code clé",
+      "awaiting_payment": "Payer l'hôte",
       "payment_sent": "Paiement déclaré",
       "confirmed": "Confirmée",
       "cancelled": "Annulée"
@@ -390,7 +391,10 @@
     "agreementFailed": "Impossible d'enregistrer l'engagement",
     "agreementAlreadySigned": "Signé par {{name}} le {{date}}",
     "agreementBackToVisits": "Retour à mes réservations",
-    "signedBy": "Signé par"
+    "signedBy": "Signé par",
+    "keyCode": "Code clé",
+    "keyHint": "Donnez ce code à l'hôte pour récupérer la clé. Ensuite vous paierez l'hôte.",
+    "keyWaitingHost": "L'hôte doit saisir ce code pour confirmer la remise de la clé."
   },
   "payments": {
     "payHostAmount": "À payer",

@@ -42,6 +42,11 @@ public class VisitRequestService {
     return visitRequestBusiness.signAgreement(id, request, locale);
   }
 
+  public Response<Map<String, Object>> confirmKey(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    return visitRequestBusiness.confirmKey(id, request, locale);
+  }
+
   public com.maresi.api.service.FileStorageService.StoredMedia loadRequesterIdentity(UUID id, String kind) {
     return visitRequestBusiness.loadRequesterIdentity(id, kind);
   }

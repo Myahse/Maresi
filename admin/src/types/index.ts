@@ -61,6 +61,7 @@ export type VisitRequestStatus =
   | "accepted"
   | "declined"
   | "awaiting_agreement"
+  | "awaiting_key"
   | "awaiting_payment"
   | "payment_sent"
   | "confirmed"
@@ -85,7 +86,11 @@ export interface VisitRequest {
   id_card?: string;
   requester_name?: string;
   requester_email?: string;
+  owner_name?: string;
+  owner_email?: string;
   owner_note?: string;
+  key_code?: string;
+  key_confirmed_at?: string;
 }
 
 export interface Payment {
@@ -130,6 +135,25 @@ export interface AdminOverview {
   revenue_completed: number;
   subscriptions_active: number;
   host_applications_pending: number;
+  properties?: number;
+  visits?: number;
+  visits_pending?: number;
+  visits_awaiting_key?: number;
+  visits_awaiting_payment?: number;
+  visits_confirmed?: number;
+}
+
+export interface AdminActivity {
+  id: string;
+  action: string;
+  entity_type?: string;
+  entity_id?: string;
+  actor_id?: string;
+  actor_name?: string;
+  actor_email?: string;
+  actor_role?: string;
+  summary?: string;
+  created_at?: string;
 }
 
 export interface PropertyRating {

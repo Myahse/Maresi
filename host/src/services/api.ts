@@ -186,6 +186,10 @@ export function getOwnerVisitRequests() {
   return api.get<import("@/types").VisitRequest[]>(`/visit-requests/owner`);
 }
 
+export function confirmVisitKey(id: string, code: string) {
+  return api.post<import("@/types").VisitRequest>(`/visit-requests/${id}/key`, { code });
+}
+
 export function updateVisitRequestStatus(
   id: string,
   status: import("@/types").VisitRequestStatus,

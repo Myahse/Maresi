@@ -124,6 +124,8 @@ public final class RowMaps {
     putIfPresent(rs, m, "agreement_full_name");
     putIfPresent(rs, m, "agreement_accepted");
     putIfPresent(rs, m, "agreement_signed_at");
+    putIfPresent(rs, m, "key_code");
+    putIfPresent(rs, m, "key_confirmed_at");
     putIfPresent(rs, m, "property_price");
     putIfPresent(rs, m, "property_owner_id");
     putIfPresent(rs, m, "wave_payment_url");

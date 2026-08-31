@@ -56,6 +56,7 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
   bool _canCancel(String status) =>
       status == 'pending' ||
       status == 'awaiting_agreement' ||
+      status == 'awaiting_key' ||
       status == 'awaiting_payment' ||
       status == 'payment_sent' ||
       status == 'confirmed';
@@ -89,15 +90,11 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
     }
   }
 
-  Future<void> _payStay(VisitRequest visit) async {
+  Future<void> _markPaid(VisitRequest visit) async {
     setState(() => _actingId = visit.id);
     try {
-      final payment = await maresiApi.startReservationPayment(visit.id);
+      await maresiApi.updateVisitRequestStatus(visit.id, 'payment_sent');
       if (!mounted) return;
-      if (payment.checkoutUrl != null && payment.checkoutUrl!.isNotEmpty) {
-        await _openLink(payment.checkoutUrl!);
-        return;
-      }
       await _load();
     } catch (e) {
       if (!mounted) return;
@@ -181,17 +178,44 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
                                     child: Text(locale.t('visits.agreementSign')),
                                   ),
                                 ],
+                                if (visit.status == 'awaiting_key') ...[
+                                  const SizedBox(height: 8),
+                                  Text(locale.t('visits.keyHint'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    visit.keyCode ?? '------',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: 8),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(locale.t('visits.keyWaitingHost'), style: TextStyle(color: palette.textSecondary, fontSize: 12)),
+                                ],
                                 if (visit.status == 'awaiting_payment') ...[
                                   const SizedBox(height: 8),
-                                  Text(locale.t('payments.payMaresiHint'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
+                                  Text(locale.t('payments.payHostHint'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
+                                  if (visit.wavePaymentUrl != null && visit.wavePaymentUrl!.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    FilledButton(
+                                      onPressed: () => _openLink(visit.wavePaymentUrl!),
+                                      style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                                      child: Text(locale.t('payments.payWave')),
+                                    ),
+                                  ],
+                                  if (visit.orangeMoneyUrl != null && visit.orangeMoneyUrl!.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    OutlinedButton(
+                                      onPressed: () => _openLink(visit.orangeMoneyUrl!),
+                                      child: Text(locale.t('payments.payOrange')),
+                                    ),
+                                  ],
                                   const SizedBox(height: 12),
                                   FilledButton(
-                                    onPressed: _actingId == visit.id ? null : () => _payStay(visit),
+                                    onPressed: _actingId == visit.id ? null : () => _markPaid(visit),
                                     style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
                                     child: Text(
                                       _actingId == visit.id
                                           ? locale.t('payments.paying')
-                                          : locale.t('payments.payReservation'),
+                                          : locale.t('payments.iPaidHost'),
                                     ),
                                   ),
                                 ],

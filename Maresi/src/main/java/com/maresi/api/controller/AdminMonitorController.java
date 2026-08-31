@@ -62,6 +62,24 @@ public class AdminMonitorController {
     return ControllerSupport.run(() -> adminMonitorService.subscriptions(loc), loc, exceptionUtils);
   }
 
+  @GetMapping("/visits")
+  public ResponseEntity<Response<Map<String, Object>>> visits(Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> adminMonitorService.visits(loc), loc, exceptionUtils);
+  }
+
+  @GetMapping("/activity")
+  public ResponseEntity<Response<Map<String, Object>>> activity(Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> adminMonitorService.activity(loc), loc, exceptionUtils);
+  }
+
+  @GetMapping("/users/{userId}")
+  public ResponseEntity<Response<Map<String, Object>>> userTrail(@PathVariable UUID userId, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> adminMonitorService.userTrail(userId, loc), loc, exceptionUtils);
+  }
+
   @PatchMapping("/subscriptions/{userId}")
   public ResponseEntity<Response<Map<String, Object>>> updateSubscription(
       @PathVariable UUID userId, @RequestBody Request<Map<String, Object>> request, Locale locale) {

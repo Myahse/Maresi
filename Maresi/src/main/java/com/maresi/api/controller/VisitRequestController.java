@@ -84,6 +84,21 @@ public class VisitRequestController {
         exceptionUtils);
   }
 
+  @PostMapping("/{id}/key")
+  public ResponseEntity<Response<Map<String, Object>>> confirmKey(
+      @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return visitRequestService.confirmKey(id, request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
   @PostMapping("/{id}/agreement")
   public ResponseEntity<Response<Map<String, Object>>> signAgreement(
       @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {

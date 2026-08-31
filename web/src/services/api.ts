@@ -183,6 +183,10 @@ export function updateVisitRequestStatus(
   });
 }
 
+export function confirmVisitKey(id: string, code: string) {
+  return api.post<import("@/types").VisitRequest>(`/visit-requests/${id}/key`, { code });
+}
+
 export function signStayAgreement(id: string, fullName: string) {
   return api.post<import("@/types").VisitRequest>(`/visit-requests/${id}/agreement`, {
     full_name: fullName,

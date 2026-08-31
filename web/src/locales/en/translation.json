@@ -359,7 +359,8 @@
       "accepted": "Accepted",
       "declined": "Declined",
       "awaiting_agreement": "Sign care agreement",
-      "awaiting_payment": "Pay Maresi",
+      "awaiting_key": "Share the key code",
+      "awaiting_payment": "Pay the host",
       "payment_sent": "Payment declared",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled"
@@ -390,7 +391,10 @@
     "agreementFailed": "Could not save the agreement",
     "agreementAlreadySigned": "Signed by {{name}} on {{date}}",
     "agreementBackToVisits": "Back to my reservations",
-    "signedBy": "Signed by"
+    "signedBy": "Signed by",
+    "keyCode": "Key code",
+    "keyHint": "Give this code to the host to receive the key. Then pay the host.",
+    "keyWaitingHost": "The host must enter this code to confirm the key handover."
   },
   "payments": {
     "payHostAmount": "Amount due",

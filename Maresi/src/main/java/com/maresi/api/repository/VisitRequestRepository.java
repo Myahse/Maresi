@@ -139,23 +139,102 @@ public class VisitRequestRepository {
         .findFirst();
   }
 
-  public Optional<Map<String, Object>> signAgreement(UUID id, UUID userId, String fullName) {
+  public Optional<Map<String, Object>> signAgreement(UUID id, UUID userId, String fullName, String keyCode) {
     return jdbc.query(
             """
             UPDATE visit_requests
-            SET status = 'awaiting_payment',
+            SET status = 'awaiting_key',
                 agreement_full_name = ?,
                 agreement_accepted = TRUE,
-                agreement_signed_at = NOW()
+                agreement_signed_at = NOW(),
+                key_code = ?
             WHERE id = ? AND user_id = ? AND status = 'awaiting_agreement'
             RETURNING *
             """,
             (rs, rowNum) -> RowMaps.visitRequest(rs),
             fullName,
+            keyCode,
             id,
             userId)
         .stream()
         .findFirst();
+  }
+
+  public Optional<Map<String, Object>> confirmKey(UUID id, UUID ownerId, String keyCode) {
+    return jdbc.query(
+            """
+            UPDATE visit_requests vr
+            SET status = 'awaiting_payment', key_confirmed_at = NOW()
+            FROM properties p
+            WHERE vr.property_id = p.id
+              AND p.owner_id = ?
+              AND vr.id = ?
+              AND vr.status = 'awaiting_key'
+              AND vr.key_code = ?
+            RETURNING vr.*
+            """,
+            (rs, rowNum) -> RowMaps.visitRequest(rs),
+            ownerId,
+            id,
+            keyCode)
+        .stream()
+        .findFirst();
+  }
+
+  public List<Map<String, Object>> findAllForAdmin() {
+    return jdbc.query(
+        """
+        SELECT vr.*, p.title AS property_title, p.location, p.price AS property_price,
+               p.owner_id AS property_owner_id,
+               guest.full_name AS requester_name, guest.email AS requester_email,
+               guest.phone AS requester_phone,
+               host.full_name AS owner_name, host.email AS owner_email
+        FROM visit_requests vr
+        JOIN properties p ON vr.property_id = p.id
+        JOIN users guest ON vr.user_id = guest.id
+        JOIN users host ON p.owner_id = host.id
+        ORDER BY vr.requested_at DESC
+        LIMIT 400
+        """,
+        (rs, rowNum) -> {
+          Map<String, Object> m = RowMaps.visitRequest(rs);
+          try {
+            m.put("property_price", rs.getBigDecimal("property_price"));
+            m.put("owner_name", rs.getString("owner_name"));
+            m.put("owner_email", rs.getString("owner_email"));
+          } catch (Exception ignored) {
+          }
+          return m;
+        });
+  }
+
+  public List<Map<String, Object>> findByUserOrOwner(UUID userId) {
+    return jdbc.query(
+        """
+        SELECT vr.*, p.title AS property_title, p.location, p.price AS property_price,
+               p.owner_id AS property_owner_id,
+               guest.full_name AS requester_name, guest.email AS requester_email,
+               host.full_name AS owner_name, host.email AS owner_email
+        FROM visit_requests vr
+        JOIN properties p ON vr.property_id = p.id
+        JOIN users guest ON vr.user_id = guest.id
+        JOIN users host ON p.owner_id = host.id
+        WHERE vr.user_id = ? OR p.owner_id = ?
+        ORDER BY vr.requested_at DESC
+        LIMIT 200
+        """,
+        (rs, rowNum) -> {
+          Map<String, Object> m = RowMaps.visitRequest(rs);
+          try {
+            m.put("property_price", rs.getBigDecimal("property_price"));
+            m.put("owner_name", rs.getString("owner_name"));
+            m.put("owner_email", rs.getString("owner_email"));
+          } catch (Exception ignored) {
+          }
+          return m;
+        },
+        userId,
+        userId);
   }
 
   public Optional<Map<String, Object>> findRequesterIdentity(UUID visitId) {

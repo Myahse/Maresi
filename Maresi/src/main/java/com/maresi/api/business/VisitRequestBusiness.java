@@ -186,6 +186,9 @@ public class VisitRequestBusiness {
     if (owner || admin) {
       exposeIdentityLinks(item);
     }
+    if (owner && !guest && !admin) {
+      hideKeyCode(item);
+    }
     response.setItem(item);
     response.setStatus(functionalError.success("Demande", locale));
     return response;
@@ -196,6 +199,7 @@ public class VisitRequestBusiness {
     var items = visitRequests.findByPropertyOwner(SecurityUtils.requireUser().id());
     for (Map<String, Object> item : items) {
       exposeIdentityLinks(item);
+      hideKeyCode(item);
     }
     response.setItems(items);
     response.setCount((long) items.size());
@@ -291,7 +295,7 @@ public class VisitRequestBusiness {
       response.setStatus(functionalError.invalidData("Cette reservation ne peut plus etre annulee", locale));
       return response;
     }
-    if (!List.of("pending", "awaiting_agreement", "awaiting_payment", "payment_sent", "confirmed").contains(currentStatus)) {
+    if (!List.of("pending", "awaiting_agreement", "awaiting_key", "awaiting_payment", "payment_sent", "confirmed").contains(currentStatus)) {
       response.setHasError(true);
       response.setStatus(functionalError.invalidData("Cette reservation ne peut plus etre annulee", locale));
       return response;
@@ -446,7 +450,8 @@ public class VisitRequestBusiness {
       response.setStatus(functionalError.invalidData("Vous devez accepter l'engagement", locale));
       return response;
     }
-    Map<String, Object> updated = visitRequests.signAgreement(id, user.id(), fullName.trim()).orElse(null);
+    String keyCode = String.format("%06d", java.util.concurrent.ThreadLocalRandom.current().nextInt(1_000_000));
+    Map<String, Object> updated = visitRequests.signAgreement(id, user.id(), fullName.trim(), keyCode).orElse(null);
     if (updated == null) {
       response.setHasError(true);
       response.setStatus(functionalError.invalidData("Signez apres acceptation de l'hote", locale));
@@ -462,7 +467,9 @@ public class VisitRequestBusiness {
                 .map(Object::toString)
                 .map(UUID::fromString)
                 .orElse(null);
-    realtime.publish("visit.status_changed", updated, user.id(), ownerId, true);
+    Map<String, Object> published = new java.util.HashMap<>(updated);
+    hideKeyCode(published);
+    realtime.publish("visit.status_changed", published, user.id(), ownerId, true);
     String listingTitle =
         properties
             .findById(listingId)
@@ -472,31 +479,66 @@ public class VisitRequestBusiness {
     notifications.create(
         user.id(),
         "reservation",
-        "Paiement Maresi",
-        "Engagement signe. Payez via GeniusPay. L'hote recevra 90% sur son portefeuille.",
+        "Code cle",
+        "Engagement signe. Donnez le code a 6 chiffres a l'hote pour recuperer la cle, puis payez l'hote.",
         listingId);
     if (ownerId != null) {
       notifications.create(
           ownerId,
           "reservation",
-          "Engagement signe",
-          "Le client a signe l'engagement et va payer.",
+          "Attente du code cle",
+          "Le client a signe. Demandez le code a 6 chiffres, saisissez-le, puis le client paiera.",
           listingId);
       email.sendToUser(
           ownerId,
-          "Maresi — engagement signe",
+          "Maresi — code cle",
           "Le client a signe l'engagement pour "
               + listingTitle
-              + " et va proceder au paiement. Ouvrez Maresi Hote pour voir le dossier.");
+              + ". Demandez-lui le code a 6 chiffres, saisissez-le dans Maresi Hote, puis il paiera.");
     }
     email.sendToUser(
         user.id(),
-        "Maresi — engagement signe",
-        "Merci. Votre engagement est enregistre.\nConsultez-le ici :\n"
-            + agreementUrl(id)
-            + "\n\nPayez maintenant dans Maresi via GeniusPay.");
+        "Maresi — votre code cle",
+        "Merci. Votre engagement est enregistre.\nVotre code cle : "
+            + keyCode
+            + "\n\nDonnez ce code a l'hote pour recuperer la cle. Ensuite, payez l'hote dans Maresi.");
     response.setItem(updated);
     response.setStatus(functionalError.success("Engagement signe", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> confirmKey(UUID id, Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> data = request.getData() == null ? Map.of() : request.getData();
+    String code = str(data.get("code"));
+    if (code == null || !code.trim().matches("\\d{6}")) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Saisissez le code a 6 chiffres", locale));
+      return response;
+    }
+    Map<String, Object> updated = visitRequests.confirmKey(id, user.id(), code.trim()).orElse(null);
+    if (updated == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Code incorrect ou deja utilise", locale));
+      return response;
+    }
+    hideKeyCode(updated);
+    UUID requesterId = UUID.fromString(updated.get("user_id").toString());
+    UUID listingId = UUID.fromString(updated.get("property_id").toString());
+    realtime.publish("visit.status_changed", updated, requesterId, user.id(), true);
+    notifications.create(
+        requesterId,
+        "reservation",
+        "Cle confirmee",
+        "L'hote a confirme le code. Payez maintenant l'hote.",
+        listingId);
+    email.sendToUser(
+        requesterId,
+        "Maresi — payez l'hote",
+        "L'hote a confirme le code cle. Payez l'hote depuis Maresi (Wave ou Orange Money).");
+    response.setItem(updated);
+    response.setStatus(functionalError.success("Code confirme", locale));
     return response;
   }
 
@@ -517,6 +559,10 @@ public class VisitRequestBusiness {
 
   private String agreementUrl(UUID visitId) {
     return StayAgreementText.pageUrl(appProperties.getPayments().getSuccessUrl(), visitId);
+  }
+
+  private static void hideKeyCode(Map<String, Object> item) {
+    if (item != null) item.remove("key_code");
   }
 
   private void exposeIdentityLinks(Map<String, Object> item) {

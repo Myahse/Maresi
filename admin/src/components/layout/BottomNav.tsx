@@ -24,14 +24,14 @@ export function BottomNav() {
     },
     { to: "/users", label: t("admin.navUsers"), icon: Users, active: pathname.startsWith("/users") },
     {
-      to: "/payments",
-      label: t("admin.navPayments"),
-      icon: CreditCard,
-      active: pathname.startsWith("/payments"),
+      to: "/visits",
+      label: t("admin.navVisits"),
+      icon: ClipboardList,
+      active: pathname.startsWith("/visits"),
     },
   ] as const;
 
-  const moreActive = moreOpen || pathname.startsWith("/subscriptions");
+  const moreActive = moreOpen || pathname.startsWith("/subscriptions") || pathname.startsWith("/payments");
 
   return (
     <>
@@ -48,6 +48,13 @@ export function BottomNav() {
               <ThemeToggle />
               <LanguageSwitcher />
             </div>
+            <Link
+              to="/payments"
+              className="block rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-muted"
+              onClick={() => setMoreOpen(false)}
+            >
+              {t("admin.navPayments")}
+            </Link>
             <Link
               to="/subscriptions"
               className="block rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-muted"

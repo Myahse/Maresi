@@ -7,8 +7,10 @@ import { LoginPage } from "@/pages/LoginPage";
 import { AdminOverviewPage } from "@/pages/AdminOverviewPage";
 import { AdminApplicationsPage } from "@/pages/AdminApplicationsPage";
 import { AdminUsersPage } from "@/pages/AdminUsersPage";
+import { AdminUserTrailPage } from "@/pages/AdminUserTrailPage";
 import { AdminPaymentsPage } from "@/pages/AdminPaymentsPage";
 import { AdminSubscriptionsPage } from "@/pages/AdminSubscriptionsPage";
+import { AdminVisitsPage } from "@/pages/AdminVisitsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { AppSplash } from "@/components/layout/AppSplash";
 import { PushPrompt } from "@/components/realtime/PushPrompt";
@@ -31,6 +33,8 @@ function App() {
             <Route index element={<AdminPage><AdminOverviewPage /></AdminPage>} />
             <Route path="applications" element={<AdminPage><AdminApplicationsPage /></AdminPage>} />
             <Route path="users" element={<AdminPage><AdminUsersPage /></AdminPage>} />
+            <Route path="users/:userId" element={<AdminPage><AdminUserTrailPage /></AdminPage>} />
+            <Route path="visits" element={<AdminPage><AdminVisitsPage /></AdminPage>} />
             <Route path="payments" element={<AdminPage><AdminPaymentsPage /></AdminPage>} />
             <Route path="subscriptions" element={<AdminPage><AdminSubscriptionsPage /></AdminPage>} />
             <Route path="*" element={<NotFoundPage />} />

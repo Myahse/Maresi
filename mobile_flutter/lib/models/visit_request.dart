@@ -53,6 +53,7 @@ class VisitRequest {
     this.wavePaymentUrl,
     this.orangeMoneyUrl,
     this.ownerPhone,
+    this.keyCode,
   });
 
   final String id;
@@ -72,6 +73,7 @@ class VisitRequest {
   final String? wavePaymentUrl;
   final String? orangeMoneyUrl;
   final String? ownerPhone;
+  final String? keyCode;
 
   factory VisitRequest.fromJson(Map<String, dynamic> json) {
     return VisitRequest(
@@ -92,6 +94,7 @@ class VisitRequest {
       wavePaymentUrl: json['wave_payment_url'] as String?,
       orangeMoneyUrl: json['orange_money_url'] as String?,
       ownerPhone: json['owner_phone'] as String?,
+      keyCode: json['key_code'] as String?,
     );
   }
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getMyVisitRequests, startReservationPayment, updateVisitRequestStatus } from "@/services/api";
+import { getMyVisitRequests, updateVisitRequestStatus } from "@/services/api";
 import { VisitRequestCard } from "@/components/visit/VisitRequestCard";
 import { Button } from "@/components/ui/button";
 import { usePriceFormatter } from "@/context/CurrencyContext";
@@ -43,6 +43,7 @@ export function VisitRequestsPage() {
   const canCancel = (status: VisitRequest["status"]) =>
     status === "pending" ||
     status === "awaiting_agreement" ||
+    status === "awaiting_key" ||
     status === "awaiting_payment" ||
     status === "payment_sent" ||
     status === "confirmed";
@@ -61,15 +62,11 @@ export function VisitRequestsPage() {
     }
   };
 
-  const payStay = async (visitId: string) => {
+  const markPaid = async (visitId: string) => {
     setActingId(visitId);
     setError("");
     try {
-      const payment = await startReservationPayment(visitId);
-      if (payment.checkout_url) {
-        window.location.href = payment.checkout_url;
-        return;
-      }
+      await updateVisitRequestStatus(visitId, "payment_sent");
       await reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : t("payments.payFailed"));
@@ -101,18 +98,46 @@ export function VisitRequestsPage() {
                     </Button>
                   </div>
                 )}
+                {v.status === "awaiting_key" && (
+                  <div className="space-y-2 pt-2 border-t border-gray-100">
+                    <p className="text-sm text-muted-foreground">{t("visits.keyHint")}</p>
+                    <p className="text-3xl font-mono font-bold tracking-[0.35em] text-center text-foreground py-2">
+                      {v.key_code || "------"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{t("visits.keyWaitingHost")}</p>
+                  </div>
+                )}
                 {v.status === "awaiting_payment" && (
                   <div className="space-y-3 pt-2 border-t border-gray-100">
                     <p className="text-sm font-semibold text-foreground">
                       {t("payments.payHostAmount")}: {formatPrice(stayAmount(v))}
                     </p>
-                    <p className="text-xs text-muted-foreground">{t("payments.payMaresiHint")}</p>
+                    <p className="text-xs text-muted-foreground">{t("payments.payHostHint")}</p>
+                    {v.wave_payment_url && (
+                      <Button asChild className="w-full rounded-full bg-brand hover:bg-brand-dark">
+                        <a href={v.wave_payment_url} target="_blank" rel="noreferrer">
+                          {t("payments.payWave")}
+                        </a>
+                      </Button>
+                    )}
+                    {v.orange_money_url && (
+                      <Button asChild variant="outline" className="w-full rounded-full">
+                        <a href={v.orange_money_url} target="_blank" rel="noreferrer">
+                          {t("payments.payOrange")}
+                        </a>
+                      </Button>
+                    )}
+                    {v.owner_phone && (
+                      <Button asChild variant="outline" className="w-full rounded-full">
+                        <a href={`tel:${v.owner_phone}`}>{t("payments.callHost")}</a>
+                      </Button>
+                    )}
                     <Button
                       className="w-full rounded-full bg-brand hover:bg-brand-dark"
                       disabled={actingId === v.id}
-                      onClick={() => void payStay(v.id)}
+                      onClick={() => void markPaid(v.id)}
                     >
-                      {actingId === v.id ? t("common.saving") : t("payments.payReservation")}
+                      {actingId === v.id ? t("common.saving") : t("payments.iPaidHost")}
                     </Button>
                   </div>
                 )}

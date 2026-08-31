@@ -4,6 +4,7 @@ import com.maresi.api.contracts.FunctionalError;
 import com.maresi.api.contracts.Request;
 import com.maresi.api.contracts.Response;
 import com.maresi.api.exception.ApiException;
+import com.maresi.api.repository.ActivityRepository;
 import com.maresi.api.repository.AdminMonitorRepository;
 import com.maresi.api.repository.NotificationRepository;
 import com.maresi.api.repository.OwnerSubscriptionRepository;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AdminMonitorBusiness {
   private final AdminMonitorRepository monitor;
+  private final ActivityRepository activity;
   private final OwnerSubscriptionRepository subscriptions;
   private final PaymentRepository payments;
   private final VisitRequestRepository visitRequests;
@@ -37,6 +39,7 @@ public class AdminMonitorBusiness {
 
   public AdminMonitorBusiness(
       AdminMonitorRepository monitor,
+      ActivityRepository activity,
       OwnerSubscriptionRepository subscriptions,
       PaymentRepository payments,
       VisitRequestRepository visitRequests,
@@ -46,6 +49,7 @@ public class AdminMonitorBusiness {
       GeniusPayClient geniusPay,
       FunctionalError functionalError) {
     this.monitor = monitor;
+    this.activity = activity;
     this.subscriptions = subscriptions;
     this.payments = payments;
     this.visitRequests = visitRequests;
@@ -77,6 +81,35 @@ public class AdminMonitorBusiness {
   public Response<Map<String, Object>> subscriptions(Locale locale) {
     requireAdmin();
     return list(monitor.listSubscriptions(), "Abonnements", locale);
+  }
+
+  public Response<Map<String, Object>> visits(Locale locale) {
+    requireAdmin();
+    return list(monitor.listVisits(), "Reservations", locale);
+  }
+
+  public Response<Map<String, Object>> activity(Locale locale) {
+    requireAdmin();
+    return list(activity.listRecent(250), "Activite", locale);
+  }
+
+  public Response<Map<String, Object>> userTrail(UUID userId, Locale locale) {
+    requireAdmin();
+    Response<Map<String, Object>> response = new Response<>();
+    Map<String, Object> account = users.findById(userId).orElse(null);
+    if (account == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Utilisateur introuvable", locale));
+      return response;
+    }
+    Map<String, Object> item = new java.util.LinkedHashMap<>();
+    item.put("user", account);
+    item.put("visits", visitRequests.findByUserOrOwner(userId));
+    item.put("payments", monitor.listPaymentsForUser(userId));
+    item.put("activity", activity.listForActor(userId, 150));
+    response.setItem(item);
+    response.setStatus(functionalError.success("Dossier utilisateur", locale));
+    return response;
   }
 
   public Response<Map<String, Object>> updateSubscription(

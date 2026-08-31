@@ -35,6 +35,7 @@ public class PropertyRepository {
              'pending',
              'accepted',
              'awaiting_agreement',
+             'awaiting_key',
              'awaiting_payment',
              'payment_sent',
              'confirmed'

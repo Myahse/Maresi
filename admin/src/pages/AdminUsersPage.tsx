@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { getAdminUsers, patchAdminSubscription } from "@/services/api";
@@ -65,7 +66,11 @@ export function AdminUsersPage() {
               {items.map((u) => (
                 <tr key={u.id} className="border-b last:border-0">
                   <td className="p-3">{u.email}</td>
-                  <td className="p-3">{u.full_name}</td>
+                  <td className="p-3">
+                    <Link to={`/users/${u.id}`} className="text-brand hover:underline">
+                      {u.full_name}
+                    </Link>
+                  </td>
                   <td className="p-3">{u.role}</td>
                   <td className="p-3">{u.phone || "—"}</td>
                   <td className="p-3">
