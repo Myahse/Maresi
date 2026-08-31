@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Menu, X } from "lucide-react";
 
 const navLinkClass = "text-sm font-semibold text-white/90 hover:text-white transition-colors";
@@ -36,7 +37,7 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-brand to-brand-dark shadow-md">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-brand shadow-md">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-2">
             <Link to="/owner" className="font-extrabold italic text-xl text-white">
@@ -44,6 +45,7 @@ export function Header() {
             </Link>
             <nav className="hidden lg:flex items-center gap-6">{isAuthenticated && links}</nav>
             <div className="flex items-center gap-2">
+              <ThemeToggle inverted />
               <CurrencyPicker inverted />
               <LanguageSwitcher inverted />
               {isAuthenticated && (
@@ -65,7 +67,7 @@ export function Header() {
       {menuOpen && isAuthenticated && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <button type="button" className="absolute inset-0 bg-black/40" onClick={() => setMenuOpen(false)} />
-          <div className="absolute top-16 left-0 right-0 bg-white p-4 flex flex-col gap-3">
+          <div className="absolute top-16 left-0 right-0 bg-card border-b border-border p-4 flex flex-col gap-3">
             <Link to="/owner" onClick={() => setMenuOpen(false)}>{t("owner.title")}</Link>
             <Link to="/owner/visits" onClick={() => setMenuOpen(false)}>{t("dashboard.cards.validateVisits")}</Link>
             <Link to="/owner/subscription" onClick={() => setMenuOpen(false)}>{t("payments.walletNav")}</Link>

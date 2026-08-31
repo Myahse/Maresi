@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS users (
   role VARCHAR(20) NOT NULL DEFAULT 'client' CHECK (role IN ('client', 'owner', 'admin')),
   phone VARCHAR(50),
   avatar_url VARCHAR(500),
+  id_card VARCHAR(50),
+  selfie_url VARCHAR(500),
+  id_card_photo_url VARCHAR(500),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -297,4 +300,10 @@ ALTER TABLE visit_requests
   CHECK (status IN (
     'pending', 'accepted', 'declined', 'awaiting_payment', 'payment_sent', 'confirmed', 'cancelled'
   ));
+
+-- ========== 014_user_identity.sql ==========
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS id_card VARCHAR(50),
+  ADD COLUMN IF NOT EXISTS selfie_url VARCHAR(500),
+  ADD COLUMN IF NOT EXISTS id_card_photo_url VARCHAR(500);
 

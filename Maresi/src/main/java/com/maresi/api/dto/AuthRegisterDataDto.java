@@ -15,11 +15,15 @@ public class AuthRegisterDataDto {
   @Schema(example = "Jean Dupont")
   private String fullName;
 
-  @Schema(example = "client", allowableValues = {"client"})
+  @Schema(example = "client", allowableValues = {"client", "owner", "host"})
   private String role;
 
   @Schema(example = "+2250700000000")
   private String phone;
+
+  @JsonAlias({"idCard", "id_card"})
+  @Schema(example = "CI123456789")
+  private String idCard;
 
   public String getEmail() {
     return email;
@@ -59,5 +63,13 @@ public class AuthRegisterDataDto {
 
   public void setPhone(String phone) {
     this.phone = phone;
+  }
+
+  public String getIdCard() {
+    return idCard;
+  }
+
+  public void setIdCard(String idCard) {
+    this.idCard = idCard;
   }
 }

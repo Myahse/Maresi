@@ -101,6 +101,15 @@
     "showMap": "Voir la carte",
     "showList": "Voir la liste"
   },
+  "theme": {
+    "toDark": "Passer en mode sombre",
+    "toLight": "Passer en mode clair"
+  },
+  "notFound": {
+    "title": "Cette page n'existe pas",
+    "description": "Le lien est peut-être incorrect, ou la page a été déplacée.",
+    "home": "Accueil admin"
+  },
   "login": {
     "title": "Connexion",
     "description": "Saisissez votre e-mail et votre mot de passe pour accéder à votre compte.",

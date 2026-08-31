@@ -166,9 +166,12 @@ class MockApiService implements MaresiApi {
     required String password,
     required String fullName,
     required UserRole role,
+    required String idCard,
+    String? selfiePath,
+    String? idCardPhotoPath,
   }) async {
     await _delay();
-    if (password.length < 6 || fullName.trim().isEmpty) {
+    if (password.length < 6 || fullName.trim().isEmpty || idCard.trim().length < 5) {
       throw Exception('Données invalides');
     }
     final user = User(

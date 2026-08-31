@@ -58,7 +58,7 @@ export function PropertyEditPage() {
       <h1 className="text-2xl font-bold mt-4 mb-2">
         {isNew ? t("propertyEdit.add") : t("propertyEdit.edit")}
       </h1>
-      <p className="text-gray-600 text-sm mb-8">{t("wizard.property.pageHint")}</p>
+      <p className="text-muted-foreground text-sm mb-8">{t("wizard.property.pageHint")}</p>
       <PropertyCreationWizard
         initial={initial ?? undefined}
         onSubmit={handleSubmit}

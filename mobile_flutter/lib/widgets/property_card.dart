@@ -77,8 +77,8 @@ class PropertyCard extends StatelessWidget {
                     right: 0,
                     bottom: 0,
                     height: 90,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(gradient: AppGradients.cardOverlay),
+                    child: ColoredBox(
+                      color: const Color(0xB3000000),
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
                         child: Column(

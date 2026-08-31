@@ -1,13 +1,15 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { LoginPage } from "@/pages/LoginPage";
+import { RegisterPage } from "@/pages/RegisterPage";
 import { OwnerDashboardPage } from "@/pages/owner/OwnerDashboardPage";
 import { PropertyEditPage } from "@/pages/owner/PropertyEditPage";
 import { OwnerVisitsPage } from "@/pages/owner/OwnerVisitsPage";
 import { OwnerSubscriptionPage } from "@/pages/owner/OwnerSubscriptionPage";
 import { PaymentSuccessPage, PaymentErrorPage } from "@/pages/PaymentResultPages";
+import { NotFoundPage } from "@/pages/NotFoundPage";
 import { AppSplash } from "@/components/layout/AppSplash";
 import { HostRealtimeBridge } from "@/components/realtime/HostRealtimeBridge";
 import { PushPrompt } from "@/components/realtime/PushPrompt";
@@ -24,6 +26,9 @@ function App() {
             <Route path="login" element={<AuthLayout />}>
               <Route index element={<LoginPage />} />
             </Route>
+            <Route path="register" element={<AuthLayout />}>
+              <Route index element={<RegisterPage />} />
+            </Route>
             <Route index element={<ProtectedRoute roles={["owner"]}><OwnerDashboardPage /></ProtectedRoute>} />
             <Route path="owner" element={<ProtectedRoute roles={["owner"]}><OwnerDashboardPage /></ProtectedRoute>} />
             <Route path="owner/subscription" element={<ProtectedRoute roles={["owner"]}><OwnerSubscriptionPage /></ProtectedRoute>} />
@@ -32,8 +37,8 @@ function App() {
             <Route path="owner/visits" element={<ProtectedRoute roles={["owner"]}><OwnerVisitsPage /></ProtectedRoute>} />
             <Route path="payments/success" element={<PaymentSuccessPage />} />
             <Route path="payments/error" element={<PaymentErrorPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </>

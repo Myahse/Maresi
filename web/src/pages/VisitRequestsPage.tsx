@@ -72,14 +72,14 @@ export function VisitRequestsPage() {
 
   return (
     <div className="font-jakarta max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">{t("visits.title")}</h1>
-      <p className="text-gray-600 text-sm mb-6">{t("visits.subtitle")}</p>
+      <h1 className="text-2xl font-bold text-foreground mb-2">{t("visits.title")}</h1>
+      <p className="text-muted-foreground text-sm mb-6">{t("visits.subtitle")}</p>
       {error && <p className="text-sm text-destructive mb-4">{error}</p>}
 
       {loading ? (
         <p className="text-muted-foreground">{t("common.loading")}</p>
       ) : visits.length === 0 ? (
-        <p className="text-gray-500">{t("visits.empty")}</p>
+        <p className="text-muted-foreground">{t("visits.empty")}</p>
       ) : (
         <ul className="space-y-4">
           {visits.map((v) => (
@@ -87,10 +87,10 @@ export function VisitRequestsPage() {
               <VisitRequestCard visit={v}>
                 {v.status === "awaiting_payment" && (
                   <div className="space-y-3 pt-2 border-t border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-foreground">
                       {t("payments.payHostAmount")}: {formatPrice(stayAmount(v))}
                     </p>
-                    <p className="text-xs text-gray-600">{t("payments.payMaresiHint")}</p>
+                    <p className="text-xs text-muted-foreground">{t("payments.payMaresiHint")}</p>
                     <Button
                       className="w-full rounded-full bg-brand hover:bg-brand-dark"
                       disabled={actingId === v.id}
@@ -103,7 +103,7 @@ export function VisitRequestsPage() {
                 {canCancel(v.status) && (
                   <div className="pt-2">
                     {(v.status === "confirmed" || v.status === "payment_sent") && (
-                      <p className="text-xs text-gray-500 mb-2">{t("visits.cancelPaidHint")}</p>
+                      <p className="text-xs text-muted-foreground mb-2">{t("visits.cancelPaidHint")}</p>
                     )}
                     <Button
                       variant="outline"

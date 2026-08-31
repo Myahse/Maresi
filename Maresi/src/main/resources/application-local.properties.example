@@ -17,3 +17,10 @@ maresi.jwt.expires-in=7d
 # maresi.push.vapid-public-key=
 # maresi.push.vapid-private-key=
 # maresi.push.subject=mailto:hello@maresi.app
+
+# Cloudflare R2 (preferred). If unset, photos stay on local disk.
+# maresi.r2.account-id=
+# maresi.r2.access-key-id=
+# maresi.r2.secret-access-key=
+# maresi.r2.bucket=maresi-images
+# maresi.r2.public-url=https://pub-xxxxxxxx.r2.dev

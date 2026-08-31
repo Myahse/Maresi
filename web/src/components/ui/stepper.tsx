@@ -35,7 +35,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                     "flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full border-2 text-xs sm:text-sm font-bold transition-colors",
                     done && "bg-brand border-brand text-white",
                     active && !done && "border-brand text-brand bg-brand/10",
-                    !done && !active && "border-gray-300 text-gray-400 bg-white"
+                    !done && !active && "border-border text-gray-400 bg-card"
                   )}
                 >
                   {done ? <Check className="h-4 w-4" /> : index + 1}
@@ -52,7 +52,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
               <span
                 className={cn(
                   "mt-2 text-[10px] sm:text-xs font-semibold text-center truncate w-full px-0.5",
-                  active ? "text-brand" : done ? "text-gray-700" : "text-gray-400"
+                  active ? "text-brand" : done ? "text-foreground" : "text-gray-400"
                 )}
               >
                 {step.label}

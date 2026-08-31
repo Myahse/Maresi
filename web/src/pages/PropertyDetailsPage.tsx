@@ -73,7 +73,7 @@ export function PropertyDetailsPage() {
 
   return (
     <div className="font-jakarta container mx-auto px-4 py-8 max-w-5xl">
-      <div className="rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-gray-200 aspect-video mb-3 bg-cover bg-center shadow-sm"
+      <div className="rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-border aspect-video mb-3 bg-cover bg-center shadow-sm"
         style={{ backgroundImage: `url(${images[activeImage]})` }}
       />
       {images.length > 1 && (
@@ -85,7 +85,7 @@ export function PropertyDetailsPage() {
               onClick={() => setActiveImage(idx)}
               className={cn(
                 "shrink-0 w-20 h-14 rounded-lg bg-cover bg-center border-2 transition-colors",
-                idx === activeImage ? "border-brand ring-2 ring-brand/30" : "border-gray-200"
+                idx === activeImage ? "border-brand ring-2 ring-brand/30" : "border-border"
               )}
               style={{ backgroundImage: `url(${img})` }}
             />
@@ -96,32 +96,32 @@ export function PropertyDetailsPage() {
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{property.title}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{property.title}</h1>
             <div className="flex flex-wrap items-center gap-3 mt-2">
               <p className="text-brand font-bold text-xl">
                 {formatPrice(property.price)}
-                <span className="text-gray-500 font-normal text-base ml-1">{t("common.night")}</span>
+                <span className="text-muted-foreground font-normal text-base ml-1">{t("common.night")}</span>
               </p>
               {(property.average_rating ?? 0) > 0 && (
                 <div className="flex items-center gap-1">
                   <StarRating value={property.average_rating!} size="sm" />
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-muted-foreground">
                     ({property.rating_count ?? 0})
                   </span>
                 </div>
               )}
             </div>
-            <p className="text-gray-500 flex items-center gap-2 mt-2">
+            <p className="text-muted-foreground flex items-center gap-2 mt-2">
               <MapPin className="h-4 w-4 shrink-0" />
               {property.location}
             </p>
-            <p className="text-sm text-gray-500 capitalize mt-1">{property.property_type}</p>
+            <p className="text-sm text-muted-foreground capitalize mt-1">{property.property_type}</p>
           </div>
 
           {property.description && (
             <div>
-              <h2 className="font-bold text-gray-900 mb-2">{t("propertyDetails.description")}</h2>
-              <p className="whitespace-pre-wrap text-gray-700">{property.description}</p>
+              <h2 className="font-bold text-foreground mb-2">{t("propertyDetails.description")}</h2>
+              <p className="whitespace-pre-wrap text-foreground">{property.description}</p>
             </div>
           )}
 
@@ -130,7 +130,7 @@ export function PropertyDetailsPage() {
           )}
 
           <div>
-            <h2 className="font-bold text-gray-900 mb-3">{t("propertyDetails.location")}</h2>
+            <h2 className="font-bold text-foreground mb-3">{t("propertyDetails.location")}</h2>
             <PropertyLocationMap
               latitude={property.latitude}
               longitude={property.longitude}
@@ -147,7 +147,7 @@ export function PropertyDetailsPage() {
         </div>
 
         <div className="space-y-4">
-          <Card className="rounded-2xl border-2 border-gray-200">
+          <Card className="rounded-2xl border-2 border-border">
             <CardHeader className="pb-2">
               <p className="text-sm font-medium text-muted-foreground">{t("propertyDetails.contactOwner")}</p>
               {property.owner_name && <p className="font-medium">{property.owner_name}</p>}
@@ -171,8 +171,8 @@ export function PropertyDetailsPage() {
           </Card>
           <Card className="rounded-2xl border-2 border-brand/30 bg-brand/5">
             <CardHeader className="pb-2">
-              <p className="text-sm font-bold text-gray-900">{t("propertyDetails.reserveTitle")}</p>
-              <p className="text-xs text-gray-600 mt-1">{t("propertyDetails.reserveHint")}</p>
+              <p className="text-sm font-bold text-foreground">{t("propertyDetails.reserveTitle")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("propertyDetails.reserveHint")}</p>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button className="w-full rounded-full bg-brand hover:bg-brand-dark" onClick={() => handleReserve(false)}>

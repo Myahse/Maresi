@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,10 +55,16 @@ export function LoginPage() {
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col gap-4">
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? t("common.signingIn") : t("login.submit")}
           </Button>
+          <p className="text-sm text-muted-foreground">
+            {t("login.noAccount")}{" "}
+            <Link to="/register" className="text-brand font-medium hover:underline">
+              {t("login.registerLink")}
+            </Link>
+          </p>
         </CardFooter>
       </form>
     </Card>

@@ -40,12 +40,18 @@ class AuthService {
     required String password,
     required String fullName,
     required UserRole role,
+    required String idCard,
+    String? selfiePath,
+    String? idCardPhotoPath,
   }) async {
     final result = await _api.register(
       email: email,
       password: password,
       fullName: fullName,
       role: role,
+      idCard: idCard,
+      selfiePath: selfiePath,
+      idCardPhotoPath: idCardPhotoPath,
     );
     await _persistSession(result);
   }

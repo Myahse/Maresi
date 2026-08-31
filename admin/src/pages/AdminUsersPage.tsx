@@ -50,7 +50,7 @@ export function AdminUsersPage() {
       ) : items.length === 0 ? (
         <p className="text-gray-600">{t("admin.emptyUsers")}</p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border bg-white">
+        <div className="overflow-x-auto rounded-2xl border bg-card">
           <table className="w-full text-sm">
             <thead className="text-left text-gray-500 border-b">
               <tr>

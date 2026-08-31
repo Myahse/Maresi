@@ -157,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
       value: SystemUiOverlayStyle.light,
       child: Stack(
         children: [
-          Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(gradient: AppGradients.header))),
+          Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(color: AppColors.primary))),
           Positioned(
             top: 0,
             left: 0,

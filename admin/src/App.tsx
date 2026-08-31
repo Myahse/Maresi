@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import type { ReactNode } from "react";
 import { MainLayout } from "@/layouts/MainLayout";
 import { AuthLayout } from "@/layouts/AuthLayout";
@@ -9,6 +9,7 @@ import { AdminApplicationsPage } from "@/pages/AdminApplicationsPage";
 import { AdminUsersPage } from "@/pages/AdminUsersPage";
 import { AdminPaymentsPage } from "@/pages/AdminPaymentsPage";
 import { AdminSubscriptionsPage } from "@/pages/AdminSubscriptionsPage";
+import { NotFoundPage } from "@/pages/NotFoundPage";
 import { AppSplash } from "@/components/layout/AppSplash";
 import { PushPrompt } from "@/components/realtime/PushPrompt";
 
@@ -32,8 +33,8 @@ function App() {
             <Route path="users" element={<AdminPage><AdminUsersPage /></AdminPage>} />
             <Route path="payments" element={<AdminPage><AdminPaymentsPage /></AdminPage>} />
             <Route path="subscriptions" element={<AdminPage><AdminSubscriptionsPage /></AdminPage>} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </>

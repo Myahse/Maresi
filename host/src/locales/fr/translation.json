@@ -28,7 +28,9 @@
     "saving": "Enregistrement...",
     "signingIn": "Connexion...",
     "creatingAccount": "Création du compte...",
-    "user": "vous"
+    "user": "vous",
+    "back": "Retour",
+    "next": "Suivant"
   },
   "push": {
     "title": "Activer les notifications",
@@ -110,16 +112,45 @@
     "noAccount": "Pas encore de compte ?",
     "registerLink": "S'inscrire"
   },
+  "theme": {
+    "toDark": "Passer en mode sombre",
+    "toLight": "Passer en mode clair"
+  },
+  "notFound": {
+    "title": "Cette page n'existe pas",
+    "description": "Le lien est peut-être incorrect, ou la page a été déplacée.",
+    "home": "Tableau hôte"
+  },
   "register": {
+    "kicker": "Rejoindre Maresi",
     "title": "Créer un compte",
-    "description": "Créez un compte client pour parcourir les résidences et demander des visites.",
+    "description": "Indiquez comment vous utiliserez Maresi, puis confirmez votre identité.",
+    "stepRole": "Profil",
+    "stepAccount": "Compte",
+    "stepIdentity": "Identité",
+    "clientTitle": "Je cherche un logement",
+    "clientHint": "Parcourir chambres et appartements et réserver un séjour.",
+    "hostTitle": "Je veux héberger",
+    "hostHint": "Mettre en location votre appartement, chambre ou autre résidence.",
+    "roleRequired": "Choisissez si vous êtes client ou hôte.",
+    "accountRequired": "Saisissez votre nom, e-mail et un mot de passe d'au moins 6 caractères.",
+    "photosRequired": "Ajoutez un selfie et une photo de votre pièce d'identité.",
+    "idCardInvalid": "Saisissez un numéro de pièce d'identité valide.",
+    "identityHint": "Un selfie et une photo de pièce d'identité sont requis pour les clients et les hôtes.",
+    "selfie": "Selfie",
+    "selfieHint": "Prenez une photo nette de votre visage.",
+    "idCardPhoto": "Photo de la pièce d'identité",
+    "idCardPhotoHint": "Photographiez le recto de votre pièce d'identité.",
+    "idCardNumber": "Numéro de pièce d'identité",
+    "idCardPlaceholder": "ex. CI123456789",
+    "choosePhoto": "Choisir une photo",
     "fullName": "Nom complet",
     "emailPlaceholder": "vous@exemple.com",
     "iAmA": "Je suis",
     "client": "Client (parcourir et réserver)",
     "owner": "Propriétaire (publier des biens)",
     "phoneOptional": "Téléphone (facultatif)",
-    "submit": "S'inscrire",
+    "submit": "Créer le compte",
     "failed": "Échec de l'inscription",
     "hasAccount": "Déjà un compte ?",
     "signInLink": "Se connecter"

@@ -6,6 +6,7 @@ import { useAuthModal } from "@/context/AuthModalContext";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Menu, X, Heart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HOST_APP_URL } from "@/lib/hostApp";
@@ -67,7 +68,7 @@ export function Header() {
     <>
       <Link
         to="/properties"
-        className="text-sm font-semibold text-gray-700 hover:text-brand"
+        className="text-sm font-semibold text-foreground hover:text-brand"
         onClick={() => setMenuOpen(false)}
       >
         {t("header.browse")}
@@ -76,14 +77,14 @@ export function Header() {
         <>
           <Link
             to="/dashboard"
-            className="text-sm font-semibold text-gray-700 hover:text-brand"
+            className="text-sm font-semibold text-foreground hover:text-brand"
             onClick={() => setMenuOpen(false)}
           >
             {t("header.dashboard")}
           </Link>
           <Link
             to="/favorites"
-            className="text-sm font-semibold text-gray-700 hover:text-brand inline-flex items-center gap-1"
+            className="text-sm font-semibold text-foreground hover:text-brand inline-flex items-center gap-1"
             onClick={() => setMenuOpen(false)}
           >
             <Heart className="h-4 w-4" />
@@ -92,7 +93,7 @@ export function Header() {
           {user?.role === "owner" ? (
             <a
               href={HOST_APP_URL}
-              className="text-sm font-semibold text-gray-700 hover:text-brand"
+              className="text-sm font-semibold text-foreground hover:text-brand"
               onClick={() => setMenuOpen(false)}
             >
               {t("header.openHostApp")}
@@ -100,7 +101,7 @@ export function Header() {
           ) : (
             <Link
               to="/become-host"
-              className="text-sm font-semibold text-gray-700 hover:text-brand"
+              className="text-sm font-semibold text-foreground hover:text-brand"
               onClick={() => setMenuOpen(false)}
             >
               {t("header.becomeHost")}
@@ -116,7 +117,7 @@ export function Header() {
       <header
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ease-out",
-          "bg-gradient-to-r from-brand to-brand-dark shadow-md",
+          "bg-brand shadow-md",
           !pinHeader && !visible && "-translate-y-full"
         )}
       >
@@ -132,6 +133,7 @@ export function Header() {
             <nav className="hidden lg:flex items-center gap-6 min-w-0">{desktopNavLinks}</nav>
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <ThemeToggle inverted />
               <div className="hidden sm:block">
                 <CurrencyPicker inverted />
               </div>
@@ -201,10 +203,11 @@ export function Header() {
             aria-label="Close menu"
             onClick={() => setMenuOpen(false)}
           />
-          <div className="absolute top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-lg p-4 flex flex-col gap-3 max-h-[calc(100vh-4rem)] overflow-y-auto">
-            <div className="flex items-center gap-2 sm:hidden pb-2 border-b border-gray-100">
+          <div className="absolute top-16 left-0 right-0 bg-card border-b border-border shadow-lg p-4 flex flex-col gap-3 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            <div className="flex items-center gap-2 sm:hidden pb-2 border-b border-border">
               <CurrencyPicker />
               <LanguageSwitcher />
+              <ThemeToggle />
             </div>
             {mobileMenuLinks}
             {!isAuthenticated ? (
@@ -231,7 +234,7 @@ export function Header() {
                 </button>
               </>
             ) : (
-              <button type="button" className="text-sm font-semibold text-left text-gray-700" onClick={handleLogout}>
+              <button type="button" className="text-sm font-semibold text-left text-foreground" onClick={handleLogout}>
                 {t("header.logout")}
               </button>
             )}

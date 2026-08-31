@@ -133,21 +133,21 @@ export function OwnerSubscriptionPage() {
   return (
     <div className="font-jakarta max-w-xl mx-auto px-4 py-8 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t("payments.subscriptionTitle")}</h1>
-        <p className="text-sm text-gray-600 mt-1">{t("payments.subscriptionHint")}</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("payments.subscriptionTitle")}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t("payments.subscriptionHint")}</p>
       </div>
 
       {loading ? (
         <p className="text-muted-foreground">{t("common.loading")}</p>
       ) : (
         <>
-          <div className="rounded-2xl border-2 border-brand/20 bg-white p-6 space-y-4">
+          <div className="rounded-2xl border-2 border-brand/20 bg-card p-6 space-y-4">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">{t("payments.walletTitle")}</h2>
-              <p className="text-sm text-gray-600 mt-1">{t("payments.walletHint")}</p>
+              <h2 className="text-lg font-semibold text-foreground">{t("payments.walletTitle")}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{t("payments.walletHint")}</p>
             </div>
             <div className="flex justify-between gap-4 items-end">
-              <span className="text-sm text-gray-500">{t("payments.walletBalance")}</span>
+              <span className="text-sm text-muted-foreground">{t("payments.walletBalance")}</span>
               <span className="text-2xl font-bold text-brand">{formatPrice(balance)}</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -163,9 +163,9 @@ export function OwnerSubscriptionPage() {
                 </Button>
               ))}
             </div>
-            <div className="rounded-xl border border-gray-200 p-3 space-y-3">
-              <p className="text-sm font-semibold text-gray-900">{t("payments.payoutTitle")}</p>
-              <p className="text-xs text-gray-600">{t("payments.payoutHint")}</p>
+            <div className="rounded-xl border border-border p-3 space-y-3">
+              <p className="text-sm font-semibold text-foreground">{t("payments.payoutTitle")}</p>
+              <p className="text-xs text-muted-foreground">{t("payments.payoutHint")}</p>
               <input
                 type="number"
                 min={200}
@@ -210,21 +210,21 @@ export function OwnerSubscriptionPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border-2 border-gray-200 bg-white p-6 space-y-4">
+          <div className="rounded-2xl border-2 border-border bg-card p-6 space-y-4">
             <div className="flex justify-between gap-4 text-sm">
-              <span className="text-gray-500">{t("payments.status")}</span>
+              <span className="text-muted-foreground">{t("payments.status")}</span>
               <span className="font-semibold">
                 {sub?.active ? t("payments.active") : t("payments.inactive")}
               </span>
             </div>
             <div className="flex justify-between gap-4 text-sm">
-              <span className="text-gray-500">{t("payments.price")}</span>
+              <span className="text-muted-foreground">{t("payments.price")}</span>
               <span className="font-semibold text-brand">
                 {formatPrice(price)} / {t("payments.month")}
               </span>
             </div>
             <div className="flex justify-between gap-4 text-sm">
-              <span className="text-gray-500">{t("payments.freeListings")}</span>
+              <span className="text-muted-foreground">{t("payments.freeListings")}</span>
               <span className="font-semibold">
                 {t("payments.freeListingsValue", {
                   left: sub?.free_listings_left ?? 0,
@@ -235,14 +235,14 @@ export function OwnerSubscriptionPage() {
             </div>
             {sub?.expires_at && (
               <div className="flex justify-between gap-4 text-sm">
-                <span className="text-gray-500">{t("payments.expires")}</span>
+                <span className="text-muted-foreground">{t("payments.expires")}</span>
                 <span className="font-semibold">{new Date(sub.expires_at).toLocaleDateString()}</span>
               </div>
             )}
             {due > 0 && (
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 space-y-2">
                 <div className="flex justify-between gap-4 text-sm">
-                  <span className="text-gray-700">{t("payments.commissionDue")}</span>
+                  <span className="text-foreground">{t("payments.commissionDue")}</span>
                   <span className="font-semibold text-amber-800">{formatPrice(due)}</span>
                 </div>
                 <Button
@@ -273,18 +273,18 @@ export function OwnerSubscriptionPage() {
             </Button>
           </div>
 
-          <div className="rounded-2xl border-2 border-gray-200 bg-white p-6 space-y-3">
-            <h2 className="text-lg font-semibold text-gray-900">{t("payments.ledgerTitle")}</h2>
+          <div className="rounded-2xl border-2 border-border bg-card p-6 space-y-3">
+            <h2 className="text-lg font-semibold text-foreground">{t("payments.ledgerTitle")}</h2>
             {ledger.length === 0 ? (
-              <p className="text-sm text-gray-500">{t("payments.ledgerEmpty")}</p>
+              <p className="text-sm text-muted-foreground">{t("payments.ledgerEmpty")}</p>
             ) : (
               <ul className="space-y-2">
                 {ledger.map((entry) => (
                   <li key={entry.id} className="flex justify-between gap-3 text-sm">
                     <div>
-                      <p className="font-medium text-gray-800">{ledgerLabel(t, entry)}</p>
+                      <p className="font-medium text-foreground">{ledgerLabel(t, entry)}</p>
                       {entry.created_at && (
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           {new Date(entry.created_at).toLocaleString()}
                         </p>
                       )}
@@ -293,7 +293,7 @@ export function OwnerSubscriptionPage() {
                       className={
                         entry.direction === "credit"
                           ? "font-semibold text-emerald-700"
-                          : "font-semibold text-gray-900"
+                          : "font-semibold text-foreground"
                       }
                     >
                       {entry.direction === "credit" ? "+" : "−"}

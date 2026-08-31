@@ -6,6 +6,7 @@ import com.maresi.api.contracts.Request;
 import com.maresi.api.contracts.Response;
 import com.maresi.api.repository.UserRepository;
 import com.maresi.api.security.JwtService;
+import com.maresi.api.service.FileStorageService;
 import com.maresi.api.service.OtpService;
 import com.maresi.api.service.SmsService;
 import com.maresi.api.util.PhoneNormalizer;
@@ -16,6 +17,7 @@ import java.util.UUID;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 @Component
 public class AuthBusiness {
@@ -27,6 +29,7 @@ public class AuthBusiness {
   private final JwtService jwtService;
   private final OtpService otpService;
   private final SmsService smsService;
+  private final FileStorageService fileStorage;
   private final Environment env;
   private final FunctionalError functionalError;
 
@@ -37,6 +40,7 @@ public class AuthBusiness {
       JwtService jwtService,
       OtpService otpService,
       SmsService smsService,
+      FileStorageService fileStorage,
       Environment env,
       FunctionalError functionalError) {
     this.props = props;
@@ -45,13 +49,23 @@ public class AuthBusiness {
     this.jwtService = jwtService;
     this.otpService = otpService;
     this.smsService = smsService;
+    this.fileStorage = fileStorage;
     this.env = env;
     this.functionalError = functionalError;
   }
 
   public Response<Map<String, Object>> register(Request<Map<String, Object>> request, Locale locale) {
+    return register(request, null, null, null, locale);
+  }
+
+  public Response<Map<String, Object>> register(
+      Request<Map<String, Object>> request,
+      MultipartFile selfie,
+      MultipartFile idCardPhoto,
+      String baseUrl,
+      Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
-    Map<String, Object> body = request.getData();
+    Map<String, Object> body = request.getData() != null ? request.getData() : Map.of();
     if (props.isDevAuthBypass()) {
       response.setItem(devAuthPayload(body));
       response.setStatus(functionalError.success("Inscription", locale));
@@ -62,12 +76,24 @@ public class AuthBusiness {
     String password = str(body.get("password"));
     String fullName = str(body.get("fullName"));
     if (fullName == null) fullName = str(body.get("full_name"));
-    String role = "client";
     String phone = str(body.get("phone"));
+    String idCard = str(body.get("id_card"));
+    if (idCard == null) idCard = str(body.get("idCard"));
+    String role = resolveRole(str(body.get("role")));
 
     if (email == null || password == null || fullName == null) {
       response.setHasError(true);
       response.setStatus(functionalError.fieldEmpty("email, password, fullName", locale));
+      return response;
+    }
+    if (!validIdCard(idCard)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("id_card", locale));
+      return response;
+    }
+    if (selfie == null || selfie.isEmpty() || idCardPhoto == null || idCardPhoto.isEmpty()) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("selfie, id_card_photo", locale));
       return response;
     }
     if (users.findByEmail(email).isPresent()) {
@@ -76,8 +102,18 @@ public class AuthBusiness {
       return response;
     }
 
+    String selfieUrl = fileStorage.storeIdentityImage(selfie, baseUrl);
+    String idCardPhotoUrl = fileStorage.storeIdentityImage(idCardPhoto, baseUrl);
     Map<String, Object> user =
-        users.create(email, passwordEncoder.encode(password), fullName, role, phone);
+        users.create(
+            email,
+            passwordEncoder.encode(password),
+            fullName,
+            role,
+            phone,
+            idCard.trim(),
+            selfieUrl,
+            idCardPhotoUrl);
     response.setItem(authPayload(user));
     response.setStatus(functionalError.success("Inscription", locale));
     return response;
@@ -185,7 +221,7 @@ public class AuthBusiness {
     String fullName = str(body.get("fullName"));
     if (fullName == null) fullName = str(body.get("full_name"));
     if (fullName == null) fullName = "Dev User";
-    String role = "client";
+    String role = resolveRole(str(body.get("role")));
     String phone = str(body.get("phone"));
     Map<String, Object> user = new HashMap<>();
     user.put("id", DEV_USER_ID);
@@ -211,6 +247,20 @@ public class AuthBusiness {
   private boolean exposeDevCode() {
     return props.isDevAuthBypass()
         || !"production".equalsIgnoreCase(env.getProperty("spring.profiles.active", ""));
+  }
+
+  private static String resolveRole(String raw) {
+    if (raw == null) return "client";
+    String role = raw.trim().toLowerCase(Locale.ROOT);
+    if ("owner".equals(role) || "host".equals(role)) return "owner";
+    return "client";
+  }
+
+  private static boolean validIdCard(String idCard) {
+    if (idCard == null) return false;
+    String trimmed = idCard.trim();
+    if (trimmed.length() < 5) return false;
+    return trimmed.matches("[A-Za-z0-9\\-/\\s]+");
   }
 
   private static String str(Object v) {

@@ -56,7 +56,7 @@ export function RoleDashboardPage() {
         <p className="text-white/80 mt-2 text-sm sm:text-base">{t("dashboard.subtitle")}</p>
       </div>
 
-      <div className="flex-1 bg-white rounded-t-3xl px-4 sm:px-8 py-8 -mt-6">
+      <div className="flex-1 bg-card rounded-t-3xl px-4 sm:px-8 py-8 -mt-6">
         <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {cards.map((card) => (
             <DashboardCard

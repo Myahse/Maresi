@@ -26,13 +26,31 @@ public class PropertyRepository {
     this.jdbc = jdbc;
   }
 
+  private static final String NOT_RESERVED =
+      """
+       AND NOT EXISTS (
+         SELECT 1 FROM visit_requests vr
+         WHERE vr.property_id = p.id
+           AND vr.status = 'confirmed'
+           AND (vr.check_out IS NULL OR vr.check_out >= CURRENT_DATE)
+       )
+      """;
+
   public List<Map<String, Object>> findAll(
-      String location, BigDecimal minPrice, BigDecimal maxPrice, String propertyType, UUID ownerId) {
+      String location,
+      BigDecimal minPrice,
+      BigDecimal maxPrice,
+      String propertyType,
+      UUID ownerId,
+      boolean excludeReserved) {
     StringBuilder sql = new StringBuilder(SELECT_JOIN).append(" WHERE p.is_active = true");
     List<Object> params = new ArrayList<>();
     if (ownerId != null) {
       sql.append(" AND p.owner_id = ?");
       params.add(ownerId);
+    }
+    if (excludeReserved) {
+      sql.append(NOT_RESERVED);
     }
     if (location != null && !location.isBlank()) {
       sql.append(" AND p.location ILIKE ?");

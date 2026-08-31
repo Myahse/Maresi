@@ -35,6 +35,9 @@ abstract class MaresiApi {
     required String password,
     required String fullName,
     required UserRole role,
+    required String idCard,
+    String? selfiePath,
+    String? idCardPhotoPath,
   });
 
   Future<Property> createProperty({

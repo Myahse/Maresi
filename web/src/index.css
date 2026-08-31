@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    color-scheme: light;
     --background: 0 0% 100%;
     --foreground: 180 10% 15%;
     --card: 0 0% 100%;
@@ -26,21 +27,25 @@
     --brand-dark: 176 69% 22%;
   }
   .dark {
-    --background: 180 10% 8%;
-    --foreground: 0 0% 98%;
-    --card: 180 10% 10%;
-    --card-foreground: 0 0% 98%;
+    color-scheme: dark;
+    --background: 180 8% 8%;
+    --foreground: 0 0% 96%;
+    --card: 180 8% 11%;
+    --card-foreground: 0 0% 96%;
     --primary: 173 70% 40%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 180 10% 16%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 180 10% 16%;
-    --muted-foreground: 0 0% 64%;
-    --accent: 173 40% 20%;
-    --accent-foreground: 173 60% 70%;
-    --border: 180 10% 20%;
-    --input: 180 10% 20%;
+    --secondary: 180 8% 16%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 180 8% 16%;
+    --muted-foreground: 180 8% 68%;
+    --accent: 173 30% 18%;
+    --accent-foreground: 173 60% 72%;
+    --destructive: 0 72% 51%;
+    --border: 180 8% 22%;
+    --input: 180 8% 22%;
     --ring: 173 70% 40%;
+    --brand: 173 70% 40%;
+    --brand-dark: 176 50% 28%;
   }
   * {
     @apply border-border;
@@ -69,9 +74,6 @@
   }
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
-  }
-  .text-brand-gradient {
-    @apply bg-gradient-to-r from-brand to-brand-dark bg-clip-text text-transparent;
   }
 
   .splash-logo {

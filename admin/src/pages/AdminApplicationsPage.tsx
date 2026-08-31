@@ -78,7 +78,7 @@ export function AdminApplicationsPage() {
         ) : (
           <ul className="space-y-3">
             {items.map((app) => (
-              <li key={app.id} className="rounded-2xl border p-4 space-y-2 bg-white">
+              <li key={app.id} className="rounded-2xl border p-4 space-y-2 bg-card">
                 <div className="font-semibold">{app.full_name}</div>
                 <div className="text-sm text-gray-600">
                   {app.user_email} · {app.phone} · {app.city || "—"} · {app.status}
@@ -107,7 +107,7 @@ export function AdminApplicationsPage() {
           />
         </div>
       </div>
-      <aside className="rounded-2xl border bg-white p-4 h-fit">
+      <aside className="rounded-2xl border bg-card p-4 h-fit">
         <h2 className="font-semibold mb-3">{t("admin.live")}</h2>
         <ul className="space-y-2 text-xs text-gray-600">
           {events.length === 0 && <li>—</li>}

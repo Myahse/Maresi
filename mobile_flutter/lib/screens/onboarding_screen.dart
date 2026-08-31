@@ -35,7 +35,7 @@ class OnboardingScreen extends StatelessWidget {
         body: Stack(
           children: [
             const Positioned.fill(
-              child: DecoratedBox(decoration: BoxDecoration(gradient: AppGradients.header)),
+              child: DecoratedBox(decoration: BoxDecoration(color: AppColors.primary)),
             ),
             Positioned(
               top: 0,

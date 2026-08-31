@@ -156,8 +156,8 @@ export function ReservationPage() {
     return (
       <div className="font-jakarta max-w-lg mx-auto px-4 py-16 text-center">
         <CheckCircle2 className="h-16 w-16 text-brand mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900">{t("wizard.reserve.successTitle")}</h1>
-        <p className="text-gray-600 mt-2 text-sm">{t("wizard.reserve.successText")}</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("wizard.reserve.successTitle")}</h1>
+        <p className="text-muted-foreground mt-2 text-sm">{t("wizard.reserve.successText")}</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
           <Button className="rounded-full bg-brand hover:bg-brand-dark" onClick={() => navigate("/visits")}>
             {t("visits.viewMine")}
@@ -175,8 +175,8 @@ export function ReservationPage() {
       <Link to={`/properties/${id}`} className="text-sm text-brand hover:underline">
         ← {property.title}
       </Link>
-      <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-2">{t("wizard.reserve.title")}</h1>
-      <p className="text-gray-600 text-sm mb-8">{t("wizard.reserve.subtitle")}</p>
+      <h1 className="text-2xl font-bold text-foreground mt-4 mb-2">{t("wizard.reserve.title")}</h1>
+      <p className="text-muted-foreground text-sm mb-8">{t("wizard.reserve.subtitle")}</p>
 
       <Stepper steps={steps} currentStep={step} className="mb-8" />
 
@@ -186,8 +186,8 @@ export function ReservationPage() {
 
       {step === 0 && (
         <div className="space-y-4">
-          <h2 className="font-bold text-gray-900">{t("wizard.reserve.datesTitle")}</h2>
-          <p className="text-sm text-gray-600">{t("wizard.reserve.datesHint")}</p>
+          <h2 className="font-bold text-foreground">{t("wizard.reserve.datesTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.reserve.datesHint")}</p>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="check_in">{t("wizard.reserve.checkIn")} *</Label>
@@ -206,9 +206,9 @@ export function ReservationPage() {
 
       {step === 1 && (
         <div className="space-y-4">
-          <h2 className="font-bold text-gray-900">{t("wizard.reserve.visitTitle")}</h2>
-          <p className="text-sm text-gray-600">{t("wizard.reserve.visitHint")}</p>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-800">
+          <h2 className="font-bold text-foreground">{t("wizard.reserve.visitTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.reserve.visitHint")}</p>
+          <label className="flex items-center gap-2 text-sm font-medium text-foreground">
             <input
               type="checkbox"
               checked={includeVisit}
@@ -244,8 +244,8 @@ export function ReservationPage() {
 
       {step === 2 && (
         <div className="space-y-4">
-          <h2 className="font-bold text-gray-900">{t("wizard.reserve.contactTitle")}</h2>
-          <p className="text-sm text-gray-600">{t("wizard.reserve.contactHint")}</p>
+          <h2 className="font-bold text-foreground">{t("wizard.reserve.contactTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.reserve.contactHint")}</p>
           <div className="space-y-2">
             <Label htmlFor="guests">{t("wizard.reserve.guests")} *</Label>
             <Input
@@ -257,7 +257,7 @@ export function ReservationPage() {
               onChange={(e) => setGuestsCount(e.target.value)}
             />
             {property.max_guests && (
-              <p className="text-xs text-gray-500">{t("wizard.reserve.maxGuestsHint", { max: property.max_guests })}</p>
+              <p className="text-xs text-muted-foreground">{t("wizard.reserve.maxGuestsHint", { max: property.max_guests })}</p>
             )}
           </div>
           <div className="space-y-2">
@@ -294,38 +294,38 @@ export function ReservationPage() {
 
       {step === 3 && (
         <div className="space-y-4">
-          <h2 className="font-bold text-gray-900">{t("wizard.reserve.reviewTitle")}</h2>
-          <dl className="rounded-2xl border-2 border-gray-200 divide-y text-sm">
+          <h2 className="font-bold text-foreground">{t("wizard.reserve.reviewTitle")}</h2>
+          <dl className="rounded-2xl border-2 border-border divide-y text-sm">
             <div className="p-4">
-              <dt className="text-gray-500">{t("common.property")}</dt>
-              <dd className="font-bold text-gray-900">{property.title}</dd>
+              <dt className="text-muted-foreground">{t("common.property")}</dt>
+              <dd className="font-bold text-foreground">{property.title}</dd>
             </div>
             <div className="p-4">
-              <dt className="text-gray-500">{t("wizard.reserve.stay")}</dt>
+              <dt className="text-muted-foreground">{t("wizard.reserve.stay")}</dt>
               <dd className="font-semibold">
                 {check_in} → {check_out}
               </dd>
             </div>
             <div className="p-4">
-              <dt className="text-gray-500">{t("wizard.reserve.visitSlot")}</dt>
+              <dt className="text-muted-foreground">{t("wizard.reserve.visitSlot")}</dt>
               <dd className="font-semibold">
                 {includeVisit ? `${visit_date} · ${visit_time}` : t("wizard.reserve.visitSkipped")}
               </dd>
             </div>
             <div className="p-4 flex justify-between">
-              <dt className="text-gray-500">{t("wizard.reserve.guests")}</dt>
+              <dt className="text-muted-foreground">{t("wizard.reserve.guests")}</dt>
               <dd className="font-semibold">{guests_count}</dd>
             </div>
             <div className="p-4 flex justify-between">
-              <dt className="text-gray-500">{t("wizard.reserve.phone")}</dt>
+              <dt className="text-muted-foreground">{t("wizard.reserve.phone")}</dt>
               <dd className="font-semibold">{contact_phone}</dd>
             </div>
             <div className="p-4 flex justify-between">
-              <dt className="text-gray-500">{t("wizard.reserve.idCard")}</dt>
+              <dt className="text-muted-foreground">{t("wizard.reserve.idCard")}</dt>
               <dd className="font-semibold">{id_card}</dd>
             </div>
           </dl>
-          <p className="text-xs text-gray-500">{t("wizard.reserve.validationNote")}</p>
+          <p className="text-xs text-muted-foreground">{t("wizard.reserve.validationNote")}</p>
         </div>
       )}
 

@@ -37,10 +37,10 @@ export function RatingsSection({ propertyId, averageRating = 0, ratingCount = 0 
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">{t("ratings.title")}</h2>
+          <h2 className="text-lg font-bold text-foreground">{t("ratings.title")}</h2>
           <div className="flex items-center gap-2 mt-1">
             <StarRating value={avg} size="sm" />
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-muted-foreground">
               {avg.toFixed(1)} · {t("ratings.count", { count })}
             </span>
           </div>
@@ -55,7 +55,7 @@ export function RatingsSection({ propertyId, averageRating = 0, ratingCount = 0 
       </div>
 
       {reviews.length === 0 ? (
-        <p className="text-sm text-gray-500">{t("ratings.empty")}</p>
+        <p className="text-sm text-muted-foreground">{t("ratings.empty")}</p>
       ) : (
         <ul className="space-y-4">
           {reviews.map((r) => (
@@ -64,7 +64,7 @@ export function RatingsSection({ propertyId, averageRating = 0, ratingCount = 0 
                 <p className="font-semibold text-sm">{r.user_name}</p>
                 <StarRating value={r.score} size="sm" />
               </div>
-              {r.comment && <p className="text-sm text-gray-600 mt-1">{r.comment}</p>}
+              {r.comment && <p className="text-sm text-muted-foreground mt-1">{r.comment}</p>}
             </li>
           ))}
         </ul>

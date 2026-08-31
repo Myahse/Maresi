@@ -1,6 +1,7 @@
 package com.maresi.api;
 
 import com.maresi.api.config.AppProperties;
+import com.maresi.api.config.DotEnvLoader;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -11,6 +12,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableConfigurationProperties(AppProperties.class)
 public class MaresiApplication {
   public static void main(String[] args) {
+    DotEnvLoader.load();
     SpringApplication.run(MaresiApplication.class, args);
   }
 }

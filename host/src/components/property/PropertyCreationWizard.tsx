@@ -163,8 +163,8 @@ export function PropertyCreationWizard({
 
       {step === 0 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-gray-900">{t("wizard.property.basicsTitle")}</h2>
-          <p className="text-sm text-gray-600">{t("wizard.property.basicsHint")}</p>
+          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.basicsTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.basicsHint")}</p>
           <div className="space-y-2">
             <Label htmlFor="title">{t("propertyForm.title")} *</Label>
             <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -193,25 +193,25 @@ export function PropertyCreationWizard({
 
       {step === 1 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-gray-900">{t("wizard.property.locationTitle")}</h2>
-          <p className="text-sm text-gray-600">{t("wizard.property.locationHint")}</p>
+          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.locationTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.locationHint")}</p>
           <LocationMapPicker latitude={latitude} longitude={longitude} onChange={applyPlace} />
           {(street || city || country || location) && (
-            <dl className="rounded-2xl border border-gray-200 divide-y text-sm">
+            <dl className="rounded-2xl border border-border divide-y text-sm">
               <div className="flex justify-between gap-4 p-3">
-                <dt className="text-gray-500">{t("wizard.property.street")}</dt>
+                <dt className="text-muted-foreground">{t("wizard.property.street")}</dt>
                 <dd className="font-semibold text-right">{street || "—"}</dd>
               </div>
               <div className="flex justify-between gap-4 p-3">
-                <dt className="text-gray-500">{t("wizard.property.city")}</dt>
+                <dt className="text-muted-foreground">{t("wizard.property.city")}</dt>
                 <dd className="font-semibold text-right">{city || "—"}</dd>
               </div>
               <div className="flex justify-between gap-4 p-3">
-                <dt className="text-gray-500">{t("wizard.property.country")}</dt>
+                <dt className="text-muted-foreground">{t("wizard.property.country")}</dt>
                 <dd className="font-semibold text-right">{country || "—"}</dd>
               </div>
               <div className="flex justify-between gap-4 p-3">
-                <dt className="text-gray-500">{t("propertyForm.location")}</dt>
+                <dt className="text-muted-foreground">{t("propertyForm.location")}</dt>
                 <dd className="font-semibold text-right">{location || "—"}</dd>
               </div>
             </dl>
@@ -221,8 +221,8 @@ export function PropertyCreationWizard({
 
       {step === 2 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-gray-900">{t("wizard.property.pricingTitle")}</h2>
-          <p className="text-sm text-gray-600">{t("wizard.property.pricingHint")}</p>
+          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.pricingTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.pricingHint")}</p>
           <div className="space-y-2">
             <Label htmlFor="price">{t("wizard.property.priceXof")} *</Label>
             <Input
@@ -255,7 +255,7 @@ export function PropertyCreationWizard({
               />
             </div>
           </div>
-          <p className="text-sm text-gray-600">{t("wizard.property.payHostHint")}</p>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.payHostHint")}</p>
           <div className="space-y-2">
             <Label htmlFor="wave">{t("wizard.property.waveUrl")}</Label>
             <Input
@@ -281,8 +281,8 @@ export function PropertyCreationWizard({
 
       {step === 3 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-gray-900">{t("wizard.property.mediaTitle")}</h2>
-          <p className="text-sm text-gray-600">{t("wizard.property.mediaHint", { count: MIN_PROPERTY_PHOTOS })}</p>
+          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.mediaTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.mediaHint", { count: MIN_PROPERTY_PHOTOS })}</p>
           <div className="space-y-2">
             <Label>{t("common.photos")}</Label>
             <Input
@@ -295,20 +295,20 @@ export function PropertyCreationWizard({
               }}
             />
             {images.length > 0 && (
-              <p className={`text-xs ${hasMinPropertyPhotos(images) ? "text-emerald-600" : "text-gray-500"}`}>
+              <p className={`text-xs ${hasMinPropertyPhotos(images) ? "text-emerald-600" : "text-muted-foreground"}`}>
                 {t("wizard.property.photosSelected", { count: images.length, min: MIN_PROPERTY_PHOTOS })}
               </p>
             )}
             {previews.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs text-gray-600">{t("wizard.property.coverHint")}</p>
+                <p className="text-xs text-muted-foreground">{t("wizard.property.coverHint")}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {previews.map((src, idx) => (
                     <button
                       key={src}
                       type="button"
                       className={`relative overflow-hidden rounded-xl border-2 ${
-                        idx === coverIndex ? "border-brand" : "border-gray-200"
+                        idx === coverIndex ? "border-brand" : "border-border"
                       }`}
                       onClick={() => setCoverIndex(idx)}
                     >
@@ -339,42 +339,42 @@ export function PropertyCreationWizard({
 
       {step === 4 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-gray-900">{t("wizard.property.reviewTitle")}</h2>
-          <p className="text-sm text-gray-600">{t("wizard.property.reviewHint")}</p>
-          <dl className="rounded-2xl border-2 border-gray-200 divide-y text-sm">
+          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.reviewTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.reviewHint")}</p>
+          <dl className="rounded-2xl border-2 border-border divide-y text-sm">
             <div className="flex justify-between gap-4 p-4">
-              <dt className="text-gray-500">{t("propertyForm.title")}</dt>
+              <dt className="text-muted-foreground">{t("propertyForm.title")}</dt>
               <dd className="font-semibold text-right">{title}</dd>
             </div>
             <div className="flex justify-between gap-4 p-4">
-              <dt className="text-gray-500">{t("propertyForm.propertyType")}</dt>
+              <dt className="text-muted-foreground">{t("propertyForm.propertyType")}</dt>
               <dd className="font-semibold capitalize">
                 {t(`propertyTypes.${property_type as (typeof PROPERTY_TYPES)[number]}`)}
               </dd>
             </div>
             <div className="flex justify-between gap-4 p-4">
-              <dt className="text-gray-500">{t("propertyForm.location")}</dt>
+              <dt className="text-muted-foreground">{t("propertyForm.location")}</dt>
               <dd className="font-semibold text-right">{location}</dd>
             </div>
             <div className="flex justify-between gap-4 p-4">
-              <dt className="text-gray-500">{t("common.perNight")}</dt>
+              <dt className="text-muted-foreground">{t("common.perNight")}</dt>
               <dd className="font-semibold text-brand">{formatPrice(Number(price))}</dd>
             </div>
             <div className="flex justify-between gap-4 p-4">
-              <dt className="text-gray-500">{t("wizard.property.bedrooms")}</dt>
+              <dt className="text-muted-foreground">{t("wizard.property.bedrooms")}</dt>
               <dd className="font-semibold">{bedrooms}</dd>
             </div>
             <div className="flex justify-between gap-4 p-4">
-              <dt className="text-gray-500">{t("wizard.property.maxGuests")}</dt>
+              <dt className="text-muted-foreground">{t("wizard.property.maxGuests")}</dt>
               <dd className="font-semibold">{max_guests}</dd>
             </div>
             <div className="flex justify-between gap-4 p-4">
-              <dt className="text-gray-500">{t("common.photos")}</dt>
+              <dt className="text-muted-foreground">{t("common.photos")}</dt>
               <dd className="font-semibold">{images.length}</dd>
             </div>
             {previews[coverIndex] && (
               <div className="p-4 space-y-2">
-                <dt className="text-gray-500">{t("wizard.property.coverBadge")}</dt>
+                <dt className="text-muted-foreground">{t("wizard.property.coverBadge")}</dt>
                 <img
                   src={previews[coverIndex]}
                   alt=""

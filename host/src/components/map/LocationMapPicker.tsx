@@ -125,12 +125,12 @@ export function LocationMapPicker({ latitude, longitude, onChange }: LocationMap
           onChange={(e) => setQuery(e.target.value)}
         />
         {suggestions.length > 0 && (
-          <ul className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+          <ul className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-xl border border-border bg-card shadow-lg">
             {suggestions.map((place) => (
               <li key={`${place.latitude}-${place.longitude}-${place.label}`}>
                 <button
                   type="button"
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
                   onClick={() => {
                     applyPlace(place);
                     setQuery(place.label);
@@ -146,9 +146,9 @@ export function LocationMapPicker({ latitude, longitude, onChange }: LocationMap
       </div>
       <div
         ref={containerRef}
-        className="h-72 w-full rounded-2xl overflow-hidden border-2 border-gray-200"
+        className="h-72 w-full rounded-2xl overflow-hidden border-2 border-border"
       />
-      {busy && <p className="text-xs text-gray-500">{t("common.loading")}</p>}
+      {busy && <p className="text-xs text-muted-foreground">{t("common.loading")}</p>}
     </div>
   );
 }

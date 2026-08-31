@@ -11,7 +11,7 @@ class SplashScreen extends StatelessWidget {
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         body: DecoratedBox(
-          decoration: const BoxDecoration(gradient: AppGradients.header),
+          decoration: const BoxDecoration(color: AppColors.primary),
           child: Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,

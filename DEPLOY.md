@@ -46,9 +46,15 @@ Demo logins (password `Password123!`): `client@maresi.app`, `owner@maresi.app`, 
 | `VAPID_PUBLIC_KEY` | `npx web-push generate-vapid-keys` → public key |
 | `VAPID_PRIVATE_KEY` | same command → private key (keep secret) |
 | `VAPID_SUBJECT` | `mailto:your-email@domain` |
+| `R2_ACCOUNT_ID` | Cloudflare account ID |
+| `R2_ACCESS_KEY_ID` | R2 API token access key |
+| `R2_SECRET_ACCESS_KEY` | R2 API token secret |
+| `R2_BUCKET` | R2 bucket name (e.g. `maresi-images`) |
+| `R2_PUBLIC_URL` | Public base URL, no trailing slash (`https://pub-….r2.dev` or custom domain) |
 
-4. Deploy. Health check: `GET https://YOUR-RENDER-APP.onrender.com/api/health`
-5. GeniusPay webhook URL: `https://YOUR-RENDER-APP.onrender.com/api/webhooks/geniuspay`
+4. **R2:** Cloudflare dashboard → **R2** → create bucket (e.g. `maresi-images`) → **Settings → Public development URL** (or attach a custom domain). Create an **R2 API token** with Object Read & Write. Enable CORS if you load images from a different origin in ways other than `<img>`. Listing photos, registration selfies, and ID photos are stored under `properties/` and `identity/` in that bucket.
+5. Deploy. Health check: `GET https://YOUR-RENDER-APP.onrender.com/api/health`
+6. GeniusPay webhook URL: `https://YOUR-RENDER-APP.onrender.com/api/webhooks/geniuspay`
 
 Free Render services sleep when idle; first request after sleep can take ~30–60s.
 

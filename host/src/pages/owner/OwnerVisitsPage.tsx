@@ -49,18 +49,18 @@ export function OwnerVisitsPage() {
       <Link to="/owner" className="text-sm text-brand hover:underline">
         ← {t("owner.title")}
       </Link>
-      <h1 className="text-2xl font-bold text-gray-900 mt-4">{t("owner.visitValidation")}</h1>
-      <p className="text-gray-600 text-sm mt-1 mb-8">{t("owner.visitValidationHint")}</p>
+      <h1 className="text-2xl font-bold text-foreground mt-4">{t("owner.visitValidation")}</h1>
+      <p className="text-muted-foreground text-sm mt-1 mb-8">{t("owner.visitValidationHint")}</p>
 
       {loading ? (
         <p className="text-muted-foreground">{t("common.loading")}</p>
       ) : visits.length === 0 ? (
-        <p className="text-gray-500">{t("owner.noVisits")}</p>
+        <p className="text-muted-foreground">{t("owner.noVisits")}</p>
       ) : (
         <div className="space-y-8">
           {pending.length > 0 && (
             <section className="space-y-4">
-              <h2 className="font-semibold text-gray-900">{t("owner.pendingRequests")} ({pending.length})</h2>
+              <h2 className="font-semibold text-foreground">{t("owner.pendingRequests")} ({pending.length})</h2>
               {pending.map((v) => (
                 <VisitRequestCard key={v.id} visit={v} showRequester>
                   {declineId === v.id ? (
@@ -114,7 +114,7 @@ export function OwnerVisitsPage() {
 
           {toConfirm.length > 0 && (
             <section className="space-y-4">
-              <h2 className="font-semibold text-gray-900">
+              <h2 className="font-semibold text-foreground">
                 {t("owner.confirmReceiptTitle")} ({toConfirm.length})
               </h2>
               {toConfirm.map((v) => (
@@ -134,7 +134,7 @@ export function OwnerVisitsPage() {
 
           {resolved.length > 0 && (
             <section className="space-y-4">
-              <h2 className="font-semibold text-gray-900">{t("owner.pastRequests")}</h2>
+              <h2 className="font-semibold text-foreground">{t("owner.pastRequests")}</h2>
               {resolved.map((v) => (
                 <VisitRequestCard key={v.id} visit={v} showRequester />
               ))}

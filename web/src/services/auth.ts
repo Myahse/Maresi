@@ -67,18 +67,37 @@ export async function register(data: {
   full_name: string;
   role?: "client" | "owner";
   phone?: string;
+  id_card: string;
+  selfie: File;
+  id_card_photo: File;
 }): Promise<AuthResponse> {
-  const payload: Record<string, unknown> = {
-    email: data.email.trim(),
-    password: data.password,
-    fullName: data.full_name.trim(),
-    full_name: data.full_name.trim(),
-    role: "client",
-  };
-  if (data.phone?.trim()) payload.phone = data.phone.trim();
+  const form = new FormData();
+  form.append("email", data.email.trim());
+  form.append("password", data.password);
+  form.append("fullName", data.full_name.trim());
+  form.append("full_name", data.full_name.trim());
+  form.append("role", data.role === "owner" ? "owner" : "client");
+  form.append("id_card", data.id_card.trim());
+  if (data.phone?.trim()) form.append("phone", data.phone.trim());
+  form.append("selfie", data.selfie);
+  form.append("id_card_photo", data.id_card_photo);
 
-  const res = await api.post<unknown>("/auth/register", payload);
-  return persistAuth(normalizeAuthResponse(res));
+  const res = await fetch(`${import.meta.env.VITE_API_URL ?? "/api"}/auth/register`, {
+    method: "POST",
+    body: form,
+  });
+  const dataJson = await res.json().catch(() => ({}));
+  if (!res.ok || (dataJson && typeof dataJson === "object" && dataJson.hasError)) {
+    const status = dataJson?.status;
+    const message =
+      (typeof status === "object" && status?.message) ||
+      (typeof status === "string" && status) ||
+      dataJson?.error ||
+      "Registration failed";
+    throw new Error(message);
+  }
+  const payload = dataJson?.item ?? dataJson;
+  return persistAuth(normalizeAuthResponse(payload));
 }
 
 export async function login(email: string, password: string): Promise<AuthResponse> {

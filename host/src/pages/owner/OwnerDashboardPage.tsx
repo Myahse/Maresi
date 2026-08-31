@@ -123,7 +123,7 @@ export function OwnerDashboardPage() {
                 {cover ? (
                   <img src={cover} alt={p.title} className="h-40 w-full object-cover" />
                 ) : (
-                  <div className="h-40 w-full bg-gray-100 flex items-center justify-center text-sm text-gray-500">
+                  <div className="h-40 w-full bg-muted flex items-center justify-center text-sm text-muted-foreground">
                     {t("propertyDetails.noImage")}
                   </div>
                 )}

@@ -51,8 +51,8 @@ export function PaymentSuccessPage() {
 
   return (
     <div className="font-jakarta max-w-lg mx-auto px-4 py-16 text-center space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-      <p className="text-gray-600 text-sm">{text}</p>
+      <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+      <p className="text-muted-foreground text-sm">{text}</p>
       {reference ? (
         <p className="text-xs text-gray-400 font-mono break-all">{reference}</p>
       ) : null}
@@ -72,8 +72,8 @@ export function PaymentErrorPage() {
   const { t } = useTranslation();
   return (
     <div className="font-jakarta max-w-lg mx-auto px-4 py-16 text-center space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900">{t("payments.errorTitle")}</h1>
-      <p className="text-gray-600 text-sm">{t("payments.errorText")}</p>
+      <h1 className="text-2xl font-bold text-foreground">{t("payments.errorTitle")}</h1>
+      <p className="text-muted-foreground text-sm">{t("payments.errorText")}</p>
       <Button asChild className="rounded-full bg-brand hover:bg-brand-dark">
         <Link to="/owner/visits">{t("visits.viewMine")}</Link>
       </Button>

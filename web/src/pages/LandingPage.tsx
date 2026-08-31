@@ -54,7 +54,7 @@ export function LandingPage() {
     }
     if (list.length === 0) {
       return (
-        <div className="py-12 text-center text-gray-500">
+        <div className="py-12 text-center text-muted-foreground">
           <p className="font-medium">{t(emptyKey)}</p>
           <p className="text-sm mt-1">{t("landing.checkBack")}</p>
         </div>
@@ -70,13 +70,13 @@ export function LandingPage() {
   };
 
   return (
-    <div className="font-jakarta flex flex-col bg-white">
+    <div className="font-jakarta flex flex-col bg-background">
       {/* Hero image — desktop */}
       <section className="hidden sm:block w-full px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3">
         <div className="max-w-8xl mx-auto">
           <div className="relative h-40 sm:h-56 md:h-64 lg:h-72 overflow-hidden rounded-2xl sm:rounded-3xl">
             <img src={HERO_IMAGE} alt="" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/90 via-brand/30 to-transparent" />
+            <div className="absolute inset-0 bg-brand/80" />
             <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-8 text-white max-w-lg">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">{t("landing.heroTitle")}</h1>
               <p className="text-sm sm:text-base text-white/90 mt-1 hidden md:block">{t("landing.heroSubtitle")}</p>
@@ -102,7 +102,7 @@ export function LandingPage() {
       </section>
 
       {/* Mobile hero */}
-      <section className="sm:hidden px-4 py-6 bg-gradient-to-br from-brand to-brand-dark text-white">
+      <section className="sm:hidden px-4 py-6 bg-brand text-white">
         <h1 className="text-2xl font-bold">{t("landing.heroTitle")}</h1>
         <p className="text-white/90 mt-2 text-sm">{t("landing.heroSubtitle")}</p>
         <div className="flex gap-3 mt-4">
@@ -126,7 +126,7 @@ export function LandingPage() {
       <section className="hidden sm:block w-full px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-4">
         <div className="max-w-8xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <h2 className="text-xs sm:text-sm font-bold text-gray-900 shrink-0">{t("landing.dedicatedServices")}</h2>
+            <h2 className="text-xs sm:text-sm font-bold text-foreground shrink-0">{t("landing.dedicatedServices")}</h2>
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {SERVICE_KEYS.map((key) => (
                 <span
@@ -146,8 +146,8 @@ export function LandingPage() {
         <div className="max-w-8xl mx-auto">
           <div className="flex justify-between items-end gap-4 mb-4 sm:mb-6">
             <div>
-              <h2 className="text-lg sm:text-2xl font-bold text-gray-900">{t("landing.available")}</h2>
-              <p className="text-xs sm:text-sm font-semibold text-gray-600">{t("landing.featuredCity")}</p>
+              <h2 className="text-lg sm:text-2xl font-bold text-foreground">{t("landing.available")}</h2>
+              <p className="text-xs sm:text-sm font-semibold text-muted-foreground">{t("landing.featuredCity")}</p>
             </div>
             <button
               type="button"
@@ -162,12 +162,12 @@ export function LandingPage() {
       </section>
 
       {others.length > 0 && (
-        <section className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 bg-gray-50">
+        <section className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 bg-muted">
           <div className="max-w-8xl mx-auto">
             <div className="flex justify-between items-end gap-4 mb-4 sm:mb-6">
               <div>
-                <h2 className="text-lg sm:text-2xl font-bold text-gray-900">{t("landing.moreListings")}</h2>
-                <p className="text-xs sm:text-sm font-semibold text-gray-600">{t("landing.otherCities")}</p>
+                <h2 className="text-lg sm:text-2xl font-bold text-foreground">{t("landing.moreListings")}</h2>
+                <p className="text-xs sm:text-sm font-semibold text-muted-foreground">{t("landing.otherCities")}</p>
               </div>
               <button
                 type="button"
@@ -185,8 +185,8 @@ export function LandingPage() {
       {/* CTA */}
       <section className="py-12 px-4 bg-brand/5 border-t border-brand/20">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-xl font-bold text-gray-900">{t("landing.listTitle")}</h2>
-          <p className="text-gray-600 mt-2 text-sm sm:text-base">{t("landing.listText")}</p>
+          <h2 className="text-xl font-bold text-foreground">{t("landing.listTitle")}</h2>
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">{t("landing.listText")}</p>
           <button
             type="button"
             onClick={openRegister}

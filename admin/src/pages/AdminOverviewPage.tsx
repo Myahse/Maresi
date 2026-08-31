@@ -43,7 +43,7 @@ export function AdminOverviewPage() {
               <Link
                 key={c.key}
                 to={c.to}
-                className="rounded-2xl border bg-white p-4 hover:border-brand"
+                className="rounded-2xl border bg-card p-4 hover:border-brand"
               >
                 <div className="text-sm text-gray-600">{c.label}</div>
                 <div className="text-2xl font-bold mt-1">{data[c.key]}</div>

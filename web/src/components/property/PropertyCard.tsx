@@ -115,7 +115,7 @@ export function PropertyCard({
           </button>
         )}
 
-        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/90 text-[10px] sm:text-xs font-semibold text-gray-800 capitalize">
+        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-card/90 text-[10px] sm:text-xs font-semibold text-foreground capitalize">
           {property.property_type === "apartment" ||
           property.property_type === "house" ||
           property.property_type === "studio"
@@ -125,27 +125,27 @@ export function PropertyCard({
       </div>
 
       <div className="p-4">
-        <h3 className="font-bold text-gray-900 text-base sm:text-lg line-clamp-2 mb-1">{property.title}</h3>
-        <p className="text-sm text-gray-500 flex items-center gap-1 mb-2">
+        <h3 className="font-bold text-foreground text-base sm:text-lg line-clamp-2 mb-1">{property.title}</h3>
+        <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
           <MapPin className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{property.location}</span>
         </p>
         {(property.average_rating ?? 0) > 0 && (
           <div className="flex items-center gap-1 mb-2">
             <StarRating value={property.average_rating!} size="sm" />
-            <span className="text-xs text-gray-500">({property.rating_count ?? 0})</span>
+            <span className="text-xs text-muted-foreground">({property.rating_count ?? 0})</span>
           </div>
         )}
         <p className="text-brand font-bold text-lg">
           {formatPrice(property.price)}
-          <span className="text-gray-500 font-normal text-sm"> {t("common.night")}</span>
+          <span className="text-muted-foreground font-normal text-sm"> {t("common.night")}</span>
         </p>
       </div>
     </>
   );
 
   const cardClass = cn(
-    "bg-white rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-gray-200",
+    "bg-card rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-border",
     "cursor-pointer hover:shadow-xl hover:border-brand transition-all duration-300 hover:-translate-y-1",
     rental && "sm:shrink-0 w-full sm:w-72 md:w-80 lg:w-[340px]",
     className

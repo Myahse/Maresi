@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,6 +10,7 @@ import 'package:maresi_mobile/providers/auth_provider.dart';
 import 'package:maresi_mobile/providers/locale_provider.dart';
 import 'package:maresi_mobile/services/maresi_client.dart';
 import 'package:maresi_mobile/theme/app_colors.dart';
+import 'package:maresi_mobile/theme/maresi_palette.dart';
 import 'package:maresi_mobile/utils/property_photos.dart';
 import 'package:maresi_mobile/widgets/maresi_card.dart';
 import 'package:maresi_mobile/widgets/maresi_stepper.dart';
@@ -24,20 +27,21 @@ class RegistrationFlowScreen extends StatefulWidget {
 
 class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   static const _stepIntent = 0;
-  static const _stepPropertyType = 1;
-  static const _stepPropertyDetails = 2;
-  static const _stepPropertyPhotos = 3;
-  static const _stepAccount = 4;
-
-  static const _pageBg = Color(0xFFF9FAFB);
+  static const _stepIdentity = 1;
+  static const _stepPropertyType = 2;
+  static const _stepPropertyDetails = 3;
+  static const _stepPropertyPhotos = 4;
+  static const _stepAccount = 5;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
+  final _idCardController = TextEditingController();
   final _locationController = TextEditingController();
   final _surfaceController = TextEditingController();
   final _priceController = TextEditingController();
   final _titleController = TextEditingController();
+  final _picker = ImagePicker();
 
   int? _intentIndex;
   int _step = _stepIntent;
@@ -46,6 +50,8 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   bool _loading = false;
   bool _obscurePassword = true;
   List<XFile> _photos = [];
+  XFile? _selfie;
+  XFile? _idCardPhoto;
 
   bool get _isOwner => _role == UserRole.owner;
 
@@ -54,6 +60,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
+    _idCardController.dispose();
     _locationController.dispose();
     _surfaceController.dispose();
     _priceController.dispose();
@@ -65,10 +72,15 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
 
   List<String> _stepLabels(LocaleProvider locale) {
     if (!_isOwner) {
-      return [locale.t('register.stepProfile'), locale.t('register.stepAccount')];
+      return [
+        locale.t('register.stepProfile'),
+        locale.t('register.stepIdentity'),
+        locale.t('register.stepAccount'),
+      ];
     }
     return [
       locale.t('register.stepProfile'),
+      locale.t('register.stepIdentity'),
       locale.t('register.stepType'),
       locale.t('register.stepListing'),
       locale.t('register.stepPhotos'),
@@ -77,8 +89,19 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   }
 
   int _stepperIndex() {
-    if (!_isOwner) return _step == _stepAccount ? 1 : 0;
-    return _step;
+    if (!_isOwner) {
+      if (_step == _stepIntent) return 0;
+      if (_step == _stepIdentity) return 1;
+      return 2;
+    }
+    return switch (_step) {
+      _stepIntent => 0,
+      _stepIdentity => 1,
+      _stepPropertyType => 2,
+      _stepPropertyDetails => 3,
+      _stepPropertyPhotos => 4,
+      _ => 5,
+    };
   }
 
   void _showMessage(String message) {
@@ -108,6 +131,37 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     final locale = context.read<LocaleProvider>();
     if (_intentIndex == null || _role == null) {
       _showMessage(locale.t('register.intentRequired'));
+      return;
+    }
+    setState(() => _step = _stepIdentity);
+  }
+
+  Future<void> _pickIdentityPhoto({required bool selfie}) async {
+    if (_loading) return;
+    final file = await _picker.pickImage(
+      source: ImageSource.camera,
+      preferredCameraDevice: selfie ? CameraDevice.front : CameraDevice.rear,
+      imageQuality: 85,
+    );
+    if (file == null) return;
+    setState(() {
+      if (selfie) {
+        _selfie = file;
+      } else {
+        _idCardPhoto = file;
+      }
+    });
+  }
+
+  void _continueFromIdentity() {
+    final locale = context.read<LocaleProvider>();
+    if (_selfie == null || _idCardPhoto == null) {
+      _showMessage(locale.t('register.photosRequired'));
+      return;
+    }
+    final idCard = _idCardController.text.trim();
+    if (idCard.length < 5) {
+      _showMessage(locale.t('register.idCardInvalid'));
       return;
     }
     setState(() => _step = _isOwner ? _stepPropertyType : _stepAccount);
@@ -196,6 +250,9 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
             password: password,
             fullName: name,
             role: role,
+            idCard: _idCardController.text.trim(),
+            selfiePath: _selfie?.path,
+            idCardPhotoPath: _idCardPhoto?.path,
           );
 
       if (_isOwner && _propertyType != null) {
@@ -221,18 +278,22 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   void _goBack() {
     if (_loading) return;
     if (_step == _stepAccount) {
-      setState(() => _step = _isOwner ? _stepPropertyDetails : _stepIntent);
-      return;
-    }
-    if (_step == _stepPropertyDetails) {
-      setState(() => _step = _stepPropertyType);
+      setState(() => _step = _isOwner ? _stepPropertyPhotos : _stepIdentity);
       return;
     }
     if (_step == _stepPropertyPhotos) {
       setState(() => _step = _stepPropertyDetails);
       return;
     }
+    if (_step == _stepPropertyDetails) {
+      setState(() => _step = _stepPropertyType);
+      return;
+    }
     if (_step == _stepPropertyType) {
+      setState(() => _step = _stepIdentity);
+      return;
+    }
+    if (_step == _stepIdentity) {
       setState(() => _step = _stepIntent);
       return;
     }
@@ -243,6 +304,8 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     switch (_step) {
       case _stepIntent:
         _continueFromIntent();
+      case _stepIdentity:
+        _continueFromIdentity();
       case _stepPropertyType:
         _continueFromPropertyType();
       case _stepPropertyDetails:
@@ -263,13 +326,15 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   Widget build(BuildContext context) {
     final locale = context.watch<LocaleProvider>();
 
+    final palette = context.palette;
+
     return Scaffold(
-      backgroundColor: _pageBg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: _pageBg,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF111827)),
+          icon: Icon(Icons.arrow_back, color: palette.text),
           onPressed: _goBack,
         ),
         title: Text(locale.t('register.flowTitle')),
@@ -289,6 +354,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
                   duration: const Duration(milliseconds: 280),
                   child: switch (_step) {
                     _stepIntent => _buildIntentStep(locale),
+                    _stepIdentity => _buildIdentityStep(locale),
                     _stepPropertyType => _buildPropertyTypeStep(locale),
                     _stepPropertyDetails => _buildPropertyDetailsStep(locale),
                     _stepPropertyPhotos => _buildPropertyPhotosStep(locale),
@@ -324,6 +390,43 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
           options: [locale.t('register.intentRent'), locale.t('register.intentList')],
           selectedIndex: _intentIndex,
           onSelected: _selectIntent,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIdentityStep(LocaleProvider locale) {
+    return Column(
+      key: const ValueKey('identity'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MaresiSectionHeader(
+          title: locale.t('register.identityTitle'),
+          subtitle: locale.t('register.identityHint'),
+        ),
+        const SizedBox(height: 20),
+        _IdentityPhotoTile(
+          label: locale.t('register.selfie'),
+          hint: locale.t('register.selfieHint'),
+          path: _selfie?.path,
+          onTap: () => _pickIdentityPhoto(selfie: true),
+        ),
+        const SizedBox(height: 12),
+        _IdentityPhotoTile(
+          label: locale.t('register.idCardPhoto'),
+          hint: locale.t('register.idCardPhotoHint'),
+          path: _idCardPhoto?.path,
+          onTap: () => _pickIdentityPhoto(selfie: false),
+        ),
+        const SizedBox(height: 16),
+        _LabeledField(
+          label: locale.t('register.idCardNumber'),
+          child: TextField(
+            controller: _idCardController,
+            enabled: !_loading,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(hintText: locale.t('register.idCardPlaceholder')),
+          ),
         ),
       ],
     );
@@ -516,12 +619,13 @@ class _WebSelectTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     return Material(
-      color: selected ? AppColors.primary.withValues(alpha: 0.08) : Colors.white,
+      color: selected ? AppColors.primary.withValues(alpha: 0.08) : palette.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: selected ? AppColors.primary : const Color(0xFFE5E7EB),
+          color: selected ? AppColors.primary : palette.border,
           width: 2,
         ),
       ),
@@ -534,7 +638,7 @@ class _WebSelectTile extends StatelessWidget {
             children: [
               Icon(
                 selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                color: selected ? AppColors.primary : const Color(0xFF9CA3AF),
+                color: selected ? AppColors.primary : palette.textLight,
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -544,7 +648,7 @@ class _WebSelectTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                    color: const Color(0xFF111827),
+                    color: palette.text,
                   ),
                 ),
               ),
@@ -591,10 +695,64 @@ class _LabeledField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF374151)),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: context.palette.text),
         ),
         const SizedBox(height: 8),
         child,
+      ],
+    );
+  }
+}
+
+class _IdentityPhotoTile extends StatelessWidget {
+  const _IdentityPhotoTile({
+    required this.label,
+    required this.hint,
+    required this.path,
+    required this.onTap,
+  });
+
+  final String label;
+  final String hint;
+  final String? path;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: palette.text)),
+        const SizedBox(height: 8),
+        Material(
+          color: palette.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: palette.border, width: 2),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              height: 140,
+              width: double.infinity,
+              child: path == null
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.photo_camera_outlined, color: palette.textLight, size: 28),
+                        const SizedBox(height: 8),
+                        Text(hint, textAlign: TextAlign.center, style: TextStyle(color: palette.textSecondary, fontSize: 13)),
+                      ],
+                    )
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(File(path!), fit: BoxFit.cover, width: double.infinity),
+                    ),
+            ),
+          ),
+        ),
       ],
     );
   }

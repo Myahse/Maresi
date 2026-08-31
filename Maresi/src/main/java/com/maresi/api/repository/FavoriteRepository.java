@@ -21,6 +21,12 @@ public class FavoriteRepository {
         FROM favorites f
         JOIN properties p ON f.property_id = p.id
         WHERE f.user_id = ? AND p.is_active = true
+          AND NOT EXISTS (
+            SELECT 1 FROM visit_requests vr
+            WHERE vr.property_id = p.id
+              AND vr.status = 'confirmed'
+              AND (vr.check_out IS NULL OR vr.check_out >= CURRENT_DATE)
+          )
         ORDER BY f.created_at DESC
         """,
         (rs, rowNum) -> RowMaps.favorite(rs),

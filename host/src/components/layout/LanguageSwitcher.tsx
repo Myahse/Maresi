@@ -27,7 +27,7 @@ export function LanguageSwitcher({ className, inverted }: LanguageSwitcherProps)
           "rounded-full border px-2 py-1.5 text-xs sm:text-sm font-semibold cursor-pointer outline-none focus:ring-2 focus:ring-brand/40",
           inverted
             ? "border-white/40 bg-white/20 text-white [&>option]:text-gray-900 [&>option]:bg-white"
-            : "border-gray-200 bg-white text-gray-700"
+            : "border-border bg-background text-foreground"
         )}
       >
         <option value="en">{t("language.en")}</option>

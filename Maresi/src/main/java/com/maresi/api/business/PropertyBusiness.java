@@ -52,8 +52,9 @@ public class PropertyBusiness {
     if (ownerFilter == null && user != null && "owner".equals(user.role())) {
       ownerFilter = user.id();
     }
+    boolean excludeReserved = ownerFilter == null;
     List<Map<String, Object>> items =
-        properties.findAll(location, minPrice, maxPrice, propertyType, ownerFilter);
+        properties.findAll(location, minPrice, maxPrice, propertyType, ownerFilter, excludeReserved);
     response.setItems(items);
     response.setCount((long) items.size());
     response.setStatus(functionalError.success("Annonces", locale));

@@ -6,18 +6,18 @@ import App from "./App";
 import "./index.css";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { AuthProvider } from "@/context/AuthContext";
-import { AuthModalProvider } from "@/context/AuthModalContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 registerSW({ immediate: true });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <CurrencyProvider>
-      <AuthProvider>
-        <AuthModalProvider>
+    <ThemeProvider>
+      <CurrencyProvider>
+        <AuthProvider>
           <App />
-        </AuthModalProvider>
-      </AuthProvider>
-    </CurrencyProvider>
+        </AuthProvider>
+      </CurrencyProvider>
+    </ThemeProvider>
   </React.StrictMode>
 );

@@ -6,6 +6,7 @@ import com.maresi.api.contracts.Response;
 import java.util.Locale;
 import java.util.Map;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 @Component
 public class AuthService {
@@ -17,6 +18,15 @@ public class AuthService {
 
   public Response<Map<String, Object>> register(Request<Map<String, Object>> request, Locale locale) {
     return authBusiness.register(request, locale);
+  }
+
+  public Response<Map<String, Object>> register(
+      Request<Map<String, Object>> request,
+      MultipartFile selfie,
+      MultipartFile idCardPhoto,
+      String baseUrl,
+      Locale locale) {
+    return authBusiness.register(request, selfie, idCardPhoto, baseUrl, locale);
   }
 
   public Response<Map<String, Object>> login(Request<Map<String, Object>> request, Locale locale) {

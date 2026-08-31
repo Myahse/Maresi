@@ -70,14 +70,14 @@ export function BecomeHostPage() {
   return (
     <div className="font-jakarta max-w-xl mx-auto px-4 py-8 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t("hostApply.title")}</h1>
-        <p className="text-sm text-gray-600 mt-1">{t("hostApply.hint")}</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("hostApply.title")}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t("hostApply.hint")}</p>
       </div>
 
       {loading ? (
         <p className="text-muted-foreground">{t("common.loading")}</p>
       ) : approved ? (
-        <div className="rounded-2xl border-2 border-gray-200 bg-white p-6 space-y-4">
+        <div className="rounded-2xl border-2 border-border bg-card p-6 space-y-4">
           <p className="font-semibold text-brand">{t("hostApply.approved")}</p>
           <a
             href={HOST_APP_URL}
@@ -87,12 +87,12 @@ export function BecomeHostPage() {
           </a>
         </div>
       ) : pending ? (
-        <div className="rounded-2xl border-2 border-gray-200 bg-white p-6">
+        <div className="rounded-2xl border-2 border-border bg-card p-6">
           <p className="font-semibold">{t("hostApply.pending")}</p>
-          <p className="text-sm text-gray-600 mt-2">{t("hostApply.pendingHint")}</p>
+          <p className="text-sm text-muted-foreground mt-2">{t("hostApply.pendingHint")}</p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="rounded-2xl border-2 border-gray-200 bg-white p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="rounded-2xl border-2 border-border bg-card p-6 space-y-4">
           {rejected && (
             <p className="text-sm text-destructive bg-destructive/10 p-2 rounded-md">
               {current?.admin_note || t("hostApply.rejected")}

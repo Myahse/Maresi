@@ -24,9 +24,7 @@ class ImmoGradientButton extends StatelessWidget {
       height: 48,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: disabled
-              ? const LinearGradient(colors: [Color(0xFF666666), Color(0xFF555555)])
-              : AppGradients.cta,
+          color: disabled ? const Color(0xFF666666) : AppColors.primary,
           borderRadius: BorderRadius.circular(25),
         ),
         child: Material(

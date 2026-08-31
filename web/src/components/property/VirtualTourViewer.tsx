@@ -12,7 +12,7 @@ export function VirtualTourViewer({ url, title }: VirtualTourViewerProps) {
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900">{t("virtualTour.title")}</h2>
+        <h2 className="text-lg font-bold text-foreground">{t("virtualTour.title")}</h2>
         <a
           href={url}
           target="_blank"
@@ -23,7 +23,7 @@ export function VirtualTourViewer({ url, title }: VirtualTourViewerProps) {
           {t("virtualTour.open")}
         </a>
       </div>
-      <div className="relative rounded-2xl overflow-hidden border-2 border-gray-200 aspect-video bg-gray-100">
+      <div className="relative rounded-2xl overflow-hidden border-2 border-border aspect-video bg-muted">
         <iframe
           src={url}
           title={title ?? t("virtualTour.title")}

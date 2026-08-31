@@ -287,7 +287,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             DecoratedBox(
-                              decoration: BoxDecoration(gradient: AppGradients.provider),
+                              decoration: const BoxDecoration(color: AppColors.primary),
                               child: Padding(
                                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
                                 child: Row(

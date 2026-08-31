@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS users (
   role VARCHAR(20) NOT NULL DEFAULT 'client' CHECK (role IN ('client', 'owner', 'admin')),
   phone VARCHAR(50),
   avatar_url VARCHAR(500),
+  id_card VARCHAR(50),
+  selfie_url VARCHAR(500),
+  id_card_photo_url VARCHAR(500),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

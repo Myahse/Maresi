@@ -21,6 +21,7 @@
     <java.version>17</java.version>
     <jjwt.version>0.12.6</jjwt.version>
     <springdoc.version>2.6.0</springdoc.version>
+    <aws.sdk.version>2.31.50</aws.sdk.version>
   </properties>
 
   <dependencies>
@@ -102,6 +103,16 @@
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
       <version>4.5.14</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
+      <version>${aws.sdk.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>url-connection-client</artifactId>
+      <version>${aws.sdk.version}</version>
     </dependency>
   </dependencies>
 

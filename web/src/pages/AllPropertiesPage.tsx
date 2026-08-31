@@ -78,8 +78,8 @@ export function AllPropertiesPage() {
   const listPanel = (
     <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t("properties.allTitle")}</h1>
-        <p className="text-gray-600 mt-1 text-sm">{t("properties.allSubtitle")}</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t("properties.allTitle")}</h1>
+        <p className="text-muted-foreground mt-1 text-sm">{t("properties.allSubtitle")}</p>
       </div>
 
       <button
@@ -92,7 +92,7 @@ export function AllPropertiesPage() {
       </button>
 
       {showMobileMap && (
-        <div className="md:hidden mb-4 h-64 rounded-2xl overflow-hidden border-2 border-gray-200">
+        <div className="md:hidden mb-4 h-64 rounded-2xl overflow-hidden border-2 border-border">
           <PropertiesMap
             properties={properties}
             hoveredId={hoveredId}
@@ -102,7 +102,7 @@ export function AllPropertiesPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border-2 border-gray-200 p-4 sm:p-5 mb-6 shadow-sm sticky top-0 z-10 md:static">
+      <div className="bg-card rounded-2xl border-2 border-border p-4 sm:p-5 mb-6 shadow-sm sticky top-0 z-10 md:static">
         <PropertyFilters
           values={filters}
           onChange={setFilters}
@@ -116,7 +116,7 @@ export function AllPropertiesPage() {
 
       {error && <p className="text-destructive mb-4">{error}</p>}
       {!loading && !error && (
-        <p className="text-sm text-gray-500 mb-4">{t("properties.count", { count: properties.length })}</p>
+        <p className="text-sm text-muted-foreground mb-4">{t("properties.count", { count: properties.length })}</p>
       )}
 
       {loading ? (
@@ -126,7 +126,7 @@ export function AllPropertiesPage() {
           ))}
         </div>
       ) : properties.length === 0 ? (
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center py-16 text-muted-foreground">
           <p className="text-lg font-medium">{t("dashboard.noneFound")}</p>
         </div>
       ) : (
@@ -151,8 +151,8 @@ export function AllPropertiesPage() {
   );
 
   return (
-    <div className="font-jakarta bg-gray-50 md:fixed md:top-[4.5rem] md:left-0 md:right-0 md:bottom-0 flex flex-col md:flex-row">
-      <div className="hidden md:block md:w-[35%] md:h-full border-r border-gray-200">
+    <div className="font-jakarta bg-muted md:fixed md:top-[4.5rem] md:left-0 md:right-0 md:bottom-0 flex flex-col md:flex-row">
+      <div className="hidden md:block md:w-[35%] md:h-full border-r border-border">
         <PropertiesMap
           properties={properties}
           hoveredId={hoveredId}

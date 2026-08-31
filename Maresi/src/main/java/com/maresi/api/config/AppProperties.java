@@ -7,6 +7,7 @@ public class AppProperties {
   private Jwt jwt = new Jwt();
   private boolean devAuthBypass = true;
   private String uploadDir = "uploads";
+  private R2 r2 = new R2();
   private Sms sms = new Sms();
   private GeniusPay geniuspay = new GeniusPay();
   private Payments payments = new Payments();
@@ -34,6 +35,14 @@ public class AppProperties {
 
   public void setUploadDir(String uploadDir) {
     this.uploadDir = uploadDir;
+  }
+
+  public R2 getR2() {
+    return r2;
+  }
+
+  public void setR2(R2 r2) {
+    this.r2 = r2;
   }
 
   public Sms getSms() {
@@ -66,6 +75,86 @@ public class AppProperties {
 
   public void setPush(Push push) {
     this.push = push;
+  }
+
+  public static class R2 {
+    private String accountId = "";
+    private String accessKeyId = "";
+    private String secretAccessKey = "";
+    private String bucket = "";
+    private String endpoint = "";
+    private String publicUrl = "";
+
+    public boolean isConfigured() {
+      return notBlank(accessKeyId)
+          && notBlank(secretAccessKey)
+          && notBlank(bucket)
+          && notBlank(publicUrl)
+          && (notBlank(endpoint) || notBlank(accountId));
+    }
+
+    public String resolvedEndpoint() {
+      if (notBlank(endpoint)) {
+        return endpoint.trim().replaceAll("/+$", "");
+      }
+      return "https://" + accountId.trim() + ".r2.cloudflarestorage.com";
+    }
+
+    public String resolvedPublicUrl() {
+      return publicUrl == null ? "" : publicUrl.trim().replaceAll("/+$", "");
+    }
+
+    public String getAccountId() {
+      return accountId;
+    }
+
+    public void setAccountId(String accountId) {
+      this.accountId = accountId;
+    }
+
+    public String getAccessKeyId() {
+      return accessKeyId;
+    }
+
+    public void setAccessKeyId(String accessKeyId) {
+      this.accessKeyId = accessKeyId;
+    }
+
+    public String getSecretAccessKey() {
+      return secretAccessKey;
+    }
+
+    public void setSecretAccessKey(String secretAccessKey) {
+      this.secretAccessKey = secretAccessKey;
+    }
+
+    public String getBucket() {
+      return bucket;
+    }
+
+    public void setBucket(String bucket) {
+      this.bucket = bucket;
+    }
+
+    public String getEndpoint() {
+      return endpoint;
+    }
+
+    public void setEndpoint(String endpoint) {
+      this.endpoint = endpoint;
+    }
+
+    public String getPublicUrl() {
+      return publicUrl;
+    }
+
+    public void setPublicUrl(String publicUrl) {
+      this.publicUrl = publicUrl;
+    }
+
+    private static boolean notBlank(String value) {
+      return value != null && !value.isBlank();
+    }
   }
 
   public static class Jwt {

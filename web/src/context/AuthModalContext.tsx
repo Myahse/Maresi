@@ -1,8 +1,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { useAuth } from "@/hooks/useAuth";
-
-type AuthModalTab = "login" | "register";
 
 interface AuthModalContextValue {
   openLogin: () => void;
@@ -15,18 +14,17 @@ const AuthModalContext = createContext<AuthModalContextValue | null>(null);
 
 export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<AuthModalTab>("login");
 
   const openLogin = useCallback(() => {
-    setTab("login");
     setOpen(true);
   }, []);
 
   const openRegister = useCallback(() => {
-    setTab("register");
-    setOpen(true);
-  }, []);
+    setOpen(false);
+    navigate("/register");
+  }, [navigate]);
 
   const close = useCallback(() => setOpen(false), []);
 
@@ -49,7 +47,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthModalContext.Provider value={value}>
       {children}
-      <LoginModal open={open} tab={tab} onTabChange={setTab} onClose={close} />
+      <LoginModal open={open} onClose={close} onRegister={openRegister} />
     </AuthModalContext.Provider>
   );
 }

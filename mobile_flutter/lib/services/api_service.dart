@@ -215,17 +215,25 @@ class ApiService implements MaresiApi {
     required String password,
     required String fullName,
     required UserRole role,
+    required String idCard,
+    String? selfiePath,
+    String? idCardPhotoPath,
   }) async {
-    final res = await http.post(
-      Uri.parse('${AppConfig.apiPrefix}/auth/register'),
-      headers: {'Content-Type': 'application/json'},
-      body: _wrapBody({
-        'email': email.trim(),
-        'password': password,
-        'full_name': fullName.trim(),
-        'role': role.name,
-      }),
-    );
+    final request = http.MultipartRequest('POST', Uri.parse('${AppConfig.apiPrefix}/auth/register'));
+    request.fields['email'] = email.trim();
+    request.fields['password'] = password;
+    request.fields['fullName'] = fullName.trim();
+    request.fields['full_name'] = fullName.trim();
+    request.fields['role'] = role.name;
+    request.fields['id_card'] = idCard.trim();
+    if (selfiePath != null && selfiePath.isNotEmpty) {
+      request.files.add(await http.MultipartFile.fromPath('selfie', selfiePath));
+    }
+    if (idCardPhotoPath != null && idCardPhotoPath.isNotEmpty) {
+      request.files.add(await http.MultipartFile.fromPath('id_card_photo', idCardPhotoPath));
+    }
+    final streamed = await request.send();
+    final res = await http.Response.fromStream(streamed);
     final data = _parseBody(res);
     if (res.statusCode >= 400) _throwFromResponse(res, data);
     final map = _unwrapEnvelope(data) as Map<String, dynamic>;

@@ -33,12 +33,18 @@ class AuthProvider extends ChangeNotifier {
     required String password,
     required String fullName,
     required UserRole role,
+    required String idCard,
+    String? selfiePath,
+    String? idCardPhotoPath,
   }) async {
     await _authService.register(
       email: email,
       password: password,
       fullName: fullName,
       role: role,
+      idCard: idCard,
+      selfiePath: selfiePath,
+      idCardPhotoPath: idCardPhotoPath,
     );
     notifyListeners();
   }

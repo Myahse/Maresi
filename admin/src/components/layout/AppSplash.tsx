@@ -63,7 +63,7 @@ export function AppSplash() {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white font-jakarta transition-opacity duration-400 ease-out",
+        "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background font-jakarta transition-opacity duration-400 ease-out",
         phase === "hiding" ? "opacity-0 pointer-events-none" : "opacity-100"
       )}
       role="status"

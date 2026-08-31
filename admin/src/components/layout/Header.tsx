@@ -2,6 +2,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
   `px-3 py-1.5 rounded-full text-sm font-semibold ${
@@ -15,7 +16,7 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-brand to-brand-dark shadow-md">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-brand shadow-md">
         <div className="max-w-8xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
           <Link to="/" className="font-extrabold italic text-xl text-white shrink-0">
             Maresi Admin
@@ -40,6 +41,7 @@ export function Header() {
             </nav>
           )}
           <div className="flex items-center gap-2 shrink-0">
+            <ThemeToggle inverted />
             <LanguageSwitcher inverted />
             {isAuthenticated && (
               <button

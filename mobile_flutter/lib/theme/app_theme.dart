@@ -4,7 +4,7 @@ import 'package:maresi_mobile/theme/app_colors.dart';
 import 'package:maresi_mobile/theme/maresi_palette.dart';
 
 abstract final class AppTheme {
-  static ThemeData get light => _build(Brightness.light, MaresiPalette.light, const Color(0xFFF9FAFB));
+  static ThemeData get light => _build(Brightness.light, MaresiPalette.light, const Color(0xFFF5F5F5));
 
   static ThemeData get dark => _build(Brightness.dark, MaresiPalette.dark, const Color(0xFF121212));
 
@@ -28,30 +28,30 @@ abstract final class AppTheme {
       brightness: brightness,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: scaffoldBg,
-      textTheme: textTheme,
+      textTheme: textTheme.apply(bodyColor: palette.text, displayColor: palette.text),
       extensions: [palette],
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF111827),
+        backgroundColor: palette.surface,
+        foregroundColor: palette.text,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w600,
           fontSize: 16,
-          color: const Color(0xFF111827),
+          color: palette.text,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: palette.surface,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: BorderSide(color: palette.inputBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: BorderSide(color: palette.inputBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -60,9 +60,9 @@ abstract final class AppTheme {
         labelStyle: textTheme.bodyMedium?.copyWith(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: const Color(0xFF374151),
+          color: palette.text,
         ),
-        hintStyle: textTheme.bodyMedium?.copyWith(fontSize: 14, color: const Color(0xFF9CA3AF)),
+        hintStyle: textTheme.bodyMedium?.copyWith(fontSize: 14, color: palette.textLight),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(

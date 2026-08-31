@@ -47,11 +47,20 @@ public class UserRepository {
   }
 
   public Map<String, Object> create(
-      String email, String passwordHash, String fullName, String role, String phone) {
+      String email,
+      String passwordHash,
+      String fullName,
+      String role,
+      String phone,
+      String idCard,
+      String selfieUrl,
+      String idCardPhotoUrl) {
     return jdbc.queryForObject(
         """
-        INSERT INTO users (email, password_hash, full_name, role, phone)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO users (
+          email, password_hash, full_name, role, phone, id_card, selfie_url, id_card_photo_url
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         RETURNING id, email, full_name, role, phone, created_at
         """,
         (rs, rowNum) -> RowMaps.userPublic(rs),
@@ -59,7 +68,10 @@ public class UserRepository {
         passwordHash,
         fullName,
         role,
-        phone);
+        phone,
+        idCard,
+        selfieUrl,
+        idCardPhotoUrl);
   }
 
   public Map<String, Object> createFromPhone(String phone, String fullName, String role) {
