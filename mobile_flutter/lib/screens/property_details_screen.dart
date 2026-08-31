@@ -339,31 +339,30 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      property.title,
-                                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: palette.text),
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Icon(Icons.star, color: Colors.amber, size: 22),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          (property.ratingCount ?? 0) > 0 && property.averageRating != null
+                                              ? property.averageRating!.toStringAsFixed(1)
+                                              : '—',
+                                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: palette.text),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            property.title,
+                                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: palette.text),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          formatPrice(property.price),
-                                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.primary),
-                                        ),
-                                        if (property.averageRating != null) ...[
-                                          const Spacer(),
-                                          const Icon(Icons.star, color: Colors.amber, size: 18),
-                                          Text(
-                                            ' ${property.averageRating!.toStringAsFixed(1)}',
-                                            style: TextStyle(color: palette.text, fontWeight: FontWeight.w600),
-                                          ),
-                                          if (property.ratingCount != null)
-                                            Text(
-                                              ' (${property.ratingCount})',
-                                              style: TextStyle(color: palette.textSecondary, fontSize: 13),
-                                            ),
-                                        ],
-                                      ],
+                                    Text(
+                                      formatPrice(property.price),
+                                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.primary),
                                     ),
                                     if (property.location.isNotEmpty) ...[
                                       const SizedBox(height: 8),

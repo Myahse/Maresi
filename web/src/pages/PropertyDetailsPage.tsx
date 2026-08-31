@@ -11,7 +11,7 @@ import { useAuthModal } from "@/context/AuthModalContext";
 import { PropertyLocationMap } from "@/components/map/PropertyLocationMap";
 import { VirtualTourViewer } from "@/components/property/VirtualTourViewer";
 import { RatingsSection } from "@/components/rating/RatingsSection";
-import { StarRating } from "@/components/rating/StarRating";
+import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
 import { cn } from "@/lib/utils";
 import { listingImageUrls } from "@/lib/media";
 
@@ -25,11 +25,17 @@ export function PropertyDetailsPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
+  const [ratingAvg, setRatingAvg] = useState(0);
+  const [ratingCount, setRatingCount] = useState(0);
 
   useEffect(() => {
     if (!id) return;
     getProperty(id)
-      .then(setProperty)
+      .then((item) => {
+        setProperty(item);
+        setRatingAvg(Number(item.average_rating ?? 0));
+        setRatingCount(Number(item.rating_count ?? 0));
+      })
       .catch(() => setProperty(null))
       .finally(() => setLoading(false));
   }, [id]);
@@ -107,19 +113,19 @@ export function PropertyDetailsPage() {
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{property.title}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-start gap-3">
+              <PropertyRatingMark rating={ratingAvg} count={ratingCount} className="mt-1 text-lg" />
+              <span>{property.title}</span>
+            </h1>
             <div className="flex flex-wrap items-center gap-3 mt-2">
               <p className="text-brand font-bold text-xl">
                 {formatPrice(property.price)}
                 <span className="text-muted-foreground font-normal text-base ml-1">{t("common.night")}</span>
               </p>
-              {(property.average_rating ?? 0) > 0 && (
-                <div className="flex items-center gap-1">
-                  <StarRating value={property.average_rating!} size="sm" />
-                  <span className="text-sm text-muted-foreground">
-                    ({property.rating_count ?? 0})
-                  </span>
-                </div>
+              {ratingCount > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  {t("ratings.count", { count: ratingCount })}
+                </span>
               )}
             </div>
             <p className="text-muted-foreground flex items-center gap-2 mt-2">
@@ -152,8 +158,12 @@ export function PropertyDetailsPage() {
 
           <RatingsSection
             propertyId={property.id}
-            averageRating={property.average_rating}
-            ratingCount={property.rating_count}
+            averageRating={ratingAvg}
+            ratingCount={ratingCount}
+            onStatsChange={(average, count) => {
+              setRatingAvg(average);
+              setRatingCount(count);
+            }}
           />
         </div>
 

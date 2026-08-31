@@ -120,28 +120,11 @@ export async function getPropertyRatings(propertyId: string) {
   }
 }
 
-/** Soft-fail: ratings REST is not implemented on Spring yet. */
-export async function submitPropertyRating(
-  propertyId: string,
-  score: number,
-  comment?: string
-) {
-  try {
-    return await api.post<PropertyRating>(`/properties/${propertyId}/ratings`, {
-      score,
-      comment,
-    });
-  } catch {
-    return {
-      id: `local-${Date.now()}`,
-      property_id: propertyId,
-      user_id: "local",
-      user_name: "You",
-      score,
-      comment,
-      created_at: new Date().toISOString(),
-    } satisfies PropertyRating;
-  }
+export function submitPropertyRating(propertyId: string, score: number, comment?: string) {
+  return api.post<PropertyRating>(`/properties/${propertyId}/ratings`, {
+    score,
+    comment,
+  });
 }
 
 export function createProperty(formData: FormData) {

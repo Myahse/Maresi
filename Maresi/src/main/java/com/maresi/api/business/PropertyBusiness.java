@@ -45,16 +45,20 @@ public class PropertyBusiness {
       BigDecimal maxPrice,
       String propertyType,
       UUID ownerId,
+      boolean mine,
       Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
-    AuthUser user = SecurityUtils.currentUserOrNull();
     UUID ownerFilter = ownerId;
-    if (ownerFilter == null && user != null && "owner".equals(user.role())) {
-      ownerFilter = user.id();
+    boolean includeInactive = false;
+    if (mine) {
+      AuthUser required = SecurityUtils.requireUser();
+      ownerFilter = required.id();
+      includeInactive = true;
     }
     boolean excludeReserved = ownerFilter == null;
     List<Map<String, Object>> items =
-        properties.findAll(location, minPrice, maxPrice, propertyType, ownerFilter, excludeReserved);
+        properties.findAll(
+            location, minPrice, maxPrice, propertyType, ownerFilter, excludeReserved, includeInactive);
     fileStorage.rewriteImageFields(items);
     response.setItems(items);
     response.setCount((long) items.size());
@@ -68,6 +72,11 @@ public class PropertyBusiness {
         .findById(id)
         .map(
             property -> {
+              if (!canViewProperty(property)) {
+                response.setHasError(true);
+                response.setStatus(functionalError.dataNotFound("Bien introuvable", locale));
+                return response;
+              }
               fileStorage.rewriteImageFields(property);
               response.setItem(property);
               response.setStatus(functionalError.success("Bien", locale));
@@ -90,6 +99,7 @@ public class PropertyBusiness {
       List<MultipartFile> images,
       List<String> uploadedImageUrls,
       Map<String, Object> extras,
+      boolean draft,
       String baseUrl,
       Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
@@ -103,19 +113,25 @@ public class PropertyBusiness {
     List<String> storedUrls = fileStorage.storePropertyImages(images, baseUrl);
     List<String> imageUrls = new ArrayList<>(ownedUrls);
     imageUrls.addAll(storedUrls);
-    if (imageUrls.size() < MIN_PROPERTY_PHOTOS) {
-      throw ApiException.of(400, "At least " + MIN_PROPERTY_PHOTOS + " photos are required");
+    String safeTitle = title == null || title.isBlank() ? "Untitled listing" : title.trim();
+    String safeLocation = location == null ? "" : location.trim();
+    String safeType = propertyType == null || propertyType.isBlank() ? "apartment" : propertyType.trim();
+    BigDecimal safePrice = price == null ? BigDecimal.ZERO : price;
+    if (!draft) {
+      requirePublishable(safeTitle, safeLocation, safePrice, imageUrls.size());
     }
+    Map<String, Object> extra = extras == null ? new HashMap<>() : new HashMap<>(extras);
+    extra.put("is_active", !draft);
     Map<String, Object> created =
         properties.create(
             user.id(),
-            title,
+            safeTitle,
             description != null ? description : "",
-            price,
-            location,
-            propertyType,
+            safePrice,
+            safeLocation,
+            safeType,
             imageUrls,
-            extras);
+            extra);
     fileStorage.rewriteImageFields(created);
     response.setItem(created);
     response.setStatus(functionalError.success("Creation", locale));
@@ -144,16 +160,27 @@ public class PropertyBusiness {
     }
     List<String> ownedUrls = fileStorage.acceptOwnedImageUrls(uploadedImageUrls, baseUrl);
     List<String> storedUrls = fileStorage.storePropertyImages(images, baseUrl);
-    if (!ownedUrls.isEmpty() || !storedUrls.isEmpty()) {
-      List<String> current =
-          existing.get("images") instanceof List<?> l
+    data = new HashMap<>(data);
+    if (uploadedImageUrls != null || !storedUrls.isEmpty()) {
+      List<String> next = new ArrayList<>(ownedUrls);
+      next.addAll(storedUrls);
+      data.put("images", next);
+    }
+    if (Boolean.TRUE.equals(data.get("is_active"))) {
+      List<String> photos =
+          data.get("images") instanceof List<?> l
               ? l.stream().map(Object::toString).toList()
-              : List.of();
-      List<String> merged = new ArrayList<>(current);
-      merged.addAll(ownedUrls);
-      merged.addAll(storedUrls);
-      data = new HashMap<>(data);
-      data.put("images", merged);
+              : existing.get("images") instanceof List<?> l
+                  ? l.stream().map(Object::toString).toList()
+                  : List.of();
+      String nextTitle =
+          data.get("title") != null ? data.get("title").toString() : String.valueOf(existing.get("title"));
+      String nextLocation =
+          data.get("location") != null
+              ? data.get("location").toString()
+              : String.valueOf(existing.get("location"));
+      BigDecimal nextPrice = asDecimal(data.get("price"), asDecimal(existing.get("price"), BigDecimal.ZERO));
+      requirePublishable(nextTitle, nextLocation, nextPrice, photos.size());
     }
     Map<String, Object> updated = properties.update(id, data);
     fileStorage.rewriteImageFields(updated);
@@ -176,8 +203,46 @@ public class PropertyBusiness {
       response.setStatus(functionalError.disallowed("Suppression non autorisee", locale));
       return response;
     }
+    fileStorage.deletePropertyImages(existing.get("images"));
     properties.remove(id);
+    fileStorage.deleteUnreferencedPropertyImages(properties.allImageUrls());
     response.setStatus(functionalError.success("Suppression", locale));
     return response;
+  }
+
+  private static boolean canViewProperty(Map<String, Object> property) {
+    if (!Boolean.FALSE.equals(property.get("is_active"))) return true;
+    AuthUser user = SecurityUtils.currentUserOrNull();
+    if (user == null) return false;
+    if ("admin".equals(user.role())) return true;
+    return user.id().toString().equals(String.valueOf(property.get("owner_id")));
+  }
+
+  private static void requirePublishable(String title, String location, BigDecimal price, int photoCount) {
+    if (title == null || title.isBlank() || "Untitled listing".equals(title)) {
+      throw ApiException.of(400, "Title is required to publish");
+    }
+    if (location == null || location.isBlank()) {
+      throw ApiException.of(400, "Location is required to publish");
+    }
+    if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+      throw ApiException.of(400, "Price is required to publish");
+    }
+    if (photoCount < MIN_PROPERTY_PHOTOS) {
+      throw ApiException.of(400, "At least " + MIN_PROPERTY_PHOTOS + " photos are required");
+    }
+  }
+
+  private static BigDecimal asDecimal(Object raw, BigDecimal fallback) {
+    if (raw instanceof BigDecimal value) return value;
+    if (raw instanceof Number number) return BigDecimal.valueOf(number.doubleValue());
+    if (raw != null) {
+      try {
+        return new BigDecimal(raw.toString().trim());
+      } catch (NumberFormatException ignored) {
+        return fallback;
+      }
+    }
+    return fallback;
   }
 }

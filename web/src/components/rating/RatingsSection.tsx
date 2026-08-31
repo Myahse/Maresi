@@ -11,9 +11,15 @@ interface RatingsSectionProps {
   propertyId: string;
   averageRating?: number;
   ratingCount?: number;
+  onStatsChange?: (average: number, count: number) => void;
 }
 
-export function RatingsSection({ propertyId, averageRating = 0, ratingCount = 0 }: RatingsSectionProps) {
+export function RatingsSection({
+  propertyId,
+  averageRating = 0,
+  ratingCount = 0,
+  onStatsChange,
+}: RatingsSectionProps) {
   const { t } = useTranslation();
   const { requireAuth } = useAuthModal();
   const [reviews, setReviews] = useState<PropertyRating[]>([]);
@@ -26,6 +32,7 @@ export function RatingsSection({ propertyId, averageRating = 0, ratingCount = 0 
       .then(({ ratings, statistics }) => {
         setReviews(ratings);
         setStats(statistics);
+        onStatsChange?.(statistics.average, statistics.count);
       })
       .catch(() => {});
   }, [propertyId, refresh]);

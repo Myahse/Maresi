@@ -7,9 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Stepper } from "@/components/ui/stepper";
 import { usePriceFormatter } from "@/context/CurrencyContext";
-import { isValidPrice, isValidUrl, hasMinPropertyPhotos, MIN_PROPERTY_PHOTOS } from "@/lib/validation";
+import { isValidPrice, isValidUrl, MIN_PROPERTY_PHOTOS } from "@/lib/validation";
 import { compressImageFile } from "@/lib/compressImage";
 import { uploadPropertyImages } from "@/services/api";
+import { listingImageUrl } from "@/lib/media";
 import { LocationMapPicker } from "@/components/map/LocationMapPicker";
 import { cn } from "@/lib/utils";
 import type { MapboxPlace } from "@/lib/mapbox";
@@ -50,6 +51,9 @@ export function PropertyCreationWizard({
   const [virtual_tour_url, setVirtualTourUrl] = useState(initial?.virtual_tour_url ?? "");
   const [wave_payment_url, setWavePaymentUrl] = useState(initial?.wave_payment_url ?? "");
   const [orange_money_url, setOrangeMoneyUrl] = useState(initial?.orange_money_url ?? "");
+  const [existingUrls, setExistingUrls] = useState<string[]>(
+    () => (Array.isArray(initial?.images) ? initial.images.filter((url): url is string => Boolean(url)) : [])
+  );
   const [images, setImages] = useState<File[]>([]);
   const [coverIndex, setCoverIndex] = useState(0);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -94,7 +98,7 @@ export function PropertyCreationWizard({
         if (orange_money_url.trim() && !isValidUrl(orange_money_url)) return t("wizard.property.errors.url");
         return null;
       case 3:
-        if (!hasMinPropertyPhotos(images)) {
+        if (existingUrls.length + images.length < MIN_PROPERTY_PHOTOS) {
           return t("wizard.property.errors.photosMin", { count: MIN_PROPERTY_PHOTOS });
         }
         if (!isValidUrl(virtual_tour_url)) return t("wizard.property.errors.url");
@@ -172,31 +176,40 @@ export function PropertyCreationWizard({
     })();
   };
 
+  const photoCount = existingUrls.length + images.length;
+
   const removePhoto = (idx: number) => {
-    const next = images.filter((_, i) => i !== idx);
-    imagesRef.current = next;
-    setImages(next);
+    if (idx < existingUrls.length) {
+      setExistingUrls((prev) => prev.filter((_, i) => i !== idx));
+    } else {
+      const fileIdx = idx - existingUrls.length;
+      const next = images.filter((_, i) => i !== fileIdx);
+      imagesRef.current = next;
+      setImages(next);
+      uploadGen.current += 1;
+      pendingUpload.current = null;
+      if (next.length > 0) startBackgroundUpload(next);
+      else setUploadingPhotos(false);
+    }
     setCoverIndex((current) => {
-      if (next.length === 0) return 0;
+      if (photoCount <= 1) return 0;
       if (idx === current) return 0;
       if (idx < current) return current - 1;
       return current;
     });
-    uploadGen.current += 1;
-    pendingUpload.current = null;
-    if (next.length > 0) startBackgroundUpload(next);
-    else setUploadingPhotos(false);
   };
 
-  const handleSubmit = async () => {
-    if (!hasMinPropertyPhotos(images)) {
+  const handleSubmit = async (asDraft = false) => {
+    if (!asDraft && photoCount < MIN_PROPERTY_PHOTOS) {
       setError(t("wizard.property.errors.photosMin", { count: MIN_PROPERTY_PHOTOS }));
       return;
     }
-    const err = validateStep(step);
-    if (err) {
-      setError(err);
-      return;
+    if (!asDraft) {
+      const err = validateStep(step);
+      if (err) {
+        setError(err);
+        return;
+      }
     }
     setError("");
     const formData = new FormData();
@@ -206,29 +219,33 @@ export function PropertyCreationWizard({
     formData.set("location", location.trim());
     if (latitude) formData.set("latitude", latitude);
     if (longitude) formData.set("longitude", longitude);
-    formData.set("price", price);
-    formData.set("bedrooms", bedrooms);
-    formData.set("max_guests", max_guests);
+    if (price) formData.set("price", price);
+    if (bedrooms) formData.set("bedrooms", bedrooms);
+    if (max_guests) formData.set("max_guests", max_guests);
     if (virtual_tour_url.trim()) formData.set("virtual_tour_url", virtual_tour_url.trim());
     if (wave_payment_url.trim()) formData.set("wave_payment_url", wave_payment_url.trim());
     if (orange_money_url.trim()) formData.set("orange_money_url", orange_money_url.trim());
-    const ordered = [...images];
-    if (coverIndex > 0 && coverIndex < ordered.length) {
-      const [cover] = ordered.splice(coverIndex, 1);
-      ordered.unshift(cover);
-    }
+    formData.set("draft", asDraft ? "true" : "false");
     setWaitingUpload(true);
     try {
       const uploaded = pendingUpload.current ? await pendingUpload.current : null;
-      if (uploaded && uploaded.length === images.length) {
-        const orderedUrls = [...uploaded];
+      const newUrls = uploaded && uploaded.length === images.length ? uploaded : null;
+      if (newUrls || images.length === 0) {
+        const orderedUrls = [...existingUrls, ...(newUrls ?? [])];
         if (coverIndex > 0 && coverIndex < orderedUrls.length) {
           const [cover] = orderedUrls.splice(coverIndex, 1);
           orderedUrls.unshift(cover);
         }
         orderedUrls.forEach((url) => formData.append("image_urls", url));
       } else {
-        ordered.forEach((f) => formData.append("images", f));
+        existingUrls.forEach((url) => formData.append("image_urls", url));
+        const ordered = [...images];
+        const fileCover = coverIndex - existingUrls.length;
+        if (fileCover > 0 && fileCover < ordered.length) {
+          const [cover] = ordered.splice(fileCover, 1);
+          ordered.unshift(cover);
+        }
+        ordered.forEach((file) => formData.append("images", file));
       }
       await onSubmit(formData);
     } catch (e) {
@@ -400,16 +417,16 @@ export function PropertyCreationWizard({
             {uploadingPhotos && !preparingPhotos && (
               <p className="text-xs text-brand">{t("wizard.property.uploadingPhotos")}</p>
             )}
-            {images.length > 0 && (
-              <p className={`text-xs ${hasMinPropertyPhotos(images) ? "text-emerald-600" : "text-muted-foreground"}`}>
-                {t("wizard.property.photosSelected", { count: images.length, min: MIN_PROPERTY_PHOTOS })}
+            {photoCount > 0 && (
+              <p className={`text-xs ${photoCount >= MIN_PROPERTY_PHOTOS ? "text-emerald-600" : "text-muted-foreground"}`}>
+                {t("wizard.property.photosSelected", { count: photoCount, min: MIN_PROPERTY_PHOTOS })}
               </p>
             )}
-            {previews.length > 0 && (
+            {photoCount > 0 && (
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">{t("wizard.property.coverHint")}</p>
                 <div className="grid grid-cols-3 gap-2">
-                  {previews.map((src, idx) => (
+                  {[...existingUrls.map((url) => listingImageUrl(url)), ...previews].map((src, idx) => (
                     <div
                       key={src}
                       className={`relative overflow-hidden rounded-xl border-2 ${
@@ -492,13 +509,13 @@ export function PropertyCreationWizard({
             </div>
             <div className="flex justify-between gap-4 p-4">
               <dt className="text-muted-foreground">{t("common.photos")}</dt>
-              <dd className="font-semibold">{images.length}</dd>
+              <dd className="font-semibold">{photoCount}</dd>
             </div>
-            {previews[coverIndex] && (
+            {([...existingUrls.map((url) => listingImageUrl(url)), ...previews][coverIndex]) && (
               <div className="p-4 space-y-2">
                 <dt className="text-muted-foreground">{t("wizard.property.coverBadge")}</dt>
                 <img
-                  src={previews[coverIndex]}
+                  src={[...existingUrls.map((url) => listingImageUrl(url)), ...previews][coverIndex]}
                   alt=""
                   className="mt-2 h-32 w-full rounded-xl object-cover"
                 />
@@ -517,6 +534,15 @@ export function PropertyCreationWizard({
         <Button type="button" variant="ghost" className="rounded-full" onClick={onCancel}>
           {t("common.cancel")}
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="rounded-full"
+          disabled={loading || waitingUpload}
+          onClick={() => void handleSubmit(true)}
+        >
+          {t("wizard.property.saveDraft")}
+        </Button>
         {step < steps.length - 1 ? (
           <Button
             type="button"
@@ -530,7 +556,7 @@ export function PropertyCreationWizard({
             type="button"
             className="rounded-full bg-brand hover:bg-brand-dark ml-auto"
             disabled={loading || waitingUpload}
-            onClick={handleSubmit}
+            onClick={() => void handleSubmit(false)}
           >
             {loading || waitingUpload
               ? uploadingPhotos

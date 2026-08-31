@@ -24,8 +24,9 @@ public class PropertyService {
       BigDecimal maxPrice,
       String propertyType,
       UUID ownerId,
+      boolean mine,
       Locale locale) {
-    return propertyBusiness.list(location, minPrice, maxPrice, propertyType, ownerId, locale);
+    return propertyBusiness.list(location, minPrice, maxPrice, propertyType, ownerId, mine, locale);
   }
 
   public Response<Map<String, Object>> getById(UUID id, Locale locale) {
@@ -41,6 +42,7 @@ public class PropertyService {
       List<MultipartFile> images,
       List<String> uploadedImageUrls,
       Map<String, Object> extras,
+      boolean draft,
       String baseUrl,
       Locale locale) {
     return propertyBusiness.create(
@@ -52,6 +54,7 @@ public class PropertyService {
         images,
         uploadedImageUrls,
         extras,
+        draft,
         baseUrl,
         locale);
   }

@@ -102,46 +102,24 @@ export function getProperty(id: string) {
   return api.get<Property>(`/properties/${id}`);
 }
 
-/** Soft-fail: ratings REST is not implemented on Spring yet. */
 export async function getPropertyRatings(propertyId: string) {
-  try {
-    const data = await api.get<{ ratings?: PropertyRating[]; statistics?: RatingStats } | PropertyRating[]>(
-      `/properties/${propertyId}/ratings`
-    );
-    if (Array.isArray(data)) {
-      return { ratings: data, statistics: emptyRatingStats() };
-    }
-    return {
-      ratings: data.ratings ?? [],
-      statistics: data.statistics ?? emptyRatingStats(),
-    };
-  } catch {
-    return { ratings: [] as PropertyRating[], statistics: emptyRatingStats() };
+  const data = await api.get<{ ratings?: PropertyRating[]; statistics?: RatingStats } | PropertyRating[]>(
+    `/properties/${propertyId}/ratings`
+  );
+  if (Array.isArray(data)) {
+    return { ratings: data, statistics: emptyRatingStats() };
   }
+  return {
+    ratings: data.ratings ?? [],
+    statistics: data.statistics ?? emptyRatingStats(),
+  };
 }
 
-/** Soft-fail: ratings REST is not implemented on Spring yet. */
-export async function submitPropertyRating(
-  propertyId: string,
-  score: number,
-  comment?: string
-) {
-  try {
-    return await api.post<PropertyRating>(`/properties/${propertyId}/ratings`, {
-      score,
-      comment,
-    });
-  } catch {
-    return {
-      id: `local-${Date.now()}`,
-      property_id: propertyId,
-      user_id: "local",
-      user_name: "You",
-      score,
-      comment,
-      created_at: new Date().toISOString(),
-    } satisfies PropertyRating;
-  }
+export function submitPropertyRating(propertyId: string, score: number, comment?: string) {
+  return api.post<PropertyRating>(`/properties/${propertyId}/ratings`, {
+    score,
+    comment,
+  });
 }
 
 export function createProperty(formData: FormData) {

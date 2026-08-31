@@ -30,11 +30,11 @@ export function OwnerDashboardPage() {
       setError("");
       try {
         const [allProps, myVisits, sub] = await Promise.all([
-          getProperties(),
+          getProperties({ mine: true }),
           getOwnerVisitRequests(),
           getMySubscription().catch(() => null),
         ]);
-        setProperties(allProps.filter((p) => p.owner_id === user.id));
+        setProperties(allProps);
         setVisits(myVisits);
         setWallet(sub);
       } catch (e) {
@@ -136,7 +136,14 @@ export function OwnerDashboardPage() {
                   </div>
                 )}
                 <CardHeader className="flex flex-row items-center justify-between gap-2">
-                  <CardTitle className="text-base">{p.title}</CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <span>{p.title}</span>
+                    {p.is_active === false && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+                        {t("owner.draftBadge")}
+                      </span>
+                    )}
+                  </CardTitle>
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => handleEdit(p.id)}>
                       {t("common.edit")}

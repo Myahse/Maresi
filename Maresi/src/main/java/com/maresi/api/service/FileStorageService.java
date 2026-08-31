@@ -12,7 +12,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,11 +44,15 @@ import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 @Service
 public class FileStorageService {
@@ -164,6 +170,119 @@ public class FileStorageService {
       next.add(toBrowserUrl(url, baseUrl));
     }
     item.put("images", next);
+  }
+
+  public void deletePropertyImages(Object rawImages) {
+    LinkedHashSet<String> keys = new LinkedHashSet<>();
+    for (String url : urlsFrom(rawImages)) {
+      String key = extractPropertyObjectKey(url);
+      if (key != null) keys.add(key);
+    }
+    if (keys.isEmpty()) {
+      log.warn("Listing delete: no property photo keys found on stored image URLs");
+      return;
+    }
+    log.info("Listing delete: removing {} photo(s) from storage", keys.size());
+    deleteKeys(keys);
+  }
+
+  public void deleteUnreferencedPropertyImages(List<String> stillUsedUrls) {
+    if (r2Client == null) return;
+    LinkedHashSet<String> keep = new LinkedHashSet<>();
+    for (String url : urlsFrom(stillUsedUrls)) {
+      String key = extractPropertyObjectKey(url);
+      if (key != null) keep.add(key);
+    }
+    Instant cutoff = Instant.now().minus(Duration.ofMinutes(10));
+    int scanned = 0;
+    int removed = 0;
+    log.info("Sweeping leftover listing photos in R2 (keeping {} still in use)", keep.size());
+    try {
+      String token = null;
+      do {
+        ListObjectsV2Response page =
+            r2Client.listObjectsV2(
+                ListObjectsV2Request.builder()
+                    .bucket(r2.getBucket())
+                    .prefix("properties/")
+                    .continuationToken(token)
+                    .overrideConfiguration(c -> c.apiCallTimeout(Duration.ofSeconds(25)))
+                    .build());
+        for (S3Object object : page.contents()) {
+          scanned++;
+          String key = object.key();
+          if (key == null || !key.startsWith("properties/") || keep.contains(key)) continue;
+          Instant modified = object.lastModified();
+          if (modified != null && modified.isAfter(cutoff)) continue;
+          if (deleteR2Key(key)) removed++;
+        }
+        token = Boolean.TRUE.equals(page.isTruncated()) ? page.nextContinuationToken() : null;
+      } while (token != null);
+    } catch (Exception e) {
+      log.warn("Could not sweep leftover listing photos in R2: {}", e.getMessage());
+    }
+    log.info("R2 listing photo sweep finished: scanned={}, removed={}", scanned, removed);
+  }
+
+  private void deleteKeys(Set<String> keys) {
+    if (r2Client != null) {
+      int removed = 0;
+      for (String key : keys) {
+        if (deleteR2Key(key)) removed++;
+      }
+      log.info("Deleted {}/{} listing photo(s) from R2", removed, keys.size());
+      return;
+    }
+    if (propertyDir == null) return;
+    for (String key : keys) {
+      Path target = propertyDir.resolve(key.substring(key.lastIndexOf('/') + 1)).normalize();
+      if (!target.startsWith(propertyDir)) continue;
+      try {
+        Files.deleteIfExists(target);
+      } catch (IOException e) {
+        log.warn("Could not delete local listing photo {}: {}", key, e.getMessage());
+      }
+    }
+  }
+
+  private boolean deleteR2Key(String key) {
+    try {
+      r2Client.deleteObject(DeleteObjectRequest.builder().bucket(r2.getBucket()).key(key).build());
+      return true;
+    } catch (NoSuchKeyException e) {
+      return false;
+    } catch (Exception e) {
+      log.warn("R2 delete failed for key={}: {}", key, e.getMessage());
+      return false;
+    }
+  }
+
+  private static List<String> urlsFrom(Object raw) {
+    if (raw == null) return List.of();
+    if (raw instanceof java.sql.Array sqlArray) {
+      try {
+        return urlsFrom(sqlArray.getArray());
+      } catch (Exception e) {
+        return List.of();
+      }
+    }
+    if (raw instanceof List<?> list) {
+      List<String> out = new ArrayList<>(list.size());
+      for (Object value : list) {
+        if (value != null && !value.toString().isBlank()) out.add(value.toString().trim());
+      }
+      return out;
+    }
+    if (raw instanceof String[] strings) return List.of(strings);
+    if (raw instanceof Object[] objects) {
+      List<String> out = new ArrayList<>(objects.length);
+      for (Object value : objects) {
+        if (value != null && !value.toString().isBlank()) out.add(value.toString().trim());
+      }
+      return out;
+    }
+    if (raw instanceof String text && !text.isBlank()) return List.of(text.trim());
+    return List.of();
   }
 
   public StoredMedia loadPublicPropertyImage(String rawKey) {

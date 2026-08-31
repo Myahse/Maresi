@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Heart, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Property } from "@/types";
 import { usePriceFormatter } from "@/context/CurrencyContext";
-import { StarRating } from "@/components/rating/StarRating";
+import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
 import { cn } from "@/lib/utils";
 import { listingImageUrls } from "@/lib/media";
 
@@ -127,17 +127,18 @@ export function PropertyCard({
       </div>
 
       <div className="p-4">
-        <h3 className="font-bold text-foreground text-base sm:text-lg line-clamp-2 mb-1">{property.title}</h3>
+        <h3 className="font-bold text-foreground text-base sm:text-lg mb-1 flex items-start gap-2">
+          <PropertyRatingMark
+            rating={property.average_rating}
+            count={property.rating_count}
+            className="mt-0.5 text-sm"
+          />
+          <span className="line-clamp-2">{property.title}</span>
+        </h3>
         <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
           <MapPin className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{property.location}</span>
         </p>
-        {(property.average_rating ?? 0) > 0 && (
-          <div className="flex items-center gap-1 mb-2">
-            <StarRating value={property.average_rating!} size="sm" />
-            <span className="text-xs text-muted-foreground">({property.rating_count ?? 0})</span>
-          </div>
-        )}
         <p className="text-brand font-bold text-lg">
           {formatPrice(property.price)}
           <span className="text-muted-foreground font-normal text-sm"> {t("common.night")}</span>

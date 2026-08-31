@@ -88,12 +88,14 @@ export function getProperties(params?: {
   minPrice?: number;
   maxPrice?: number;
   property_type?: string;
+  mine?: boolean;
 }) {
   const q = new URLSearchParams();
   if (params?.location) q.set("location", params.location);
   if (params?.minPrice != null) q.set("minPrice", String(params.minPrice));
   if (params?.maxPrice != null) q.set("maxPrice", String(params.maxPrice));
   if (params?.property_type) q.set("property_type", params.property_type);
+  if (params?.mine) q.set("mine", "true");
   const query = q.toString();
   return api.get<Property[]>(`/properties${query ? `?${query}` : ""}`);
 }
@@ -120,28 +122,11 @@ export async function getPropertyRatings(propertyId: string) {
   }
 }
 
-/** Soft-fail: ratings REST is not implemented on Spring yet. */
-export async function submitPropertyRating(
-  propertyId: string,
-  score: number,
-  comment?: string
-) {
-  try {
-    return await api.post<PropertyRating>(`/properties/${propertyId}/ratings`, {
-      score,
-      comment,
-    });
-  } catch {
-    return {
-      id: `local-${Date.now()}`,
-      property_id: propertyId,
-      user_id: "local",
-      user_name: "You",
-      score,
-      comment,
-      created_at: new Date().toISOString(),
-    } satisfies PropertyRating;
-  }
+export function submitPropertyRating(propertyId: string, score: number, comment?: string) {
+  return api.post<PropertyRating>(`/properties/${propertyId}/ratings`, {
+    score,
+    comment,
+  });
 }
 
 export function uploadPropertyImages(files: File[]) {

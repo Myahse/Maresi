@@ -62,6 +62,20 @@ public final class RowMaps {
     m.put("location", rs.getString("location"));
     m.put("property_type", rs.getString("property_type"));
     m.put("images", readTextArray(rs, "images"));
+    putIfPresent(rs, m, "average_rating");
+    putIfPresent(rs, m, "rating_count");
+    return m;
+  }
+
+  public static Map<String, Object> rating(ResultSet rs) throws SQLException {
+    Map<String, Object> m = new LinkedHashMap<>();
+    m.put("id", rs.getObject("id"));
+    m.put("property_id", rs.getObject("property_id"));
+    m.put("user_id", rs.getObject("user_id"));
+    m.put("user_name", rs.getString("user_name"));
+    m.put("score", rs.getInt("score"));
+    m.put("comment", rs.getString("comment"));
+    m.put("created_at", toIso(rs.getTimestamp("created_at")));
     return m;
   }
 

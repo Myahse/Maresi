@@ -42,9 +42,13 @@ public class PropertyRepository {
       BigDecimal maxPrice,
       String propertyType,
       UUID ownerId,
-      boolean excludeReserved) {
-    StringBuilder sql = new StringBuilder(SELECT_JOIN).append(" WHERE p.is_active = true");
+      boolean excludeReserved,
+      boolean includeInactive) {
+    StringBuilder sql = new StringBuilder(SELECT_JOIN).append(" WHERE 1=1");
     List<Object> params = new ArrayList<>();
+    if (!includeInactive) {
+      sql.append(" AND p.is_active = true");
+    }
     if (ownerId != null) {
       sql.append(" AND p.owner_id = ?");
       params.add(ownerId);
@@ -105,9 +109,9 @@ public class PropertyRepository {
                   INSERT INTO properties (
                     owner_id, title, description, price, location, property_type, images,
                     latitude, longitude, bedrooms, max_guests, virtual_tour_url,
-                    wave_payment_url, orange_money_url
+                    wave_payment_url, orange_money_url, is_active
                   )
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                   RETURNING *
                   """)) {
             ps.setObject(1, ownerId);
@@ -124,6 +128,8 @@ public class PropertyRepository {
             ps.setObject(12, extra.get("virtual_tour_url"));
             ps.setObject(13, extra.get("wave_payment_url"));
             ps.setObject(14, extra.get("orange_money_url"));
+            Object active = extra.get("is_active");
+            ps.setObject(15, active instanceof Boolean b ? b : Boolean.TRUE);
             try (var rs = ps.executeQuery()) {
               if (rs.next()) return RowMaps.property(rs);
               throw new IllegalStateException("Insert failed");
@@ -186,5 +192,11 @@ public class PropertyRepository {
 
   public boolean remove(UUID id) {
     return jdbc.update("DELETE FROM properties WHERE id = ?", id) > 0;
+  }
+
+  public List<String> allImageUrls() {
+    return jdbc.query(
+        "SELECT unnest(images) AS url FROM properties WHERE images IS NOT NULL",
+        (rs, rowNum) -> rs.getString("url"));
   }
 }

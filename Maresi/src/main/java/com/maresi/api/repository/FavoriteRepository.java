@@ -17,7 +17,8 @@ public class FavoriteRepository {
   public List<Map<String, Object>> findByUser(UUID userId) {
     return jdbc.query(
         """
-        SELECT f.id, f.property_id, f.created_at, p.title, p.price, p.location, p.property_type, p.images
+        SELECT f.id, f.property_id, f.created_at, p.title, p.price, p.location, p.property_type, p.images,
+               p.average_rating, p.rating_count
         FROM favorites f
         JOIN properties p ON f.property_id = p.id
         WHERE f.user_id = ? AND p.is_active = true

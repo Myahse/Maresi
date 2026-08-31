@@ -7,6 +7,7 @@ import com.maresi.api.contracts.Request;
 import com.maresi.api.contracts.Response;
 import com.maresi.api.contracts.Validate;
 import com.maresi.api.service.PropertyService;
+import com.maresi.api.service.RatingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,12 +28,17 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @Tag(name = "Properties", description = "Annonces de résidences")
 public class PropertyController {
   private final PropertyService propertyService;
+  private final RatingService ratingService;
   private final FunctionalError functionalError;
   private final ExceptionUtils exceptionUtils;
 
   public PropertyController(
-      PropertyService propertyService, FunctionalError functionalError, ExceptionUtils exceptionUtils) {
+      PropertyService propertyService,
+      RatingService ratingService,
+      FunctionalError functionalError,
+      ExceptionUtils exceptionUtils) {
     this.propertyService = propertyService;
+    this.ratingService = ratingService;
     this.functionalError = functionalError;
     this.exceptionUtils = exceptionUtils;
   }
@@ -45,10 +51,11 @@ public class PropertyController {
       @RequestParam(required = false) BigDecimal maxPrice,
       @RequestParam(name = "property_type", required = false) String propertyType,
       @RequestParam(name = "owner_id", required = false) UUID ownerId,
+      @RequestParam(name = "mine", required = false, defaultValue = "false") boolean mine,
       Locale locale) {
     Locale loc = ControllerSupport.locale(locale);
     return ControllerSupport.run(
-        () -> propertyService.list(location, minPrice, maxPrice, propertyType, ownerId, loc),
+        () -> propertyService.list(location, minPrice, maxPrice, propertyType, ownerId, mine, loc),
         loc,
         exceptionUtils);
   }
@@ -63,11 +70,11 @@ public class PropertyController {
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "Créer une annonce (propriétaire)", security = @SecurityRequirement(name = "bearerAuth"))
   public ResponseEntity<Response<Map<String, Object>>> create(
-      @RequestParam String title,
+      @RequestParam(required = false) String title,
       @RequestParam(required = false) String description,
-      @RequestParam BigDecimal price,
-      @RequestParam String location,
-      @RequestParam(name = "property_type") String propertyType,
+      @RequestParam(required = false) BigDecimal price,
+      @RequestParam(required = false) String location,
+      @RequestParam(name = "property_type", required = false) String propertyType,
       @RequestParam(required = false) BigDecimal latitude,
       @RequestParam(required = false) BigDecimal longitude,
       @RequestParam(required = false) Integer bedrooms,
@@ -77,6 +84,7 @@ public class PropertyController {
       @RequestParam(name = "orange_money_url", required = false) String orangeMoneyUrl,
       @RequestPart(name = "images", required = false) List<MultipartFile> images,
       @RequestParam(name = "image_urls", required = false) List<String> imageUrls,
+      @RequestParam(required = false, defaultValue = "false") boolean draft,
       Locale locale) {
     Locale loc = ControllerSupport.locale(locale);
     String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
@@ -93,6 +101,7 @@ public class PropertyController {
                 images,
                 imageUrls,
                 extras,
+                draft,
                 baseUrl,
                 loc),
         loc,
@@ -135,6 +144,7 @@ public class PropertyController {
       @RequestParam(name = "orange_money_url", required = false) String orangeMoneyUrl,
       @RequestPart(name = "images", required = false) List<MultipartFile> images,
       @RequestParam(name = "image_urls", required = false) List<String> imageUrls,
+      @RequestParam(required = false) Boolean draft,
       Locale locale) {
     Locale loc = ControllerSupport.locale(locale);
     Map<String, Object> data = new HashMap<>();
@@ -144,11 +154,36 @@ public class PropertyController {
     if (location != null) data.put("location", location);
     if (propertyType != null) data.put("property_type", propertyType);
     if (is_active != null) data.put("is_active", is_active);
+    if (Boolean.TRUE.equals(draft)) data.put("is_active", false);
+    else if (Boolean.FALSE.equals(draft)) data.put("is_active", true);
     data.putAll(
         extraFields(latitude, longitude, bedrooms, maxGuests, virtualTourUrl, wavePaymentUrl, orangeMoneyUrl));
     String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
     return ControllerSupport.run(
         () -> propertyService.update(id, data, images, imageUrls, baseUrl, loc), loc, exceptionUtils);
+  }
+
+  @GetMapping("/{id}/ratings")
+  @Operation(summary = "Lister les avis d'une annonce")
+  public ResponseEntity<Response<Map<String, Object>>> listRatings(@PathVariable UUID id, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> ratingService.list(id, loc), loc, exceptionUtils);
+  }
+
+  @PostMapping("/{id}/ratings")
+  @Operation(summary = "Publier ou mettre à jour un avis", security = @SecurityRequirement(name = "bearerAuth"))
+  public ResponseEntity<Response<Map<String, Object>>> upsertRating(
+      @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.runCreated(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return ratingService.upsert(id, request, loc);
+        },
+        loc,
+        exceptionUtils);
   }
 
   @DeleteMapping("/{id}")

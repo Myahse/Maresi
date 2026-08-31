@@ -205,7 +205,7 @@
     "back": "Retour",
     "next": "Suivant",
     "property": {
-      "pageHint": "Complétez chaque étape pour publier votre annonce. Les champs * sont obligatoires.",
+      "pageHint": "Complétez chaque étape pour publier, ou enregistrez un brouillon et terminez plus tard. Les champs * sont obligatoires pour publier.",
       "steps": {
         "basics": "Infos",
         "location": "Lieu",
@@ -246,6 +246,7 @@
       "coverHint": "Choisissez la photo affichée sur la carte de l'annonce.",
       "coverBadge": "Photo de l'annonce",
       "publish": "Publier l'annonce",
+      "saveDraft": "Enregistrer le brouillon",
       "errors": {
         "title": "Le titre est obligatoire.",
         "titleShort": "Le titre doit faire au moins 5 caractères.",
@@ -439,6 +440,7 @@
     "signIn": "Se connecter",
     "title": "Mes biens",
     "addProperty": "Ajouter un bien",
+    "draftBadge": "Brouillon",
     "failedLoad": "Échec du chargement des données propriétaire",
     "deleteConfirm": "Supprimer ce bien ?",
     "deleteFailed": "Échec de la suppression",

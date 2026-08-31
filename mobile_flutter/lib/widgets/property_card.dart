@@ -85,11 +85,11 @@ class PropertyCard extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.end,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            _titleWithStar(
                               title,
+                              color: Colors.white,
+                              fontSize: 14,
                               maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
                             ),
                             if (property.location.isNotEmpty)
                               Row(
@@ -165,11 +165,11 @@ class PropertyCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: Text(
+                              child: _titleWithStar(
                                 title,
+                                color: palette.text,
+                                fontSize: 15,
                                 maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: palette.text, height: 1.25),
                               ),
                             ),
                             if (onFavoriteTap != null)
@@ -217,6 +217,31 @@ class PropertyCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _titleWithStar(String title, {required Color color, required double fontSize, int maxLines = 1}) {
+    final rating = property.averageRating;
+    final count = property.ratingCount ?? 0;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.star, size: fontSize, color: Colors.amber),
+        const SizedBox(width: 2),
+        Text(
+          count > 0 && rating != null ? rating.toStringAsFixed(1) : '—',
+          style: TextStyle(color: color, fontSize: fontSize, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: maxLines,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: color, fontSize: fontSize, fontWeight: FontWeight.w700, height: 1.25),
+          ),
+        ),
+      ],
     );
   }
 

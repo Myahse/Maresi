@@ -205,7 +205,7 @@
     "back": "Back",
     "next": "Next",
     "property": {
-      "pageHint": "Complete each step to publish your listing. Fields marked * are required.",
+      "pageHint": "Complete each step to publish, or save a draft and finish later. Fields marked * are required to publish.",
       "steps": {
         "basics": "Basics",
         "location": "Location",
@@ -246,6 +246,7 @@
       "coverHint": "Choose the photo shown on the listing card.",
       "coverBadge": "Listing photo",
       "publish": "Publish listing",
+      "saveDraft": "Save draft",
       "errors": {
         "title": "Title is required.",
         "titleShort": "Title must be at least 5 characters.",
@@ -439,6 +440,7 @@
     "signIn": "Sign in",
     "title": "My properties",
     "addProperty": "Add property",
+    "draftBadge": "Draft",
     "failedLoad": "Failed to load owner data",
     "deleteConfirm": "Delete this property?",
     "deleteFailed": "Failed to delete property",
