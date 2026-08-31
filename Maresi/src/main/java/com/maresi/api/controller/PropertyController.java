@@ -76,6 +76,7 @@ public class PropertyController {
       @RequestParam(name = "wave_payment_url", required = false) String wavePaymentUrl,
       @RequestParam(name = "orange_money_url", required = false) String orangeMoneyUrl,
       @RequestPart(name = "images", required = false) List<MultipartFile> images,
+      @RequestParam(name = "image_urls", required = false) List<String> imageUrls,
       Locale locale) {
     Locale loc = ControllerSupport.locale(locale);
     String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
@@ -84,7 +85,16 @@ public class PropertyController {
     return ControllerSupport.runCreated(
         () ->
             propertyService.create(
-                title, description, price, location, propertyType, images, extras, baseUrl, loc),
+                title,
+                description,
+                price,
+                location,
+                propertyType,
+                images,
+                imageUrls,
+                extras,
+                baseUrl,
+                loc),
         loc,
         exceptionUtils);
   }
@@ -100,7 +110,7 @@ public class PropertyController {
           Response<Map<String, Object>> response = new Response<>();
           Validate.validateObject(request, response, functionalError, loc);
           if (response.isHasError()) return response;
-          return propertyService.update(id, request.getData(), null, baseUrl, loc);
+          return propertyService.update(id, request.getData(), null, null, baseUrl, loc);
         },
         loc,
         exceptionUtils);
@@ -124,6 +134,7 @@ public class PropertyController {
       @RequestParam(name = "wave_payment_url", required = false) String wavePaymentUrl,
       @RequestParam(name = "orange_money_url", required = false) String orangeMoneyUrl,
       @RequestPart(name = "images", required = false) List<MultipartFile> images,
+      @RequestParam(name = "image_urls", required = false) List<String> imageUrls,
       Locale locale) {
     Locale loc = ControllerSupport.locale(locale);
     Map<String, Object> data = new HashMap<>();
@@ -137,7 +148,7 @@ public class PropertyController {
         extraFields(latitude, longitude, bedrooms, maxGuests, virtualTourUrl, wavePaymentUrl, orangeMoneyUrl));
     String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
     return ControllerSupport.run(
-        () -> propertyService.update(id, data, images, baseUrl, loc), loc, exceptionUtils);
+        () -> propertyService.update(id, data, images, imageUrls, baseUrl, loc), loc, exceptionUtils);
   }
 
   @DeleteMapping("/{id}")

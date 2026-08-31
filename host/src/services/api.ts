@@ -144,6 +144,17 @@ export async function submitPropertyRating(
   }
 }
 
+export function uploadPropertyImages(files: File[]) {
+  const token = getToken();
+  const formData = new FormData();
+  files.forEach((file) => formData.append("images", file));
+  return fetch(`${API_BASE}/uploads/images`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  }).then((res) => parseFormResponse<{ urls: string[] }>(res));
+}
+
 export function createProperty(formData: FormData) {
   const token = getToken();
   return fetch(`${API_BASE}/properties`, {

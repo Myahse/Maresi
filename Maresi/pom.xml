@@ -111,7 +111,7 @@
     </dependency>
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
-      <artifactId>url-connection-client</artifactId>
+      <artifactId>apache-client</artifactId>
       <version>${aws.sdk.version}</version>
     </dependency>
   </dependencies>

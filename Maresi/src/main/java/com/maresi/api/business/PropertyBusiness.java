@@ -86,6 +86,7 @@ public class PropertyBusiness {
       String location,
       String propertyType,
       List<MultipartFile> images,
+      List<String> uploadedImageUrls,
       Map<String, Object> extras,
       String baseUrl,
       Locale locale) {
@@ -96,14 +97,13 @@ public class PropertyBusiness {
       throw ApiException.of(
           402, "Abonnement proprietaire requis a partir de " + (FREE_LISTINGS + 1) + " annonces");
     }
-    long imageCount =
-        images == null
-            ? 0
-            : images.stream().filter(f -> f != null && !f.isEmpty()).count();
-    if (imageCount < MIN_PROPERTY_PHOTOS) {
+    List<String> ownedUrls = fileStorage.acceptOwnedImageUrls(uploadedImageUrls, baseUrl);
+    List<String> storedUrls = fileStorage.storePropertyImages(images, baseUrl);
+    List<String> imageUrls = new ArrayList<>(ownedUrls);
+    imageUrls.addAll(storedUrls);
+    if (imageUrls.size() < MIN_PROPERTY_PHOTOS) {
       throw ApiException.of(400, "At least " + MIN_PROPERTY_PHOTOS + " photos are required");
     }
-    List<String> imageUrls = fileStorage.storePropertyImages(images, baseUrl);
     Map<String, Object> created =
         properties.create(
             user.id(),
@@ -120,7 +120,12 @@ public class PropertyBusiness {
   }
 
   public Response<Map<String, Object>> update(
-      UUID id, Map<String, Object> data, List<MultipartFile> images, String baseUrl, Locale locale) {
+      UUID id,
+      Map<String, Object> data,
+      List<MultipartFile> images,
+      List<String> uploadedImageUrls,
+      String baseUrl,
+      Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
     AuthUser user = SecurityUtils.requireUser();
     Map<String, Object> existing = properties.findById(id).orElse(null);
@@ -134,14 +139,16 @@ public class PropertyBusiness {
       response.setStatus(functionalError.disallowed("Modification non autorisee", locale));
       return response;
     }
-    if (images != null && !images.isEmpty()) {
-      List<String> newUrls = fileStorage.storePropertyImages(images, baseUrl);
+    List<String> ownedUrls = fileStorage.acceptOwnedImageUrls(uploadedImageUrls, baseUrl);
+    List<String> storedUrls = fileStorage.storePropertyImages(images, baseUrl);
+    if (!ownedUrls.isEmpty() || !storedUrls.isEmpty()) {
       List<String> current =
           existing.get("images") instanceof List<?> l
               ? l.stream().map(Object::toString).toList()
               : List.of();
       List<String> merged = new ArrayList<>(current);
-      merged.addAll(newUrls);
+      merged.addAll(ownedUrls);
+      merged.addAll(storedUrls);
       data = new HashMap<>(data);
       data.put("images", merged);
     }

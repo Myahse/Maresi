@@ -24,7 +24,11 @@ class PropertyPhotosPicker extends StatelessWidget {
   Future<void> _pickPhotos() async {
     if (!enabled) return;
     final picker = ImagePicker();
-    final picked = await picker.pickMultiImage(imageQuality: 85);
+    final picked = await picker.pickMultiImage(
+      imageQuality: 70,
+      maxWidth: 1600,
+      maxHeight: 1600,
+    );
     if (picked.isEmpty) return;
     onChanged([...photos, ...picked]);
   }

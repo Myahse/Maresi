@@ -39,16 +39,31 @@ public class PropertyService {
       String location,
       String propertyType,
       List<MultipartFile> images,
+      List<String> uploadedImageUrls,
       Map<String, Object> extras,
       String baseUrl,
       Locale locale) {
     return propertyBusiness.create(
-        title, description, price, location, propertyType, images, extras, baseUrl, locale);
+        title,
+        description,
+        price,
+        location,
+        propertyType,
+        images,
+        uploadedImageUrls,
+        extras,
+        baseUrl,
+        locale);
   }
 
   public Response<Map<String, Object>> update(
-      UUID id, Map<String, Object> data, List<MultipartFile> images, String baseUrl, Locale locale) {
-    return propertyBusiness.update(id, data, images, baseUrl, locale);
+      UUID id,
+      Map<String, Object> data,
+      List<MultipartFile> images,
+      List<String> uploadedImageUrls,
+      String baseUrl,
+      Locale locale) {
+    return propertyBusiness.update(id, data, images, uploadedImageUrls, baseUrl, locale);
   }
 
   public Response<Map<String, Object>> remove(UUID id, Locale locale) {

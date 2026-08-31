@@ -157,6 +157,7 @@
     "idCardNumber": "ID card number",
     "idCardPlaceholder": "e.g. CI123456789",
     "choosePhoto": "Choose photo",
+    "preparingPhoto": "Preparing photo…",
     "fullName": "Full name",
     "emailPlaceholder": "you@example.com",
     "iAmA": "I am a",

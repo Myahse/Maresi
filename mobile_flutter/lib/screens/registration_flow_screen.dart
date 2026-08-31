@@ -141,7 +141,9 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     final file = await _picker.pickImage(
       source: ImageSource.camera,
       preferredCameraDevice: selfie ? CameraDevice.front : CameraDevice.rear,
-      imageQuality: 85,
+      imageQuality: 75,
+      maxWidth: 1280,
+      maxHeight: 1280,
     );
     if (file == null) return;
     setState(() {

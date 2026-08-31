@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,8 @@ import { Select } from "@/components/ui/select";
 import { Stepper } from "@/components/ui/stepper";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { isValidPrice, isValidUrl, hasMinPropertyPhotos, MIN_PROPERTY_PHOTOS } from "@/lib/validation";
+import { compressImageFiles } from "@/lib/compressImage";
+import { uploadPropertyImages } from "@/services/api";
 import { LocationMapPicker } from "@/components/map/LocationMapPicker";
 import { cn } from "@/lib/utils";
 import type { MapboxPlace } from "@/lib/mapbox";
@@ -50,6 +52,11 @@ export function PropertyCreationWizard({
   const [images, setImages] = useState<File[]>([]);
   const [coverIndex, setCoverIndex] = useState(0);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [preparingPhotos, setPreparingPhotos] = useState(false);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [waitingUpload, setWaitingUpload] = useState(false);
+  const uploadGen = useRef(0);
+  const pendingUpload = useRef<Promise<string[] | null> | null>(null);
 
   useEffect(() => {
     const urls = images.map((file) => URL.createObjectURL(file));
@@ -108,6 +115,44 @@ export function PropertyCreationWizard({
     setStep((s) => Math.max(s - 1, 0));
   };
 
+  const startBackgroundUpload = (files: File[]) => {
+    const gen = ++uploadGen.current;
+    pendingUpload.current = (async () => {
+      setUploadingPhotos(true);
+      try {
+        const result = await uploadPropertyImages(files);
+        if (gen !== uploadGen.current) return null;
+        return Array.isArray(result.urls) && result.urls.length === files.length ? result.urls : null;
+      } catch {
+        if (gen !== uploadGen.current) return null;
+        return null;
+      } finally {
+        if (gen === uploadGen.current) setUploadingPhotos(false);
+      }
+    })();
+  };
+
+  const handlePhotosSelected = async (list: FileList | null) => {
+    const raw = Array.from(list || []);
+    setCoverIndex(0);
+    uploadGen.current += 1;
+    pendingUpload.current = null;
+    if (raw.length === 0) {
+      setImages([]);
+      return;
+    }
+    const gen = uploadGen.current;
+    setPreparingPhotos(true);
+    try {
+      const compressed = await compressImageFiles(raw);
+      if (gen !== uploadGen.current) return;
+      setImages(compressed);
+      startBackgroundUpload(compressed);
+    } finally {
+      if (gen === uploadGen.current) setPreparingPhotos(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!hasMinPropertyPhotos(images)) {
       setError(t("wizard.property.errors.photosMin", { count: MIN_PROPERTY_PHOTOS }));
@@ -137,11 +182,24 @@ export function PropertyCreationWizard({
       const [cover] = ordered.splice(coverIndex, 1);
       ordered.unshift(cover);
     }
-    ordered.forEach((f) => formData.append("images", f));
+    setWaitingUpload(true);
     try {
+      const uploaded = pendingUpload.current ? await pendingUpload.current : null;
+      if (uploaded && uploaded.length === images.length) {
+        const orderedUrls = [...uploaded];
+        if (coverIndex > 0 && coverIndex < orderedUrls.length) {
+          const [cover] = orderedUrls.splice(coverIndex, 1);
+          orderedUrls.unshift(cover);
+        }
+        orderedUrls.forEach((url) => formData.append("image_urls", url));
+      } else {
+        ordered.forEach((f) => formData.append("images", f));
+      }
       await onSubmit(formData);
     } catch (e) {
       setError(e instanceof Error ? e.message : t("propertyForm.saveFailed"));
+    } finally {
+      setWaitingUpload(false);
     }
   };
 
@@ -296,11 +354,18 @@ export function PropertyCreationWizard({
               type="file"
               accept="image/*"
               multiple
+              disabled={preparingPhotos}
               onChange={(e) => {
-                setImages(Array.from(e.target.files || []));
-                setCoverIndex(0);
+                void handlePhotosSelected(e.target.files);
+                e.target.value = "";
               }}
             />
+            {preparingPhotos && (
+              <p className="text-xs text-brand">{t("wizard.property.preparingPhotos")}</p>
+            )}
+            {uploadingPhotos && !preparingPhotos && (
+              <p className="text-xs text-brand">{t("wizard.property.uploadingPhotos")}</p>
+            )}
             {images.length > 0 && (
               <p className={`text-xs ${hasMinPropertyPhotos(images) ? "text-emerald-600" : "text-muted-foreground"}`}>
                 {t("wizard.property.photosSelected", { count: images.length, min: MIN_PROPERTY_PHOTOS })}
@@ -403,17 +468,26 @@ export function PropertyCreationWizard({
           {t("common.cancel")}
         </Button>
         {step < steps.length - 1 ? (
-          <Button type="button" className="rounded-full bg-brand hover:bg-brand-dark ml-auto" onClick={next}>
+          <Button
+            type="button"
+            className="rounded-full bg-brand hover:bg-brand-dark ml-auto"
+            disabled={preparingPhotos}
+            onClick={next}
+          >
             {t("wizard.next")}
           </Button>
         ) : (
           <Button
             type="button"
             className="rounded-full bg-brand hover:bg-brand-dark ml-auto"
-            disabled={loading}
+            disabled={loading || preparingPhotos || waitingUpload}
             onClick={handleSubmit}
           >
-            {loading ? t("common.saving") : t("wizard.property.publish")}
+            {loading || waitingUpload
+              ? uploadingPhotos
+                ? t("wizard.property.uploadingPhotos")
+                : t("common.saving")
+              : t("wizard.property.publish")}
           </Button>
         )}
       </div>
