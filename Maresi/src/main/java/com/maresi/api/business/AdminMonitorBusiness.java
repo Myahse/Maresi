@@ -96,12 +96,13 @@ public class AdminMonitorBusiness {
   public Response<Map<String, Object>> userTrail(UUID userId, Locale locale) {
     requireAdmin();
     Response<Map<String, Object>> response = new Response<>();
-    Map<String, Object> account = users.findById(userId).orElse(null);
+    Map<String, Object> account = users.findIdentity(userId).orElse(null);
     if (account == null) {
       response.setHasError(true);
       response.setStatus(functionalError.dataNotFound("Utilisateur introuvable", locale));
       return response;
     }
+    UserBusiness.exposeIdentityLinks(account, userId);
     Map<String, Object> item = new java.util.LinkedHashMap<>();
     item.put("user", account);
     item.put("visits", visitRequests.findByUserOrOwner(userId));

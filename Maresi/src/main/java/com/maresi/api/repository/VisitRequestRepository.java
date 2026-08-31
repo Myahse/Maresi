@@ -25,14 +25,15 @@ public class VisitRequestRepository {
       String visitTime,
       Integer guestsCount,
       String contactPhone,
-      String idCard) {
+      String idCard,
+      String stayRate) {
     return jdbc.queryForObject(
         """
         INSERT INTO visit_requests (
           user_id, property_id, message, check_in, check_out,
-          visit_date, visit_time, guests_count, contact_phone, id_card
+          visit_date, visit_time, guests_count, contact_phone, id_card, stay_rate
         )
-        VALUES (?, ?, ?, CAST(? AS date), CAST(? AS date), CAST(? AS date), ?, ?, ?, ?)
+        VALUES (?, ?, ?, CAST(? AS date), CAST(? AS date), CAST(? AS date), ?, ?, ?, ?, ?)
         RETURNING *
         """,
         (rs, rowNum) -> RowMaps.visitRequest(rs),
@@ -45,7 +46,8 @@ public class VisitRequestRepository {
         visitTime,
         guestsCount != null ? guestsCount : 1,
         contactPhone,
-        idCard);
+        idCard,
+        stayRate != null && !stayRate.isBlank() ? stayRate : "night");
   }
 
   public Optional<Map<String, Object>> findById(UUID id) {
@@ -53,6 +55,7 @@ public class VisitRequestRepository {
             """
             SELECT vr.*, p.title AS property_title, p.location, p.price AS property_price,
                    p.owner_id AS property_owner_id, p.wave_payment_url, p.orange_money_url,
+                   p.price_midday, p.price_full_day, p.check_in_time, p.check_out_time,
                    u.phone AS owner_phone
             FROM visit_requests vr
             JOIN properties p ON vr.property_id = p.id
@@ -78,6 +81,7 @@ public class VisitRequestRepository {
         """
         SELECT vr.*, p.title AS property_title, p.location, p.price AS property_price,
                p.owner_id AS property_owner_id, p.wave_payment_url, p.orange_money_url,
+               p.price_midday, p.price_full_day, p.check_in_time, p.check_out_time,
                u.phone AS owner_phone
         FROM visit_requests vr
         JOIN properties p ON vr.property_id = p.id
@@ -95,7 +99,8 @@ public class VisitRequestRepository {
         SELECT vr.*, p.title AS property_title, p.location,
                u.full_name AS requester_name, u.email AS requester_email,
                u.phone AS requester_phone, u.id_card AS requester_id_card,
-               u.selfie_url AS requester_selfie_url, u.id_card_photo_url AS requester_id_photo_url
+               u.selfie_url AS requester_selfie_url, u.id_card_photo_url AS requester_id_photo_url,
+               u.id_card_back_url AS requester_id_back_url
         FROM visit_requests vr
         JOIN properties p ON vr.property_id = p.id
         JOIN users u ON vr.user_id = u.id
@@ -241,7 +246,7 @@ public class VisitRequestRepository {
     return jdbc.query(
             """
             SELECT vr.id, vr.user_id, p.owner_id AS property_owner_id,
-                   u.selfie_url, u.id_card_photo_url
+                   u.selfie_url, u.id_card_photo_url, u.id_card_back_url
             FROM visit_requests vr
             JOIN properties p ON vr.property_id = p.id
             JOIN users u ON vr.user_id = u.id
@@ -254,10 +259,55 @@ public class VisitRequestRepository {
               m.put("property_owner_id", rs.getObject("property_owner_id"));
               m.put("selfie_url", rs.getString("selfie_url"));
               m.put("id_card_photo_url", rs.getString("id_card_photo_url"));
+              m.put("id_card_back_url", rs.getString("id_card_back_url"));
               return m;
             },
             visitId)
         .stream()
         .findFirst();
+  }
+
+  public List<Map<String, Object>> findDueStayReminders() {
+    return jdbc.query(
+        """
+        SELECT vr.id, vr.user_id, vr.status, vr.check_in, vr.check_out,
+               p.owner_id AS property_owner_id, p.title AS property_title,
+               p.check_in_time, p.check_out_time, p.location
+        FROM visit_requests vr
+        JOIN properties p ON vr.property_id = p.id
+        WHERE vr.status IN ('confirmed', 'payment_sent')
+          AND (
+            (
+              vr.checkin_notified_at IS NULL
+              AND vr.check_in IS NOT NULL
+              AND (vr.check_in + COALESCE(p.check_in_time, TIME '14:00'))
+                    AT TIME ZONE 'Africa/Abidjan' <= NOW()
+              AND (vr.check_in + COALESCE(p.check_in_time, TIME '14:00'))
+                    AT TIME ZONE 'Africa/Abidjan' > NOW() - INTERVAL '12 hours'
+            )
+            OR (
+              vr.checkout_notified_at IS NULL
+              AND vr.check_out IS NOT NULL
+              AND (vr.check_out + COALESCE(p.check_out_time, TIME '12:00'))
+                    AT TIME ZONE 'Africa/Abidjan' <= NOW()
+              AND (vr.check_out + COALESCE(p.check_out_time, TIME '12:00'))
+                    AT TIME ZONE 'Africa/Abidjan' > NOW() - INTERVAL '12 hours'
+            )
+          )
+        LIMIT 80
+        """,
+        (rs, rowNum) -> RowMaps.visitRequest(rs));
+  }
+
+  public void markStayNotified(UUID id, String kind) {
+    if ("checkout".equals(kind)) {
+      jdbc.update(
+          "UPDATE visit_requests SET checkout_notified_at = NOW() WHERE id = ? AND checkout_notified_at IS NULL",
+          id);
+    } else {
+      jdbc.update(
+          "UPDATE visit_requests SET checkin_notified_at = NOW() WHERE id = ? AND checkin_notified_at IS NULL",
+          id);
+    }
   }
 }

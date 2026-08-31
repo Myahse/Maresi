@@ -72,12 +72,13 @@ public class AuthController {
       @RequestParam String password,
       @RequestParam(required = false) String fullName,
       @RequestParam(name = "full_name", required = false) String fullNameSnake,
-      @RequestParam(required = false) String phone,
+      @RequestParam String phone,
       @RequestParam(required = false) String role,
       @RequestParam(name = "id_card", required = false) String idCard,
       @RequestParam(name = "idCard", required = false) String idCardCamel,
       @RequestPart("selfie") MultipartFile selfie,
       @RequestPart(name = "id_card_photo") MultipartFile idCardPhoto,
+      @RequestPart(name = "id_card_back", required = false) MultipartFile idCardBack,
       Locale locale) {
     Locale loc = ControllerSupport.locale(locale);
     String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
@@ -92,7 +93,7 @@ public class AuthController {
     Request<Map<String, Object>> mapRequest = new Request<>();
     mapRequest.setData(data);
     return ControllerSupport.runCreated(
-        () -> authService.register(mapRequest, selfie, idCardPhoto, baseUrl, loc),
+        () -> authService.register(mapRequest, selfie, idCardPhoto, idCardBack, baseUrl, loc),
         loc,
         exceptionUtils);
   }

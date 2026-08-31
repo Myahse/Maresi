@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Stepper } from "@/components/ui/stepper";
+import { WizardPane } from "@/components/ui/WizardPane";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { isValidPrice, isValidUrl, MIN_PROPERTY_PHOTOS } from "@/lib/validation";
 import { compressImageFile } from "@/lib/compressImage";
@@ -51,6 +52,10 @@ export function PropertyCreationWizard({
   const [virtual_tour_url, setVirtualTourUrl] = useState(initial?.virtual_tour_url ?? "");
   const [wave_payment_url, setWavePaymentUrl] = useState(initial?.wave_payment_url ?? "");
   const [orange_money_url, setOrangeMoneyUrl] = useState(initial?.orange_money_url ?? "");
+  const [checkInTime, setCheckInTime] = useState(initial?.check_in_time?.slice(0, 5) ?? "14:00");
+  const [checkOutTime, setCheckOutTime] = useState(initial?.check_out_time?.slice(0, 5) ?? "12:00");
+  const [priceMidday, setPriceMidday] = useState(initial?.price_midday?.toString() ?? "");
+  const [priceFullDay, setPriceFullDay] = useState(initial?.price_full_day?.toString() ?? "");
   const [existingUrls, setExistingUrls] = useState<string[]>(
     () => (Array.isArray(initial?.images) ? initial.images.filter((url): url is string => Boolean(url)) : [])
   );
@@ -75,7 +80,9 @@ export function PropertyCreationWizard({
   const steps = [
     { id: "basics", label: t("wizard.property.steps.basics") },
     { id: "location", label: t("wizard.property.steps.location") },
+    { id: "times", label: t("wizard.property.steps.times") },
     { id: "pricing", label: t("wizard.property.steps.pricing") },
+    { id: "rates", label: t("wizard.property.steps.rates") },
     { id: "amenities", label: t("wizard.property.steps.amenities") },
     { id: "media", label: t("wizard.property.steps.media") },
     { id: "review", label: t("wizard.property.steps.review") },
@@ -93,12 +100,19 @@ export function PropertyCreationWizard({
         if (!latitude || !longitude || !location.trim()) return t("wizard.property.errors.mapPin");
         return null;
       case 2:
+        if (!checkInTime || !checkOutTime) return t("wizard.property.errors.times");
+        return null;
+      case 3:
         if (!isValidPrice(price)) return t("wizard.property.errors.price");
         if (!max_guests || Number(max_guests) < 1) return t("wizard.property.errors.guests");
         if (wave_payment_url.trim() && !isValidUrl(wave_payment_url)) return t("wizard.property.errors.url");
         if (orange_money_url.trim() && !isValidUrl(orange_money_url)) return t("wizard.property.errors.url");
         return null;
       case 4:
+        if (priceMidday && !isValidPrice(priceMidday)) return t("wizard.property.errors.price");
+        if (priceFullDay && !isValidPrice(priceFullDay)) return t("wizard.property.errors.price");
+        return null;
+      case 6:
         if (existingUrls.length + images.length < MIN_PROPERTY_PHOTOS) {
           return t("wizard.property.errors.photosMin", { count: MIN_PROPERTY_PHOTOS });
         }
@@ -228,6 +242,10 @@ export function PropertyCreationWizard({
     if (virtual_tour_url.trim()) formData.set("virtual_tour_url", virtual_tour_url.trim());
     if (wave_payment_url.trim()) formData.set("wave_payment_url", wave_payment_url.trim());
     if (orange_money_url.trim()) formData.set("orange_money_url", orange_money_url.trim());
+    if (checkInTime) formData.set("check_in_time", checkInTime);
+    if (checkOutTime) formData.set("check_out_time", checkOutTime);
+    if (priceMidday) formData.set("price_midday", priceMidday);
+    if (priceFullDay) formData.set("price_full_day", priceFullDay);
     formData.set("draft", asDraft ? "true" : "false");
     setWaitingUpload(true);
     try {
@@ -276,7 +294,7 @@ export function PropertyCreationWizard({
       )}
 
       {step === 0 && (
-        <div className="space-y-4">
+        <WizardPane step={0}>
           <h2 className="text-lg font-bold text-foreground">{t("wizard.property.basicsTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("wizard.property.basicsHint")}</p>
           <div className="space-y-2">
@@ -314,11 +332,11 @@ export function PropertyCreationWizard({
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-        </div>
+        </WizardPane>
       )}
 
       {step === 1 && (
-        <div className="space-y-4">
+        <WizardPane step={1}>
           <h2 className="text-lg sm:text-xl font-bold text-foreground">
             {t("wizard.property.locationTitle")}
           </h2>
@@ -348,11 +366,28 @@ export function PropertyCreationWizard({
               </p>
             )}
           </LocationMapPicker>
-        </div>
+        </WizardPane>
       )}
 
       {step === 2 && (
-        <div className="space-y-4">
+        <WizardPane step={2}>
+          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.timesTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.timesHint")}</p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="check-in-time">{t("wizard.property.checkInTime")}</Label>
+              <Input id="check-in-time" type="time" value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="check-out-time">{t("wizard.property.checkOutTime")}</Label>
+              <Input id="check-out-time" type="time" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} />
+            </div>
+          </div>
+        </WizardPane>
+      )}
+
+      {step === 3 && (
+        <WizardPane step={3}>
           <h2 className="text-lg font-bold text-foreground">{t("wizard.property.pricingTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("wizard.property.pricingHint")}</p>
           <div className="space-y-2">
@@ -396,11 +431,40 @@ export function PropertyCreationWizard({
               onChange={(e) => setOrangeMoneyUrl(e.target.value)}
             />
           </div>
-        </div>
+        </WizardPane>
       )}
 
-      {step === 3 && (
-        <div className="space-y-4">
+      {step === 4 && (
+        <WizardPane step={4}>
+          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.ratesTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.ratesHint")}</p>
+          <div className="space-y-2">
+            <Label htmlFor="midday">{t("wizard.property.priceMidday")}</Label>
+            <Input
+              id="midday"
+              type="number"
+              min={0}
+              value={priceMidday}
+              onChange={(e) => setPriceMidday(e.target.value)}
+              placeholder="15000"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="fullday">{t("wizard.property.priceFullDay")}</Label>
+            <Input
+              id="fullday"
+              type="number"
+              min={0}
+              value={priceFullDay}
+              onChange={(e) => setPriceFullDay(e.target.value)}
+              placeholder="20000"
+            />
+          </div>
+        </WizardPane>
+      )}
+
+      {step === 5 && (
+        <WizardPane step={5}>
           <h2 className="text-lg font-bold text-foreground">{t("wizard.property.amenitiesTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("wizard.property.amenitiesHint")}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -429,11 +493,11 @@ export function PropertyCreationWizard({
               );
             })}
           </div>
-        </div>
+        </WizardPane>
       )}
 
-      {step === 4 && (
-        <div className="space-y-4">
+      {step === 6 && (
+        <WizardPane step={6}>
           <h2 className="text-lg font-bold text-foreground">{t("wizard.property.mediaTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("wizard.property.mediaHint", { count: MIN_PROPERTY_PHOTOS })}</p>
           <div className="space-y-2">
@@ -509,11 +573,11 @@ export function PropertyCreationWizard({
               onChange={(e) => setVirtualTourUrl(e.target.value)}
             />
           </div>
-        </div>
+        </WizardPane>
       )}
 
-      {step === 5 && (
-        <div className="space-y-4">
+      {step === 7 && (
+        <WizardPane step={7}>
           <h2 className="text-lg font-bold text-foreground">{t("wizard.property.reviewTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("wizard.property.reviewHint")}</p>
           <dl className="rounded-2xl border-2 border-border divide-y text-sm">
@@ -535,6 +599,26 @@ export function PropertyCreationWizard({
               <dt className="text-muted-foreground">{t("common.perNight")}</dt>
               <dd className="font-semibold text-brand">{formatPrice(Number(price))}</dd>
             </div>
+            <div className="flex justify-between gap-4 p-4">
+              <dt className="text-muted-foreground">{t("wizard.property.checkInTime")}</dt>
+              <dd className="font-semibold">{checkInTime}</dd>
+            </div>
+            <div className="flex justify-between gap-4 p-4">
+              <dt className="text-muted-foreground">{t("wizard.property.checkOutTime")}</dt>
+              <dd className="font-semibold">{checkOutTime}</dd>
+            </div>
+            {priceMidday && (
+              <div className="flex justify-between gap-4 p-4">
+                <dt className="text-muted-foreground">{t("wizard.property.priceMidday")}</dt>
+                <dd className="font-semibold">{formatPrice(Number(priceMidday))}</dd>
+              </div>
+            )}
+            {priceFullDay && (
+              <div className="flex justify-between gap-4 p-4">
+                <dt className="text-muted-foreground">{t("wizard.property.priceFullDay")}</dt>
+                <dd className="font-semibold">{formatPrice(Number(priceFullDay))}</dd>
+              </div>
+            )}
             <div className="flex justify-between gap-4 p-4">
               <dt className="text-muted-foreground">{t("wizard.property.bedrooms")}</dt>
               <dd className="font-semibold">{bedrooms}</dd>
@@ -566,7 +650,7 @@ export function PropertyCreationWizard({
               </div>
             )}
           </dl>
-        </div>
+        </WizardPane>
       )}
 
       <div className="flex flex-wrap gap-3 pt-4 pb-2">

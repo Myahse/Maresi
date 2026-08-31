@@ -4,9 +4,11 @@ import com.maresi.api.contracts.FunctionalError;
 import com.maresi.api.contracts.Request;
 import com.maresi.api.contracts.Response;
 import com.maresi.api.exception.ApiException;
+import com.maresi.api.repository.NotificationRepository;
 import com.maresi.api.repository.PropertyRepository;
 import com.maresi.api.repository.RatingRepository;
 import com.maresi.api.repository.UserRepository;
+import com.maresi.api.service.EmailService;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
 import java.util.LinkedHashMap;
@@ -21,16 +23,22 @@ public class RatingBusiness {
   private final RatingRepository ratings;
   private final PropertyRepository properties;
   private final UserRepository users;
+  private final NotificationRepository notifications;
+  private final EmailService email;
   private final FunctionalError functionalError;
 
   public RatingBusiness(
       RatingRepository ratings,
       PropertyRepository properties,
       UserRepository users,
+      NotificationRepository notifications,
+      EmailService email,
       FunctionalError functionalError) {
     this.ratings = ratings;
     this.properties = properties;
     this.users = users;
+    this.notifications = notifications;
+    this.email = email;
     this.functionalError = functionalError;
   }
 
@@ -75,6 +83,15 @@ public class RatingBusiness {
             .orElse("Client");
     saved.put("user_name", name);
     ratings.refreshPropertyAggregate(propertyId);
+    UUID ownerId =
+        property.get("owner_id") != null ? UUID.fromString(property.get("owner_id").toString()) : null;
+    if (ownerId != null && !ownerId.equals(user.id())) {
+      String listing = String.valueOf(property.get("title") == null ? "votre residence" : property.get("title"));
+      String body = name + " a laisse un avis (" + score + "/5) sur " + listing + ".";
+      if (comment != null) body += "\n\"" + comment + "\"";
+      notifications.create(ownerId, "review", "Nouvel avis", body, propertyId);
+      email.sendToUser(ownerId, "Maresi — nouvel avis", body);
+    }
     response.setItem(saved);
     response.setStatus(functionalError.success("Avis", locale));
     return response;

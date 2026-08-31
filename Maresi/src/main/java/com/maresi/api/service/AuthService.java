@@ -26,7 +26,17 @@ public class AuthService {
       MultipartFile idCardPhoto,
       String baseUrl,
       Locale locale) {
-    return authBusiness.register(request, selfie, idCardPhoto, baseUrl, locale);
+    return authBusiness.register(request, selfie, idCardPhoto, null, baseUrl, locale);
+  }
+
+  public Response<Map<String, Object>> register(
+      Request<Map<String, Object>> request,
+      MultipartFile selfie,
+      MultipartFile idCardPhoto,
+      MultipartFile idCardBack,
+      String baseUrl,
+      Locale locale) {
+    return authBusiness.register(request, selfie, idCardPhoto, idCardBack, baseUrl, locale);
   }
 
   public Response<Map<String, Object>> login(Request<Map<String, Object>> request, Locale locale) {

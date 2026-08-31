@@ -7,6 +7,7 @@ import { RegisterPage } from "@/pages/RegisterPage";
 import { OwnerDashboardPage } from "@/pages/owner/OwnerDashboardPage";
 import { PropertyEditPage } from "@/pages/owner/PropertyEditPage";
 import { OwnerVisitsPage } from "@/pages/owner/OwnerVisitsPage";
+import { OwnerIdentityPage } from "@/pages/owner/OwnerIdentityPage";
 import { OwnerSubscriptionPage } from "@/pages/owner/OwnerSubscriptionPage";
 import { PaymentSuccessPage, PaymentErrorPage } from "@/pages/PaymentResultPages";
 import { NotFoundPage } from "@/pages/NotFoundPage";
@@ -37,6 +38,7 @@ function App() {
             <Route path="owner/new" element={<ProtectedRoute roles={["owner"]}><PropertyEditPage /></ProtectedRoute>} />
             <Route path="owner/edit/:id" element={<ProtectedRoute roles={["owner"]}><PropertyEditPage /></ProtectedRoute>} />
             <Route path="owner/visits" element={<ProtectedRoute roles={["owner"]}><OwnerVisitsPage /></ProtectedRoute>} />
+            <Route path="owner/account" element={<ProtectedRoute roles={["owner"]}><OwnerIdentityPage /></ProtectedRoute>} />
             <Route path="payments/success" element={<PaymentSuccessPage />} />
             <Route path="payments/error" element={<PaymentErrorPage />} />
             <Route path="*" element={<NotFoundPage />} />

@@ -21,6 +21,19 @@ public final class RowMaps {
     m.put("role", rs.getString("role"));
     m.put("phone", rs.getString("phone"));
     putIfPresent(rs, m, "created_at");
+    putIfPresent(rs, m, "id_card");
+    putIfPresent(rs, m, "selfie_url");
+    putIfPresent(rs, m, "id_card_photo_url");
+    putIfPresent(rs, m, "id_card_back_url");
+    return m;
+  }
+
+  public static Map<String, Object> userIdentity(ResultSet rs) throws SQLException {
+    Map<String, Object> m = userPublic(rs);
+    m.put("id_card", rs.getString("id_card"));
+    m.put("selfie_url", rs.getString("selfie_url"));
+    m.put("id_card_photo_url", rs.getString("id_card_photo_url"));
+    m.put("id_card_back_url", rs.getString("id_card_back_url"));
     return m;
   }
 
@@ -45,6 +58,10 @@ public final class RowMaps {
     putIfPresent(rs, m, "max_guests");
     putIfPresent(rs, m, "wave_payment_url");
     putIfPresent(rs, m, "orange_money_url");
+    putTime(rs, m, "check_in_time");
+    putTime(rs, m, "check_out_time");
+    putIfPresent(rs, m, "price_midday");
+    putIfPresent(rs, m, "price_full_day");
     m.put("created_at", toIso(rs.getTimestamp("created_at")));
     m.put("updated_at", toIso(rs.getTimestamp("updated_at")));
     putIfPresent(rs, m, "owner_name");
@@ -121,11 +138,19 @@ public final class RowMaps {
     putIfPresent(rs, m, "requester_id_card");
     putIfPresent(rs, m, "requester_selfie_url");
     putIfPresent(rs, m, "requester_id_photo_url");
+    putIfPresent(rs, m, "requester_id_back_url");
+    putIfPresent(rs, m, "stay_rate");
+    putIfPresent(rs, m, "price_midday");
+    putIfPresent(rs, m, "price_full_day");
+    putTime(rs, m, "check_in_time");
+    putTime(rs, m, "check_out_time");
     putIfPresent(rs, m, "agreement_full_name");
     putIfPresent(rs, m, "agreement_accepted");
     putIfPresent(rs, m, "agreement_signed_at");
     putIfPresent(rs, m, "key_code");
     putIfPresent(rs, m, "key_confirmed_at");
+    putIfPresent(rs, m, "checkin_notified_at");
+    putIfPresent(rs, m, "checkout_notified_at");
     putIfPresent(rs, m, "property_price");
     putIfPresent(rs, m, "property_owner_id");
     putIfPresent(rs, m, "wave_payment_url");
@@ -211,6 +236,17 @@ public final class RowMaps {
     m.put("updated_at", toIso(rs.getTimestamp("updated_at")));
     putIfPresent(rs, m, "user_email");
     return m;
+  }
+
+  private static void putTime(ResultSet rs, Map<String, Object> m, String col) {
+    try {
+      java.sql.Time time = rs.getTime(col);
+      if (time != null) {
+        m.put(col, time.toLocalTime().toString());
+      }
+    } catch (SQLException ignored) {
+      // column not in result set
+    }
   }
 
   private static void putIfPresent(ResultSet rs, Map<String, Object> m, String col) throws SQLException {

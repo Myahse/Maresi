@@ -165,7 +165,7 @@
     "hostTitle": "Je suis propriétaire",
     "hostHint": "Mettre en location votre appartement, chambre ou autre résidence.",
     "roleRequired": "Choisissez si vous êtes client ou hôte.",
-    "accountRequired": "Saisissez votre nom, e-mail et un mot de passe d'au moins 6 caractères.",
+    "accountRequired": "Saisissez votre nom, e-mail, téléphone et un mot de passe d'au moins 6 caractères.",
     "photosRequired": "Ajoutez un selfie et une photo de votre pièce d'identité.",
     "idCardInvalid": "Saisissez un numéro de pièce d'identité valide.",
     "identityHint": "Un selfie et une photo de pièce d'identité sont requis pour les clients et les hôtes.",
@@ -182,7 +182,11 @@
     "iAmA": "Je suis",
     "client": "Client (parcourir et réserver)",
     "owner": "Propriétaire (publier des biens)",
-    "phoneOptional": "Téléphone (facultatif)",
+    "phoneOptional": "Téléphone",
+    "phone": "Téléphone",
+    "idCardFront": "Recto de la pièce",
+    "idCardBack": "Verso de la pièce",
+    "idCardBackHint": "Photographiez le verso si votre pièce en a un.",
     "submit": "Créer le compte",
     "failed": "Échec de l'inscription",
     "hasAccount": "Déjà un compte ?",
@@ -222,7 +226,9 @@
       "steps": {
         "basics": "Infos",
         "location": "Lieu",
+        "times": "Horaires",
         "pricing": "Tarifs",
+        "rates": "Autres prix",
         "amenities": "Équipements",
         "media": "Médias",
         "review": "Validation"
@@ -238,8 +244,16 @@
       "country": "Pays",
       "coordinates": "Coordonnées",
       "locationEmpty": "Cherchez une adresse ou touchez la carte. Rue, ville et pays s’affichent ici.",
+      "timesTitle": "Heures d'arrivée et de départ",
+      "timesHint": "Indiquez l'heure à laquelle le client peut arriver et doit partir.",
+      "checkInTime": "Heure d'arrivée",
+      "checkOutTime": "Heure de départ",
+      "ratesTitle": "Prix selon la durée (optionnel)",
+      "ratesHint": "Laissez vide si vous n'utilisez que le prix par nuit. Exemple : midi 15 000 F, journée 20 000 F.",
+      "priceMidday": "Prix midi (XOF)",
+      "priceFullDay": "Prix journée complète (XOF)",
       "pricingTitle": "Tarif et capacité",
-      "pricingHint": "Prix par nuit en XOF. Le client paie Maresi. 90 % arrivent sur votre portefeuille, 10 % restent à Maresi.",
+      "pricingHint": "Prix par nuit en XOF. Le client paie l'hôte après le code clé.",
       "payHostHint": "Le client paie Maresi via GeniusPay. Ces liens Wave / Orange Money ne sont plus utilisés pour les nouvelles réservations.",
       "waveUrl": "Lien Wave (si vous êtes marchand)",
       "orangeUrl": "Lien Orange Money (si vous êtes marchand)",
@@ -274,7 +288,8 @@
         "bedrooms": "Au moins 1 chambre.",
         "guests": "Au moins 1 voyageur.",
         "url": "URL de visite virtuelle invalide.",
-        "photosMin": "Ajoutez au moins {{count}} photos du lieu."
+        "photosMin": "Ajoutez au moins {{count}} photos du lieu.",
+        "times": "Choisissez les heures d'arrivée et de départ."
       }
     },
     "reserve": {
@@ -527,5 +542,11 @@
   },
   "hostGate": {
     "wrongRole": "Cette app est réservée aux hôtes validés. Faites la demande depuis le site client."
+  },
+  "account": {
+    "kicker": "Votre dossier",
+    "title": "Informations du compte",
+    "hint": "Tout ce qui a été enregistré à la création : identité, téléphone et photos.",
+    "loadFailed": "Impossible de charger le dossier."
   }
 }

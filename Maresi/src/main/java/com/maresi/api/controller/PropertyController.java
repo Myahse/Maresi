@@ -83,6 +83,10 @@ public class PropertyController {
       @RequestParam(name = "wave_payment_url", required = false) String wavePaymentUrl,
       @RequestParam(name = "orange_money_url", required = false) String orangeMoneyUrl,
       @RequestParam(required = false) List<String> amenities,
+      @RequestParam(name = "check_in_time", required = false) String checkInTime,
+      @RequestParam(name = "check_out_time", required = false) String checkOutTime,
+      @RequestParam(name = "price_midday", required = false) BigDecimal priceMidday,
+      @RequestParam(name = "price_full_day", required = false) BigDecimal priceFullDay,
       @RequestPart(name = "images", required = false) List<MultipartFile> images,
       @RequestParam(name = "image_urls", required = false) List<String> imageUrls,
       @RequestParam(required = false, defaultValue = "false") boolean draft,
@@ -90,7 +94,18 @@ public class PropertyController {
     Locale loc = ControllerSupport.locale(locale);
     String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
     Map<String, Object> extras = extraFields(
-        latitude, longitude, bedrooms, maxGuests, virtualTourUrl, wavePaymentUrl, orangeMoneyUrl, amenities);
+        latitude,
+        longitude,
+        bedrooms,
+        maxGuests,
+        virtualTourUrl,
+        wavePaymentUrl,
+        orangeMoneyUrl,
+        amenities,
+        checkInTime,
+        checkOutTime,
+        priceMidday,
+        priceFullDay);
     return ControllerSupport.runCreated(
         () ->
             propertyService.create(
@@ -144,6 +159,10 @@ public class PropertyController {
       @RequestParam(name = "wave_payment_url", required = false) String wavePaymentUrl,
       @RequestParam(name = "orange_money_url", required = false) String orangeMoneyUrl,
       @RequestParam(required = false) List<String> amenities,
+      @RequestParam(name = "check_in_time", required = false) String checkInTime,
+      @RequestParam(name = "check_out_time", required = false) String checkOutTime,
+      @RequestParam(name = "price_midday", required = false) BigDecimal priceMidday,
+      @RequestParam(name = "price_full_day", required = false) BigDecimal priceFullDay,
       @RequestPart(name = "images", required = false) List<MultipartFile> images,
       @RequestParam(name = "image_urls", required = false) List<String> imageUrls,
       @RequestParam(required = false) Boolean draft,
@@ -159,7 +178,19 @@ public class PropertyController {
     if (Boolean.TRUE.equals(draft)) data.put("is_active", false);
     else if (Boolean.FALSE.equals(draft)) data.put("is_active", true);
     data.putAll(
-        extraFields(latitude, longitude, bedrooms, maxGuests, virtualTourUrl, wavePaymentUrl, orangeMoneyUrl, amenities));
+        extraFields(
+            latitude,
+            longitude,
+            bedrooms,
+            maxGuests,
+            virtualTourUrl,
+            wavePaymentUrl,
+            orangeMoneyUrl,
+            amenities,
+            checkInTime,
+            checkOutTime,
+            priceMidday,
+            priceFullDay));
     String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
     return ControllerSupport.run(
         () -> propertyService.update(id, data, images, imageUrls, baseUrl, loc), loc, exceptionUtils);
@@ -203,7 +234,11 @@ public class PropertyController {
       String virtualTourUrl,
       String wavePaymentUrl,
       String orangeMoneyUrl,
-      List<String> amenities) {
+      List<String> amenities,
+      String checkInTime,
+      String checkOutTime,
+      BigDecimal priceMidday,
+      BigDecimal priceFullDay) {
     Map<String, Object> extras = new HashMap<>();
     if (latitude != null) extras.put("latitude", latitude);
     if (longitude != null) extras.put("longitude", longitude);
@@ -217,6 +252,20 @@ public class PropertyController {
           "amenities",
           amenities.stream().filter(item -> item != null && !item.isBlank()).map(String::trim).toList());
     }
+    String inTime = normalizeTime(checkInTime);
+    String outTime = normalizeTime(checkOutTime);
+    if (inTime != null) extras.put("check_in_time", inTime);
+    if (outTime != null) extras.put("check_out_time", outTime);
+    if (priceMidday != null && priceMidday.signum() > 0) extras.put("price_midday", priceMidday);
+    if (priceFullDay != null && priceFullDay.signum() > 0) extras.put("price_full_day", priceFullDay);
     return extras;
+  }
+
+  private static String normalizeTime(String raw) {
+    if (raw == null || raw.isBlank()) return null;
+    String value = raw.trim();
+    if (value.matches("\\d{2}:\\d{2}")) return value + ":00";
+    if (value.matches("\\d{2}:\\d{2}:\\d{2}")) return value;
+    return null;
   }
 }

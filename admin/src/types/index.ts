@@ -7,6 +7,10 @@ export interface User {
   role: UserRole;
   phone?: string;
   created_at?: string;
+  id_card?: string;
+  selfie_url?: string;
+  id_card_photo_url?: string;
+  id_card_back_url?: string;
 }
 
 export interface Property {

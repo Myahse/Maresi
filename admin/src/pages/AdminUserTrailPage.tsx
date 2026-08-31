@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { getAdminUserTrail } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtime } from "@/hooks/useRealtime";
+import { AuthImage } from "@/components/media/AuthImage";
 import type { AdminActivity, Payment, RealtimeEvent, User, VisitRequest } from "@/types";
 
 export function AdminUserTrailPage() {
@@ -60,12 +61,38 @@ export function AdminUserTrailPage() {
       ) : (
         <>
           {account && (
-            <div className="rounded-2xl border bg-card p-4 text-sm">
-              <p className="font-semibold">{account.full_name}</p>
-              <p>{account.email}</p>
-              <p>
-                {account.role} · {account.phone || "—"}
-              </p>
+            <div className="rounded-2xl border bg-card p-4 text-sm space-y-4">
+              <div>
+                <p className="font-semibold">{account.full_name}</p>
+                <p>{account.email}</p>
+                <p>
+                  {account.role} · {account.phone || "—"}
+                </p>
+                {account.id_card && <p>{t("register.idCardNumber", { defaultValue: "ID" })}: {account.id_card}</p>}
+              </div>
+              {(account.selfie_url || account.id_card_photo_url || account.id_card_back_url) && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                    {t("admin.identityPhotos")}
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">{t("admin.selfie")}</p>
+                      <AuthImage src={account.selfie_url} alt={t("admin.selfie")} className="h-36 w-full rounded-xl object-cover bg-muted" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">{t("admin.idFront")}</p>
+                      <AuthImage src={account.id_card_photo_url} alt={t("admin.idFront")} className="h-36 w-full rounded-xl object-cover bg-muted" />
+                    </div>
+                    {account.id_card_back_url && (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">{t("admin.idBack")}</p>
+                        <AuthImage src={account.id_card_back_url} alt={t("admin.idBack")} className="h-36 w-full rounded-xl object-cover bg-muted" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <section>

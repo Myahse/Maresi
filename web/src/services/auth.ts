@@ -66,10 +66,11 @@ export async function register(data: {
   password: string;
   full_name: string;
   role?: "client" | "owner";
-  phone?: string;
+  phone: string;
   id_card: string;
   selfie: File;
   id_card_photo: File;
+  id_card_back?: File;
 }): Promise<AuthResponse> {
   const form = new FormData();
   form.append("email", data.email.trim());
@@ -78,9 +79,10 @@ export async function register(data: {
   form.append("full_name", data.full_name.trim());
   form.append("role", data.role === "owner" ? "owner" : "client");
   form.append("id_card", data.id_card.trim());
-  if (data.phone?.trim()) form.append("phone", data.phone.trim());
+  form.append("phone", data.phone.trim());
   form.append("selfie", data.selfie);
   form.append("id_card_photo", data.id_card_photo);
+  if (data.id_card_back) form.append("id_card_back", data.id_card_back);
 
   const res = await fetch(`${import.meta.env.VITE_API_URL ?? "/api"}/auth/register`, {
     method: "POST",

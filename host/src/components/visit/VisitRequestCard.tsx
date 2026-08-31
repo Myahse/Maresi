@@ -88,8 +88,8 @@ export function VisitRequestCard({ visit, showRequester, children }: VisitReques
                 </span>
               </p>
             )}
-            {(visit.requester_selfie_url || visit.requester_id_photo_url) && (
-              <div className="grid grid-cols-2 gap-2">
+            {(visit.requester_selfie_url || visit.requester_id_photo_url || visit.requester_id_back_url) && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">{t("visits.selfie")}</p>
                   <AuthImage
@@ -106,6 +106,16 @@ export function VisitRequestCard({ visit, showRequester, children }: VisitReques
                     className="h-28 w-full rounded-lg object-cover bg-muted"
                   />
                 </div>
+                {visit.requester_id_back_url && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">{t("register.idCardBack")}</p>
+                    <AuthImage
+                      src={visit.requester_id_back_url}
+                      alt={t("register.idCardBack")}
+                      className="h-28 w-full rounded-lg object-cover bg-muted"
+                    />
+                  </div>
+                )}
               </div>
             )}
             {visit.agreement_full_name && (

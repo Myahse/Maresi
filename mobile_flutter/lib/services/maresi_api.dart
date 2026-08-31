@@ -36,9 +36,13 @@ abstract class MaresiApi {
     required String fullName,
     required UserRole role,
     required String idCard,
+    required String phone,
     String? selfiePath,
     String? idCardPhotoPath,
+    String? idCardBackPath,
   });
+
+  Future<Map<String, dynamic>> getMyProfile();
 
   Future<Property> createProperty({
     required String title,
@@ -47,6 +51,10 @@ abstract class MaresiApi {
     required String location,
     required String propertyType,
     List<String> imagePaths = const [],
+    String? checkInTime,
+    String? checkOutTime,
+    int? priceMidday,
+    int? priceFullDay,
   });
 
   Future<VisitRequest> createVisitRequest(VisitRequestPayload payload);

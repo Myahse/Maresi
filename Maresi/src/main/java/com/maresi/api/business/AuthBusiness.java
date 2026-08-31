@@ -4,8 +4,10 @@ import com.maresi.api.config.AppProperties;
 import com.maresi.api.contracts.FunctionalError;
 import com.maresi.api.contracts.Request;
 import com.maresi.api.contracts.Response;
+import com.maresi.api.repository.NotificationRepository;
 import com.maresi.api.repository.UserRepository;
 import com.maresi.api.security.JwtService;
+import com.maresi.api.service.EmailService;
 import com.maresi.api.service.FileStorageService;
 import com.maresi.api.service.OtpService;
 import com.maresi.api.service.SmsService;
@@ -32,6 +34,8 @@ public class AuthBusiness {
   private final FileStorageService fileStorage;
   private final Environment env;
   private final FunctionalError functionalError;
+  private final EmailService email;
+  private final NotificationRepository notifications;
 
   public AuthBusiness(
       AppProperties props,
@@ -42,7 +46,9 @@ public class AuthBusiness {
       SmsService smsService,
       FileStorageService fileStorage,
       Environment env,
-      FunctionalError functionalError) {
+      FunctionalError functionalError,
+      EmailService email,
+      NotificationRepository notifications) {
     this.props = props;
     this.users = users;
     this.passwordEncoder = passwordEncoder;
@@ -52,16 +58,28 @@ public class AuthBusiness {
     this.fileStorage = fileStorage;
     this.env = env;
     this.functionalError = functionalError;
+    this.email = email;
+    this.notifications = notifications;
   }
 
   public Response<Map<String, Object>> register(Request<Map<String, Object>> request, Locale locale) {
-    return register(request, null, null, null, locale);
+    return register(request, null, null, null, null, locale);
   }
 
   public Response<Map<String, Object>> register(
       Request<Map<String, Object>> request,
       MultipartFile selfie,
       MultipartFile idCardPhoto,
+      String baseUrl,
+      Locale locale) {
+    return register(request, selfie, idCardPhoto, null, baseUrl, locale);
+  }
+
+  public Response<Map<String, Object>> register(
+      Request<Map<String, Object>> request,
+      MultipartFile selfie,
+      MultipartFile idCardPhoto,
+      MultipartFile idCardBack,
       String baseUrl,
       Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
@@ -76,7 +94,7 @@ public class AuthBusiness {
     String password = str(body.get("password"));
     String fullName = str(body.get("fullName"));
     if (fullName == null) fullName = str(body.get("full_name"));
-    String phone = str(body.get("phone"));
+    String phone = PhoneNormalizer.normalize(str(body.get("phone")));
     String idCard = str(body.get("id_card"));
     if (idCard == null) idCard = str(body.get("idCard"));
     String role = resolveRole(str(body.get("role")));
@@ -84,6 +102,11 @@ public class AuthBusiness {
     if (email == null || password == null || fullName == null) {
       response.setHasError(true);
       response.setStatus(functionalError.fieldEmpty("email, password, fullName", locale));
+      return response;
+    }
+    if (phone == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("phone", locale));
       return response;
     }
     if (!validIdCard(idCard)) {
@@ -104,6 +127,10 @@ public class AuthBusiness {
 
     String selfieUrl = fileStorage.storeIdentityImage(selfie, baseUrl);
     String idCardPhotoUrl = fileStorage.storeIdentityImage(idCardPhoto, baseUrl);
+    String idCardBackUrl =
+        idCardBack != null && !idCardBack.isEmpty()
+            ? fileStorage.storeIdentityImage(idCardBack, baseUrl)
+            : null;
     Map<String, Object> user =
         users.create(
             email,
@@ -113,10 +140,24 @@ public class AuthBusiness {
             phone,
             idCard.trim(),
             selfieUrl,
-            idCardPhotoUrl);
+            idCardPhotoUrl,
+            idCardBackUrl);
+    welcomeNewAccount(user);
     response.setItem(authPayload(user));
     response.setStatus(functionalError.success("Inscription", locale));
     return response;
+  }
+
+  private void welcomeNewAccount(Map<String, Object> user) {
+    UUID id = user.get("id") instanceof UUID u ? u : UUID.fromString(user.get("id").toString());
+    boolean host = "owner".equals(str(user.get("role")));
+    String title = host ? "Compte hote cree" : "Bienvenue sur Maresi";
+    String body =
+        host
+            ? "Votre compte hote est pret. Publiez une residence et recevez des demandes."
+            : "Votre compte est pret. Parcourez les residences et reservez.";
+    notifications.create(id, "account", title, body, null);
+    email.sendToUser(id, "Maresi — " + title, body + "\n\nTelephone enregistre : " + str(user.get("phone")));
   }
 
   public Response<Map<String, Object>> login(Request<Map<String, Object>> request, Locale locale) {

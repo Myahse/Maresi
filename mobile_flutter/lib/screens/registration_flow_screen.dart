@@ -37,9 +37,12 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
   final _idCardController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _locationController = TextEditingController();
   final _surfaceController = TextEditingController();
   final _priceController = TextEditingController();
+  final _priceMiddayController = TextEditingController();
+  final _priceFullDayController = TextEditingController();
   final _titleController = TextEditingController();
   final _picker = ImagePicker();
 
@@ -52,6 +55,10 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   List<XFile> _photos = [];
   XFile? _selfie;
   XFile? _idCardPhoto;
+  XFile? _idCardBack;
+  String _phoneDial = '+225';
+  String _checkInTime = '14:00';
+  String _checkOutTime = '12:00';
 
   bool get _isOwner => _role == UserRole.owner;
 
@@ -61,7 +68,10 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     _passwordController.dispose();
     _nameController.dispose();
     _idCardController.dispose();
+    _phoneController.dispose();
     _locationController.dispose();
+    _priceMiddayController.dispose();
+    _priceFullDayController.dispose();
     _surfaceController.dispose();
     _priceController.dispose();
     _titleController.dispose();
@@ -136,7 +146,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     setState(() => _step = _stepIdentity);
   }
 
-  Future<void> _pickIdentityPhoto({required bool selfie}) async {
+  Future<void> _pickIdentityPhoto({required bool selfie, bool back = false}) async {
     if (_loading) return;
     final file = await _picker.pickImage(
       source: ImageSource.camera,
@@ -149,6 +159,8 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     setState(() {
       if (selfie) {
         _selfie = file;
+      } else if (back) {
+        _idCardBack = file;
       } else {
         _idCardPhoto = file;
       }
@@ -248,14 +260,22 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
 
     setState(() => _loading = true);
     try {
+      final phoneDigits = _phoneController.text.replaceAll(RegExp(r'\D'), '');
+      if (phoneDigits.length < 8) {
+        _showMessage(locale.t('register.phoneRequired'));
+        setState(() => _loading = false);
+        return;
+      }
       await context.read<AuthProvider>().register(
             email: email,
             password: password,
             fullName: name,
             role: role,
             idCard: _idCardController.text.trim(),
+            phone: '$_phoneDial$phoneDigits',
             selfiePath: _selfie?.path,
             idCardPhotoPath: _idCardPhoto?.path,
+            idCardBackPath: _idCardBack?.path,
           );
 
       if (_isOwner && _propertyType != null) {
@@ -267,6 +287,10 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
           location: _locationController.text.trim(),
           propertyType: _propertyType!,
           imagePaths: _photos.map((p) => p.path).toList(),
+          checkInTime: _checkInTime,
+          checkOutTime: _checkOutTime,
+          priceMidday: int.tryParse(_priceMiddayController.text.trim()),
+          priceFullDay: int.tryParse(_priceFullDayController.text.trim()),
         );
       }
 
@@ -354,7 +378,9 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: MaresiCard(
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 280),
+                  duration: const Duration(milliseconds: 420),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
                   child: switch (_step) {
                     _stepIntent => _buildIntentStep(locale),
                     _stepIdentity => _buildIdentityStep(locale),
@@ -420,6 +446,13 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
           hint: locale.t('register.idCardPhotoHint'),
           path: _idCardPhoto?.path,
           onTap: () => _pickIdentityPhoto(selfie: false),
+        ),
+        const SizedBox(height: 12),
+        _IdentityPhotoTile(
+          label: locale.t('register.idCardBack'),
+          hint: locale.t('register.idCardBackHint'),
+          path: _idCardBack?.path,
+          onTap: () => _pickIdentityPhoto(selfie: false, back: true),
         ),
         const SizedBox(height: 16),
         _LabeledField(
@@ -529,6 +562,63 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
             decoration: InputDecoration(hintText: locale.t('register.titleHint')),
           ),
         ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _LabeledField(
+                label: locale.t('register.checkInTime'),
+                child: DropdownButtonFormField<String>(
+                  value: _checkInTime,
+                  items: const [
+                    DropdownMenuItem(value: '10:00', child: Text('10:00')),
+                    DropdownMenuItem(value: '12:00', child: Text('12:00')),
+                    DropdownMenuItem(value: '14:00', child: Text('14:00')),
+                    DropdownMenuItem(value: '16:00', child: Text('16:00')),
+                  ],
+                  onChanged: _loading ? null : (value) => setState(() => _checkInTime = value ?? '14:00'),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _LabeledField(
+                label: locale.t('register.checkOutTime'),
+                child: DropdownButtonFormField<String>(
+                  value: _checkOutTime,
+                  items: const [
+                    DropdownMenuItem(value: '10:00', child: Text('10:00')),
+                    DropdownMenuItem(value: '12:00', child: Text('12:00')),
+                    DropdownMenuItem(value: '14:00', child: Text('14:00')),
+                  ],
+                  onChanged: _loading ? null : (value) => setState(() => _checkOutTime = value ?? '12:00'),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _LabeledField(
+          label: locale.t('register.priceMidday'),
+          child: TextField(
+            controller: _priceMiddayController,
+            enabled: !_loading,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(hintText: '15000'),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _LabeledField(
+          label: locale.t('register.priceFullDay'),
+          child: TextField(
+            controller: _priceFullDayController,
+            enabled: !_loading,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(hintText: '20000'),
+          ),
+        ),
       ],
     );
   }
@@ -586,6 +676,34 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
             keyboardType: TextInputType.emailAddress,
             autocorrect: false,
             decoration: InputDecoration(hintText: locale.t('auth.emailHint')),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _LabeledField(
+          label: locale.t('register.phone'),
+          child: Row(
+            children: [
+              DropdownButton<String>(
+                value: _phoneDial,
+                items: const [
+                  DropdownMenuItem(value: '+225', child: Text('🇨🇮 +225')),
+                  DropdownMenuItem(value: '+221', child: Text('🇸🇳 +221')),
+                  DropdownMenuItem(value: '+223', child: Text('🇲🇱 +223')),
+                  DropdownMenuItem(value: '+226', child: Text('🇧🇫 +226')),
+                  DropdownMenuItem(value: '+33', child: Text('🇫🇷 +33')),
+                ],
+                onChanged: _loading ? null : (value) => setState(() => _phoneDial = value ?? '+225'),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _phoneController,
+                  enabled: !_loading,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(hintText: '07 00 00 00 00'),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 16),

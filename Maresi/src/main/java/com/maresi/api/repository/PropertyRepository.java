@@ -121,9 +121,10 @@ public class PropertyRepository {
                   INSERT INTO properties (
                     owner_id, title, description, price, location, property_type, images,
                     latitude, longitude, bedrooms, max_guests, virtual_tour_url,
-                    wave_payment_url, orange_money_url, is_active, amenities
+                    wave_payment_url, orange_money_url, is_active, amenities,
+                    check_in_time, check_out_time, price_midday, price_full_day
                   )
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS time), CAST(? AS time), ?, ?)
                   RETURNING *
                   """)) {
             ps.setObject(1, ownerId);
@@ -144,6 +145,10 @@ public class PropertyRepository {
             ps.setObject(15, active instanceof Boolean b ? b : Boolean.TRUE);
             Array amenityArray = conn.createArrayOf("text", toTextArray(extra.get("amenities")));
             ps.setArray(16, amenityArray);
+            ps.setObject(17, extra.get("check_in_time"));
+            ps.setObject(18, extra.get("check_out_time"));
+            ps.setObject(19, extra.get("price_midday"));
+            ps.setObject(20, extra.get("price_full_day"));
             try (var rs = ps.executeQuery()) {
               if (rs.next()) return RowMaps.property(rs);
               throw new IllegalStateException("Insert failed");
@@ -169,7 +174,11 @@ public class PropertyRepository {
             "virtual_tour_url",
             "wave_payment_url",
             "orange_money_url",
-            "amenities");
+            "amenities",
+            "check_in_time",
+            "check_out_time",
+            "price_midday",
+            "price_full_day");
     List<String> updateKeys = new ArrayList<>();
     List<Object> updateValues = new ArrayList<>();
     for (String key : keys) {
@@ -183,7 +192,10 @@ public class PropertyRepository {
     }
     return jdbc.execute(
         (Connection conn) -> {
-          List<String> sets = updateKeys.stream().map(k -> k + " = ?").toList();
+          List<String> sets =
+              updateKeys.stream()
+                  .map(k -> k.endsWith("_time") ? k + " = CAST(? AS time)" : k + " = ?")
+                  .toList();
           String sql = "UPDATE properties SET " + String.join(", ", sets) + " WHERE id = ? RETURNING *";
           try (var ps = conn.prepareStatement(sql)) {
             int idx = 1;

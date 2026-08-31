@@ -165,7 +165,7 @@
     "hostTitle": "I am an owner",
     "hostHint": "List your apartment, room, or other residence for guests.",
     "roleRequired": "Choose whether you are a guest or a host.",
-    "accountRequired": "Enter your name, email, and a password of at least 6 characters.",
+    "accountRequired": "Enter your name, email, phone and a password of at least 6 characters.",
     "photosRequired": "Add a selfie and a photo of your ID card.",
     "idCardInvalid": "Enter a valid ID card number.",
     "identityHint": "We need a selfie and a photo of your ID card for both guests and hosts.",
@@ -182,7 +182,11 @@
     "iAmA": "I am a",
     "client": "Client (browse & book)",
     "owner": "Owner (list properties)",
-    "phoneOptional": "Phone (optional)",
+    "phoneOptional": "Phone",
+    "phone": "Phone",
+    "idCardFront": "ID front",
+    "idCardBack": "ID back",
+    "idCardBackHint": "Photograph the back if your document has one.",
     "submit": "Create account",
     "failed": "Registration failed",
     "hasAccount": "Already have an account?",
@@ -222,7 +226,9 @@
       "steps": {
         "basics": "Basics",
         "location": "Location",
+        "times": "Hours",
         "pricing": "Pricing",
+        "rates": "Other rates",
         "amenities": "Amenities",
         "media": "Media",
         "review": "Review"
@@ -238,6 +244,14 @@
       "country": "Country",
       "coordinates": "Coordinates",
       "locationEmpty": "Search an address or tap the map. Street, city, and country will show here.",
+      "timesTitle": "Check-in and check-out hours",
+      "timesHint": "Set when guests may arrive and when they must leave.",
+      "checkInTime": "Check-in time",
+      "checkOutTime": "Check-out time",
+      "ratesTitle": "Duration rates (optional)",
+      "ratesHint": "Leave empty to use only the nightly price. Example: midday 15,000 F, full day 20,000 F.",
+      "priceMidday": "Midday price (XOF)",
+      "priceFullDay": "Full-day price (XOF)",
       "pricingTitle": "Pricing & capacity",
       "pricingHint": "Nightly price in XOF. The guest pays Maresi. 90% lands in your wallet, 10% stays with Maresi.",
       "payHostHint": "Guests pay Maresi via GeniusPay. These Wave / Orange Money links are no longer used for new bookings.",
@@ -274,7 +288,8 @@
         "bedrooms": "At least 1 bedroom required.",
         "guests": "At least 1 guest required.",
         "url": "Virtual tour URL is not valid.",
-        "photosMin": "Add at least {{count}} photos of the place."
+        "photosMin": "Add at least {{count}} photos of the place.",
+        "times": "Choose check-in and check-out times."
       }
     },
     "reserve": {
@@ -527,5 +542,11 @@
   },
   "hostGate": {
     "wrongRole": "This app is for approved hosts. Apply from the client site."
+  },
+  "account": {
+    "kicker": "Your file",
+    "title": "Account details",
+    "hint": "Everything collected at signup: identity, phone and photos.",
+    "loadFailed": "Could not load your file."
   }
 }

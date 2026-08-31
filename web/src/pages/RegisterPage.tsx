@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IdentityPhotoField } from "@/components/auth/IdentityPhotoField";
+import { PhoneInput } from "@/components/auth/PhoneInput";
+import { WizardPane } from "@/components/ui/WizardPane";
 import { useAuth } from "@/hooks/useAuth";
 import { isValidIdCard } from "@/lib/validation";
+import { isCompletePhone } from "@/lib/phoneCountries";
 import { HOST_APP_URL } from "@/lib/hostApp";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +30,7 @@ export function RegisterPage() {
   const [idCard, setIdCard] = useState("");
   const [selfie, setSelfie] = useState<File | null>(null);
   const [idCardPhoto, setIdCardPhoto] = useState<File | null>(null);
+  const [idCardBack, setIdCardBack] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -39,7 +43,7 @@ export function RegisterPage() {
       return;
     }
     if (step === 1) {
-      if (!fullName.trim() || !email.trim() || password.length < 6) {
+      if (!fullName.trim() || !email.trim() || password.length < 6 || !isCompletePhone(phone)) {
         setError(t("register.accountRequired"));
         return;
       }
@@ -72,11 +76,12 @@ export function RegisterPage() {
         email,
         password,
         full_name: fullName,
-        phone: phone.trim() || undefined,
+        phone: phone.trim(),
         role,
         id_card: idCard.trim(),
         selfie,
         id_card_photo: idCardPhoto,
+        id_card_back: idCardBack ?? undefined,
       });
       if (res.user.role === "owner") {
         window.location.assign(HOST_APP_URL);
@@ -119,6 +124,7 @@ export function RegisterPage() {
           )}
 
           {step === 0 && (
+            <WizardPane step={0}>
             <div className="grid sm:grid-cols-2 gap-4">
               <button
                 type="button"
@@ -145,10 +151,11 @@ export function RegisterPage() {
                 <p className="text-sm text-muted-foreground mt-1">{t("register.hostHint")}</p>
               </button>
             </div>
+            </WizardPane>
           )}
 
           {step === 1 && (
-            <div className="space-y-4">
+            <WizardPane step={1}>
               <div className="space-y-2">
                 <Label htmlFor="fullName">{t("register.fullName")}</Label>
                 <Input
@@ -181,19 +188,14 @@ export function RegisterPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">{t("register.phoneOptional")}</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
+                <Label htmlFor="phone">{t("register.phone")}</Label>
+                <PhoneInput id="phone" value={phone} onChange={setPhone} required />
               </div>
-            </div>
+            </WizardPane>
           )}
 
           {step === 2 && (
-            <div className="space-y-4">
+            <WizardPane step={2}>
               <p className="text-sm text-muted-foreground">{t("register.identityHint")}</p>
               <div className="grid sm:grid-cols-2 gap-4">
                 <IdentityPhotoField
@@ -206,10 +208,18 @@ export function RegisterPage() {
                 />
                 <IdentityPhotoField
                   id="id-card-photo"
-                  label={t("register.idCardPhoto")}
+                  label={t("register.idCardFront")}
                   hint={t("register.idCardPhotoHint")}
                   file={idCardPhoto}
                   onChange={setIdCardPhoto}
+                  capture="environment"
+                />
+                <IdentityPhotoField
+                  id="id-card-back"
+                  label={t("register.idCardBack")}
+                  hint={t("register.idCardBackHint")}
+                  file={idCardBack}
+                  onChange={setIdCardBack}
                   capture="environment"
                 />
               </div>
@@ -223,7 +233,7 @@ export function RegisterPage() {
                   required
                 />
               </div>
-            </div>
+            </WizardPane>
           )}
 
           <div className="flex gap-3">

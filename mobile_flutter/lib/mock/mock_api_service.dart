@@ -167,8 +167,10 @@ class MockApiService implements MaresiApi {
     required String fullName,
     required UserRole role,
     required String idCard,
+    required String phone,
     String? selfiePath,
     String? idCardPhotoPath,
+    String? idCardBackPath,
   }) async {
     await _delay();
     if (password.length < 6 || fullName.trim().isEmpty || idCard.trim().length < 5) {
@@ -182,6 +184,20 @@ class MockApiService implements MaresiApi {
     );
     _sessionUser = user;
     return AuthResponse(user: user, token: _mockToken);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getMyProfile() async {
+    await _delay();
+    final user = _sessionUser;
+    if (user == null) throw Exception('Authentification requise');
+    return {
+      'id': user.id,
+      'email': user.email,
+      'full_name': user.fullName,
+      'role': user.role.name,
+      'phone': '',
+    };
   }
 
   User _userForEmail(String email) {
@@ -203,6 +219,10 @@ class MockApiService implements MaresiApi {
     required String location,
     required String propertyType,
     List<String> imagePaths = const [],
+    String? checkInTime,
+    String? checkOutTime,
+    int? priceMidday,
+    int? priceFullDay,
   }) async {
     await _delay();
     if (_sessionUser == null) throw Exception('Authentification requise');

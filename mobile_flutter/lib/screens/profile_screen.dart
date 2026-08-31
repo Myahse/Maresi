@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maresi_mobile/models/user.dart';
+import 'package:maresi_mobile/screens/identity_dossier_screen.dart';
 import 'package:maresi_mobile/screens/my_visits_screen.dart';
 import 'package:maresi_mobile/screens/owner_subscription_screen.dart';
 import 'package:maresi_mobile/screens/property_create_screen.dart';
@@ -96,7 +97,15 @@ class ProfileScreen extends StatelessWidget {
                   },
                 ),
                 const ImmoMenuDivider(),
-                ImmoMenuTile(title: locale.t('profile.personalInfo'), icon: Icons.person_outline, onTap: () {}),
+                ImmoMenuTile(
+                  title: locale.t('account.title'),
+                  icon: Icons.person_outline,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => const IdentityDossierScreen()),
+                    );
+                  },
+                ),
                 const ImmoMenuDivider(),
                 ImmoMenuTile(
                   title: locale.t('profile.email'),

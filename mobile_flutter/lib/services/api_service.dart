@@ -216,8 +216,10 @@ class ApiService implements MaresiApi {
     required String fullName,
     required UserRole role,
     required String idCard,
+    required String phone,
     String? selfiePath,
     String? idCardPhotoPath,
+    String? idCardBackPath,
   }) async {
     final request = http.MultipartRequest('POST', Uri.parse('${AppConfig.apiPrefix}/auth/register'));
     request.fields['email'] = email.trim();
@@ -226,11 +228,15 @@ class ApiService implements MaresiApi {
     request.fields['full_name'] = fullName.trim();
     request.fields['role'] = role.name;
     request.fields['id_card'] = idCard.trim();
+    request.fields['phone'] = phone.trim();
     if (selfiePath != null && selfiePath.isNotEmpty) {
       request.files.add(await http.MultipartFile.fromPath('selfie', selfiePath));
     }
     if (idCardPhotoPath != null && idCardPhotoPath.isNotEmpty) {
       request.files.add(await http.MultipartFile.fromPath('id_card_photo', idCardPhotoPath));
+    }
+    if (idCardBackPath != null && idCardBackPath.isNotEmpty) {
+      request.files.add(await http.MultipartFile.fromPath('id_card_back', idCardBackPath));
     }
     final streamed = await request.send();
     final res = await http.Response.fromStream(streamed);
@@ -244,6 +250,17 @@ class ApiService implements MaresiApi {
   }
 
   @override
+  Future<Map<String, dynamic>> getMyProfile() async {
+    final res = await http.get(
+      Uri.parse('${AppConfig.apiPrefix}/users/me'),
+      headers: await _authHeaders(),
+    );
+    final data = _parseBody(res);
+    if (res.statusCode >= 400) _throwFromResponse(res, data);
+    return _unwrapEnvelope(data) as Map<String, dynamic>;
+  }
+
+  @override
   Future<Property> createProperty({
     required String title,
     required String description,
@@ -251,6 +268,10 @@ class ApiService implements MaresiApi {
     required String location,
     required String propertyType,
     List<String> imagePaths = const [],
+    String? checkInTime,
+    String? checkOutTime,
+    int? priceMidday,
+    int? priceFullDay,
   }) async {
     final request = http.MultipartRequest('POST', Uri.parse('${AppConfig.apiPrefix}/properties'));
     final headers = await _authHeaders();
@@ -261,6 +282,10 @@ class ApiService implements MaresiApi {
     request.fields['price'] = price.toString();
     request.fields['location'] = location.trim();
     request.fields['property_type'] = propertyType;
+    if (checkInTime != null && checkInTime.isNotEmpty) request.fields['check_in_time'] = checkInTime;
+    if (checkOutTime != null && checkOutTime.isNotEmpty) request.fields['check_out_time'] = checkOutTime;
+    if (priceMidday != null && priceMidday > 0) request.fields['price_midday'] = priceMidday.toString();
+    if (priceFullDay != null && priceFullDay > 0) request.fields['price_full_day'] = priceFullDay.toString();
 
     for (final path in imagePaths) {
       request.files.add(await http.MultipartFile.fromPath('images', path));

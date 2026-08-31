@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
-import { Search, Heart, Calendar, Home, LayoutDashboard } from "lucide-react";
+import { Search, Heart, Calendar, Home, LayoutDashboard, IdCard } from "lucide-react";
 import { openHostApp } from "@/lib/hostApp";
 
 export function RoleDashboardPage() {
@@ -32,6 +32,13 @@ export function RoleDashboardPage() {
       description: t("dashboard.cards.visitsDesc"),
       icon: Calendar,
       route: "/visits",
+    },
+    {
+      id: "identity",
+      title: t("dashboard.cards.identity"),
+      description: t("dashboard.cards.identityDesc"),
+      icon: IdCard,
+      route: "/account",
     },
     ...(isOwner
       ? [

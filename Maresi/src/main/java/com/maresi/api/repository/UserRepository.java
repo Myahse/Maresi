@@ -17,8 +17,21 @@ public class UserRepository {
 
   public Optional<Map<String, Object>> findById(UUID id) {
     return jdbc.query(
-            "SELECT id, email, full_name, role, phone FROM users WHERE id = ?",
+            "SELECT id, email, full_name, role, phone, created_at FROM users WHERE id = ?",
             (rs, rowNum) -> RowMaps.userPublic(rs),
+            id)
+        .stream()
+        .findFirst();
+  }
+
+  public Optional<Map<String, Object>> findIdentity(UUID id) {
+    return jdbc.query(
+            """
+            SELECT id, email, full_name, role, phone, created_at,
+                   id_card, selfie_url, id_card_photo_url, id_card_back_url
+            FROM users WHERE id = ?
+            """,
+            (rs, rowNum) -> RowMaps.userIdentity(rs),
             id)
         .stream()
         .findFirst();
@@ -54,13 +67,15 @@ public class UserRepository {
       String phone,
       String idCard,
       String selfieUrl,
-      String idCardPhotoUrl) {
+      String idCardPhotoUrl,
+      String idCardBackUrl) {
     return jdbc.queryForObject(
         """
         INSERT INTO users (
-          email, password_hash, full_name, role, phone, id_card, selfie_url, id_card_photo_url
+          email, password_hash, full_name, role, phone, id_card,
+          selfie_url, id_card_photo_url, id_card_back_url
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         RETURNING id, email, full_name, role, phone, created_at
         """,
         (rs, rowNum) -> RowMaps.userPublic(rs),
@@ -71,7 +86,8 @@ public class UserRepository {
         phone,
         idCard,
         selfieUrl,
-        idCardPhotoUrl);
+        idCardPhotoUrl,
+        idCardBackUrl);
   }
 
   public Map<String, Object> createFromPhone(String phone, String fullName, String role) {

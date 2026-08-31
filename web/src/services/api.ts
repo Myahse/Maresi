@@ -102,6 +102,10 @@ export function getProperty(id: string) {
   return api.get<Property>(`/properties/${id}`);
 }
 
+export function getMyProfile() {
+  return api.get<import("@/types").UserProfile>("/users/me");
+}
+
 export async function getPropertyRatings(propertyId: string) {
   const data = await api.get<{ ratings?: PropertyRating[]; statistics?: RatingStats } | PropertyRating[]>(
     `/properties/${propertyId}/ratings`

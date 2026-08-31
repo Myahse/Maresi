@@ -93,6 +93,9 @@ export function OwnerDashboardPage() {
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">{t("owner.title")}</h1>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate("/owner/account")}>
+            {t("account.title")}
+          </Button>
           <Button variant="outline" onClick={() => navigate("/owner/subscription")}>
             {t("payments.walletNav")}
           </Button>

@@ -104,6 +104,12 @@ public class HostApplicationBusiness {
         user.id(),
         "Maresi — demande hote envoyee",
         "Votre demande pour devenir hote est en attente de validation.");
+    for (UUID adminId : users.findIdsByRole("admin")) {
+      email.sendToUser(
+          adminId,
+          "Maresi — nouvelle demande hote",
+          fullName.trim() + " souhaite devenir hote. Telephone : " + phone.trim() + ".");
+    }
 
     response.setItem(created);
     response.setStatus(functionalError.success("Demande hote", locale));

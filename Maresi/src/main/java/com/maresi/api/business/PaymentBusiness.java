@@ -896,7 +896,15 @@ public class PaymentBusiness {
   }
 
   private BigDecimal computeReservationAmount(Map<String, Object> visit) {
+    String rate = visit.get("stay_rate") == null ? "night" : visit.get("stay_rate").toString();
     BigDecimal unit = toMoney(visit.get("property_price"));
+    if ("midday".equals(rate)) {
+      BigDecimal midday = toMoney(visit.get("price_midday"));
+      if (midday != null) unit = midday;
+    } else if ("full_day".equals(rate)) {
+      BigDecimal full = toMoney(visit.get("price_full_day"));
+      if (full != null) unit = full;
+    }
     if (unit == null) unit = BigDecimal.ZERO;
     Object checkIn = visit.get("check_in");
     Object checkOut = visit.get("check_out");

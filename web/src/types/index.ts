@@ -8,6 +8,14 @@ export interface User {
   phone?: string;
 }
 
+export interface UserProfile extends User {
+  id_card?: string;
+  selfie_url?: string;
+  id_card_photo_url?: string;
+  id_card_back_url?: string;
+  created_at?: string;
+}
+
 export interface Property {
   id: string;
   owner_id: string;
@@ -32,6 +40,10 @@ export interface Property {
   amenities?: string[];
   wave_payment_url?: string;
   orange_money_url?: string;
+  check_in_time?: string;
+  check_out_time?: string;
+  price_midday?: number;
+  price_full_day?: number;
 }
 
 export interface VisitRequestPayload {
@@ -44,6 +56,7 @@ export interface VisitRequestPayload {
   guests_count: number;
   contact_phone: string;
   id_card: string;
+  stay_rate?: "night" | "midday" | "full_day";
 }
 
 export interface Favorite {
@@ -94,6 +107,7 @@ export interface VisitRequest {
   requester_id_card?: string;
   requester_selfie_url?: string;
   requester_id_photo_url?: string;
+  requester_id_back_url?: string;
   agreement_full_name?: string;
   agreement_accepted?: boolean;
   agreement_signed_at?: string;

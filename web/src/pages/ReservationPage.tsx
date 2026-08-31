@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Stepper } from "@/components/ui/stepper";
+import { WizardPane } from "@/components/ui/WizardPane";
+import { cn } from "@/lib/utils";
 import { getProperty, requestVisit } from "@/services/api";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,6 +43,7 @@ export function ReservationPage() {
   const [contact_phone, setContactPhone] = useState("");
   const [id_card, setIdCard] = useState("");
   const [message, setMessage] = useState("");
+  const [stayRate, setStayRate] = useState<"night" | "midday" | "full_day">("night");
 
   const steps = [
     { id: "dates", label: t("wizard.reserve.steps.dates") },
@@ -126,6 +129,7 @@ export function ReservationPage() {
           contact_phone: contact_phone.trim(),
           id_card: id_card.trim(),
           message: message.trim() || undefined,
+          stay_rate: stayRate,
         };
         await requestVisit(payload);
         setDone(true);
@@ -185,7 +189,7 @@ export function ReservationPage() {
       )}
 
       {step === 0 && (
-        <div className="space-y-4">
+        <WizardPane step={0}>
           <h2 className="font-bold text-foreground">{t("wizard.reserve.datesTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("wizard.reserve.datesHint")}</p>
           <div className="grid sm:grid-cols-2 gap-4">
@@ -198,10 +202,47 @@ export function ReservationPage() {
               <Input id="check_out" type="date" value={check_out} onChange={(e) => setCheckOut(e.target.value)} />
             </div>
           </div>
+          {(property.check_in_time || property.check_out_time) && (
+            <p className="text-sm text-muted-foreground">
+              {property.check_in_time ? `${t("wizard.reserve.checkIn")} ${String(property.check_in_time).slice(0, 5)}` : ""}
+              {property.check_in_time && property.check_out_time ? " · " : ""}
+              {property.check_out_time ? `${t("wizard.reserve.checkOut")} ${String(property.check_out_time).slice(0, 5)}` : ""}
+            </p>
+          )}
+          {(property.price_midday || property.price_full_day) && (
+            <div className="space-y-2">
+              <p className="text-sm font-semibold">{t("wizard.reserve.rateTitle")}</p>
+              <p className="text-xs text-muted-foreground">{t("wizard.reserve.rateHint")}</p>
+              <div className="grid sm:grid-cols-3 gap-2">
+                <RateCard
+                  selected={stayRate === "night"}
+                  title={t("wizard.reserve.rateNight")}
+                  price={formatPrice(property.price)}
+                  onClick={() => setStayRate("night")}
+                />
+                {property.price_midday ? (
+                  <RateCard
+                    selected={stayRate === "midday"}
+                    title={t("wizard.reserve.rateMidday")}
+                    price={formatPrice(Number(property.price_midday))}
+                    onClick={() => setStayRate("midday")}
+                  />
+                ) : null}
+                {property.price_full_day ? (
+                  <RateCard
+                    selected={stayRate === "full_day"}
+                    title={t("wizard.reserve.rateFullDay")}
+                    price={formatPrice(Number(property.price_full_day))}
+                    onClick={() => setStayRate("full_day")}
+                  />
+                ) : null}
+              </div>
+            </div>
+          )}
           <p className="text-sm text-brand font-semibold">
             {t("common.perNight")}: {formatPrice(property.price)}
           </p>
-        </div>
+        </WizardPane>
       )}
 
       {step === 1 && (
@@ -351,5 +392,31 @@ export function ReservationPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function RateCard({
+  selected,
+  title,
+  price,
+  onClick,
+}: {
+  selected: boolean;
+  title: string;
+  price: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-xl border-2 p-3 text-left transition-colors",
+        selected ? "border-brand bg-accent" : "border-border"
+      )}
+    >
+      <p className="text-sm font-semibold">{title}</p>
+      <p className="text-brand font-bold">{price}</p>
+    </button>
   );
 }

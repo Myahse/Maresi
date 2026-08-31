@@ -111,7 +111,8 @@ public class VisitRequestBusiness {
             visitTime,
             intOrNull(body.get("guests_count")),
             str(body.get("contact_phone")),
-            idCard);
+            idCard,
+            stayRate(body.get("stay_rate")));
 
     notifyVisitRequestSubmitted(user.id(), listingId, String.valueOf(property.get("title")));
     UUID ownerId =
@@ -268,7 +269,7 @@ public class VisitRequestBusiness {
               + title
               + ".\n\nOuvrez cette page pour lire et signer l'engagement de soin du logement :\n"
               + agreementUrl(id)
-              + "\n\nApres signature, vous pourrez payer via GeniusPay.");
+              + "\n\nApres signature, vous recevrez un code a 6 chiffres a donner a l'hote. Ensuite, payez l'hote.");
     } else {
       notifyVisitRequestStatusUpdated(requesterId, listingId, status);
       email.sendToUser(
@@ -553,7 +554,11 @@ public class VisitRequestBusiness {
       throw ApiException.of(403, "Access denied");
     }
     String stored =
-        "id-card".equals(kind) ? str(row.get("id_card_photo_url")) : str(row.get("selfie_url"));
+        switch (kind == null ? "" : kind) {
+          case "id-card", "id-front" -> str(row.get("id_card_photo_url"));
+          case "id-back" -> str(row.get("id_card_back_url"));
+          default -> str(row.get("selfie_url"));
+        };
     return fileStorage.loadIdentityImage(stored);
   }
 
@@ -574,6 +579,16 @@ public class VisitRequestBusiness {
     if (item.get("requester_id_photo_url") != null) {
       item.put("requester_id_photo_url", "/api/visit-requests/" + id + "/identity/id-card");
     }
+    if (item.get("requester_id_back_url") != null) {
+      item.put("requester_id_back_url", "/api/visit-requests/" + id + "/identity/id-back");
+    }
+  }
+
+  private static String stayRate(Object raw) {
+    if (raw == null) return "night";
+    String value = raw.toString().trim().toLowerCase(Locale.ROOT);
+    if ("midday".equals(value) || "full_day".equals(value) || "night".equals(value)) return value;
+    return "night";
   }
 
   private static UUID uuid(Object v) {

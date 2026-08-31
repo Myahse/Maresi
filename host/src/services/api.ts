@@ -100,6 +100,10 @@ export function getProperties(params?: {
   return api.get<Property[]>(`/properties${query ? `?${query}` : ""}`);
 }
 
+export function getMyProfile() {
+  return api.get<import("@/types").UserProfile>("/users/me");
+}
+
 export function getProperty(id: string) {
   return api.get<Property>(`/properties/${id}`);
 }
