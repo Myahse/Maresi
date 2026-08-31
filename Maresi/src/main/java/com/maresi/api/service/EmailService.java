@@ -11,9 +11,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.core.io.ByteArrayResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -25,6 +28,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
+  public record Attachment(String filename, byte[] content) {}
+
   private static final Logger log = LoggerFactory.getLogger(EmailService.class);
   private static final URI BREVO_SEND = URI.create("https://api.brevo.com/v3/smtp/email");
 
@@ -67,6 +72,11 @@ public class EmailService {
 
   @Async
   public void sendToUser(UUID userId, String subject, String body) {
+    sendToUser(userId, subject, body, null);
+  }
+
+  @Async
+  public void sendToUser(UUID userId, String subject, String body, Attachment attachment) {
     if (userId == null) return;
     String to =
         users
@@ -79,35 +89,44 @@ public class EmailService {
       log.warn("Email skipped; user {} has no address", userId);
       return;
     }
-    send(to, subject, body);
+    send(to, subject, body, attachment);
   }
 
   public void send(String to, String subject, String body) {
+    send(to, subject, body, null);
+  }
+
+  public void send(String to, String subject, String body, Attachment attachment) {
     if (to == null || to.isBlank()) return;
     if (apiReady()) {
-      sendViaApi(to.trim(), subject, body);
+      sendViaApi(to.trim(), subject, body, attachment);
       return;
     }
     if (smtpReady()) {
-      sendViaSmtp(to.trim(), subject, body);
+      sendViaSmtp(to.trim(), subject, body, attachment);
       return;
     }
     log.warn("[mail skipped] neither Brevo API nor SMTP is configured; to={} subject={}", to, subject);
   }
 
-  private void sendViaApi(String to, String subject, String body) {
+  private void sendViaApi(String to, String subject, String body, Attachment attachment) {
     try {
-      String json =
-          objectMapper.writeValueAsString(
-              Map.of(
-                  "sender",
-                  Map.of("name", fromName(), "email", fromEmail()),
-                  "to",
-                  List.of(Map.of("email", to)),
-                  "subject",
-                  subject,
-                  "textContent",
-                  body));
+      Map<String, Object> payload = new LinkedHashMap<>();
+      payload.put("sender", Map.of("name", fromName(), "email", fromEmail()));
+      payload.put("to", List.of(Map.of("email", to)));
+      payload.put("subject", subject);
+      payload.put("textContent", body);
+      if (attachment != null && attachment.content() != null && attachment.content().length > 0) {
+        payload.put(
+            "attachment",
+            List.of(
+                Map.of(
+                    "name",
+                    attachment.filename() != null ? attachment.filename() : "engagement-soin-maresi.txt",
+                    "content",
+                    Base64.getEncoder().encodeToString(attachment.content()))));
+      }
+      String json = objectMapper.writeValueAsString(payload);
       HttpRequest request =
           HttpRequest.newBuilder(BREVO_SEND)
               .timeout(Duration.ofSeconds(20))
@@ -132,14 +151,20 @@ public class EmailService {
     }
   }
 
-  private void sendViaSmtp(String to, String subject, String body) {
+  private void sendViaSmtp(String to, String subject, String body, Attachment attachment) {
     try {
       MimeMessage message = mailSender.createMimeMessage();
-      MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+      boolean multipart = attachment != null && attachment.content() != null;
+      MimeMessageHelper helper = new MimeMessageHelper(message, multipart, "UTF-8");
       helper.setFrom(fromInternetAddress());
       helper.setTo(to);
       helper.setSubject(subject);
       helper.setText(body, false);
+      if (multipart) {
+        helper.addAttachment(
+            attachment.filename() != null ? attachment.filename() : "engagement-soin-maresi.txt",
+            new ByteArrayResource(attachment.content()));
+      }
       mailSender.send(message);
       log.info("Email sent via SMTP to {} subject={}", to, subject);
     } catch (Exception e) {

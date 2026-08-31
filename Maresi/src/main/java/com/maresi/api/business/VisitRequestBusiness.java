@@ -13,8 +13,10 @@ import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
 import com.maresi.api.service.EmailService;
 import com.maresi.api.service.FileStorageService;
+import com.maresi.api.service.StayAgreementText;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -225,12 +227,17 @@ public class VisitRequestBusiness {
           "Signez l'engagement",
           "Votre demande a ete acceptee. Signez l'engagement de soin du logement, puis payez via GeniusPay.",
           listingId);
+      Map<String, Object> forMail = new LinkedHashMap<>(updated);
+      forMail.put("property_title", title);
+      String agreement = StayAgreementText.document(forMail, null);
       email.sendToUser(
           requesterId,
           "Maresi — demande acceptee",
           "L'hote a accepte votre demande pour "
               + title
-              + ".\nSignez l'engagement (vous prendrez soin du logement) dans l'application, puis payez.");
+              + ".\nSignez l'engagement dans l'application Maresi, puis payez via GeniusPay.\n\n"
+              + agreement,
+          StayAgreementText.attachment(forMail, null));
     } else {
       notifyVisitRequestStatusUpdated(requesterId, listingId, status);
       email.sendToUser(
@@ -429,6 +436,17 @@ public class VisitRequestBusiness {
                 .map(UUID::fromString)
                 .orElse(null);
     realtime.publish("visit.status_changed", updated, user.id(), ownerId, true);
+    String listingTitle =
+        properties
+            .findById(listingId)
+            .map(p -> p.get("title"))
+            .map(Object::toString)
+            .orElse("la residence");
+    Map<String, Object> forMail = new LinkedHashMap<>(updated);
+    forMail.put("property_title", listingTitle);
+    String signedName = fullName.trim();
+    String signedCopy = StayAgreementText.document(forMail, signedName);
+    EmailService.Attachment signedFile = StayAgreementText.attachment(forMail, signedName);
     notifications.create(
         user.id(),
         "reservation",
@@ -445,12 +463,18 @@ public class VisitRequestBusiness {
       email.sendToUser(
           ownerId,
           "Maresi — engagement signe",
-          "Le client a signe l'engagement pour cette reservation et va proceder au paiement.");
+          "Le client a signe l'engagement pour "
+              + listingTitle
+              + " et va proceder au paiement.\n\n"
+              + signedCopy,
+          signedFile);
     }
     email.sendToUser(
         user.id(),
         "Maresi — engagement signe",
-        "Merci. Payez maintenant via GeniusPay pour confirmer la reservation.");
+        "Merci. Payez maintenant via GeniusPay pour confirmer la reservation.\n\n"
+            + signedCopy,
+        signedFile);
     response.setItem(updated);
     response.setStatus(functionalError.success("Engagement signe", locale));
     return response;
