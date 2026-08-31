@@ -52,6 +52,10 @@
     "dashboard": "Tableau de bord",
     "becomeHost": "Devenir hôte"
   },
+  "nav": {
+    "home": "Accueil",
+    "more": "Plus"
+  },
   "footer": {
     "copyright": "© {{year}} Maresi. Tous droits réservés.",
     "home": "Accueil",

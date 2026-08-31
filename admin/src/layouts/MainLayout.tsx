@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { DocumentTitle } from "@/components/layout/DocumentTitle";
 
 export function MainLayout() {
@@ -8,10 +9,11 @@ export function MainLayout() {
     <div className="min-h-screen flex flex-col">
       <DocumentTitle />
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
         <Outlet />
       </main>
       <Footer />
+      <BottomNav />
     </div>
   );
 }

@@ -151,7 +151,7 @@ export function AllPropertiesPage() {
   );
 
   return (
-    <div className="font-jakarta bg-muted md:fixed md:top-[4.5rem] md:left-0 md:right-0 md:bottom-0 flex flex-col md:flex-row">
+    <div className="font-jakarta bg-muted md:fixed md:inset-x-0 md:top-0 md:bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:top-[4.5rem] lg:bottom-0 flex flex-col md:flex-row">
       <div className="hidden md:block md:w-[35%] md:h-full border-r border-border">
         <PropertiesMap
           properties={properties}

@@ -55,6 +55,17 @@
     "becomeHost": "Become a host",
     "openHostApp": "Open host app"
   },
+  "nav": {
+    "home": "Home",
+    "browse": "Browse",
+    "favorites": "Saved",
+    "visits": "Visits",
+    "account": "Account",
+    "listings": "Listings",
+    "add": "Add",
+    "wallet": "Wallet",
+    "more": "More"
+  },
   "footer": {
     "copyright": "© {{year}} Maresi. All rights reserved.",
     "home": "Home",

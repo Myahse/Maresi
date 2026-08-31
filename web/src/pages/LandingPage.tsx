@@ -102,8 +102,9 @@ export function LandingPage() {
       </section>
 
       {/* Mobile hero */}
-      <section className="sm:hidden px-4 py-6 bg-brand text-white">
-        <h1 className="text-2xl font-bold">{t("landing.heroTitle")}</h1>
+      <section className="sm:hidden px-4 pt-5 pb-6 bg-brand text-white">
+        <p className="font-extrabold italic text-xl tracking-tight">Maresi</p>
+        <h1 className="text-2xl font-bold mt-3">{t("landing.heroTitle")}</h1>
         <p className="text-white/90 mt-2 text-sm">{t("landing.heroSubtitle")}</p>
         <div className="flex gap-3 mt-4">
           <Link

@@ -16,7 +16,7 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-brand shadow-md">
+      <header className="hidden lg:block fixed top-0 left-0 right-0 z-50 bg-brand shadow-md">
         <div className="max-w-8xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
           <Link to="/" className="font-extrabold italic text-xl text-white shrink-0">
             Maresi Admin
@@ -58,7 +58,7 @@ export function Header() {
           </div>
         </div>
       </header>
-      <div className="h-16" aria-hidden />
+      <div className="hidden lg:block h-16" aria-hidden />
     </>
   );
 }

@@ -28,7 +28,8 @@
     "saving": "Saving...",
     "signingIn": "Signing in...",
     "creatingAccount": "Creating account...",
-    "user": "there"
+    "user": "there",
+    "cancel": "Cancel"
   },
   "push": {
     "title": "Enable notifications",
@@ -51,6 +52,10 @@
     "register": "Register",
     "dashboard": "Dashboard",
     "becomeHost": "Become a host"
+  },
+  "nav": {
+    "home": "Home",
+    "more": "More"
   },
   "footer": {
     "copyright": "© {{year}} Maresi. All rights reserved.",
