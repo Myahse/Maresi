@@ -8,6 +8,7 @@ import { Stepper } from "@/components/ui/stepper";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { isValidPrice, isValidUrl, hasMinPropertyPhotos, MIN_PROPERTY_PHOTOS } from "@/lib/validation";
 import { LocationMapPicker } from "@/components/map/LocationMapPicker";
+import { cn } from "@/lib/utils";
 import type { MapboxPlace } from "@/lib/mapbox";
 import type { Property } from "@/types";
 
@@ -154,7 +155,7 @@ export function PropertyCreationWizard({
   };
 
   return (
-    <div className="max-w-2xl space-y-8 font-jakarta">
+    <div className={cn("space-y-8 font-jakarta", step === 1 ? "max-w-6xl" : "max-w-2xl")}>
       <Stepper steps={steps} currentStep={step} />
 
       {error && (
@@ -193,29 +194,35 @@ export function PropertyCreationWizard({
 
       {step === 1 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.locationTitle")}</h2>
-          <p className="text-sm text-muted-foreground">{t("wizard.property.locationHint")}</p>
-          <LocationMapPicker latitude={latitude} longitude={longitude} onChange={applyPlace} />
-          {(street || city || country || location) && (
-            <dl className="rounded-2xl border border-border divide-y text-sm">
-              <div className="flex justify-between gap-4 p-3">
-                <dt className="text-muted-foreground">{t("wizard.property.street")}</dt>
-                <dd className="font-semibold text-right">{street || "—"}</dd>
-              </div>
-              <div className="flex justify-between gap-4 p-3">
-                <dt className="text-muted-foreground">{t("wizard.property.city")}</dt>
-                <dd className="font-semibold text-right">{city || "—"}</dd>
-              </div>
-              <div className="flex justify-between gap-4 p-3">
-                <dt className="text-muted-foreground">{t("wizard.property.country")}</dt>
-                <dd className="font-semibold text-right">{country || "—"}</dd>
-              </div>
-              <div className="flex justify-between gap-4 p-3">
-                <dt className="text-muted-foreground">{t("propertyForm.location")}</dt>
-                <dd className="font-semibold text-right">{location || "—"}</dd>
-              </div>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">
+            {t("wizard.property.locationTitle")}
+          </h2>
+          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+            {t("wizard.property.locationHint")}
+          </p>
+          <LocationMapPicker latitude={latitude} longitude={longitude} onChange={applyPlace}>
+            <dl className="rounded-2xl border border-border bg-card divide-y text-sm sm:text-base">
+              <AddressRow label={t("wizard.property.street")} value={street} />
+              <AddressRow label={t("wizard.property.city")} value={city} />
+              <AddressRow label={t("wizard.property.country")} value={country} />
+              <AddressRow label={t("propertyForm.location")} value={location} />
+              {(latitude || longitude) && (
+                <AddressRow
+                  label={t("wizard.property.coordinates")}
+                  value={
+                    latitude && longitude
+                      ? `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`
+                      : ""
+                  }
+                />
+              )}
             </dl>
-          )}
+            {!latitude && (
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                {t("wizard.property.locationEmpty")}
+              </p>
+            )}
+          </LocationMapPicker>
         </div>
       )}
 
@@ -410,6 +417,17 @@ export function PropertyCreationWizard({
           </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+function AddressRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+      <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:pt-0.5 sm:shrink-0">
+        {label}
+      </dt>
+      <dd className="font-semibold text-foreground break-words sm:text-right">{value || "—"}</dd>
     </div>
   );
 }

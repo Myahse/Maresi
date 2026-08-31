@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTranslation } from "react-i18next";
@@ -16,9 +16,15 @@ interface LocationMapPickerProps {
   latitude?: string;
   longitude?: string;
   onChange: (place: MapboxPlace) => void;
+  children?: ReactNode;
 }
 
-export function LocationMapPicker({ latitude, longitude, onChange }: LocationMapPickerProps) {
+export function LocationMapPicker({
+  latitude,
+  longitude,
+  onChange,
+  children,
+}: LocationMapPickerProps) {
   const { t, i18n } = useTranslation();
   const token = mapboxToken();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -82,9 +88,15 @@ export function LocationMapPicker({ latitude, longitude, onChange }: LocationMap
         const pos = markerRef.current?.getLngLat();
         if (pos) void lookup(pos.lng, pos.lat);
       });
+      void lookup(lng, lat);
     }
     mapRef.current = map;
+    const resize = () => map.resize();
+    map.on("load", resize);
+    const observer = new ResizeObserver(resize);
+    observer.observe(containerRef.current);
     return () => {
+      observer.disconnect();
       markerRef.current?.remove();
       markerRef.current = null;
       map.remove();
@@ -115,11 +127,21 @@ export function LocationMapPicker({ latitude, longitude, onChange }: LocationMap
   }
 
   return (
-    <div className="space-y-3">
-      <div className="relative">
+    <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:grid-rows-[auto_minmax(0,1fr)] lg:gap-6 lg:min-h-[28rem]">
+      <div
+        ref={containerRef}
+        className="h-56 w-full rounded-2xl overflow-hidden border-2 border-border sm:h-72 lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:h-full lg:min-h-[28rem]"
+      />
+      <div className="relative order-first lg:order-none lg:col-start-2 lg:row-start-1">
+        <label htmlFor="map-search" className="sr-only">
+          {t("wizard.property.mapSearch")}
+        </label>
         <input
+          id="map-search"
           type="search"
-          className="w-full rounded-xl border border-input px-3 py-2 text-sm"
+          enterKeyHint="search"
+          autoComplete="street-address"
+          className="w-full rounded-xl border border-input bg-background px-3 py-3 text-base sm:text-sm"
           placeholder={t("wizard.property.mapSearch")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -130,7 +152,7 @@ export function LocationMapPicker({ latitude, longitude, onChange }: LocationMap
               <li key={`${place.latitude}-${place.longitude}-${place.label}`}>
                 <button
                   type="button"
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                  className="w-full text-left px-3 py-3 text-base sm:text-sm sm:py-2 hover:bg-muted"
                   onClick={() => {
                     applyPlace(place);
                     setQuery(place.label);
@@ -143,12 +165,9 @@ export function LocationMapPicker({ latitude, longitude, onChange }: LocationMap
             ))}
           </ul>
         )}
+        {busy && <p className="mt-2 text-sm text-muted-foreground">{t("common.loading")}</p>}
       </div>
-      <div
-        ref={containerRef}
-        className="h-72 w-full rounded-2xl overflow-hidden border-2 border-border"
-      />
-      {busy && <p className="text-xs text-muted-foreground">{t("common.loading")}</p>}
+      <div className="min-w-0 lg:col-start-2 lg:row-start-2">{children}</div>
     </div>
   );
 }

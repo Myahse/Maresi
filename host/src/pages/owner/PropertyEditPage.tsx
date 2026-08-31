@@ -51,7 +51,7 @@ export function PropertyEditPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 font-jakarta">
+    <div className="container mx-auto px-4 py-6 sm:py-8 font-jakarta max-w-6xl">
       <Link to="/owner" className="text-sm text-brand hover:underline">
         ← {t("owner.title")}
       </Link>

@@ -202,6 +202,8 @@
       "street": "Street",
       "city": "City",
       "country": "Country",
+      "coordinates": "Coordinates",
+      "locationEmpty": "Search an address or tap the map. Street, city, and country will show here.",
       "pricingTitle": "Pricing & capacity",
       "pricingHint": "Nightly price in XOF. The guest pays Maresi. 90% lands in your wallet, 10% stays with Maresi.",
       "payHostHint": "Guests pay Maresi via GeniusPay. These Wave / Orange Money links are no longer used for new bookings.",

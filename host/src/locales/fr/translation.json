@@ -202,6 +202,8 @@
       "street": "Rue",
       "city": "Ville",
       "country": "Pays",
+      "coordinates": "Coordonnées",
+      "locationEmpty": "Cherchez une adresse ou touchez la carte. Rue, ville et pays s’affichent ici.",
       "pricingTitle": "Tarif et capacité",
       "pricingHint": "Prix par nuit en XOF. Le client paie Maresi. 90 % arrivent sur votre portefeuille, 10 % restent à Maresi.",
       "payHostHint": "Le client paie Maresi via GeniusPay. Ces liens Wave / Orange Money ne sont plus utilisés pour les nouvelles réservations.",
