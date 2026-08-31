@@ -89,6 +89,7 @@ public class AppProperties {
   public static class Mail {
     private String from = "";
     private String fromName = "Maresi";
+    private String brevoApiKey = "";
 
     public String getFrom() {
       return from;
@@ -104,6 +105,14 @@ public class AppProperties {
 
     public void setFromName(String fromName) {
       this.fromName = fromName;
+    }
+
+    public String getBrevoApiKey() {
+      return brevoApiKey;
+    }
+
+    public void setBrevoApiKey(String brevoApiKey) {
+      this.brevoApiKey = brevoApiKey;
     }
   }
 
