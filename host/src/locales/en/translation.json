@@ -162,7 +162,7 @@
     "stepIdentity": "Identity",
     "clientTitle": "I am looking for a place",
     "clientHint": "Browse rooms and apartments and book a stay.",
-    "hostTitle": "I want to host",
+    "hostTitle": "I am an owner",
     "hostHint": "List your apartment, room, or other residence for guests.",
     "roleRequired": "Choose whether you are a guest or a host.",
     "accountRequired": "Enter your name, email, and a password of at least 6 characters.",

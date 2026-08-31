@@ -363,80 +363,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: _list.length,
                     itemBuilder: (context, index) {
                       final property = _list[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _ListPropertyTile(
-                          property: property,
-                          isFavorite: favorites.isFavorite(property.id),
-                          onFavorite: () => favorites.toggle(property),
-                          onTap: () => widget.onOpenProperty(property),
-                        ),
+                      return PropertyCard(
+                        property: property,
+                        compact: false,
+                        isFavorite: favorites.isFavorite(property.id),
+                        onFavoriteTap: () => favorites.toggle(property),
+                        onTap: () => widget.onOpenProperty(property),
+                        noImageLabel: locale.t('details.noImage'),
                       );
                     },
                   ),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ListPropertyTile extends StatelessWidget {
-  const _ListPropertyTile({
-    required this.property,
-    required this.isFavorite,
-    required this.onFavorite,
-    required this.onTap,
-  });
-
-  final Property property;
-  final bool isFavorite;
-  final VoidCallback onFavorite;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = context.palette;
-    final imageUrl = property.images.isNotEmpty ? property.images.first : null;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(color: palette.border),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                width: 72,
-                height: 72,
-                child: imageUrl != null
-                    ? Image.network(imageUrl, fit: BoxFit.cover)
-                    : ColoredBox(color: palette.pillBg, child: Icon(Icons.home_work_outlined, color: palette.textLight)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(property.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w600, color: palette.text)),
-                  Text(property.location, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: palette.textSecondary, fontSize: 13)),
-                  Text(formatPrice(property.price), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
-                ],
-              ),
-            ),
-            IconButton(
-              icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? AppColors.favorite : palette.heartInactive),
-              onPressed: onFavorite,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
