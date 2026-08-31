@@ -11,12 +11,12 @@ import com.maresi.api.repository.PropertyRepository;
 import com.maresi.api.repository.VisitRequestRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
+import com.maresi.api.config.AppProperties;
 import com.maresi.api.service.EmailService;
 import com.maresi.api.service.FileStorageService;
 import com.maresi.api.service.StayAgreementText;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -34,6 +34,7 @@ public class VisitRequestBusiness {
   private final FunctionalError functionalError;
   private final EmailService email;
   private final FileStorageService fileStorage;
+  private final AppProperties appProperties;
 
   public VisitRequestBusiness(
       VisitRequestRepository visitRequests,
@@ -44,7 +45,8 @@ public class VisitRequestBusiness {
       RealtimeEventPublisher realtime,
       FunctionalError functionalError,
       EmailService email,
-      FileStorageService fileStorage) {
+      FileStorageService fileStorage,
+      AppProperties appProperties) {
     this.visitRequests = visitRequests;
     this.properties = properties;
     this.notifications = notifications;
@@ -54,6 +56,7 @@ public class VisitRequestBusiness {
     this.functionalError = functionalError;
     this.email = email;
     this.fileStorage = fileStorage;
+    this.appProperties = appProperties;
   }
 
   public Response<Map<String, Object>> create(Request<Map<String, Object>> request, Locale locale) {
@@ -161,6 +164,33 @@ public class VisitRequestBusiness {
     return response;
   }
 
+  public Response<Map<String, Object>> getOne(UUID id, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> item = visitRequests.findById(id).orElse(null);
+    if (item == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Demande introuvable", locale));
+      return response;
+    }
+    boolean guest = user.id().toString().equalsIgnoreCase(String.valueOf(item.get("user_id")));
+    boolean owner =
+        item.get("property_owner_id") != null
+            && user.id().toString().equalsIgnoreCase(String.valueOf(item.get("property_owner_id")));
+    boolean admin = "admin".equals(user.role());
+    if (!guest && !owner && !admin) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Action non autorisee", locale));
+      return response;
+    }
+    if (owner || admin) {
+      exposeIdentityLinks(item);
+    }
+    response.setItem(item);
+    response.setStatus(functionalError.success("Demande", locale));
+    return response;
+  }
+
   public Response<Map<String, Object>> listForOwner(Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
     var items = visitRequests.findByPropertyOwner(SecurityUtils.requireUser().id());
@@ -227,17 +257,14 @@ public class VisitRequestBusiness {
           "Signez l'engagement",
           "Votre demande a ete acceptee. Signez l'engagement de soin du logement, puis payez via GeniusPay.",
           listingId);
-      Map<String, Object> forMail = new LinkedHashMap<>(updated);
-      forMail.put("property_title", title);
-      String agreement = StayAgreementText.document(forMail, null);
       email.sendToUser(
           requesterId,
           "Maresi — demande acceptee",
           "L'hote a accepte votre demande pour "
               + title
-              + ".\nSignez l'engagement dans l'application Maresi, puis payez via GeniusPay.\n\n"
-              + agreement,
-          StayAgreementText.attachment(forMail, null));
+              + ".\n\nOuvrez cette page pour lire et signer l'engagement de soin du logement :\n"
+              + agreementUrl(id)
+              + "\n\nApres signature, vous pourrez payer via GeniusPay.");
     } else {
       notifyVisitRequestStatusUpdated(requesterId, listingId, status);
       email.sendToUser(
@@ -442,11 +469,6 @@ public class VisitRequestBusiness {
             .map(p -> p.get("title"))
             .map(Object::toString)
             .orElse("la residence");
-    Map<String, Object> forMail = new LinkedHashMap<>(updated);
-    forMail.put("property_title", listingTitle);
-    String signedName = fullName.trim();
-    String signedCopy = StayAgreementText.document(forMail, signedName);
-    EmailService.Attachment signedFile = StayAgreementText.attachment(forMail, signedName);
     notifications.create(
         user.id(),
         "reservation",
@@ -465,16 +487,14 @@ public class VisitRequestBusiness {
           "Maresi — engagement signe",
           "Le client a signe l'engagement pour "
               + listingTitle
-              + " et va proceder au paiement.\n\n"
-              + signedCopy,
-          signedFile);
+              + " et va proceder au paiement. Ouvrez Maresi Hote pour voir le dossier.");
     }
     email.sendToUser(
         user.id(),
         "Maresi — engagement signe",
-        "Merci. Payez maintenant via GeniusPay pour confirmer la reservation.\n\n"
-            + signedCopy,
-        signedFile);
+        "Merci. Votre engagement est enregistre.\nConsultez-le ici :\n"
+            + agreementUrl(id)
+            + "\n\nPayez maintenant dans Maresi via GeniusPay.");
     response.setItem(updated);
     response.setStatus(functionalError.success("Engagement signe", locale));
     return response;
@@ -493,6 +513,10 @@ public class VisitRequestBusiness {
     String stored =
         "id-card".equals(kind) ? str(row.get("id_card_photo_url")) : str(row.get("selfie_url"));
     return fileStorage.loadIdentityImage(stored);
+  }
+
+  private String agreementUrl(UUID visitId) {
+    return StayAgreementText.pageUrl(appProperties.getPayments().getSuccessUrl(), visitId);
   }
 
   private void exposeIdentityLinks(Map<String, Object> item) {

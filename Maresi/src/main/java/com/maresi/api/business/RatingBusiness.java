@@ -61,9 +61,6 @@ public class RatingBusiness {
       response.setStatus(functionalError.dataNotFound("Bien introuvable", locale));
       return response;
     }
-    if (user.id().toString().equals(String.valueOf(property.get("owner_id")))) {
-      throw ApiException.of(400, "You cannot review your own listing");
-    }
     Map<String, Object> data = request.getData() == null ? Map.of() : request.getData();
     int score = parseScore(data.get("score"));
     String comment = data.get("comment") == null ? null : data.get("comment").toString().trim();

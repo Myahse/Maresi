@@ -10,6 +10,7 @@ import { AllPropertiesPage } from "@/pages/AllPropertiesPage";
 import { PropertyDetailsPage } from "@/pages/PropertyDetailsPage";
 import { FavoritesPage } from "@/pages/FavoritesPage";
 import { VisitRequestsPage } from "@/pages/VisitRequestsPage";
+import { StayAgreementPage } from "@/pages/StayAgreementPage";
 import { ReservationPage } from "@/pages/ReservationPage";
 import { PaymentSuccessPage, PaymentErrorPage } from "@/pages/PaymentResultPages";
 import { BecomeHostPage } from "@/pages/BecomeHostPage";
@@ -61,6 +62,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <VisitRequestsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="visits/:id/agreement"
+                element={
+                  <ProtectedRoute>
+                    <StayAgreementPage />
                   </ProtectedRoute>
                 }
               />

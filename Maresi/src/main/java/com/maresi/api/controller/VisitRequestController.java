@@ -63,6 +63,12 @@ public class VisitRequestController {
     return ControllerSupport.run(() -> visitRequestService.listForOwner(loc), loc, exceptionUtils);
   }
 
+  @GetMapping("/{id}")
+  public ResponseEntity<Response<Map<String, Object>>> getOne(@PathVariable UUID id, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> visitRequestService.getOne(id, loc), loc, exceptionUtils);
+  }
+
   @PatchMapping("/{id}/status")
   public ResponseEntity<Response<Map<String, Object>>> updateStatus(
       @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {

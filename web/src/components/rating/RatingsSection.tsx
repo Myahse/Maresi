@@ -30,11 +30,22 @@ export function RatingsSection({
   useEffect(() => {
     getPropertyRatings(propertyId)
       .then(({ ratings, statistics }) => {
-        setReviews(ratings);
-        setStats(statistics);
-        onStatsChange?.(statistics.average, statistics.count);
+        const list = Array.isArray(ratings) ? ratings : [];
+        const average = Number(statistics?.average ?? 0);
+        const count = Number(statistics?.count ?? list.length);
+        setReviews(list);
+        setStats({
+          average,
+          count,
+          distribution: statistics?.distribution ?? { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        });
+        onStatsChange?.(average, count);
       })
-      .catch(() => {});
+      .catch(() => {
+        setReviews([]);
+      });
+    // onStatsChange is called with the latest fetch; omit from deps to avoid parent re-render loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propertyId, refresh]);
 
   const avg = stats?.average ?? averageRating;
@@ -81,7 +92,12 @@ export function RatingsSection({
         open={modalOpen}
         propertyId={propertyId}
         onClose={() => setModalOpen(false)}
-        onSubmitted={() => setRefresh((n) => n + 1)}
+        onSubmitted={(review) => {
+          if (review?.id) {
+            setReviews((prev) => [review, ...prev.filter((r) => r.id !== review.id)]);
+          }
+          setRefresh((n) => n + 1);
+        }}
       />
     </section>
   );

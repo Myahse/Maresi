@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maresi_mobile/models/visit_request.dart';
 import 'package:maresi_mobile/providers/locale_provider.dart';
+import 'package:maresi_mobile/screens/stay_agreement_screen.dart';
 import 'package:maresi_mobile/services/maresi_client.dart';
 import 'package:maresi_mobile/theme/app_colors.dart';
 import 'package:maresi_mobile/theme/maresi_palette.dart';
@@ -109,52 +110,10 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
   }
 
   Future<void> _signAgreement(VisitRequest visit) async {
-    final locale = context.read<LocaleProvider>();
-    final nameController = TextEditingController();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(locale.t('visits.agreementTitle')),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(locale.t('visits.agreementBody')),
-              const SizedBox(height: 8),
-              Text(locale.t('visits.agreementCare')),
-              Text(locale.t('visits.agreementDamage')),
-              Text(locale.t('visits.agreementRules')),
-              const SizedBox(height: 12),
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: locale.t('visits.agreementSignAs')),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(locale.t('common.cancel'))),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(locale.t('visits.agreementSign'))),
-        ],
-      ),
+    final signed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => StayAgreementScreen(visit: visit)),
     );
-    final name = nameController.text.trim();
-    nameController.dispose();
-    if (ok != true || name.length < 3) return;
-    setState(() => _actingId = visit.id);
-    try {
-      await maresiApi.signStayAgreement(visit.id, name);
-      if (!mounted) return;
-      await _load();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-      );
-    } finally {
-      if (mounted) setState(() => _actingId = null);
-    }
+    if (signed == true && mounted) await _load();
   }
 
   String _statusLabel(LocaleProvider locale, String status) {

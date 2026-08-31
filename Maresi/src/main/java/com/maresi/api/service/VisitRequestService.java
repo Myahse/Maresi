@@ -24,6 +24,10 @@ public class VisitRequestService {
     return visitRequestBusiness.listMine(locale);
   }
 
+  public Response<Map<String, Object>> getOne(UUID id, Locale locale) {
+    return visitRequestBusiness.getOne(id, locale);
+  }
+
   public Response<Map<String, Object>> listForOwner(Locale locale) {
     return visitRequestBusiness.listForOwner(locale);
   }

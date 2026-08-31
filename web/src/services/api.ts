@@ -164,6 +164,10 @@ export function getMyVisitRequests() {
   return api.get<import("@/types").VisitRequest[]>(`/visit-requests`);
 }
 
+export function getVisitRequest(id: string) {
+  return api.get<import("@/types").VisitRequest>(`/visit-requests/${id}`);
+}
+
 export function getOwnerVisitRequests() {
   return api.get<import("@/types").VisitRequest[]>(`/visit-requests/owner`);
 }

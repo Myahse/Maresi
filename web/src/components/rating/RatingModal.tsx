@@ -9,7 +9,7 @@ interface RatingModalProps {
   open: boolean;
   propertyId: string;
   onClose: () => void;
-  onSubmitted: () => void;
+  onSubmitted: (review?: import("@/types").PropertyRating) => void;
 }
 
 export function RatingModal({ open, propertyId, onClose, onSubmitted }: RatingModalProps) {
@@ -24,8 +24,8 @@ export function RatingModal({ open, propertyId, onClose, onSubmitted }: RatingMo
     setLoading(true);
     setError("");
     try {
-      await submitPropertyRating(propertyId, score, comment);
-      onSubmitted();
+      const saved = await submitPropertyRating(propertyId, score, comment);
+      onSubmitted(saved);
       onClose();
       setComment("");
       setScore(5);

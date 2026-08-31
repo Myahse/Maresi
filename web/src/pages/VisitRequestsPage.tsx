@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getMyVisitRequests, startReservationPayment, updateVisitRequestStatus } from "@/services/api";
-import { StayAgreementForm } from "@/components/visit/StayAgreementForm";
 import { VisitRequestCard } from "@/components/visit/VisitRequestCard";
 import { Button } from "@/components/ui/button";
 import { usePriceFormatter } from "@/context/CurrencyContext";
@@ -94,7 +94,12 @@ export function VisitRequestsPage() {
             <li key={v.id}>
               <VisitRequestCard visit={v}>
                 {v.status === "awaiting_agreement" && (
-                  <StayAgreementForm visitId={v.id} onSigned={() => void reload()} />
+                  <div className="pt-2 border-t border-gray-100">
+                    <p className="text-sm text-muted-foreground mb-3">{t("visits.agreementOpenHint")}</p>
+                    <Button asChild className="w-full rounded-full bg-brand hover:bg-brand-dark">
+                      <Link to={`/visits/${v.id}/agreement`}>{t("visits.agreementOpen")}</Link>
+                    </Button>
+                  </div>
                 )}
                 {v.status === "awaiting_payment" && (
                   <div className="space-y-3 pt-2 border-t border-gray-100">

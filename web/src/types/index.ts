@@ -90,6 +90,7 @@ export interface VisitRequest {
   requester_selfie_url?: string;
   requester_id_photo_url?: string;
   agreement_full_name?: string;
+  agreement_accepted?: boolean;
   agreement_signed_at?: string;
   owner_note?: string;
   property_price?: number;

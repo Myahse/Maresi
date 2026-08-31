@@ -23,7 +23,10 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? "/properties";
+  const fromLocation = (location.state as { from?: { pathname?: string; search?: string } })?.from;
+  const from = fromLocation?.pathname
+    ? `${fromLocation.pathname}${fromLocation.search ?? ""}`
+    : "/properties";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
