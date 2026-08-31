@@ -12,6 +12,7 @@ public class AppProperties {
   private GeniusPay geniuspay = new GeniusPay();
   private Payments payments = new Payments();
   private Push push = new Push();
+  private Mail mail = new Mail();
 
   public Jwt getJwt() {
     return jwt;
@@ -75,6 +76,35 @@ public class AppProperties {
 
   public void setPush(Push push) {
     this.push = push;
+  }
+
+  public Mail getMail() {
+    return mail;
+  }
+
+  public void setMail(Mail mail) {
+    this.mail = mail;
+  }
+
+  public static class Mail {
+    private String from = "";
+    private String fromName = "Maresi";
+
+    public String getFrom() {
+      return from;
+    }
+
+    public void setFrom(String from) {
+      this.from = from;
+    }
+
+    public String getFromName() {
+      return fromName;
+    }
+
+    public void setFromName(String fromName) {
+      this.fromName = fromName;
+    }
   }
 
   public static class R2 {

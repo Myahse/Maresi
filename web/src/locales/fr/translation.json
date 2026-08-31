@@ -342,6 +342,7 @@
       "pending": "En attente",
       "accepted": "Acceptée",
       "declined": "Refusée",
+      "awaiting_agreement": "Signer l'engagement",
       "awaiting_payment": "Payer Maresi",
       "payment_sent": "Paiement déclaré",
       "confirmed": "Confirmée",
@@ -349,7 +350,16 @@
     },
     "cancelCta": "Annuler la réservation",
     "cancelConfirm": "Annuler cette réservation ?",
-    "cancelPaidHint": "Si vous avez déjà payé, 90 % sont remboursés. La commission Maresi de 10 % n'est pas remboursée. Impossible si l'hôte a déjà retiré."
+    "cancelPaidHint": "Si vous avez déjà payé, 90 % sont remboursés. La commission Maresi de 10 % n'est pas remboursée. Impossible si l'hôte a déjà retiré.",
+    "agreementTitle": "Engagement de soin du logement",
+    "agreementBody": "Avant de payer, vous confirmez que vous prendrez soin de ce logement.",
+    "agreementCare": "Je prendrai soin de la résidence et la laisserai propre.",
+    "agreementDamage": "Je ne casserai, volerai ni n'endommagerai le mobilier, les clés ou le matériel. Je suis responsable des dégâts que je cause.",
+    "agreementRules": "Je respecterai le règlement intérieur, les voisins et le nombre d'occupants.",
+    "agreementSignAs": "Signez avec votre nom complet",
+    "agreementNamePlaceholder": "Prénom et nom",
+    "agreementSign": "Signer et passer au paiement",
+    "agreementFailed": "Impossible d'enregistrer l'engagement"
   },
   "payments": {
     "payHostAmount": "À payer",

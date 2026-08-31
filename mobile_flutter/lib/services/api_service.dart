@@ -317,6 +317,18 @@ class ApiService implements MaresiApi {
   }
 
   @override
+  Future<VisitRequest> signStayAgreement(String id, String fullName) async {
+    final res = await http.post(
+      Uri.parse('${AppConfig.apiPrefix}/visit-requests/$id/agreement'),
+      headers: await _authHeaders(),
+      body: _wrapBody({'full_name': fullName, 'accepted': true}),
+    );
+    final data = _parseBody(res);
+    if (res.statusCode >= 400) _throwFromResponse(res, data);
+    return VisitRequest.fromJson(_unwrapEnvelope(data) as Map<String, dynamic>);
+  }
+
+  @override
   Future<OwnerSubscription> getMySubscription() async {
     final res = await http.get(
       Uri.parse('${AppConfig.apiPrefix}/subscriptions/me'),

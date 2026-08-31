@@ -54,6 +54,7 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
 
   bool _canCancel(String status) =>
       status == 'pending' ||
+      status == 'awaiting_agreement' ||
       status == 'awaiting_payment' ||
       status == 'payment_sent' ||
       status == 'confirmed';
@@ -96,6 +97,55 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
         await _openLink(payment.checkoutUrl!);
         return;
       }
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) setState(() => _actingId = null);
+    }
+  }
+
+  Future<void> _signAgreement(VisitRequest visit) async {
+    final locale = context.read<LocaleProvider>();
+    final nameController = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(locale.t('visits.agreementTitle')),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(locale.t('visits.agreementBody')),
+              const SizedBox(height: 8),
+              Text(locale.t('visits.agreementCare')),
+              Text(locale.t('visits.agreementDamage')),
+              Text(locale.t('visits.agreementRules')),
+              const SizedBox(height: 12),
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: locale.t('visits.agreementSignAs')),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(locale.t('common.cancel'))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(locale.t('visits.agreementSign'))),
+        ],
+      ),
+    );
+    final name = nameController.text.trim();
+    nameController.dispose();
+    if (ok != true || name.length < 3) return;
+    setState(() => _actingId = visit.id);
+    try {
+      await maresiApi.signStayAgreement(visit.id, name);
+      if (!mounted) return;
       await _load();
     } catch (e) {
       if (!mounted) return;
@@ -162,6 +212,16 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
                                   _statusLabel(locale, visit.status),
                                   style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
                                 ),
+                                if (visit.status == 'awaiting_agreement') ...[
+                                  const SizedBox(height: 8),
+                                  Text(locale.t('visits.agreementBody'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
+                                  const SizedBox(height: 12),
+                                  FilledButton(
+                                    onPressed: _actingId == visit.id ? null : () => _signAgreement(visit),
+                                    style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                                    child: Text(locale.t('visits.agreementSign')),
+                                  ),
+                                ],
                                 if (visit.status == 'awaiting_payment') ...[
                                   const SizedBox(height: 8),
                                   Text(locale.t('payments.payMaresiHint'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),

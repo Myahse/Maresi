@@ -32,4 +32,13 @@ public class VisitRequestService {
       UUID id, Request<Map<String, Object>> request, Locale locale) {
     return visitRequestBusiness.updateStatus(id, request, locale);
   }
+
+  public Response<Map<String, Object>> signAgreement(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    return visitRequestBusiness.signAgreement(id, request, locale);
+  }
+
+  public com.maresi.api.service.FileStorageService.StoredMedia loadRequesterIdentity(UUID id, String kind) {
+    return visitRequestBusiness.loadRequesterIdentity(id, kind);
+  }
 }

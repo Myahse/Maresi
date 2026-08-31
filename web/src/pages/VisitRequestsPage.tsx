@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getMyVisitRequests, startReservationPayment, updateVisitRequestStatus } from "@/services/api";
-import { VisitRequestCard } from "@/components/visit/VisitRequestCard";
+import { StayAgreementForm } from "@/components/visit/StayAgreementForm";
 import { Button } from "@/components/ui/button";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import type { VisitRequest } from "@/types";
@@ -35,6 +35,7 @@ export function VisitRequestsPage() {
 
   const canCancel = (status: VisitRequest["status"]) =>
     status === "pending" ||
+    status === "awaiting_agreement" ||
     status === "awaiting_payment" ||
     status === "payment_sent" ||
     status === "confirmed";
@@ -85,6 +86,9 @@ export function VisitRequestsPage() {
           {visits.map((v) => (
             <li key={v.id}>
               <VisitRequestCard visit={v}>
+                {v.status === "awaiting_agreement" && (
+                  <StayAgreementForm visitId={v.id} onSigned={() => void reload()} />
+                )}
                 {v.status === "awaiting_payment" && (
                   <div className="space-y-3 pt-2 border-t border-gray-100">
                     <p className="text-sm font-semibold text-foreground">

@@ -179,6 +179,13 @@ export function updateVisitRequestStatus(
   });
 }
 
+export function signStayAgreement(id: string, fullName: string) {
+  return api.post<import("@/types").VisitRequest>(`/visit-requests/${id}/agreement`, {
+    full_name: fullName,
+    accepted: true,
+  });
+}
+
 export function getMySubscription() {
   return api.get<import("@/types").OwnerSubscription>(`/subscriptions/me`);
 }

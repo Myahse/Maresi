@@ -12,8 +12,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.maresi.api.service.FileStorageService.StoredMedia;
 
 @RestController
 @RequestMapping("/api/visit-requests")
@@ -73,5 +76,36 @@ public class VisitRequestController {
         },
         loc,
         exceptionUtils);
+  }
+
+  @PostMapping("/{id}/agreement")
+  public ResponseEntity<Response<Map<String, Object>>> signAgreement(
+      @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return visitRequestService.signAgreement(id, request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
+  @GetMapping("/{id}/identity/{kind}")
+  public ResponseEntity<byte[]> identityPhoto(@PathVariable UUID id, @PathVariable String kind) {
+    StoredMedia media = visitRequestService.loadRequesterIdentity(id, kind);
+    if (media == null) return ResponseEntity.notFound().build();
+    MediaType type;
+    try {
+      type = MediaType.parseMediaType(media.contentType());
+    } catch (Exception e) {
+      type = MediaType.IMAGE_JPEG;
+    }
+    return ResponseEntity.ok()
+        .contentType(type)
+        .cacheControl(CacheControl.noStore())
+        .body(media.bytes());
   }
 }

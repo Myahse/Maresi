@@ -342,6 +342,7 @@
       "pending": "Pending validation",
       "accepted": "Accepted",
       "declined": "Declined",
+      "awaiting_agreement": "Sign care agreement",
       "awaiting_payment": "Pay Maresi",
       "payment_sent": "Payment declared",
       "confirmed": "Confirmed",
@@ -349,7 +350,16 @@
     },
     "cancelCta": "Cancel reservation",
     "cancelConfirm": "Cancel this reservation?",
-    "cancelPaidHint": "If you already paid, 90% is refunded. Maresi's 10% commission is not refunded. Not possible if the host has already withdrawn."
+    "cancelPaidHint": "If you already paid, 90% is refunded. Maresi's 10% commission is not refunded. Not possible if the host has already withdrawn.",
+    "agreementTitle": "Stay care agreement",
+    "agreementBody": "Before paying, you confirm you will treat this home with care.",
+    "agreementCare": "I will take care of the residence and leave it clean.",
+    "agreementDamage": "I will not break, steal, or damage furniture, keys, or equipment. I am responsible for any damage I cause.",
+    "agreementRules": "I will respect house rules, neighbours, and occupancy limits.",
+    "agreementSignAs": "Sign with your full legal name",
+    "agreementNamePlaceholder": "First and last name",
+    "agreementSign": "Sign and continue to payment",
+    "agreementFailed": "Could not save the agreement"
   },
   "payments": {
     "payHostAmount": "Amount due",

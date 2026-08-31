@@ -307,6 +307,11 @@ class MockApiService implements MaresiApi {
   }
 
   @override
+  Future<VisitRequest> signStayAgreement(String id, String fullName) async {
+    return updateVisitRequestStatus(id, 'awaiting_payment');
+  }
+
+  @override
   Future<OwnerSubscription> getMySubscription() async {
     await _delay();
     if (_sessionUser == null) throw Exception('Authentification requise');

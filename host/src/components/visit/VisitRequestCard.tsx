@@ -1,12 +1,14 @@
 import { useTranslation } from "react-i18next";
-import { Calendar, Clock, Users, Phone, MapPin, MessageSquare } from "lucide-react";
+import { Calendar, Clock, Users, Phone, MapPin, MessageSquare, CreditCard, Mail } from "lucide-react";
 import type { VisitRequest, VisitRequestStatus } from "@/types";
 import { cn } from "@/lib/utils";
+import { AuthImage } from "@/components/visit/AuthImage";
 
 const STATUS_STYLES: Record<VisitRequestStatus, string> = {
   pending: "bg-amber-100 text-amber-800 border-amber-200",
   accepted: "bg-emerald-100 text-emerald-800 border-emerald-200",
   declined: "bg-red-100 text-red-800 border-red-200",
+  awaiting_agreement: "bg-orange-100 text-orange-800 border-orange-200",
   awaiting_payment: "bg-sky-100 text-sky-800 border-sky-200",
   payment_sent: "bg-violet-100 text-violet-800 border-violet-200",
   confirmed: "bg-emerald-100 text-emerald-800 border-emerald-200",
@@ -55,14 +57,65 @@ export function VisitRequestCard({ visit, showRequester, children }: VisitReques
           </span>
         </div>
 
-        {showRequester && (visit.requester_name || visit.requester_email) && (
-          <p className="text-sm text-muted-foreground">
-            {t("visits.requester")}:{" "}
-            <span className="font-semibold text-foreground">
-              {visit.requester_name}
-              {visit.requester_email ? ` · ${visit.requester_email}` : ""}
-            </span>
-          </p>
+        {showRequester && (
+          <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t("visits.clientFile")}
+            </p>
+            <p className="text-sm font-semibold text-foreground">{visit.requester_name || "—"}</p>
+            {visit.requester_email && (
+              <p className="text-sm flex items-center gap-2">
+                <Mail className="h-4 w-4 text-brand shrink-0" />
+                <a href={`mailto:${visit.requester_email}`} className="hover:text-brand break-all">
+                  {visit.requester_email}
+                </a>
+              </p>
+            )}
+            {(visit.requester_phone || visit.contact_phone) && (
+              <p className="text-sm flex items-center gap-2">
+                <Phone className="h-4 w-4 text-brand shrink-0" />
+                <a href={`tel:${visit.contact_phone || visit.requester_phone}`} className="hover:text-brand">
+                  {visit.contact_phone || visit.requester_phone}
+                </a>
+              </p>
+            )}
+            {(visit.id_card || visit.requester_id_card) && (
+              <p className="text-sm flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-brand shrink-0" />
+                <span>
+                  {t("visits.idCard")}: {visit.id_card || visit.requester_id_card}
+                </span>
+              </p>
+            )}
+            {(visit.requester_selfie_url || visit.requester_id_photo_url) && (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">{t("visits.selfie")}</p>
+                  <AuthImage
+                    src={visit.requester_selfie_url}
+                    alt={t("visits.selfie")}
+                    className="h-28 w-full rounded-lg object-cover bg-muted"
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">{t("visits.idPhoto")}</p>
+                  <AuthImage
+                    src={visit.requester_id_photo_url}
+                    alt={t("visits.idPhoto")}
+                    className="h-28 w-full rounded-lg object-cover bg-muted"
+                  />
+                </div>
+              </div>
+            )}
+            {visit.agreement_full_name && (
+              <p className="text-xs text-muted-foreground">
+                {t("visits.signedBy")}: {visit.agreement_full_name}
+                {visit.agreement_signed_at
+                  ? ` · ${new Date(visit.agreement_signed_at).toLocaleString()}`
+                  : ""}
+              </p>
+            )}
+          </div>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">

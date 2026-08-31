@@ -92,7 +92,10 @@ public class VisitRequestRepository {
   public List<Map<String, Object>> findByPropertyOwner(UUID ownerId) {
     return jdbc.query(
         """
-        SELECT vr.*, p.title AS property_title, u.full_name AS requester_name, u.email AS requester_email
+        SELECT vr.*, p.title AS property_title, p.location,
+               u.full_name AS requester_name, u.email AS requester_email,
+               u.phone AS requester_phone, u.id_card AS requester_id_card,
+               u.selfie_url AS requester_selfie_url, u.id_card_photo_url AS requester_id_photo_url
         FROM visit_requests vr
         JOIN properties p ON vr.property_id = p.id
         JOIN users u ON vr.user_id = u.id
@@ -132,6 +135,49 @@ public class VisitRequestRepository {
             (rs, rowNum) -> RowMaps.visitRequest(rs),
             status,
             id)
+        .stream()
+        .findFirst();
+  }
+
+  public Optional<Map<String, Object>> signAgreement(UUID id, UUID userId, String fullName) {
+    return jdbc.query(
+            """
+            UPDATE visit_requests
+            SET status = 'awaiting_payment',
+                agreement_full_name = ?,
+                agreement_accepted = TRUE,
+                agreement_signed_at = NOW()
+            WHERE id = ? AND user_id = ? AND status = 'awaiting_agreement'
+            RETURNING *
+            """,
+            (rs, rowNum) -> RowMaps.visitRequest(rs),
+            fullName,
+            id,
+            userId)
+        .stream()
+        .findFirst();
+  }
+
+  public Optional<Map<String, Object>> findRequesterIdentity(UUID visitId) {
+    return jdbc.query(
+            """
+            SELECT vr.id, vr.user_id, p.owner_id AS property_owner_id,
+                   u.selfie_url, u.id_card_photo_url
+            FROM visit_requests vr
+            JOIN properties p ON vr.property_id = p.id
+            JOIN users u ON vr.user_id = u.id
+            WHERE vr.id = ?
+            """,
+            (rs, rowNum) -> {
+              java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+              m.put("id", rs.getObject("id"));
+              m.put("user_id", rs.getObject("user_id"));
+              m.put("property_owner_id", rs.getObject("property_owner_id"));
+              m.put("selfie_url", rs.getString("selfie_url"));
+              m.put("id_card_photo_url", rs.getString("id_card_photo_url"));
+              return m;
+            },
+            visitId)
         .stream()
         .findFirst();
   }

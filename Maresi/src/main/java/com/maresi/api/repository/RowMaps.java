@@ -113,6 +113,13 @@ public final class RowMaps {
     putIfPresent(rs, m, "location");
     putIfPresent(rs, m, "requester_name");
     putIfPresent(rs, m, "requester_email");
+    putIfPresent(rs, m, "requester_phone");
+    putIfPresent(rs, m, "requester_id_card");
+    putIfPresent(rs, m, "requester_selfie_url");
+    putIfPresent(rs, m, "requester_id_photo_url");
+    putIfPresent(rs, m, "agreement_full_name");
+    putIfPresent(rs, m, "agreement_accepted");
+    putIfPresent(rs, m, "agreement_signed_at");
     putIfPresent(rs, m, "property_price");
     putIfPresent(rs, m, "property_owner_id");
     putIfPresent(rs, m, "wave_payment_url");

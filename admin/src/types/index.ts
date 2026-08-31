@@ -59,6 +59,7 @@ export type VisitRequestStatus =
   | "pending"
   | "accepted"
   | "declined"
+  | "awaiting_agreement"
   | "awaiting_payment"
   | "payment_sent"
   | "confirmed"

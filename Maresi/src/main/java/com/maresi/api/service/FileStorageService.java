@@ -63,6 +63,8 @@ public class FileStorageService {
   private static final int R2_PUT_THREADS = 4;
   private static final Pattern PROPERTY_KEY =
       Pattern.compile("(?:^|/)(properties/[A-Za-z0-9._-]+)", Pattern.CASE_INSENSITIVE);
+  private static final Pattern IDENTITY_KEY =
+      Pattern.compile("(?:^|/)(identity/[A-Za-z0-9._-]+)", Pattern.CASE_INSENSITIVE);
 
   private final Path propertyDir;
   private final Path identityDir;
@@ -323,6 +325,38 @@ public class FileStorageService {
     }
   }
 
+  public StoredMedia loadIdentityImage(String stored) {
+    String key = extractIdentityObjectKey(stored);
+    if (key == null) return null;
+    if (r2Client != null) {
+      try {
+        GetObjectRequest request = GetObjectRequest.builder().bucket(r2.getBucket()).key(key).build();
+        try (ResponseInputStream<GetObjectResponse> in = r2Client.getObject(request)) {
+          String contentType = in.response().contentType();
+          if (contentType == null || contentType.isBlank()) contentType = contentTypeForKey(key);
+          return new StoredMedia(in.readAllBytes(), contentType);
+        }
+      } catch (NoSuchKeyException e) {
+        return null;
+      } catch (S3Exception e) {
+        if (e.statusCode() == 404) return null;
+        log.error("R2 identity get failed for key={}: {}", key, e.getMessage());
+        return null;
+      } catch (IOException e) {
+        log.error("R2 identity read failed for key={}: {}", key, e.getMessage());
+        return null;
+      }
+    }
+    if (identityDir == null) return null;
+    Path target = identityDir.resolve(key.substring(key.lastIndexOf('/') + 1)).normalize();
+    if (!target.startsWith(identityDir) || !Files.isRegularFile(target)) return null;
+    try {
+      return new StoredMedia(Files.readAllBytes(target), contentTypeForKey(key));
+    } catch (IOException e) {
+      return null;
+    }
+  }
+
   private PreparedImage prepareImage(MultipartFile file, String folder) {
     String contentType = resolveImageType(file);
     if (contentType == null || !ALLOWED.contains(contentType)) {
@@ -448,6 +482,18 @@ public class FileStorageService {
     int hash = value.indexOf('#');
     if (hash >= 0) value = value.substring(0, hash);
     Matcher matcher = PROPERTY_KEY.matcher(value);
+    if (!matcher.find()) return null;
+    String key = matcher.group(1);
+    if (key.contains("..")) return null;
+    return key;
+  }
+
+  static String extractIdentityObjectKey(String stored) {
+    if (stored == null || stored.isBlank()) return null;
+    String value = stored.trim().replace('\\', '/');
+    int query = value.indexOf('?');
+    if (query >= 0) value = value.substring(0, query);
+    Matcher matcher = IDENTITY_KEY.matcher(value);
     if (!matcher.find()) return null;
     String key = matcher.group(1);
     if (key.contains("..")) return null;
