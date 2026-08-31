@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { useUserLocation } from "@/context/LocationContext";
 import { reverseGeocode } from "@/lib/mapbox";
-
-const PROPERTY_TYPES = ["apartment", "house", "studio"] as const;
+import { PROPERTY_TYPES } from "@/lib/amenities";
 
 export interface FilterValues {
   location: string;

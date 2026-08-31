@@ -50,7 +50,20 @@
   "propertyTypes": {
     "apartment": "Appartement",
     "house": "Maison",
-    "studio": "Studio"
+    "studio": "Studio",
+    "residence": "Résidence"
+  },
+  "amenities": {
+    "wifi": "Wi-Fi",
+    "ac": "Climatisation",
+    "parking": "Parking",
+    "security": "Sécurité",
+    "pool": "Piscine",
+    "kitchen": "Cuisine équipée",
+    "balcony": "Balcon / terrasse",
+    "garage": "Garage",
+    "hotWater": "Eau chaude",
+    "furnished": "Meublé"
   },
   "header": {
     "browse": "Parcourir",
@@ -60,7 +73,7 @@
     "login": "Connexion",
     "register": "S'inscrire",
     "dashboard": "Tableau de bord",
-    "becomeHost": "Devenir hôte"
+    "becomeHost": "Je suis propriétaire"
   },
   "nav": {
     "home": "Accueil",
@@ -81,7 +94,7 @@
     "services": "Services",
     "serviceListings": "Annonces immobilières",
     "serviceVisits": "Demandes de visite",
-    "serviceOwner": "Devenir hôte",
+    "serviceOwner": "Je suis propriétaire",
     "contact": "Contact",
     "addressLine1": "Plateau, Abidjan",
     "addressLine2": "Côte d'Ivoire",
@@ -197,7 +210,7 @@
       "validateVisitsDesc": "Accepter ou refuser les réservations",
       "subscription": "Abonnement",
       "subscriptionDesc": "Activez votre forfait pour publier des résidences",
-      "becomeHost": "Devenir hôte",
+      "becomeHost": "Je suis propriétaire",
       "becomeHostDesc": "Demandez à publier des résidences sur Maresi"
     }
   },
@@ -210,6 +223,7 @@
         "basics": "Infos",
         "location": "Lieu",
         "pricing": "Tarifs",
+        "amenities": "Équipements",
         "media": "Médias",
         "review": "Validation"
       },
@@ -229,6 +243,9 @@
       "payHostHint": "Le client paie Maresi via GeniusPay. Ces liens Wave / Orange Money ne sont plus utilisés pour les nouvelles réservations.",
       "waveUrl": "Lien Wave (si vous êtes marchand)",
       "orangeUrl": "Lien Orange Money (si vous êtes marchand)",
+      "amenitiesTitle": "Équipements",
+      "amenitiesHint": "Cochez ce que les voyageurs trouveront dans la résidence.",
+      "amenitiesEmpty": "Aucun",
       "mediaTitle": "Photos et visite virtuelle",
       "mediaHint": "Ajoutez au moins {{count}} photos du lieu et un lien 360° optionnel.",
       "reviewTitle": "Vérifier et publier",
@@ -478,7 +495,7 @@
     "fr": "Français"
   },
   "hostApply": {
-    "title": "Devenir hôte",
+    "title": "Je suis propriétaire",
     "hint": "Présentez-vous. Un admin validera votre demande avant de publier des résidences.",
     "phone": "Téléphone",
     "city": "Ville",

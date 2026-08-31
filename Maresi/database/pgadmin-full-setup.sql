@@ -117,7 +117,8 @@ ALTER TABLE visit_requests
 
 ALTER TABLE properties
   ADD COLUMN IF NOT EXISTS bedrooms INTEGER,
-  ADD COLUMN IF NOT EXISTS max_guests INTEGER;
+  ADD COLUMN IF NOT EXISTS max_guests INTEGER,
+  ADD COLUMN IF NOT EXISTS amenities TEXT[] DEFAULT '{}';
 
 -- ========== 004_visit_request_id_card.sql ==========
 ALTER TABLE visit_requests

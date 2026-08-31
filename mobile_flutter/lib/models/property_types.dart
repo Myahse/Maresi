@@ -3,6 +3,7 @@ abstract final class PropertyTypes {
   static const house = 'house';
   static const apartment = 'apartment';
   static const studio = 'studio';
+  static const residence = 'residence';
 
-  static const all = [apartment, studio, house];
+  static const all = [apartment, studio, house, residence];
 }

@@ -23,6 +23,8 @@
     "status": "Status",
     "property": "Property",
     "night": "/ night",
+    "rooms": "{{count}} room(s)",
+    "guests": "{{count}} guest(s)",
     "perNight": "Price (per night)",
     "photos": "Photos",
     "saving": "Saving...",
@@ -50,7 +52,20 @@
   "propertyTypes": {
     "apartment": "Apartment",
     "house": "House",
-    "studio": "Studio"
+    "studio": "Studio",
+    "residence": "Residence"
+  },
+  "amenities": {
+    "wifi": "Wi-Fi",
+    "ac": "Air conditioning",
+    "parking": "Parking",
+    "security": "Security",
+    "pool": "Pool",
+    "kitchen": "Equipped kitchen",
+    "balcony": "Balcony / terrace",
+    "garage": "Garage",
+    "hotWater": "Hot water",
+    "furnished": "Furnished"
   },
   "header": {
     "browse": "Browse",
@@ -60,7 +75,7 @@
     "login": "Login",
     "register": "Register",
     "dashboard": "Dashboard",
-    "becomeHost": "Become a host",
+    "becomeHost": "I am an owner",
     "openHostApp": "Open host app"
   },
   "nav": {
@@ -82,7 +97,7 @@
     "services": "Services",
     "serviceListings": "Property listings",
     "serviceVisits": "Visit requests",
-    "serviceOwner": "Become a host",
+    "serviceOwner": "I am an owner",
     "contact": "Contact",
     "addressLine1": "Plateau, Abidjan",
     "addressLine2": "Côte d'Ivoire",
@@ -199,7 +214,7 @@
       "validateVisitsDesc": "Accept or decline visit & stay requests",
       "subscription": "Subscription",
       "subscriptionDesc": "Activate your owner plan to publish listings",
-      "becomeHost": "Become a host",
+      "becomeHost": "I am an owner",
       "becomeHostDesc": "Apply to list residences on Maresi",
       "openHost": "Host app",
       "openHostDesc": "Manage listings, bookings, and your wallet"
@@ -321,6 +336,7 @@
     "requestSent": "Request sent",
     "sendRequest": "Send request",
     "description": "Description",
+    "amenities": "Amenities",
     "location": "Location",
     "reserveTitle": "Reserve this residence",
     "reserveHint": "Multi-step booking with stay dates, visit slot, and owner validation.",
@@ -468,7 +484,7 @@
     "fr": "Français"
   },
   "hostApply": {
-    "title": "Become a host",
+    "title": "I am an owner",
     "hint": "Tell us about yourself. An admin will review your request before you can list residences.",
     "phone": "Phone",
     "city": "City",

@@ -26,13 +26,24 @@ public class PropertyRepository {
     this.jdbc = jdbc;
   }
 
-  private static final String NOT_RESERVED =
+  static final String NOT_IN_RESERVATION =
       """
        AND NOT EXISTS (
          SELECT 1 FROM visit_requests vr
          WHERE vr.property_id = p.id
-           AND vr.status = 'confirmed'
-           AND (vr.check_out IS NULL OR vr.check_out >= CURRENT_DATE)
+           AND vr.status IN (
+             'pending',
+             'accepted',
+             'awaiting_agreement',
+             'awaiting_payment',
+             'payment_sent',
+             'confirmed'
+           )
+           AND (
+             vr.status <> 'confirmed'
+             OR vr.check_out IS NULL
+             OR vr.check_out >= CURRENT_DATE
+           )
        )
       """;
 
@@ -54,7 +65,7 @@ public class PropertyRepository {
       params.add(ownerId);
     }
     if (excludeReserved) {
-      sql.append(NOT_RESERVED);
+      sql.append(NOT_IN_RESERVATION);
     }
     if (location != null && !location.isBlank()) {
       sql.append(" AND p.location ILIKE ?");
@@ -109,9 +120,9 @@ public class PropertyRepository {
                   INSERT INTO properties (
                     owner_id, title, description, price, location, property_type, images,
                     latitude, longitude, bedrooms, max_guests, virtual_tour_url,
-                    wave_payment_url, orange_money_url, is_active
+                    wave_payment_url, orange_money_url, is_active, amenities
                   )
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                   RETURNING *
                   """)) {
             ps.setObject(1, ownerId);
@@ -130,6 +141,8 @@ public class PropertyRepository {
             ps.setObject(14, extra.get("orange_money_url"));
             Object active = extra.get("is_active");
             ps.setObject(15, active instanceof Boolean b ? b : Boolean.TRUE);
+            Array amenityArray = conn.createArrayOf("text", toTextArray(extra.get("amenities")));
+            ps.setArray(16, amenityArray);
             try (var rs = ps.executeQuery()) {
               if (rs.next()) return RowMaps.property(rs);
               throw new IllegalStateException("Insert failed");
@@ -154,7 +167,8 @@ public class PropertyRepository {
             "max_guests",
             "virtual_tour_url",
             "wave_payment_url",
-            "orange_money_url");
+            "orange_money_url",
+            "amenities");
     List<String> updateKeys = new ArrayList<>();
     List<Object> updateValues = new ArrayList<>();
     for (String key : keys) {
@@ -174,9 +188,8 @@ public class PropertyRepository {
             int idx = 1;
             for (int i = 0; i < updateValues.size(); i++) {
               Object v = updateValues.get(i);
-              if ("images".equals(updateKeys.get(i)) && v instanceof List<?> list) {
-                String[] arr = list.stream().map(Object::toString).toArray(String[]::new);
-                ps.setArray(idx++, conn.createArrayOf("text", arr));
+              if (("images".equals(updateKeys.get(i)) || "amenities".equals(updateKeys.get(i)))) {
+                ps.setArray(idx++, conn.createArrayOf("text", toTextArray(v)));
               } else {
                 ps.setObject(idx++, v);
               }
@@ -192,6 +205,22 @@ public class PropertyRepository {
 
   public boolean remove(UUID id) {
     return jdbc.update("DELETE FROM properties WHERE id = ?", id) > 0;
+  }
+
+  private static String[] toTextArray(Object raw) {
+    if (raw instanceof List<?> list) {
+      return list.stream()
+          .filter(item -> item != null && !item.toString().isBlank())
+          .map(item -> item.toString().trim())
+          .toArray(String[]::new);
+    }
+    if (raw instanceof String text && !text.isBlank()) {
+      return java.util.Arrays.stream(text.split(","))
+          .map(String::trim)
+          .filter(part -> !part.isEmpty())
+          .toArray(String[]::new);
+    }
+    return new String[0];
   }
 
   public List<String> allImageUrls() {

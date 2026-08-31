@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS properties (
   location VARCHAR(500) NOT NULL,
   property_type VARCHAR(50) NOT NULL,
   images TEXT[] DEFAULT '{}',
+  amenities TEXT[] DEFAULT '{}',
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

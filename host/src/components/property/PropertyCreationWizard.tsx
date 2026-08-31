@@ -15,8 +15,7 @@ import { LocationMapPicker } from "@/components/map/LocationMapPicker";
 import { cn } from "@/lib/utils";
 import type { MapboxPlace } from "@/lib/mapbox";
 import type { Property } from "@/types";
-
-const PROPERTY_TYPES = ["apartment", "house", "studio"] as const;
+import { PROPERTY_AMENITY_IDS, PROPERTY_TYPES, normalizeAmenities } from "@/lib/amenities";
 
 interface PropertyCreationWizardProps {
   initial?: Partial<Property>;
@@ -48,6 +47,7 @@ export function PropertyCreationWizard({
   const [price, setPrice] = useState(initial?.price?.toString() ?? "");
   const [bedrooms, setBedrooms] = useState(initial?.bedrooms?.toString() ?? "1");
   const [max_guests, setMaxGuests] = useState(initial?.max_guests?.toString() ?? "2");
+  const [amenities, setAmenities] = useState<string[]>(() => normalizeAmenities(initial?.amenities));
   const [virtual_tour_url, setVirtualTourUrl] = useState(initial?.virtual_tour_url ?? "");
   const [wave_payment_url, setWavePaymentUrl] = useState(initial?.wave_payment_url ?? "");
   const [orange_money_url, setOrangeMoneyUrl] = useState(initial?.orange_money_url ?? "");
@@ -76,6 +76,7 @@ export function PropertyCreationWizard({
     { id: "basics", label: t("wizard.property.steps.basics") },
     { id: "location", label: t("wizard.property.steps.location") },
     { id: "pricing", label: t("wizard.property.steps.pricing") },
+    { id: "amenities", label: t("wizard.property.steps.amenities") },
     { id: "media", label: t("wizard.property.steps.media") },
     { id: "review", label: t("wizard.property.steps.review") },
   ];
@@ -86,18 +87,18 @@ export function PropertyCreationWizard({
         if (!title.trim()) return t("wizard.property.errors.title");
         if (title.trim().length < 5) return t("wizard.property.errors.titleShort");
         if (!description.trim()) return t("wizard.property.errors.description");
+        if (!bedrooms || Number(bedrooms) < 1) return t("wizard.property.errors.bedrooms");
         return null;
       case 1:
         if (!latitude || !longitude || !location.trim()) return t("wizard.property.errors.mapPin");
         return null;
       case 2:
         if (!isValidPrice(price)) return t("wizard.property.errors.price");
-        if (!bedrooms || Number(bedrooms) < 1) return t("wizard.property.errors.bedrooms");
         if (!max_guests || Number(max_guests) < 1) return t("wizard.property.errors.guests");
         if (wave_payment_url.trim() && !isValidUrl(wave_payment_url)) return t("wizard.property.errors.url");
         if (orange_money_url.trim() && !isValidUrl(orange_money_url)) return t("wizard.property.errors.url");
         return null;
-      case 3:
+      case 4:
         if (existingUrls.length + images.length < MIN_PROPERTY_PHOTOS) {
           return t("wizard.property.errors.photosMin", { count: MIN_PROPERTY_PHOTOS });
         }
@@ -222,6 +223,8 @@ export function PropertyCreationWizard({
     if (price) formData.set("price", price);
     if (bedrooms) formData.set("bedrooms", bedrooms);
     if (max_guests) formData.set("max_guests", max_guests);
+    if (amenities.length === 0) formData.append("amenities", "");
+    amenities.forEach((id) => formData.append("amenities", id));
     if (virtual_tour_url.trim()) formData.set("virtual_tour_url", virtual_tour_url.trim());
     if (wave_payment_url.trim()) formData.set("wave_payment_url", wave_payment_url.trim());
     if (orange_money_url.trim()) formData.set("orange_money_url", orange_money_url.trim());
@@ -280,15 +283,27 @@ export function PropertyCreationWizard({
             <Label htmlFor="title">{t("propertyForm.title")} *</Label>
             <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="type">{t("propertyForm.propertyType")} *</Label>
-            <Select id="type" value={property_type} onChange={(e) => setPropertyType(e.target.value)}>
-              {PROPERTY_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {t(`propertyTypes.${type}`)}
-                </option>
-              ))}
-            </Select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="type">{t("propertyForm.propertyType")} *</Label>
+              <Select id="type" value={property_type} onChange={(e) => setPropertyType(e.target.value)}>
+                {PROPERTY_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {t(`propertyTypes.${type}`)}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bedrooms">{t("wizard.property.bedrooms")} *</Label>
+              <Input
+                id="bedrooms"
+                type="number"
+                min={1}
+                value={bedrooms}
+                onChange={(e) => setBedrooms(e.target.value)}
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">{t("propertyForm.description")} *</Label>
@@ -350,27 +365,15 @@ export function PropertyCreationWizard({
               onChange={(e) => setPrice(e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bedrooms">{t("wizard.property.bedrooms")} *</Label>
-              <Input
-                id="bedrooms"
-                type="number"
-                min={1}
-                value={bedrooms}
-                onChange={(e) => setBedrooms(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="guests">{t("wizard.property.maxGuests")} *</Label>
-              <Input
-                id="guests"
-                type="number"
-                min={1}
-                value={max_guests}
-                onChange={(e) => setMaxGuests(e.target.value)}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="guests">{t("wizard.property.maxGuests")} *</Label>
+            <Input
+              id="guests"
+              type="number"
+              min={1}
+              value={max_guests}
+              onChange={(e) => setMaxGuests(e.target.value)}
+            />
           </div>
           <p className="text-sm text-muted-foreground">{t("wizard.property.payHostHint")}</p>
           <div className="space-y-2">
@@ -397,6 +400,39 @@ export function PropertyCreationWizard({
       )}
 
       {step === 3 && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.amenitiesTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.amenitiesHint")}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {PROPERTY_AMENITY_IDS.map((id) => {
+              const checked = amenities.includes(id);
+              return (
+                <label
+                  key={id}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl border-2 px-3 py-2.5 text-sm cursor-pointer transition-colors",
+                    checked ? "border-brand bg-brand/5" : "border-border bg-card"
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-brand"
+                    checked={checked}
+                    onChange={() =>
+                      setAmenities((current) =>
+                        current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+                      )
+                    }
+                  />
+                  {t(`amenities.${id}`)}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-foreground">{t("wizard.property.mediaTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("wizard.property.mediaHint", { count: MIN_PROPERTY_PHOTOS })}</p>
@@ -476,7 +512,7 @@ export function PropertyCreationWizard({
         </div>
       )}
 
-      {step === 4 && (
+      {step === 5 && (
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-foreground">{t("wizard.property.reviewTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("wizard.property.reviewHint")}</p>
@@ -506,6 +542,14 @@ export function PropertyCreationWizard({
             <div className="flex justify-between gap-4 p-4">
               <dt className="text-muted-foreground">{t("wizard.property.maxGuests")}</dt>
               <dd className="font-semibold">{max_guests}</dd>
+            </div>
+            <div className="flex justify-between gap-4 p-4">
+              <dt className="text-muted-foreground">{t("wizard.property.amenitiesTitle")}</dt>
+              <dd className="font-semibold text-right">
+                {amenities.length > 0
+                  ? amenities.map((id) => t(`amenities.${id}`)).join(", ")
+                  : t("wizard.property.amenitiesEmpty")}
+              </dd>
             </div>
             <div className="flex justify-between gap-4 p-4">
               <dt className="text-muted-foreground">{t("common.photos")}</dt>

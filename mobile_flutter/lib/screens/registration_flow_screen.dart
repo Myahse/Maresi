@@ -214,6 +214,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
         PropertyTypes.house => locale.t('register.typeHouse'),
         PropertyTypes.apartment => locale.t('register.typeApartment'),
         PropertyTypes.studio => locale.t('register.typeStudio'),
+        PropertyTypes.residence => locale.t('register.typeResidence'),
         _ => type,
       };
 
@@ -439,6 +440,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
       (PropertyTypes.house, locale.t('register.typeHouse')),
       (PropertyTypes.apartment, locale.t('register.typeApartment')),
       (PropertyTypes.studio, locale.t('register.typeStudio')),
+      (PropertyTypes.residence, locale.t('register.typeResidence')),
     ];
 
     return Column(

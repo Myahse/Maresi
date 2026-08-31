@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Heart, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, MapPin, ChevronLeft, ChevronRight, BedDouble, Users } from "lucide-react";
 import type { Property } from "@/types";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
 import { cn } from "@/lib/utils";
 import { listingImageUrls } from "@/lib/media";
+import { isPropertyType, normalizeAmenities } from "@/lib/amenities";
 
 interface PropertyCardProps {
   property: Property;
@@ -34,6 +35,7 @@ export function PropertyCard({
   const hasMultiple = photos.length > 1;
 
   const goToDetails = () => navigate(`/properties/${property.id}`);
+  const amenityIds = normalizeAmenities(property.amenities);
 
   const cardInner = (
     <>
@@ -118,9 +120,7 @@ export function PropertyCard({
         )}
 
         <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-card/90 text-[10px] sm:text-xs font-semibold text-foreground capitalize">
-          {property.property_type === "apartment" ||
-          property.property_type === "house" ||
-          property.property_type === "studio"
+          {isPropertyType(property.property_type)
             ? t(`propertyTypes.${property.property_type}`)
             : property.property_type}
         </span>
@@ -139,6 +139,37 @@ export function PropertyCard({
           <MapPin className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{property.location}</span>
         </p>
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground mb-2">
+          {property.bedrooms != null && property.bedrooms > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <BedDouble className="h-3.5 w-3.5" />
+              {t("common.rooms", { count: property.bedrooms })}
+            </span>
+          )}
+          {property.max_guests != null && property.max_guests > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <Users className="h-3.5 w-3.5" />
+              {t("common.guests", { count: property.max_guests })}
+            </span>
+          )}
+        </p>
+        {amenityIds.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {amenityIds.slice(0, 3).map((id) => (
+              <span
+                key={id}
+                className="px-2 py-0.5 rounded-full bg-muted text-[11px] font-medium text-foreground"
+              >
+                {t(`amenities.${id}`)}
+              </span>
+            ))}
+            {amenityIds.length > 3 && (
+              <span className="px-2 py-0.5 rounded-full bg-muted text-[11px] font-medium text-muted-foreground">
+                +{amenityIds.length - 3}
+              </span>
+            )}
+          </div>
+        )}
         <p className="text-brand font-bold text-lg">
           {formatPrice(property.price)}
           <span className="text-muted-foreground font-normal text-sm"> {t("common.night")}</span>

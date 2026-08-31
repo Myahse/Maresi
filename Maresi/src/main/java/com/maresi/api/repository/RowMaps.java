@@ -34,6 +34,7 @@ public final class RowMaps {
     m.put("location", rs.getString("location"));
     m.put("property_type", rs.getString("property_type"));
     m.put("images", readTextArray(rs, "images"));
+    m.put("amenities", readTextArray(rs, "amenities"));
     m.put("is_active", rs.getBoolean("is_active"));
     putIfPresent(rs, m, "latitude");
     putIfPresent(rs, m, "longitude");
@@ -62,8 +63,11 @@ public final class RowMaps {
     m.put("location", rs.getString("location"));
     m.put("property_type", rs.getString("property_type"));
     m.put("images", readTextArray(rs, "images"));
+    m.put("amenities", readTextArray(rs, "amenities"));
     putIfPresent(rs, m, "average_rating");
     putIfPresent(rs, m, "rating_count");
+    putIfPresent(rs, m, "bedrooms");
+    putIfPresent(rs, m, "max_guests");
     return m;
   }
 

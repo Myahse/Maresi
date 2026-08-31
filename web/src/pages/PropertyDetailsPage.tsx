@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getProperty, addFavorite, removeFavorite, getFavorites } from "@/services/api";
 import type { Property } from "@/types";
-import { MapPin, Heart, Mail, Phone } from "lucide-react";
+import { MapPin, Heart, Mail, Phone, BedDouble, Users } from "lucide-react";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { PropertyLocationMap } from "@/components/map/PropertyLocationMap";
@@ -14,6 +14,7 @@ import { RatingsSection } from "@/components/rating/RatingsSection";
 import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
 import { cn } from "@/lib/utils";
 import { listingImageUrls } from "@/lib/media";
+import { isPropertyType, normalizeAmenities } from "@/lib/amenities";
 
 export function PropertyDetailsPage() {
   const { t } = useTranslation();
@@ -132,8 +133,42 @@ export function PropertyDetailsPage() {
               <MapPin className="h-4 w-4 shrink-0" />
               {property.location}
             </p>
-            <p className="text-sm text-muted-foreground capitalize mt-1">{property.property_type}</p>
+            <p className="text-sm text-muted-foreground capitalize mt-1">
+              {isPropertyType(property.property_type)
+                ? t(`propertyTypes.${property.property_type}`)
+                : property.property_type}
+            </p>
+            <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mt-2">
+              {property.bedrooms != null && property.bedrooms > 0 && (
+                <span className="inline-flex items-center gap-1.5">
+                  <BedDouble className="h-4 w-4" />
+                  {t("common.rooms", { count: property.bedrooms })}
+                </span>
+              )}
+              {property.max_guests != null && property.max_guests > 0 && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Users className="h-4 w-4" />
+                  {t("common.guests", { count: property.max_guests })}
+                </span>
+              )}
+            </p>
           </div>
+
+          {normalizeAmenities(property.amenities).length > 0 && (
+            <div>
+              <h2 className="font-bold text-foreground mb-3">{t("propertyDetails.amenities")}</h2>
+              <div className="flex flex-wrap gap-2">
+                {normalizeAmenities(property.amenities).map((id) => (
+                  <span
+                    key={id}
+                    className="px-3 py-1.5 rounded-full border border-border bg-card text-sm font-medium"
+                  >
+                    {t(`amenities.${id}`)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {property.description && (
             <div>

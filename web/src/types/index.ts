@@ -29,6 +29,7 @@ export interface Property {
   rating_count?: number;
   bedrooms?: number;
   max_guests?: number;
+  amenities?: string[];
   wave_payment_url?: string;
   orange_money_url?: string;
 }
@@ -54,6 +55,9 @@ export interface Favorite {
   location?: string;
   property_type?: string;
   images?: string[];
+  bedrooms?: number;
+  max_guests?: number;
+  amenities?: string[];
 }
 
 export type VisitRequestStatus =

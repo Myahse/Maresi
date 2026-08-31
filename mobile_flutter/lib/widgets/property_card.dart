@@ -1,8 +1,12 @@
 import 'package:intl/intl.dart';
 import 'package:maresi_mobile/models/property.dart';
+import 'package:maresi_mobile/models/property_types.dart';
+import 'package:maresi_mobile/providers/locale_provider.dart';
 import 'package:maresi_mobile/theme/app_colors.dart';
 import 'package:maresi_mobile/theme/maresi_palette.dart';
+import 'package:maresi_mobile/utils/property_amenities.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 String formatPrice(int price) {
   return '${NumberFormat('#,###', 'fr_FR').format(price)} CFA';
@@ -35,10 +39,35 @@ class PropertyCard extends StatelessWidget {
     return _buildListCard(context);
   }
 
+  String _metaLine(BuildContext context) {
+    final locale = context.watch<LocaleProvider>();
+    final parts = <String>[_typeLabel(context)];
+    if (property.bedrooms != null && property.bedrooms! > 0) {
+      parts.add('${property.bedrooms} ${locale.t('details.bedrooms').toLowerCase()}');
+    }
+    final amenities = resolvePropertyAmenities(property);
+    if (amenities.isNotEmpty) {
+      parts.add(locale.t(amenityLabelKey(amenities.first)));
+    }
+    return parts.where((part) => part.isNotEmpty).join(' · ');
+  }
+
+  String _typeLabel(BuildContext context) {
+    final locale = context.watch<LocaleProvider>();
+    return switch (property.propertyType) {
+      PropertyTypes.house => locale.t('register.typeHouse'),
+      PropertyTypes.apartment => locale.t('register.typeApartment'),
+      PropertyTypes.studio => locale.t('register.typeStudio'),
+      PropertyTypes.residence => locale.t('register.typeResidence'),
+      _ => property.propertyType,
+    };
+  }
+
   Widget _buildCompactCard(BuildContext context) {
     final palette = context.palette;
     final imageUrl = property.images.isNotEmpty ? property.images.first : null;
     final title = property.title.isNotEmpty ? property.title : defaultTitle;
+    final meta = _metaLine(context);
 
     return Padding(
       padding: const EdgeInsets.only(right: 24),
@@ -76,7 +105,7 @@ class PropertyCard extends StatelessWidget {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    height: 90,
+                    height: 104,
                     child: ColoredBox(
                       color: const Color(0xB3000000),
                       child: Padding(
@@ -91,6 +120,13 @@ class PropertyCard extends StatelessWidget {
                               fontSize: 14,
                               maxLines: 1,
                             ),
+                            if (meta.isNotEmpty)
+                              Text(
+                                meta,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Colors.white, fontSize: 11),
+                              ),
                             if (property.location.isNotEmpty)
                               Row(
                                 children: [
@@ -128,6 +164,7 @@ class PropertyCard extends StatelessWidget {
     final palette = context.palette;
     final imageUrl = property.images.isNotEmpty ? property.images.first : null;
     final title = property.title.isNotEmpty ? property.title : defaultTitle;
+    final meta = _metaLine(context);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -186,6 +223,15 @@ class PropertyCard extends StatelessWidget {
                               ),
                           ],
                         ),
+                        if (meta.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            meta,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 12, color: palette.textSecondary),
+                          ),
+                        ],
                         if (property.location.isNotEmpty) ...[
                           const SizedBox(height: 6),
                           Row(

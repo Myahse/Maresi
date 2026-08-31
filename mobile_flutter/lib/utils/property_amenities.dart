@@ -30,6 +30,20 @@ IconData amenityIcon(PropertyAmenityId id) => switch (id) {
 
 String amenityLabelKey(PropertyAmenityId id) => 'details.amenity.${id.name}';
 
+PropertyAmenityId? amenityFromId(String raw) {
+  for (final id in PropertyAmenityId.values) {
+    if (id.name == raw) return id;
+  }
+  return null;
+}
+
+/// Uses stored amenities when present, otherwise infers from the description.
+List<PropertyAmenityId> resolvePropertyAmenities(Property property) {
+  final stored = property.amenities.map(amenityFromId).whereType<PropertyAmenityId>().toList();
+  if (stored.isNotEmpty) return stored;
+  return inferPropertyAmenities(property);
+}
+
 /// Infers amenities from the residence description and type.
 List<PropertyAmenityId> inferPropertyAmenities(Property property) {
   final text = property.description.toLowerCase();

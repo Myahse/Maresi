@@ -23,6 +23,8 @@
     "status": "Statut",
     "property": "Bien",
     "night": "/ nuit",
+    "rooms": "{{count}} chambre(s)",
+    "guests": "{{count}} voyageur(s)",
     "perNight": "Prix (par nuit)",
     "photos": "Photos",
     "saving": "Enregistrement...",
@@ -50,7 +52,20 @@
   "propertyTypes": {
     "apartment": "Appartement",
     "house": "Maison",
-    "studio": "Studio"
+    "studio": "Studio",
+    "residence": "Résidence"
+  },
+  "amenities": {
+    "wifi": "Wi-Fi",
+    "ac": "Climatisation",
+    "parking": "Parking",
+    "security": "Sécurité",
+    "pool": "Piscine",
+    "kitchen": "Cuisine équipée",
+    "balcony": "Balcon / terrasse",
+    "garage": "Garage",
+    "hotWater": "Eau chaude",
+    "furnished": "Meublé"
   },
   "header": {
     "browse": "Parcourir",
@@ -60,7 +75,7 @@
     "login": "Connexion",
     "register": "S'inscrire",
     "dashboard": "Tableau de bord",
-    "becomeHost": "Devenir hôte",
+    "becomeHost": "Je suis propriétaire",
     "openHostApp": "Ouvrir l'app hôte"
   },
   "nav": {
@@ -82,7 +97,7 @@
     "services": "Services",
     "serviceListings": "Annonces immobilières",
     "serviceVisits": "Demandes de visite",
-    "serviceOwner": "Devenir hôte",
+    "serviceOwner": "Je suis propriétaire",
     "contact": "Contact",
     "addressLine1": "Plateau, Abidjan",
     "addressLine2": "Côte d'Ivoire",
@@ -199,7 +214,7 @@
       "validateVisitsDesc": "Accepter ou refuser les réservations",
       "subscription": "Abonnement",
       "subscriptionDesc": "Activez votre forfait pour publier des résidences",
-      "becomeHost": "Devenir hôte",
+      "becomeHost": "Je suis propriétaire",
       "becomeHostDesc": "Demandez à publier des résidences sur Maresi",
       "openHost": "App hôte",
       "openHostDesc": "Gérez vos annonces, réservations et portefeuille"
@@ -321,6 +336,7 @@
     "requestSent": "Demande envoyée",
     "sendRequest": "Envoyer la demande",
     "description": "Description",
+    "amenities": "Équipements",
     "location": "Lieu",
     "reserveTitle": "Réserver cette résidence",
     "reserveHint": "Réservation en plusieurs étapes avec validation propriétaire.",
@@ -468,7 +484,7 @@
     "fr": "Français"
   },
   "hostApply": {
-    "title": "Devenir hôte",
+    "title": "Je suis propriétaire",
     "hint": "Présentez-vous. Un admin validera votre demande avant de publier des résidences.",
     "phone": "Téléphone",
     "city": "Ville",

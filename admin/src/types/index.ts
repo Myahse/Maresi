@@ -29,6 +29,7 @@ export interface Property {
   average_rating?: number;
   rating_count?: number;
   bedrooms?: number;
+  amenities?: string[];
   max_guests?: number;
 }
 

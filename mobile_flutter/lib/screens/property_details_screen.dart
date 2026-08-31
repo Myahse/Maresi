@@ -46,6 +46,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
         PropertyTypes.house => locale.t('register.typeHouse'),
         PropertyTypes.apartment => locale.t('register.typeApartment'),
         PropertyTypes.studio => locale.t('register.typeStudio'),
+        PropertyTypes.residence => locale.t('register.typeResidence'),
         _ => type,
       };
 
@@ -135,7 +136,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
 
     final images = property.images.isNotEmpty ? property.images : <String>[];
     final isFavorite = favorites.isFavorite(property.id);
-    final amenities = inferPropertyAmenities(property);
+    final amenities = resolvePropertyAmenities(property);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,

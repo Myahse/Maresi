@@ -18,6 +18,7 @@ class Property {
     this.ratingCount,
     this.bedrooms,
     this.maxGuests,
+    this.amenities = const [],
   });
 
   final String id;
@@ -36,6 +37,7 @@ class Property {
   final int? ratingCount;
   final int? bedrooms;
   final int? maxGuests;
+  final List<String> amenities;
 
   factory Property.fromJson(Map<String, dynamic> json) {
     return Property(
@@ -58,6 +60,7 @@ class Property {
       ratingCount: (json['rating_count'] as num?)?.toInt(),
       bedrooms: (json['bedrooms'] as num?)?.toInt(),
       maxGuests: (json['max_guests'] as num?)?.toInt(),
+      amenities: (json['amenities'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
     );
   }
 
@@ -82,6 +85,7 @@ class Property {
       ratingCount: ratingCount ?? this.ratingCount,
       bedrooms: bedrooms,
       maxGuests: maxGuests,
+      amenities: amenities,
     );
   }
 }
@@ -96,6 +100,9 @@ class Favorite {
     this.location,
     this.propertyType,
     this.images = const [],
+    this.bedrooms,
+    this.maxGuests,
+    this.amenities = const [],
   });
 
   final String id;
@@ -106,6 +113,9 @@ class Favorite {
   final String? location;
   final String? propertyType;
   final List<String> images;
+  final int? bedrooms;
+  final int? maxGuests;
+  final List<String> amenities;
 
   factory Favorite.fromJson(Map<String, dynamic> json) {
     return Favorite(
@@ -120,6 +130,9 @@ class Favorite {
               ?.map((e) => listingImageUrl(e.toString()))
               .toList() ??
           const [],
+      bedrooms: (json['bedrooms'] as num?)?.toInt(),
+      maxGuests: (json['max_guests'] as num?)?.toInt(),
+      amenities: (json['amenities'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
     );
   }
 
@@ -132,5 +145,8 @@ class Favorite {
         location: location ?? '',
         propertyType: propertyType ?? '',
         images: images,
+        bedrooms: bedrooms,
+        maxGuests: maxGuests,
+        amenities: amenities,
       );
 }
