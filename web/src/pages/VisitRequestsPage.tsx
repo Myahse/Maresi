@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getMyVisitRequests, startReservationPayment, updateVisitRequestStatus } from "@/services/api";
 import { StayAgreementForm } from "@/components/visit/StayAgreementForm";
+import { VisitRequestCard } from "@/components/visit/VisitRequestCard";
 import { Button } from "@/components/ui/button";
 import { usePriceFormatter } from "@/context/CurrencyContext";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import type { VisitRequest } from "@/types";
 
 function stayAmount(visit: VisitRequest): number {
@@ -23,15 +25,20 @@ export function VisitRequestsPage() {
   const [actingId, setActingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const reload = () =>
-    getMyVisitRequests()
-      .then(setVisits)
-      .catch(() => setVisits([]))
-      .finally(() => setLoading(false));
+  const reload = useCallback(
+    () =>
+      getMyVisitRequests()
+        .then(setVisits)
+        .catch(() => setVisits([])),
+    []
+  );
 
   useEffect(() => {
-    reload();
-  }, []);
+    setLoading(true);
+    void reload().finally(() => setLoading(false));
+  }, [reload]);
+
+  useRealtimeRefresh(reload);
 
   const canCancel = (status: VisitRequest["status"]) =>
     status === "pending" ||

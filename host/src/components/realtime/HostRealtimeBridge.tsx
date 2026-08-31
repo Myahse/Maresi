@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtime } from "@/hooks/useRealtime";
+import { emitRealtime } from "@/hooks/useRealtimeRefresh";
 import type { RealtimeEvent } from "@/types";
 
 export function HostRealtimeBridge() {
@@ -9,6 +10,7 @@ export function HostRealtimeBridge() {
   const hostTopic = user?.id ? `/topic/host.${user.id}` : "";
 
   const onEvent = useCallback((event: RealtimeEvent) => {
+    emitRealtime(event);
     if (
       event.type === "visit.created" ||
       event.type === "visit.status_changed" ||

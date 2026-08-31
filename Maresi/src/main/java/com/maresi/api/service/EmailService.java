@@ -2,13 +2,17 @@ package com.maresi.api.service;
 
 import com.maresi.api.config.AppProperties;
 import com.maresi.api.repository.UserRepository;
+import jakarta.annotation.PostConstruct;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.env.Environment;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,31 +34,54 @@ public class EmailService {
     this.smtpUser = env.getProperty("spring.mail.username", "");
   }
 
+  @PostConstruct
+  void logReady() {
+    if (smtpReady()) {
+      log.info(
+          "SMTP ready host={} user={} from={}",
+          System.getProperty("MAIL_HOST", "smtp-relay.brevo.com"),
+          smtpUser,
+          fromEmail());
+    } else {
+      log.warn(
+          "SMTP not ready; emails will be skipped. Set MAIL_USERNAME, MAIL_PASSWORD, and MAIL_FROM then restart the API.");
+    }
+  }
+
+  @Async
   public void sendToUser(UUID userId, String subject, String body) {
     if (userId == null) return;
-    users
-        .findById(userId)
-        .map(u -> u.get("email"))
-        .map(Object::toString)
-        .filter(email -> email != null && email.contains("@"))
-        .ifPresent(email -> send(email, subject, body));
+    String to =
+        users
+            .findById(userId)
+            .map(u -> u.get("email"))
+            .map(Object::toString)
+            .filter(email -> email != null && email.contains("@"))
+            .orElse(null);
+    if (to == null) {
+      log.warn("Email skipped; user {} has no address", userId);
+      return;
+    }
+    send(to, subject, body);
   }
 
   public void send(String to, String subject, String body) {
     if (to == null || to.isBlank()) return;
     if (!smtpReady()) {
-      log.info("[mail skipped] SMTP not configured; to={} subject={}", to, subject);
+      log.warn("[mail skipped] SMTP not configured; to={} subject={}", to, subject);
       return;
     }
     try {
-      SimpleMailMessage message = new SimpleMailMessage();
-      message.setFrom(fromAddress());
-      message.setTo(to);
-      message.setSubject(subject);
-      message.setText(body);
+      MimeMessage message = mailSender.createMimeMessage();
+      MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+      helper.setFrom(fromInternetAddress());
+      helper.setTo(to.trim());
+      helper.setSubject(subject);
+      helper.setText(body, false);
       mailSender.send(message);
+      log.info("Email sent to {} subject={}", to, subject);
     } catch (Exception e) {
-      log.warn("Email not sent to {}: {}", to, e.getMessage());
+      log.warn("Email not sent to {} subject={}: {}", to, subject, e.getMessage());
     }
   }
 
@@ -62,15 +89,31 @@ public class EmailService {
     return mailSender != null
         && smtpUser != null
         && !smtpUser.isBlank()
-        && mail.getFrom() != null
-        && !mail.getFrom().isBlank();
+        && fromEmail() != null
+        && !fromEmail().isBlank();
   }
 
-  private String fromAddress() {
-    String from = mail.getFrom().trim();
-    if (mail.getFromName() != null && !mail.getFromName().isBlank() && !from.contains("<")) {
-      return mail.getFromName() + " <" + from + ">";
+  private InternetAddress fromInternetAddress() throws Exception {
+    String email = fromEmail();
+    String name = mail.getFromName();
+    if (name == null || name.isBlank()) {
+      String raw = mail.getFrom() == null ? "" : mail.getFrom().trim();
+      if (raw.contains("<")) {
+        name = raw.substring(0, raw.indexOf('<')).trim();
+      }
     }
-    return from;
+    if (name == null || name.isBlank()) name = "Maresi";
+    return new InternetAddress(email, name, "UTF-8");
+  }
+
+  private String fromEmail() {
+    String raw = mail.getFrom() == null ? "" : mail.getFrom().trim();
+    if (raw.isEmpty()) return "";
+    int open = raw.indexOf('<');
+    int close = raw.indexOf('>');
+    if (open >= 0 && close > open) {
+      return raw.substring(open + 1, close).trim();
+    }
+    return raw;
   }
 }

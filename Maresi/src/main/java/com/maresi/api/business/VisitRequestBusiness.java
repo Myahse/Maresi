@@ -118,6 +118,9 @@ public class VisitRequestBusiness {
           "Nouvelle reservation",
           "Un client a demande " + property.get("title") + ".",
           listingId);
+    }
+    realtime.publish("visit.created", created, user.id(), ownerId, true);
+    if (ownerId != null) {
       email.sendToUser(
           ownerId,
           "Maresi — nouvelle reservation",
@@ -141,7 +144,6 @@ public class VisitRequestBusiness {
         user.id(),
         "Maresi — demande envoyee",
         "Votre demande pour " + property.get("title") + " a ete envoyee a l'hote.");
-    realtime.publish("visit.created", created, user.id(), ownerId, true);
 
     response.setItem(created);
     response.setStatus(functionalError.success("Demande de reservation", locale));
@@ -215,6 +217,7 @@ public class VisitRequestBusiness {
     UUID requesterId = UUID.fromString(updated.get("user_id").toString());
     UUID listingId = UUID.fromString(updated.get("property_id").toString());
     String title = String.valueOf(updated.get("property_title") == null ? "la residence" : updated.get("property_title"));
+    realtime.publish("visit.status_changed", updated, requesterId, user.id(), true);
     if ("awaiting_agreement".equals(storedStatus)) {
       notifications.create(
           requesterId,
@@ -235,7 +238,6 @@ public class VisitRequestBusiness {
           "Maresi — demande refusee",
           "L'hote a refuse votre demande pour " + title + ".");
     }
-    realtime.publish("visit.status_changed", updated, requesterId, user.id(), true);
     response.setItem(updated);
     response.setStatus(functionalError.success("Statut mis a jour", locale));
     return response;
@@ -426,6 +428,7 @@ public class VisitRequestBusiness {
                 .map(Object::toString)
                 .map(UUID::fromString)
                 .orElse(null);
+    realtime.publish("visit.status_changed", updated, user.id(), ownerId, true);
     notifications.create(
         user.id(),
         "reservation",
@@ -448,7 +451,6 @@ public class VisitRequestBusiness {
         user.id(),
         "Maresi — engagement signe",
         "Merci. Payez maintenant via GeniusPay pour confirmer la reservation.");
-    realtime.publish("visit.status_changed", updated, user.id(), ownerId, true);
     response.setItem(updated);
     response.setStatus(functionalError.success("Engagement signe", locale));
     return response;

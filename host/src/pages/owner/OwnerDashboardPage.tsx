@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { getProperties, deleteProperty, getOwnerVisitRequests, getMySubscription } from "@/services/api";
 import { listingImageUrl } from "@/lib/media";
 import { usePriceFormatter } from "@/context/CurrencyContext";
@@ -19,6 +20,14 @@ export function OwnerDashboardPage() {
   const [wallet, setWallet] = useState<OwnerSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const refreshVisits = useCallback(() => {
+    return getOwnerVisitRequests()
+      .then(setVisits)
+      .catch(() => undefined);
+  }, []);
+
+  useRealtimeRefresh(refreshVisits);
 
   useEffect(() => {
     const load = async () => {
@@ -44,8 +53,8 @@ export function OwnerDashboardPage() {
       }
     };
 
-    load();
-  }, [user]);
+    void load();
+  }, [user, t]);
 
   const handleAdd = () => {
     navigate("/owner/new");

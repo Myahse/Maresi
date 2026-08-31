@@ -23,6 +23,7 @@ public final class DotEnvLoader {
       return;
     }
     int applied = 0;
+    java.util.ArrayList<String> keys = new java.util.ArrayList<>();
     try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
       String line;
       while ((line = reader.readLine()) != null) {
@@ -47,9 +48,10 @@ public final class DotEnvLoader {
           continue;
         }
         System.setProperty(key, value);
+        keys.add(key);
         applied++;
       }
-      log.info("Loaded {} entries from {}", applied, file.toAbsolutePath().normalize());
+      log.info("Loaded {} entries from {} ({})", applied, file.toAbsolutePath().normalize(), String.join(", ", keys));
     } catch (Exception e) {
       log.warn("Could not load {}: {}", file, e.getMessage());
     }

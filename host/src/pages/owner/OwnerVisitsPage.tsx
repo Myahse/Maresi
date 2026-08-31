@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { getOwnerVisitRequests, updateVisitRequestStatus } from "@/services/api";
 import { VisitRequestCard } from "@/components/visit/VisitRequestCard";
 import type { VisitRequest } from "@/types";
@@ -14,17 +15,18 @@ export function OwnerVisitsPage() {
   const [declineId, setDeclineId] = useState<string | null>(null);
   const [declineNote, setDeclineNote] = useState("");
 
-  const load = () => {
-    setLoading(true);
-    getOwnerVisitRequests()
+  const refresh = useCallback(() => {
+    return getOwnerVisitRequests()
       .then(setVisits)
-      .catch(() => setVisits([]))
-      .finally(() => setLoading(false));
-  };
+      .catch(() => setVisits([]));
+  }, []);
 
   useEffect(() => {
-    load();
-  }, []);
+    setLoading(true);
+    void refresh().finally(() => setLoading(false));
+  }, [refresh]);
+
+  useRealtimeRefresh(refresh);
 
   const handleStatus = async (id: string, status: "accepted" | "declined" | "confirmed", note?: string) => {
     setActingId(id);

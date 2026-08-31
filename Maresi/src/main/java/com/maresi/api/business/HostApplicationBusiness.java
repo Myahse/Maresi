@@ -10,6 +10,7 @@ import com.maresi.api.repository.UserRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.JwtService;
 import com.maresi.api.security.SecurityUtils;
+import com.maresi.api.service.EmailService;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -25,6 +26,7 @@ public class HostApplicationBusiness {
   private final JwtService jwtService;
   private final RealtimeEventPublisher realtime;
   private final FunctionalError functionalError;
+  private final EmailService email;
 
   public HostApplicationBusiness(
       HostApplicationRepository applications,
@@ -32,13 +34,15 @@ public class HostApplicationBusiness {
       NotificationRepository notifications,
       JwtService jwtService,
       RealtimeEventPublisher realtime,
-      FunctionalError functionalError) {
+      FunctionalError functionalError,
+      EmailService email) {
     this.applications = applications;
     this.users = users;
     this.notifications = notifications;
     this.jwtService = jwtService;
     this.realtime = realtime;
     this.functionalError = functionalError;
+    this.email = email;
   }
 
   public Response<Map<String, Object>> submit(Request<Map<String, Object>> request, Locale locale) {
@@ -96,6 +100,10 @@ public class HostApplicationBusiness {
           null);
     }
     realtime.publish("host.application.submitted", created, user.id(), null, true);
+    email.sendToUser(
+        user.id(),
+        "Maresi — demande hote envoyee",
+        "Votre demande pour devenir hote est en attente de validation.");
 
     response.setItem(created);
     response.setStatus(functionalError.success("Demande hote", locale));
@@ -167,6 +175,10 @@ public class HostApplicationBusiness {
           "Compte hote active",
           "Votre demande a ete acceptee. Connectez-vous a l'application hote.",
           null);
+      email.sendToUser(
+          applicantId,
+          "Maresi — compte hote active",
+          "Votre demande a ete acceptee. Connectez-vous a l'application hote.");
     } else {
       notifications.create(
           applicantId,
@@ -176,6 +188,12 @@ public class HostApplicationBusiness {
               ? adminNote
               : "Votre demande pour devenir hote a ete refusee.",
           null);
+      email.sendToUser(
+          applicantId,
+          "Maresi — demande hote refusee",
+          adminNote != null && !adminNote.isBlank()
+              ? adminNote
+              : "Votre demande pour devenir hote a ete refusee.");
     }
 
     realtime.publish("host.application.reviewed", payload, applicantId, null, true);
