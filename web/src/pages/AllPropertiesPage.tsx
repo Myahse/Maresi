@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Map, List } from "lucide-react";
@@ -9,6 +9,8 @@ import { PropertyCardSkeleton } from "@/components/property/PropertyCardSkeleton
 import { PropertiesMap } from "@/components/map/PropertiesMap";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/context/AuthModalContext";
+import { useUserLocation } from "@/context/LocationContext";
+import { distanceKm } from "@/lib/geolocation";
 import type { Property, Favorite } from "@/types";
 
 const defaultFilters: FilterValues = {
@@ -23,6 +25,7 @@ export function AllPropertiesPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { requireAuth } = useAuthModal();
+  const { coords } = useUserLocation();
   const [properties, setProperties] = useState<Property[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [filters, setFilters] = useState<FilterValues>(defaultFilters);
@@ -53,6 +56,21 @@ export function AllPropertiesPage() {
       setLoading(false);
     }
   }, [appliedFilters, isAuthenticated, t]);
+
+  const sortedProperties = useMemo(() => {
+    if (!coords) return properties;
+    return [...properties].sort((a, b) => {
+      const da =
+        a.latitude != null && a.longitude != null
+          ? distanceKm(coords, a.latitude, a.longitude)
+          : Number.POSITIVE_INFINITY;
+      const db =
+        b.latitude != null && b.longitude != null
+          ? distanceKm(coords, b.latitude, b.longitude)
+          : Number.POSITIVE_INFINITY;
+      return da - db;
+    });
+  }, [properties, coords]);
 
   useEffect(() => {
     load();
@@ -94,7 +112,7 @@ export function AllPropertiesPage() {
       {showMobileMap && (
         <div className="md:hidden mb-4 h-64 rounded-2xl overflow-hidden border-2 border-border">
           <PropertiesMap
-            properties={properties}
+            properties={sortedProperties}
             hoveredId={hoveredId}
             onMarkerClick={(id) => navigate(`/properties/${id}`)}
             className="h-full"
@@ -106,7 +124,11 @@ export function AllPropertiesPage() {
         <PropertyFilters
           values={filters}
           onChange={setFilters}
-          onApply={() => setAppliedFilters(filters)}
+          onApply={(next) => {
+            const v = next ?? filters;
+            setFilters(v);
+            setAppliedFilters(v);
+          }}
           onReset={() => {
             setFilters(defaultFilters);
             setAppliedFilters(defaultFilters);
@@ -116,7 +138,7 @@ export function AllPropertiesPage() {
 
       {error && <p className="text-destructive mb-4">{error}</p>}
       {!loading && !error && (
-        <p className="text-sm text-muted-foreground mb-4">{t("properties.count", { count: properties.length })}</p>
+        <p className="text-sm text-muted-foreground mb-4">{t("properties.count", { count: sortedProperties.length })}</p>
       )}
 
       {loading ? (
@@ -125,13 +147,13 @@ export function AllPropertiesPage() {
             <PropertyCardSkeleton key={i} />
           ))}
         </div>
-      ) : properties.length === 0 ? (
+      ) : sortedProperties.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-lg font-medium">{t("dashboard.noneFound")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 pb-8">
-          {properties.map((p) => (
+          {sortedProperties.map((p) => (
             <div
               key={p.id}
               onMouseEnter={() => setHoveredId(p.id)}
@@ -154,7 +176,7 @@ export function AllPropertiesPage() {
     <div className="font-jakarta bg-muted md:fixed md:inset-x-0 md:top-0 md:bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:top-[4.5rem] lg:bottom-0 flex flex-col md:flex-row">
       <div className="hidden md:block md:w-[35%] md:h-full border-r border-border">
         <PropertiesMap
-          properties={properties}
+          properties={sortedProperties}
           hoveredId={hoveredId}
           onMarkerClick={(id) => navigate(`/properties/${id}`)}
           className="h-full"

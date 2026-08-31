@@ -4,6 +4,8 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import type { Property } from "@/types";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { useTranslation } from "react-i18next";
+import { useUserLocation } from "@/context/LocationContext";
+import { GEO_WATCH_OPTIONS } from "@/lib/geolocation";
 import {
   ABIDJAN_CENTER,
   MAPBOX_MARKER,
@@ -23,13 +25,18 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
   const { t } = useTranslation();
   const { formatPrice } = usePriceFormatter();
   const token = mapboxToken();
+  const { coords, status } = useUserLocation();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
+  const geolocateRef = useRef<mapboxgl.GeolocateControl | null>(null);
   const onClickRef = useRef(onMarkerClick);
   const formatRef = useRef(formatPrice);
+  const centeredOnUser = useRef(false);
+  const statusRef = useRef(status);
   onClickRef.current = onMarkerClick;
   formatRef.current = formatPrice;
+  statusRef.current = status;
 
   const withCoords = useMemo(
     () =>
@@ -51,10 +58,22 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
       zoom: 12,
     });
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: GEO_WATCH_OPTIONS,
+      trackUserLocation: true,
+      showUserHeading: true,
+      showAccuracyCircle: true,
+    });
+    map.addControl(geolocate, "top-right");
+    geolocateRef.current = geolocate;
+    map.on("load", () => {
+      if (statusRef.current === "granted") geolocate.trigger();
+    });
     mapRef.current = map;
     return () => {
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current.clear();
+      geolocateRef.current = null;
       map.remove();
       mapRef.current = null;
     };
@@ -94,6 +113,17 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
       }
     });
   }, [withCoords, hoveredId]);
+
+  useEffect(() => {
+    if (status === "granted") geolocateRef.current?.trigger();
+  }, [status]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !coords || centeredOnUser.current || hoveredId) return;
+    centeredOnUser.current = true;
+    map.easeTo({ center: [coords.longitude, coords.latitude], zoom: 13, duration: 700 });
+  }, [coords, hoveredId]);
 
   useEffect(() => {
     const map = mapRef.current;

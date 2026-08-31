@@ -17,6 +17,7 @@ import { NotFoundPage } from "@/pages/NotFoundPage";
 import { AppSplash } from "@/components/layout/AppSplash";
 import { ClientRealtimeBridge } from "@/components/realtime/ClientRealtimeBridge";
 import { PushPrompt } from "@/components/realtime/PushPrompt";
+import { LocationPrompt } from "@/components/location/LocationPrompt";
 import { AuthModalProvider } from "@/context/AuthModalContext";
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
       <AppSplash />
       <ClientRealtimeBridge />
       <PushPrompt app="web" />
+      <LocationPrompt />
       <BrowserRouter>
         <AuthModalProvider>
           <Routes>

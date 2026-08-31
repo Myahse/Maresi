@@ -13,6 +13,7 @@ import { NotFoundPage } from "@/pages/NotFoundPage";
 import { AppSplash } from "@/components/layout/AppSplash";
 import { HostRealtimeBridge } from "@/components/realtime/HostRealtimeBridge";
 import { PushPrompt } from "@/components/realtime/PushPrompt";
+import { LocationPrompt } from "@/components/location/LocationPrompt";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
       <AppSplash />
       <HostRealtimeBridge />
       <PushPrompt app="host" />
+      <LocationPrompt />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<MainLayout />}>

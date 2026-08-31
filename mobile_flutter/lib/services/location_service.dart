@@ -13,10 +13,19 @@ class LocationService {
   Future<Position> getCurrentPosition() {
     return Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.medium,
+        accuracy: LocationAccuracy.best,
         timeLimit: _timeout,
       ),
     ).timeout(_timeout);
+  }
+
+  Stream<Position> watchPosition() {
+    return Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 25,
+      ),
+    );
   }
 
   Future<String?> reverseGeocode(Position position) async {

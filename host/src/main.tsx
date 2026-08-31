@@ -7,6 +7,7 @@ import "./index.css";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { LocationProvider } from "@/context/LocationContext";
 
 registerSW({ immediate: true });
 
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ThemeProvider>
       <CurrencyProvider>
         <AuthProvider>
-          <App />
+          <LocationProvider>
+            <App />
+          </LocationProvider>
         </AuthProvider>
       </CurrencyProvider>
     </ThemeProvider>

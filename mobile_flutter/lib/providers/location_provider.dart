@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:maresi_mobile/services/location_service.dart';
@@ -5,15 +7,27 @@ import 'package:maresi_mobile/services/location_service.dart';
 enum LocationStatus { idle, loading, granted, denied, serviceDisabled }
 
 class LocationProvider extends ChangeNotifier {
-  LocationProvider({LocationService? service}) : _service = service ?? LocationService();
+  LocationProvider({LocationService? service}) : _service = service ?? LocationService() {
+    unawaited(_resumeIfGranted());
+  }
 
   final LocationService _service;
   LocationStatus _status = LocationStatus.idle;
   String? _label;
+  Position? _position;
+  StreamSubscription<Position>? _watch;
 
   LocationStatus get status => _status;
   String? get label => _label;
+  Position? get position => _position;
   bool get hasLocation => _status == LocationStatus.granted && _label != null && _label!.isNotEmpty;
+
+  Future<void> _resumeIfGranted() async {
+    final permission = await _service.checkPermission();
+    if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+      await requestLocation();
+    }
+  }
 
   Future<bool> requestLocation() async {
     if (_status == LocationStatus.loading) return false;
@@ -40,10 +54,8 @@ class LocationProvider extends ChangeNotifier {
       }
 
       final position = await _service.getCurrentPosition();
-      _label = await _service.reverseGeocode(position);
-      _label ??= 'Abidjan';
-      _status = LocationStatus.granted;
-      notifyListeners();
+      await _applyPosition(position);
+      _startWatch();
       return true;
     } catch (_) {
       _label = null;
@@ -53,6 +65,21 @@ class LocationProvider extends ChangeNotifier {
     }
   }
 
+  void _startWatch() {
+    _watch?.cancel();
+    _watch = _service.watchPosition().listen((position) {
+      unawaited(_applyPosition(position));
+    });
+  }
+
+  Future<void> _applyPosition(Position position) async {
+    _position = position;
+    _label = await _service.reverseGeocode(position);
+    _label ??= 'Abidjan';
+    _status = LocationStatus.granted;
+    notifyListeners();
+  }
+
   Future<void> openSettings() async {
     final enabled = await _service.isServiceEnabled();
     if (!enabled) {
@@ -60,5 +87,11 @@ class LocationProvider extends ChangeNotifier {
       return;
     }
     await Geolocator.openAppSettings();
+  }
+
+  @override
+  void dispose() {
+    _watch?.cancel();
+    super.dispose();
   }
 }

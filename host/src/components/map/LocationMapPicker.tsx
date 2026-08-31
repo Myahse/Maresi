@@ -2,6 +2,9 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import { useUserLocation } from "@/context/LocationContext";
+import { GEO_WATCH_OPTIONS } from "@/lib/geolocation";
 import {
   ABIDJAN_CENTER,
   MAPBOX_MARKER,
@@ -26,6 +29,7 @@ export function LocationMapPicker({
   children,
 }: LocationMapPickerProps) {
   const { t, i18n } = useTranslation();
+  const { coords, status, requestAccess } = useUserLocation();
   const token = mapboxToken();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -33,6 +37,7 @@ export function LocationMapPicker({
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<MapboxPlace[]>([]);
   const [busy, setBusy] = useState(false);
+  const pendingMine = useRef(false);
 
   const lng = longitude ? Number(longitude) : ABIDJAN_CENTER[0];
   const lat = latitude ? Number(latitude) : ABIDJAN_CENTER[1];
@@ -67,6 +72,23 @@ export function LocationMapPicker({
     }
   };
 
+  const useMyLocation = () => {
+    if (coords) {
+      void lookup(coords.longitude, coords.latitude);
+      return;
+    }
+    pendingMine.current = true;
+    requestAccess();
+  };
+
+  useEffect(() => {
+    if (!pendingMine.current || !coords) return;
+    pendingMine.current = false;
+    void lookup(coords.longitude, coords.latitude);
+    // lookup is recreated; coords is the trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coords]);
+
   useEffect(() => {
     if (!token || !containerRef.current || mapRef.current) return;
     mapboxgl.accessToken = token;
@@ -77,6 +99,16 @@ export function LocationMapPicker({
       zoom: hasPin ? 15 : 12,
     });
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: GEO_WATCH_OPTIONS,
+      trackUserLocation: true,
+      showUserHeading: true,
+      showAccuracyCircle: true,
+    });
+    map.addControl(geolocate, "top-right");
+    geolocate.on("geolocate", (event: GeolocationPosition) => {
+      void lookup(event.coords.longitude, event.coords.latitude);
+    });
     map.on("click", (event) => {
       void lookup(event.lngLat.lng, event.lngLat.lat);
     });
@@ -136,16 +168,27 @@ export function LocationMapPicker({
         <label htmlFor="map-search" className="sr-only">
           {t("wizard.property.mapSearch")}
         </label>
-        <input
-          id="map-search"
-          type="search"
-          enterKeyHint="search"
-          autoComplete="street-address"
-          className="w-full rounded-xl border border-input bg-background px-3 py-3 text-base sm:text-sm"
-          placeholder={t("wizard.property.mapSearch")}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <div className="flex gap-2">
+          <input
+            id="map-search"
+            type="search"
+            enterKeyHint="search"
+            autoComplete="street-address"
+            className="w-full rounded-xl border border-input bg-background px-3 py-3 text-base sm:text-sm"
+            placeholder={t("wizard.property.mapSearch")}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-full shrink-0 border-2 px-3"
+            disabled={busy || status === "requesting"}
+            onClick={useMyLocation}
+          >
+            {t("location.useMine")}
+          </Button>
+        </div>
         {suggestions.length > 0 && (
           <ul className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-xl border border-border bg-card shadow-lg">
             {suggestions.map((place) => (

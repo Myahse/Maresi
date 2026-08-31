@@ -39,6 +39,14 @@
     "later": "Plus tard",
     "iosInstall": "Sur iPhone, ajoutez Maresi à l’écran d’accueil (Partager → Sur l’écran d’accueil), puis rouvrez l’app pour activer les notifications."
   },
+  "location": {
+    "title": "Placer votre annonce ici",
+    "body": "Maresi utilise le GPS et le réseau mobile pour vous placer sur la carte et mettre à jour cette position tant que l’app est ouverte.",
+    "enable": "Utiliser ma position",
+    "later": "Plus tard",
+    "nearMe": "Près de moi",
+    "useMine": "Ma position"
+  },
   "propertyTypes": {
     "apartment": "Appartement",
     "house": "Maison",

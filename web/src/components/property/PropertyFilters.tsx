@@ -1,8 +1,11 @@
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { useUserLocation } from "@/context/LocationContext";
+import { reverseGeocode } from "@/lib/mapbox";
 
 const PROPERTY_TYPES = ["apartment", "house", "studio"] as const;
 
@@ -16,21 +19,59 @@ export interface FilterValues {
 interface PropertyFiltersProps {
   values: FilterValues;
   onChange: (values: FilterValues) => void;
-  onApply: () => void;
+  onApply: (next?: FilterValues) => void;
   onReset: () => void;
 }
 
 export function PropertyFilters({ values, onChange, onApply, onReset }: PropertyFiltersProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { coords, status, requestAccess } = useUserLocation();
+  const pendingNear = useRef(false);
+
+  const applyNearMe = async (from = coords) => {
+    if (!from) return;
+    const place = await reverseGeocode(from.longitude, from.latitude, i18n.language);
+    const label = place?.city || place?.label || t("location.nearMe");
+    const next = { ...values, location: label };
+    onChange(next);
+    onApply(next);
+  };
+
+  const useNearMe = async () => {
+    if (status !== "granted" || !coords) {
+      pendingNear.current = true;
+      requestAccess();
+      return;
+    }
+    await applyNearMe(coords);
+  };
+
+  useEffect(() => {
+    if (!pendingNear.current || !coords) return;
+    pendingNear.current = false;
+    void applyNearMe(coords);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coords]);
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6 items-end">
       <div className="space-y-2">
         <Label>{t("filters.location")}</Label>
-        <Input
-          placeholder={t("filters.locationPlaceholder")}
-          value={values.location}
-          onChange={(e) => onChange({ ...values, location: e.target.value })}
-        />
+        <div className="flex gap-2">
+          <Input
+            placeholder={t("filters.locationPlaceholder")}
+            value={values.location}
+            onChange={(e) => onChange({ ...values, location: e.target.value })}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-full shrink-0 border-2"
+            onClick={() => void useNearMe()}
+          >
+            {t("location.nearMe")}
+          </Button>
+        </div>
       </div>
       <div className="space-y-2">
         <Label>{t("filters.type")}</Label>
@@ -66,7 +107,7 @@ export function PropertyFilters({ values, onChange, onApply, onReset }: Property
           onChange={(e) => onChange({ ...values, maxPrice: e.target.value })}
         />
       </div>
-      <Button onClick={onApply} className="bg-brand hover:bg-brand-dark rounded-full font-semibold">
+      <Button onClick={() => onApply()} className="bg-brand hover:bg-brand-dark rounded-full font-semibold">
         {t("common.search")}
       </Button>
       <Button variant="outline" onClick={onReset} className="rounded-full border-2">

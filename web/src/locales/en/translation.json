@@ -39,6 +39,14 @@
     "later": "Later",
     "iosInstall": "On iPhone, add Maresi to the Home Screen (Share → Add to Home Screen), then open the app to enable notifications."
   },
+  "location": {
+    "title": "Show listings near you",
+    "body": "Maresi uses GPS and the mobile network to place you on the map and keep that position updated while the app is open.",
+    "enable": "Use my location",
+    "later": "Later",
+    "nearMe": "Near me",
+    "useMine": "My position"
+  },
   "propertyTypes": {
     "apartment": "Apartment",
     "house": "House",
