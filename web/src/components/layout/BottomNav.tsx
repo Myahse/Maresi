@@ -83,7 +83,7 @@ export function BottomNav() {
                 >
                   {t("header.dashboard")}
                 </Link>
-                {user?.role === "owner" ? (
+                {user?.role === "owner" && (
                   <a
                     href={HOST_APP_URL}
                     className="rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-muted"
@@ -91,14 +91,6 @@ export function BottomNav() {
                   >
                     {t("header.openHostApp")}
                   </a>
-                ) : (
-                  <Link
-                    to="/become-host"
-                    className="rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-muted"
-                    onClick={() => setMoreOpen(false)}
-                  >
-                    {t("header.becomeHost")}
-                  </Link>
                 )}
                 <button
                   type="button"

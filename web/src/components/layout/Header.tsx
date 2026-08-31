@@ -60,14 +60,10 @@ export function Header() {
                     <Heart className="h-4 w-4" />
                     {t("header.favorites")}
                   </Link>
-                  {user?.role === "owner" ? (
+                  {user?.role === "owner" && (
                     <a href={HOST_APP_URL} className={navLinkClass}>
                       {t("header.openHostApp")}
                     </a>
-                  ) : (
-                    <Link to="/become-host" className={navLinkClass}>
-                      {t("header.becomeHost")}
-                    </Link>
                   )}
                 </>
               )}

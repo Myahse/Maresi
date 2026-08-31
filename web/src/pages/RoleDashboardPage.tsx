@@ -33,14 +33,18 @@ export function RoleDashboardPage() {
       icon: Calendar,
       route: "/visits",
     },
-    {
-      id: "host",
-      title: isOwner ? t("dashboard.cards.openHost") : t("dashboard.cards.becomeHost"),
-      description: isOwner ? t("dashboard.cards.openHostDesc") : t("dashboard.cards.becomeHostDesc"),
-      icon: Home,
-      route: "/become-host",
-      external: isOwner,
-    },
+    ...(isOwner
+      ? [
+          {
+            id: "host",
+            title: t("dashboard.cards.openHost"),
+            description: t("dashboard.cards.openHostDesc"),
+            icon: Home,
+            route: "/become-host",
+            external: true,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -64,7 +68,7 @@ export function RoleDashboardPage() {
               title={card.title}
               description={card.description}
               icon={card.icon}
-              onClick={() => (card.external ? openHostApp() : navigate(card.route))}
+              onClick={() => ("external" in card && card.external ? openHostApp() : navigate(card.route))}
             />
           ))}
         </div>

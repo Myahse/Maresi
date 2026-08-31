@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuthModal } from "@/context/AuthModalContext";
+import { useAuth } from "@/hooks/useAuth";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { PropertyCardSkeleton } from "@/components/property/PropertyCardSkeleton";
 import { getProperties } from "@/services/api";
@@ -21,6 +22,7 @@ export function LandingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { openRegister } = useAuthModal();
+  const { isAuthenticated } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -183,20 +185,21 @@ export function LandingPage() {
         </section>
       )}
 
-      {/* CTA */}
-      <section className="py-12 px-4 bg-brand/5 border-t border-brand/20">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-xl font-bold text-foreground">{t("landing.listTitle")}</h2>
-          <p className="text-muted-foreground mt-2 text-sm sm:text-base">{t("landing.listText")}</p>
-          <button
-            type="button"
-            onClick={openRegister}
-            className="inline-block mt-6 px-8 py-3 rounded-full bg-brand text-white font-semibold hover:bg-brand-dark transition-colors"
-          >
-            {t("landing.registerNow")}
-          </button>
-        </div>
-      </section>
+      {!isAuthenticated && (
+        <section className="py-12 px-4 bg-brand/5 border-t border-brand/20">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-xl font-bold text-foreground">{t("landing.listTitle")}</h2>
+            <p className="text-muted-foreground mt-2 text-sm sm:text-base">{t("landing.listText")}</p>
+            <button
+              type="button"
+              onClick={openRegister}
+              className="inline-block mt-6 px-8 py-3 rounded-full bg-brand text-white font-semibold hover:bg-brand-dark transition-colors"
+            >
+              {t("landing.registerNow")}
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

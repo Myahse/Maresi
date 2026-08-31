@@ -90,17 +90,19 @@ export function Footer() {
                       {t("footer.serviceVisits")}
                     </Link>
                   </li>
-                  <li>
-                    {user?.role === "owner" ? (
+                  {user?.role === "owner" ? (
+                    <li>
                       <a href={HOST_APP_URL} className={linkClass}>
                         {t("header.openHostApp")}
                       </a>
-                    ) : (
+                    </li>
+                  ) : !user ? (
+                    <li>
                       <Link to="/become-host" className={linkClass}>
                         {t("footer.serviceOwner")}
                       </Link>
-                    )}
-                  </li>
+                    </li>
+                  ) : null}
                 </ul>
               </div>
 
