@@ -97,6 +97,10 @@ export function LocationMapPicker({
       style: MAPBOX_STYLE,
       center: [lng, lat],
       zoom: hasPin ? 15 : 12,
+      cooperativeGestures: true,
+      dragRotate: false,
+      pitchWithRotate: false,
+      touchPitch: false,
     });
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
     const geolocate = new mapboxgl.GeolocateControl({

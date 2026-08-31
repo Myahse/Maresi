@@ -27,6 +27,10 @@ export function PropertyLocationMap({ latitude, longitude, title, location }: Pr
       center: [lng, lat],
       zoom: latitude != null && longitude != null ? 15 : 12,
       interactive: true,
+      cooperativeGestures: true,
+      dragRotate: false,
+      pitchWithRotate: false,
+      touchPitch: false,
     });
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
     new mapboxgl.Marker({ color: MAPBOX_MARKER })

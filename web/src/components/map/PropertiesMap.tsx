@@ -56,6 +56,10 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
       style: MAPBOX_STYLE,
       center: first ? [first.longitude, first.latitude] : ABIDJAN_CENTER,
       zoom: 12,
+      cooperativeGestures: window.matchMedia("(max-width: 767px)").matches,
+      dragRotate: false,
+      pitchWithRotate: false,
+      touchPitch: false,
     });
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
     const geolocate = new mapboxgl.GeolocateControl({

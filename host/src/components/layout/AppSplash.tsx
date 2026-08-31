@@ -50,11 +50,14 @@ export function AppSplash() {
   }, [phase]);
 
   useEffect(() => {
-    if (phase === "hidden") return;
+    if (phase === "hidden") {
+      document.body.style.overflow = "";
+      return;
+    }
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prev || "";
     };
   }, [phase]);
 

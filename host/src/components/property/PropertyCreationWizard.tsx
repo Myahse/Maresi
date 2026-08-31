@@ -508,7 +508,7 @@ export function PropertyCreationWizard({
         </div>
       )}
 
-      <div className="sticky z-20 flex flex-wrap gap-3 pt-3 pb-3 -mx-4 px-4 mt-2 border-t border-border bg-background above-mobile-nav lg:static lg:bottom-auto lg:mx-0 lg:mt-0 lg:border-0 lg:px-0 lg:pt-2">
+      <div className="flex flex-wrap gap-3 pt-4 pb-2">
         {step > 0 && (
           <Button type="button" variant="outline" className="rounded-full" onClick={back}>
             {t("wizard.back")}

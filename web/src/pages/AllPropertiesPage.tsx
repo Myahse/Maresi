@@ -173,7 +173,7 @@ export function AllPropertiesPage() {
   );
 
   return (
-    <div className="font-jakarta bg-muted md:fixed md:inset-x-0 md:top-0 md:bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:top-[4.5rem] lg:bottom-0 flex flex-col md:flex-row">
+    <div className="font-jakarta bg-muted md:fixed md:inset-x-0 md:top-0 md:bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:top-[4.5rem] lg:bottom-0 flex flex-col md:flex-row min-h-0">
       <div className="hidden md:block md:w-[35%] md:h-full border-r border-border">
         <PropertiesMap
           properties={sortedProperties}
@@ -182,7 +182,7 @@ export function AllPropertiesPage() {
           className="h-full"
         />
       </div>
-      <div className="md:w-[65%] md:h-full md:overflow-y-auto flex-1">{listPanel}</div>
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain md:w-[65%] md:h-full">{listPanel}</div>
     </div>
   );
 }
