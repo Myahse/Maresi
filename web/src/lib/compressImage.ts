@@ -4,6 +4,7 @@ export type CompressOptions = {
 };
 
 const JPEG = "image/jpeg";
+const SKIP_BYTES = 400 * 1024;
 
 function jpgName(name: string): string {
   const base = name.replace(/\.[^.]+$/, "").trim() || "photo";
@@ -11,46 +12,66 @@ function jpgName(name: string): string {
 }
 
 export async function compressImageFile(file: File, options: CompressOptions = {}): Promise<File> {
-  const maxEdge = options.maxEdge ?? 1600;
-  const quality = options.quality ?? 0.8;
+  const maxEdge = options.maxEdge ?? 1200;
+  const quality = options.quality ?? 0.7;
   if (file.type === "image/gif") return file;
+  const alreadySmallJpeg =
+    file.size <= SKIP_BYTES && (file.type === "image/jpeg" || file.type === "image/webp");
+  if (alreadySmallJpeg) return file;
 
   try {
     const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" } as ImageBitmapOptions);
     const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
-    const width = Math.max(1, Math.round(bitmap.width * scale));
-    const height = Math.max(1, Math.round(bitmap.height * scale));
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
+    if (scale === 1 && file.size <= SKIP_BYTES * 2) {
       bitmap.close();
       return file;
     }
-    ctx.drawImage(bitmap, 0, 0, width, height);
-    bitmap.close();
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, JPEG, quality));
-    if (!blob) return file;
-    const maxBytes = 4.5 * 1024 * 1024;
-    let output = blob;
-    if (output.size > maxBytes) {
-      const tighter = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, JPEG, 0.65));
-      if (tighter && tighter.size < output.size) output = tighter;
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    let source: ImageBitmap = bitmap;
+    if (scale < 1) {
+      try {
+        source = await createImageBitmap(bitmap, {
+          resizeWidth: width,
+          resizeHeight: height,
+          resizeQuality: "low",
+        });
+        bitmap.close();
+      } catch {
+        source = bitmap;
+      }
     }
-    if (output.size >= file.size && scale === 1) return file;
-    return new File([output], jpgName(file.name || "photo.jpg"), { type: JPEG, lastModified: Date.now() });
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) {
+      source.close();
+      return file;
+    }
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "low";
+    ctx.drawImage(source, 0, 0, width, height);
+    source.close();
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, JPEG, quality));
+    canvas.width = 0;
+    canvas.height = 0;
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], jpgName(file.name || "photo.jpg"), { type: JPEG, lastModified: Date.now() });
   } catch {
     return file;
   }
 }
 
 export async function compressImageFiles(files: File[], options?: CompressOptions): Promise<File[]> {
-  const out: File[] = [];
-  const concurrency = 3;
+  const concurrency = 4;
+  const out: File[] = new Array(files.length);
   for (let i = 0; i < files.length; i += concurrency) {
     const batch = files.slice(i, i + concurrency);
-    out.push(...(await Promise.all(batch.map((file) => compressImageFile(file, options)))));
+    const done = await Promise.all(batch.map((file) => compressImageFile(file, options)));
+    done.forEach((file, offset) => {
+      out[i + offset] = file;
+    });
   }
   return out;
 }

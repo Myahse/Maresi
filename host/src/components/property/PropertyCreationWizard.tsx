@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +8,7 @@ import { Select } from "@/components/ui/select";
 import { Stepper } from "@/components/ui/stepper";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { isValidPrice, isValidUrl, hasMinPropertyPhotos, MIN_PROPERTY_PHOTOS } from "@/lib/validation";
-import { compressImageFiles } from "@/lib/compressImage";
+import { compressImageFile } from "@/lib/compressImage";
 import { uploadPropertyImages } from "@/services/api";
 import { LocationMapPicker } from "@/components/map/LocationMapPicker";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,9 @@ export function PropertyCreationWizard({
   const [waitingUpload, setWaitingUpload] = useState(false);
   const uploadGen = useRef(0);
   const pendingUpload = useRef<Promise<string[] | null> | null>(null);
+  const imagesRef = useRef<File[]>([]);
+  const preparingCount = useRef(0);
+  imagesRef.current = images;
 
   useEffect(() => {
     const urls = images.map((file) => URL.createObjectURL(file));
@@ -116,6 +120,11 @@ export function PropertyCreationWizard({
   };
 
   const startBackgroundUpload = (files: File[]) => {
+    if (files.length === 0) {
+      pendingUpload.current = null;
+      setUploadingPhotos(false);
+      return;
+    }
     const gen = ++uploadGen.current;
     pendingUpload.current = (async () => {
       setUploadingPhotos(true);
@@ -132,25 +141,51 @@ export function PropertyCreationWizard({
     })();
   };
 
-  const handlePhotosSelected = async (list: FileList | null) => {
-    const raw = Array.from(list || []);
-    setCoverIndex(0);
+  const handlePhotosSelected = (list: FileList | null) => {
+    const incoming = Array.from(list || []);
+    if (incoming.length === 0) return;
+    setImages((prev) => [...prev, ...incoming]);
+    preparingCount.current += 1;
+    setPreparingPhotos(true);
+    void (async () => {
+      try {
+        const compressed: File[] = [];
+        const concurrency = 4;
+        for (let i = 0; i < incoming.length; i += concurrency) {
+          const batch = incoming.slice(i, i + concurrency);
+          compressed.push(...(await Promise.all(batch.map((file) => compressImageFile(file)))));
+        }
+        setImages((prev) => {
+          const next = [...prev];
+          incoming.forEach((orig, i) => {
+            const idx = next.indexOf(orig);
+            if (idx >= 0) next[idx] = compressed[i];
+          });
+          imagesRef.current = next;
+          return next;
+        });
+        startBackgroundUpload(imagesRef.current);
+      } finally {
+        preparingCount.current = Math.max(0, preparingCount.current - 1);
+        if (preparingCount.current === 0) setPreparingPhotos(false);
+      }
+    })();
+  };
+
+  const removePhoto = (idx: number) => {
+    const next = images.filter((_, i) => i !== idx);
+    imagesRef.current = next;
+    setImages(next);
+    setCoverIndex((current) => {
+      if (next.length === 0) return 0;
+      if (idx === current) return 0;
+      if (idx < current) return current - 1;
+      return current;
+    });
     uploadGen.current += 1;
     pendingUpload.current = null;
-    if (raw.length === 0) {
-      setImages([]);
-      return;
-    }
-    const gen = uploadGen.current;
-    setPreparingPhotos(true);
-    try {
-      const compressed = await compressImageFiles(raw);
-      if (gen !== uploadGen.current) return;
-      setImages(compressed);
-      startBackgroundUpload(compressed);
-    } finally {
-      if (gen === uploadGen.current) setPreparingPhotos(false);
-    }
+    if (next.length > 0) startBackgroundUpload(next);
+    else setUploadingPhotos(false);
   };
 
   const handleSubmit = async () => {
@@ -354,7 +389,6 @@ export function PropertyCreationWizard({
               type="file"
               accept="image/*"
               multiple
-              disabled={preparingPhotos}
               onChange={(e) => {
                 void handlePhotosSelected(e.target.files);
                 e.target.value = "";
@@ -376,21 +410,37 @@ export function PropertyCreationWizard({
                 <p className="text-xs text-muted-foreground">{t("wizard.property.coverHint")}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {previews.map((src, idx) => (
-                    <button
+                    <div
                       key={src}
-                      type="button"
                       className={`relative overflow-hidden rounded-xl border-2 ${
                         idx === coverIndex ? "border-brand" : "border-border"
                       }`}
-                      onClick={() => setCoverIndex(idx)}
                     >
-                      <img src={src} alt="" className="h-24 w-full object-cover" />
-                      {idx === coverIndex && (
-                        <span className="absolute bottom-1 left-1 right-1 rounded-full bg-brand px-2 py-0.5 text-[10px] font-semibold text-white">
-                          {t("wizard.property.coverBadge")}
-                        </span>
-                      )}
-                    </button>
+                      <button
+                        type="button"
+                        className="block w-full"
+                        onClick={() => setCoverIndex(idx)}
+                      >
+                        <img src={src} alt="" className="h-24 w-full object-cover" />
+                        {idx === coverIndex && (
+                          <span className="absolute bottom-1 left-1 right-1 rounded-full bg-brand px-2 py-0.5 text-[10px] font-semibold text-white">
+                            {t("wizard.property.coverBadge")}
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        className="absolute top-1 right-1 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white"
+                        aria-label={t("wizard.property.removePhoto")}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          removePhoto(idx);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -471,7 +521,6 @@ export function PropertyCreationWizard({
           <Button
             type="button"
             className="rounded-full bg-brand hover:bg-brand-dark ml-auto"
-            disabled={preparingPhotos}
             onClick={next}
           >
             {t("wizard.next")}
@@ -480,7 +529,7 @@ export function PropertyCreationWizard({
           <Button
             type="button"
             className="rounded-full bg-brand hover:bg-brand-dark ml-auto"
-            disabled={loading || preparingPhotos || waitingUpload}
+            disabled={loading || waitingUpload}
             onClick={handleSubmit}
           >
             {loading || waitingUpload
