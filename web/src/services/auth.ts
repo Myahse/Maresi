@@ -68,6 +68,24 @@ export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
 
+export type RegisterResult = AuthResponse | { needsEmailVerification: true; email: string };
+
+export async function forgotPassword(email: string, app: "guest" | "host" = "guest"): Promise<void> {
+  await api.post("/auth/forgot-password", { email: email.trim(), app });
+}
+
+export async function resetPassword(token: string, password: string): Promise<void> {
+  await api.post("/auth/reset-password", { token, password });
+}
+
+export async function verifyEmail(token: string): Promise<{ verified?: boolean; role?: string; email?: string }> {
+  return api.post("/auth/verify-email", { token });
+}
+
+export async function resendVerification(email: string): Promise<void> {
+  await api.post("/auth/resend-verification", { email: email.trim() });
+}
+
 export async function register(data: {
   email: string;
   password: string;
@@ -81,7 +99,7 @@ export async function register(data: {
   selfie: File;
   id_card_photo: File;
   id_card_back?: File;
-}): Promise<AuthResponse> {
+}): Promise<RegisterResult> {
   const firstName = data.first_name.trim();
   const lastName = data.last_name.trim();
   const fullName = `${firstName} ${lastName}`.trim();
@@ -116,6 +134,12 @@ export async function register(data: {
     throw new Error(message);
   }
   const payload = dataJson?.item ?? dataJson;
+  if (payload && typeof payload === "object" && payload.needs_email_verification) {
+    return {
+      needsEmailVerification: true,
+      email: typeof payload.email === "string" ? payload.email : data.email.trim(),
+    };
+  }
   return persistAuth(normalizeAuthResponse(payload));
 }
 

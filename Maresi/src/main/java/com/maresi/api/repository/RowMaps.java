@@ -24,6 +24,7 @@ public final class RowMaps {
     putIfPresent(rs, m, "gender");
     m.put("role", rs.getString("role"));
     m.put("phone", rs.getString("phone"));
+    putIfPresent(rs, m, "email_verified");
     putIfPresent(rs, m, "created_at");
     putIfPresent(rs, m, "id_card");
     putIfPresent(rs, m, "selfie_url");

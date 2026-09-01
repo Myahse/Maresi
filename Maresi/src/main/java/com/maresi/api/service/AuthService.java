@@ -50,4 +50,20 @@ public class AuthService {
   public Response<Map<String, Object>> verifyOtp(Request<Map<String, Object>> request, Locale locale) {
     return authBusiness.verifyOtp(request, locale);
   }
+
+  public Response<Map<String, Object>> verifyEmail(Request<Map<String, Object>> request, Locale locale) {
+    return authBusiness.verifyEmail(request, locale);
+  }
+
+  public Response<Map<String, Object>> resendVerification(Request<Map<String, Object>> request, Locale locale) {
+    return authBusiness.resendVerification(request, locale);
+  }
+
+  public Response<Map<String, Object>> forgotPassword(Request<Map<String, Object>> request, Locale locale) {
+    return authBusiness.forgotPassword(request, locale);
+  }
+
+  public Response<Map<String, Object>> resetPassword(Request<Map<String, Object>> request, Locale locale) {
+    return authBusiness.resetPassword(request, locale);
+  }
 }

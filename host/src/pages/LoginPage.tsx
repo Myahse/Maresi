@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,7 +52,12 @@ export function LoginPage() {
             <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">{t("common.password")}</Label>
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="password">{t("common.password")}</Label>
+              <Link to="/forgot-password" className="text-xs font-medium text-primary hover:underline">
+                {t("login.forgot")}
+              </Link>
+            </div>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </div>
         </CardContent>

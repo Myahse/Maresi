@@ -151,7 +151,38 @@
     "submit": "Sign in",
     "failed": "Login failed",
     "noAccount": "Don't have an account?",
-    "registerLink": "Register"
+    "registerLink": "Register",
+    "forgot": "Forgot password?"
+  },
+  "forgot": {
+    "title": "Forgot password",
+    "description": "Enter your email. We will send a link to choose a new password.",
+    "submit": "Send the link",
+    "sent": "If an account exists for this email, a link has been sent. Check spam too.",
+    "backToLogin": "Back to sign in",
+    "failed": "Could not send the link"
+  },
+  "reset": {
+    "title": "New password",
+    "description": "Choose a password with at least 6 characters.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "submit": "Save",
+    "success": "Your password has been updated. You can sign in.",
+    "failed": "Could not change the password",
+    "tooShort": "The password must have at least 6 characters.",
+    "mismatch": "The two passwords do not match.",
+    "missingToken": "This link is incomplete. Request a new one."
+  },
+  "verify": {
+    "title": "Confirm your email",
+    "description": "We need to confirm your address to activate the account.",
+    "checking": "Confirming…",
+    "success": "Your email is confirmed. You can sign in.",
+    "sent": "A confirmation email has been sent. Open the link in the message.",
+    "resend": "Resend email",
+    "failed": "Could not confirm this email",
+    "openHost": "Open Maresi Host"
   },
   "theme": {
     "toDark": "Switch to dark mode",

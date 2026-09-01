@@ -149,7 +149,28 @@
     "failed": "Login failed",
     "noAccount": "Don't have an account?",
     "registerLink": "Register",
-    "registerOnClient": "Create a host account"
+    "registerOnClient": "Create a host account",
+    "forgot": "Forgot password?"
+  },
+  "forgot": {
+    "title": "Forgot password",
+    "description": "Enter your email. We will send a link to choose a new password.",
+    "submit": "Send the link",
+    "sent": "If an account exists for this email, a link has been sent. Check spam too.",
+    "backToLogin": "Back to sign in",
+    "failed": "Could not send the link"
+  },
+  "reset": {
+    "title": "New password",
+    "description": "Choose a password with at least 6 characters.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "submit": "Save",
+    "success": "Your password has been updated. You can sign in.",
+    "failed": "Could not change the password",
+    "tooShort": "The password must have at least 6 characters.",
+    "mismatch": "The two passwords do not match.",
+    "missingToken": "This link is incomplete. Request a new one."
   },
   "theme": {
     "toDark": "Switch to dark mode",

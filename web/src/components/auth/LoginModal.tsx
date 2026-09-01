@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -70,7 +71,12 @@ export function LoginModal({ open, onClose, onRegister }: LoginModalProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="modal-password">{t("common.password")}</Label>
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="modal-password">{t("common.password")}</Label>
+              <Link to="/forgot-password" className="text-xs font-medium text-primary hover:underline" onClick={onClose}>
+                {t("login.forgot")}
+              </Link>
+            </div>
             <Input
               id="modal-password"
               type="password"

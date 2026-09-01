@@ -107,7 +107,11 @@ export function RegisterPage() {
         id_card_photo: idCardPhoto,
         id_card_back: idCardBack ?? undefined,
       });
-      if (res.user.role === "owner") {
+      if ("needsEmailVerification" in res && res.needsEmailVerification) {
+        navigate(`/verify-email?sent=1&email=${encodeURIComponent(res.email)}`, { replace: true });
+        return;
+      }
+      if ("user" in res && res.user.role === "owner") {
         window.location.assign(hostHandoffUrl(res));
         return;
       }

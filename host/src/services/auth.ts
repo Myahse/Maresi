@@ -143,6 +143,14 @@ export async function login(email: string, password: string): Promise<AuthRespon
   return persistAuth(normalizeAuthResponse(res));
 }
 
+export async function forgotPassword(email: string): Promise<void> {
+  await api.post("/auth/forgot-password", { email: email.trim(), app: "host" });
+}
+
+export async function resetPassword(token: string, password: string): Promise<void> {
+  await api.post("/auth/reset-password", { token, password });
+}
+
 export function logout(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);

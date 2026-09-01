@@ -72,6 +72,34 @@ public final class EmailTemplates {
         ctaUrl);
   }
 
+  public static Mail verifyEmail(String name, String ctaUrl) {
+    return build(
+        "Confirmez votre e-mail",
+        "Compte",
+        "Confirmez votre adresse e-mail",
+        greet(
+            name,
+            "Merci de vous être inscrit sur Maresi. Cliquez sur le bouton pour confirmer votre adresse e-mail. Ce lien expire dans 24 heures.\n\nSi vous n’êtes pas à l’origine de cette inscription, ignorez ce message."),
+        details("Compte", personName(name)),
+        null,
+        "Confirmer mon e-mail",
+        ctaUrl);
+  }
+
+  public static Mail passwordReset(String name, String ctaUrl) {
+    return build(
+        "Réinitialiser le mot de passe",
+        "Compte",
+        "Réinitialisez votre mot de passe",
+        greet(
+            name,
+            "Nous avons reçu une demande pour changer le mot de passe de votre compte Maresi. Cliquez sur le bouton pour en choisir un nouveau. Ce lien expire dans 1 heure.\n\nSi vous n’êtes pas à l’origine de cette demande, ignorez ce message."),
+        List.of(),
+        null,
+        "Choisir un nouveau mot de passe",
+        ctaUrl);
+  }
+
   public static Mail reservationSent(String title) {
     return build(
         "Demande envoyée",

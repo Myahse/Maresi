@@ -151,7 +151,38 @@
     "submit": "Se connecter",
     "failed": "Échec de la connexion",
     "noAccount": "Pas encore de compte ?",
-    "registerLink": "S'inscrire"
+    "registerLink": "S'inscrire",
+    "forgot": "Mot de passe oublié ?"
+  },
+  "forgot": {
+    "title": "Mot de passe oublié",
+    "description": "Saisissez votre e-mail. Nous vous enverrons un lien pour choisir un nouveau mot de passe.",
+    "submit": "Envoyer le lien",
+    "sent": "Si un compte existe avec cet e-mail, un lien vient d’être envoyé. Vérifiez aussi les indésirables.",
+    "backToLogin": "Retour à la connexion",
+    "failed": "Impossible d’envoyer le lien"
+  },
+  "reset": {
+    "title": "Nouveau mot de passe",
+    "description": "Choisissez un mot de passe d’au moins 6 caractères.",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "submit": "Enregistrer",
+    "success": "Votre mot de passe a été mis à jour. Vous pouvez vous connecter.",
+    "failed": "Impossible de changer le mot de passe",
+    "tooShort": "Le mot de passe doit contenir au moins 6 caractères.",
+    "mismatch": "Les deux mots de passe ne correspondent pas.",
+    "missingToken": "Ce lien est incomplet. Demandez un nouveau lien."
+  },
+  "verify": {
+    "title": "Confirmez votre e-mail",
+    "description": "Nous avons besoin de confirmer votre adresse pour activer le compte.",
+    "checking": "Confirmation en cours…",
+    "success": "Votre e-mail est confirmé. Vous pouvez vous connecter.",
+    "sent": "Un e-mail de confirmation a été envoyé. Ouvrez le lien dans le message.",
+    "resend": "Renvoyer l’e-mail",
+    "failed": "Impossible de confirmer cet e-mail",
+    "openHost": "Ouvrir Maresi Hôte"
   },
   "theme": {
     "toDark": "Passer en mode sombre",

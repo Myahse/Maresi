@@ -5,6 +5,9 @@ import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { LandingPage } from "@/pages/LandingPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage";
+import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
+import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { AllPropertiesPage } from "@/pages/AllPropertiesPage";
 import { PropertyDetailsPage } from "@/pages/PropertyDetailsPage";
@@ -39,6 +42,15 @@ function App() {
               </Route>
               <Route path="register" element={<AuthLayout />}>
                 <Route index element={<RegisterPage />} />
+              </Route>
+              <Route path="forgot-password" element={<AuthLayout />}>
+                <Route index element={<ForgotPasswordPage />} />
+              </Route>
+              <Route path="reset-password" element={<AuthLayout />}>
+                <Route index element={<ResetPasswordPage />} />
+              </Route>
+              <Route path="verify-email" element={<AuthLayout />}>
+                <Route index element={<VerifyEmailPage />} />
               </Route>
               <Route path="properties" element={<AllPropertiesPage />} />
               <Route path="properties/:id" element={<PropertyDetailsPage />} />

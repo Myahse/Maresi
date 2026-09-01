@@ -140,6 +140,38 @@ public class AuthController {
         exceptionUtils);
   }
 
+  @PostMapping("/verify-email")
+  @Operation(summary = "Confirmer l'adresse e-mail")
+  public ResponseEntity<Response<Map<String, Object>>> verifyEmail(
+      @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> authService.verifyEmail(request, loc), loc, exceptionUtils);
+  }
+
+  @PostMapping("/resend-verification")
+  @Operation(summary = "Renvoyer l'e-mail de confirmation")
+  public ResponseEntity<Response<Map<String, Object>>> resendVerification(
+      @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> authService.resendVerification(request, loc), loc, exceptionUtils);
+  }
+
+  @PostMapping("/forgot-password")
+  @Operation(summary = "Demander un lien de réinitialisation")
+  public ResponseEntity<Response<Map<String, Object>>> forgotPassword(
+      @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> authService.forgotPassword(request, loc), loc, exceptionUtils);
+  }
+
+  @PostMapping("/reset-password")
+  @Operation(summary = "Choisir un nouveau mot de passe")
+  public ResponseEntity<Response<Map<String, Object>>> resetPassword(
+      @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> authService.resetPassword(request, loc), loc, exceptionUtils);
+  }
+
   @PostMapping("/otp/verify")
   @Operation(summary = "Vérifier le code OTP et obtenir un JWT")
   public ResponseEntity<Response<Map<String, Object>>> verifyOtp(

@@ -3,6 +3,8 @@ import { MainLayout } from "@/layouts/MainLayout";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { LoginPage } from "@/pages/LoginPage";
+import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { OwnerDashboardPage } from "@/pages/owner/OwnerDashboardPage";
 import { PropertyEditPage } from "@/pages/owner/PropertyEditPage";
 import { OwnerVisitsPage } from "@/pages/owner/OwnerVisitsPage";
@@ -27,6 +29,12 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             <Route path="login" element={<AuthLayout />}>
               <Route index element={<LoginPage />} />
+            </Route>
+            <Route path="forgot-password" element={<AuthLayout />}>
+              <Route index element={<ForgotPasswordPage />} />
+            </Route>
+            <Route path="reset-password" element={<AuthLayout />}>
+              <Route index element={<ResetPasswordPage />} />
             </Route>
             <Route path="register" element={<Navigate to="/login" replace />} />
             <Route index element={<ProtectedRoute roles={["owner"]}><OwnerDashboardPage /></ProtectedRoute>} />

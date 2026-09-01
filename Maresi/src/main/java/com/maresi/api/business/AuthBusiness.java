@@ -4,6 +4,7 @@ import com.maresi.api.config.AppProperties;
 import com.maresi.api.contracts.FunctionalError;
 import com.maresi.api.contracts.Request;
 import com.maresi.api.contracts.Response;
+import com.maresi.api.repository.AuthTokenRepository;
 import com.maresi.api.repository.NotificationRepository;
 import com.maresi.api.repository.UserRepository;
 import com.maresi.api.security.JwtService;
@@ -13,12 +14,18 @@ import com.maresi.api.service.FileStorageService;
 import com.maresi.api.service.OtpService;
 import com.maresi.api.service.SmsService;
 import com.maresi.api.util.PhoneNormalizer;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -27,9 +34,11 @@ import org.springframework.web.multipart.MultipartFile;
 @Component
 public class AuthBusiness {
   private static final UUID DEV_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+  private static final SecureRandom RANDOM = new SecureRandom();
 
   private final AppProperties props;
   private final UserRepository users;
+  private final AuthTokenRepository authTokens;
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final OtpService otpService;
@@ -43,6 +52,7 @@ public class AuthBusiness {
   public AuthBusiness(
       AppProperties props,
       UserRepository users,
+      AuthTokenRepository authTokens,
       PasswordEncoder passwordEncoder,
       JwtService jwtService,
       OtpService otpService,
@@ -54,6 +64,7 @@ public class AuthBusiness {
       NotificationRepository notifications) {
     this.props = props;
     this.users = users;
+    this.authTokens = authTokens;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
     this.otpService = otpService;
@@ -160,7 +171,15 @@ public class AuthBusiness {
     }
     if (users.findByEmail(email).isPresent()) {
       response.setHasError(true);
-      response.setStatus(functionalError.dataExist("Email deja enregistre", locale));
+      response.setStatus(functionalError.dataExist("Cet e-mail est déjà enregistré. Connectez-vous ou réinitialisez votre mot de passe.", locale));
+      return response;
+    }
+    if (users.findByPhone(phone).isPresent()) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.dataExist(
+              "Ce numéro de téléphone est déjà enregistré. Connectez-vous ou utilisez un autre numéro.",
+              locale));
       return response;
     }
 
@@ -170,24 +189,43 @@ public class AuthBusiness {
         idCardBack != null && !idCardBack.isEmpty()
             ? fileStorage.storeIdentityImage(idCardBack, baseUrl)
             : null;
-    Map<String, Object> user =
-        users.create(
-            email,
-            passwordEncoder.encode(password),
-            fullName.trim(),
-            firstName.trim(),
-            lastName.trim(),
-            birthDate,
-            gender,
-            role,
-            phone,
-            idCard.trim(),
-            selfieUrl,
-            idCardPhotoUrl,
-            idCardBackUrl);
-    welcomeNewAccount(user);
-    response.setItem(authPayload(user));
-    response.setStatus(functionalError.success("Inscription", locale));
+    Map<String, Object> user;
+    try {
+      user =
+          users.create(
+              email,
+              passwordEncoder.encode(password),
+              fullName.trim(),
+              firstName.trim(),
+              lastName.trim(),
+              birthDate,
+              gender,
+              role,
+              phone,
+              idCard.trim(),
+              selfieUrl,
+              idCardPhotoUrl,
+              idCardBackUrl);
+    } catch (DataIntegrityViolationException e) {
+      response.setHasError(true);
+      String detail = e.getMostSpecificCause() != null ? e.getMostSpecificCause().getMessage() : "";
+      if (detail != null && detail.contains("idx_users_phone_unique")) {
+        response.setStatus(
+            functionalError.dataExist(
+                "Ce numéro de téléphone est déjà enregistré. Connectez-vous ou utilisez un autre numéro.",
+                locale));
+      } else {
+        response.setStatus(functionalError.dataExist("Cet e-mail est déjà enregistré. Connectez-vous ou réinitialisez votre mot de passe.", locale));
+      }
+      return response;
+    }
+    sendVerificationEmail(user);
+    Map<String, Object> item = new HashMap<>();
+    item.put("needs_email_verification", true);
+    item.put("email", email);
+    item.put("user", user);
+    response.setItem(item);
+    response.setStatus(functionalError.success("Confirmez votre e-mail", locale));
     return response;
   }
 
@@ -236,6 +274,14 @@ public class AuthBusiness {
     if (hash == null || !passwordEncoder.matches(password, hash)) {
       response.setHasError(true);
       response.setStatus(functionalError.loginFail(locale));
+      return response;
+    }
+    if (!isEmailVerified(user)) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.authFail(
+              "Confirmez votre adresse e-mail avant de vous connecter. Vérifiez votre boîte de réception ou renvoyez le lien.",
+              locale));
       return response;
     }
     user.remove("password_hash");
@@ -303,6 +349,148 @@ public class AuthBusiness {
     response.setItem(authPayload(user));
     response.setStatus(functionalError.success("Connexion OTP", locale));
     return response;
+  }
+
+  public Response<Map<String, Object>> verifyEmail(Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    String token = str(request.getData() != null ? request.getData().get("token") : null);
+    if (token == null || token.length() < 20) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Lien de confirmation invalide ou expiré", locale));
+      return response;
+    }
+    Map<String, Object> row = authTokens.findValid(hashToken(token), "email_verify").orElse(null);
+    if (row == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Lien de confirmation invalide ou expiré", locale));
+      return response;
+    }
+    UUID userId = (UUID) row.get("user_id");
+    users.markEmailVerified(userId);
+    authTokens.markUsed((UUID) row.get("id"));
+    Map<String, Object> user = users.findById(userId).orElse(null);
+    if (user != null) {
+      welcomeNewAccount(user);
+    }
+    Map<String, Object> item = new HashMap<>();
+    item.put("verified", true);
+    item.put("email", user != null ? user.get("email") : null);
+    item.put("role", user != null ? user.get("role") : null);
+    response.setItem(item);
+    response.setStatus(functionalError.success("E-mail confirmé", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> resendVerification(Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    String emailAddr = str(request.getData() != null ? request.getData().get("email") : null);
+    if (emailAddr == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("email", locale));
+      return response;
+    }
+    users.findByEmail(emailAddr).ifPresent(user -> {
+      if (!isEmailVerified(user)) {
+        sendVerificationEmail(user);
+      }
+    });
+    Map<String, Object> item = new HashMap<>();
+    item.put("sent", true);
+    response.setItem(item);
+    response.setStatus(functionalError.success("Si un compte existe, un e-mail a été envoyé", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> forgotPassword(Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    Map<String, Object> body = request.getData() != null ? request.getData() : Map.of();
+    String emailAddr = str(body.get("email"));
+    if (emailAddr == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("email", locale));
+      return response;
+    }
+    String app = str(body.get("app"));
+    users.findByEmail(emailAddr).ifPresent(user -> sendResetEmail(user, app));
+    Map<String, Object> item = new HashMap<>();
+    item.put("sent", true);
+    response.setItem(item);
+    response.setStatus(functionalError.success("Si un compte existe, un e-mail a été envoyé", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> resetPassword(Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    Map<String, Object> body = request.getData() != null ? request.getData() : Map.of();
+    String token = str(body.get("token"));
+    String password = str(body.get("password"));
+    if (token == null || token.length() < 20) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Lien de réinitialisation invalide ou expiré", locale));
+      return response;
+    }
+    if (password == null || password.length() < 6) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Le mot de passe doit contenir au moins 6 caractères", locale));
+      return response;
+    }
+    Map<String, Object> row = authTokens.findValid(hashToken(token), "password_reset").orElse(null);
+    if (row == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Lien de réinitialisation invalide ou expiré", locale));
+      return response;
+    }
+    UUID userId = (UUID) row.get("user_id");
+    users.updatePassword(userId, passwordEncoder.encode(password));
+    authTokens.markUsed((UUID) row.get("id"));
+    authTokens.invalidateOpen(userId, "password_reset");
+    Map<String, Object> item = new HashMap<>();
+    item.put("reset", true);
+    response.setItem(item);
+    response.setStatus(functionalError.success("Mot de passe mis à jour", locale));
+    return response;
+  }
+
+  private void sendVerificationEmail(Map<String, Object> user) {
+    UUID id = user.get("id") instanceof UUID u ? u : UUID.fromString(user.get("id").toString());
+    String token = newToken();
+    authTokens.invalidateOpen(id, "email_verify");
+    authTokens.create(id, "email_verify", hashToken(token), Instant.now().plus(Duration.ofHours(24)));
+    String url = EmailTemplates.guestApp(props) + "/verify-email?token=" + token;
+    email.sendToUser(id, EmailTemplates.verifyEmail(EmailTemplates.personName(user), url));
+  }
+
+  private void sendResetEmail(Map<String, Object> user, String app) {
+    UUID id = user.get("id") instanceof UUID u ? u : UUID.fromString(user.get("id").toString());
+    String token = newToken();
+    authTokens.invalidateOpen(id, "password_reset");
+    authTokens.create(id, "password_reset", hashToken(token), Instant.now().plus(Duration.ofHours(1)));
+    boolean host = app != null && app.trim().equalsIgnoreCase("host");
+    String origin = host ? EmailTemplates.hostApp(props) : EmailTemplates.guestApp(props);
+    String url = origin + "/reset-password?token=" + token;
+    email.sendToUser(id, EmailTemplates.passwordReset(EmailTemplates.personName(user), url));
+  }
+
+  private static boolean isEmailVerified(Map<String, Object> user) {
+    Object raw = user.get("email_verified");
+    if (raw instanceof Boolean b) return b;
+    if (raw instanceof Number n) return n.intValue() != 0;
+    return raw == null || Boolean.parseBoolean(String.valueOf(raw));
+  }
+
+  private static String newToken() {
+    byte[] raw = new byte[32];
+    RANDOM.nextBytes(raw);
+    return HexFormat.of().formatHex(raw);
+  }
+
+  private static String hashToken(String token) {
+    try {
+      byte[] digest = MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8));
+      return HexFormat.of().formatHex(digest);
+    } catch (Exception e) {
+      throw new IllegalStateException("Cannot hash token", e);
+    }
   }
 
   private Map<String, Object> devAuthPayload(Map<String, Object> body) {

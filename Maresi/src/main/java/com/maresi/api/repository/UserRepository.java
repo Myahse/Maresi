@@ -19,7 +19,7 @@ public class UserRepository {
     return jdbc.query(
             """
             SELECT id, email, full_name, first_name, last_name, birth_date, gender,
-                   role, phone, created_at
+                   role, phone, email_verified, created_at
             FROM users WHERE id = ?
             """,
             (rs, rowNum) -> RowMaps.userPublic(rs),
@@ -32,7 +32,7 @@ public class UserRepository {
     return jdbc.query(
             """
             SELECT id, email, full_name, first_name, last_name, birth_date, gender,
-                   role, phone, created_at,
+                   role, phone, email_verified, created_at,
                    id_card, selfie_url, id_card_photo_url, id_card_back_url
             FROM users WHERE id = ?
             """,
@@ -46,7 +46,7 @@ public class UserRepository {
     return jdbc.query(
             """
             SELECT id, email, password_hash, full_name, first_name, last_name, birth_date, gender,
-                   role, phone
+                   role, phone, email_verified
             FROM users WHERE email = ?
             """,
             (rs, rowNum) -> {
@@ -62,7 +62,7 @@ public class UserRepository {
   public Optional<Map<String, Object>> findByPhone(String phone) {
     return jdbc.query(
             """
-            SELECT id, email, full_name, first_name, last_name, birth_date, gender, role, phone
+            SELECT id, email, full_name, first_name, last_name, birth_date, gender, role, phone, email_verified
             FROM users WHERE phone = ?
             """,
             (rs, rowNum) -> RowMaps.userPublic(rs),
@@ -89,10 +89,10 @@ public class UserRepository {
         """
         INSERT INTO users (
           email, password_hash, full_name, first_name, last_name, birth_date, gender,
-          role, phone, id_card, selfie_url, id_card_photo_url, id_card_back_url
+          role, phone, id_card, selfie_url, id_card_photo_url, id_card_back_url, email_verified
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        RETURNING id, email, full_name, first_name, last_name, birth_date, gender, role, phone, created_at
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE)
+        RETURNING id, email, full_name, first_name, last_name, birth_date, gender, role, phone, email_verified, created_at
         """,
         (rs, rowNum) -> RowMaps.userPublic(rs),
         email,
@@ -116,13 +116,30 @@ public class UserRepository {
         """
         INSERT INTO users (email, password_hash, full_name, role, phone)
         VALUES (?, NULL, ?, ?, ?)
-        RETURNING id, email, full_name, role, phone, created_at
+        RETURNING id, email, full_name, role, phone, email_verified, created_at
         """,
         (rs, rowNum) -> RowMaps.userPublic(rs),
         placeholderEmail,
         fullName,
         role,
         phone);
+  }
+
+  public void updatePassword(UUID id, String passwordHash) {
+    jdbc.update(
+        "UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?",
+        passwordHash,
+        id);
+  }
+
+  public void markEmailVerified(UUID id) {
+    jdbc.update(
+        """
+        UPDATE users
+        SET email_verified = TRUE, email_verified_at = NOW(), updated_at = NOW()
+        WHERE id = ?
+        """,
+        id);
   }
 
   public List<UUID> findIdsByRole(String role) {
