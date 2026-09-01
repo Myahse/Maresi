@@ -48,13 +48,7 @@ public class UserRepository {
 
   public Optional<Map<String, Object>> findByEmail(String email) {
     return jdbc.query(
-            """
-            SELECT """
-                + PUBLIC_COLS
-                + """
-            , password_hash
-            FROM users WHERE email = ?
-            """,
+            "SELECT " + PUBLIC_COLS + ", password_hash FROM users WHERE email = ?",
             (rs, rowNum) -> {
               Map<String, Object> m = RowMaps.userPublic(rs);
               m.put("password_hash", rs.getString("password_hash"));
