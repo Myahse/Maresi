@@ -134,6 +134,21 @@ public class VisitRequestRepository {
         .findFirst();
   }
 
+  public Optional<Map<String, Object>> setPaymentReceipt(UUID id, String url) {
+    return jdbc.query(
+            """
+            UPDATE visit_requests
+            SET payment_receipt_url = ?
+            WHERE id = ?
+            RETURNING *
+            """,
+            (rs, rowNum) -> RowMaps.visitRequest(rs),
+            url,
+            id)
+        .stream()
+        .findFirst();
+  }
+
   public Optional<Map<String, Object>> updateStatusById(UUID id, String status) {
     return jdbc.query(
             """

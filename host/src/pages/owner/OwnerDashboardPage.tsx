@@ -104,22 +104,28 @@ export function OwnerDashboardPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">{t("owner.title")}</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate("/owner/account")}>
+    <div className="container mx-auto px-4 py-6 sm:py-8 space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-xl sm:text-2xl font-bold">{t("owner.title")}</h1>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => navigate("/owner/account")}>
             {t("account.title")}
           </Button>
           {approved ? (
             <>
-              <Button variant="outline" onClick={() => navigate("/owner/subscription")}>
+              <Button
+                variant="outline"
+                className="flex-1 sm:flex-none"
+                onClick={() => navigate("/owner/subscription")}
+              >
                 {t("payments.walletNav")}
               </Button>
-              <Button onClick={handleAdd}>{t("owner.addProperty")}</Button>
+              <Button className="flex-1 sm:flex-none" onClick={handleAdd}>
+                {t("owner.addProperty")}
+              </Button>
             </>
           ) : (
-            <Button variant="outline" onClick={() => navigate("/owner/application")}>
+            <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => navigate("/owner/application")}>
               {t("hostApply.title")}
             </Button>
           )}
@@ -188,25 +194,25 @@ export function OwnerDashboardPage() {
                     {t("propertyDetails.noImage")}
                   </div>
                 )}
-                <CardHeader className="flex flex-row items-center justify-between gap-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <span>{p.title}</span>
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <CardTitle className="text-base flex flex-wrap items-center gap-2 min-w-0">
+                    <span className="break-words">{p.title}</span>
                     {p.is_active === false && (
                       <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
                         {t("owner.draftBadge")}
                       </span>
                     )}
                   </CardTitle>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                     {p.is_active !== false && (
-                      <Button size="sm" variant="outline" onClick={() => void handleShare(p)}>
+                      <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={() => void handleShare(p)}>
                         {t("owner.share")}
                       </Button>
                     )}
-                    <Button size="sm" variant="outline" onClick={() => handleEdit(p.id)}>
+                    <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={() => handleEdit(p.id)}>
                       {t("common.edit")}
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(p.id)}>
+                    <Button size="sm" variant="destructive" className="flex-1 sm:flex-none" onClick={() => handleDelete(p.id)}>
                       {t("common.delete")}
                     </Button>
                   </div>

@@ -58,4 +58,13 @@ public class AdminMonitorService {
       UUID id, Request<Map<String, Object>> request, Locale locale) {
     return business.updatePayment(id, request, locale);
   }
+
+  public Response<Map<String, Object>> getSettings(Locale locale) {
+    return business.getSettings(locale);
+  }
+
+  public Response<Map<String, Object>> updateSettings(
+      Request<Map<String, Object>> request, Locale locale) {
+    return business.updateSettings(request, locale);
+  }
 }

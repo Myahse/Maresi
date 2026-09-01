@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { getAdminPayments, patchAdminPayment } from "@/services/api";
+import { getAdminPayments, getAdminSettings, patchAdminPayment, patchAdminSettings } from "@/services/api";
 import type { Payment } from "@/types";
 
 export function AdminPaymentsPage() {
@@ -10,6 +10,8 @@ export function AdminPaymentsPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
+  const [clientPaysFees, setClientPaysFees] = useState(false);
+  const [savingFees, setSavingFees] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -26,7 +28,23 @@ export function AdminPaymentsPage() {
 
   useEffect(() => {
     void load();
+    getAdminSettings()
+      .then((s) => setClientPaysFees(Boolean(s.client_pays_operator_fees)))
+      .catch(() => undefined);
   }, [load]);
+
+  const toggleFees = async (next: boolean) => {
+    setSavingFees(true);
+    setError("");
+    try {
+      const saved = await patchAdminSettings({ client_pays_operator_fees: next });
+      setClientPaysFees(Boolean(saved.client_pays_operator_fees));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("admin.empty"));
+    } finally {
+      setSavingFees(false);
+    }
+  };
 
   const act = async (id: string, action: "cancel" | "refund") => {
     const ok =
@@ -49,6 +67,19 @@ export function AdminPaymentsPage() {
   return (
     <div className="font-jakarta max-w-6xl mx-auto px-4 py-8 space-y-4">
       <h1 className="text-2xl font-bold">{t("admin.navPayments")}</h1>
+      <label className="flex items-start gap-3 rounded-2xl border bg-card p-4 text-sm">
+        <input
+          type="checkbox"
+          className="mt-1 accent-brand"
+          checked={clientPaysFees}
+          disabled={savingFees}
+          onChange={(e) => void toggleFees(e.target.checked)}
+        />
+        <span>
+          <span className="font-semibold block">{t("admin.clientPaysFeesTitle")}</span>
+          <span className="text-muted-foreground">{t("admin.clientPaysFeesHint")}</span>
+        </span>
+      </label>
       {error && <p className="text-sm text-destructive">{error}</p>}
       {loading ? (
         <p>{t("common.loading")}</p>

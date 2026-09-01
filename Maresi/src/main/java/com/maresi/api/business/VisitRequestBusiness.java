@@ -26,6 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 @Component
 public class VisitRequestBusiness {
@@ -295,7 +296,7 @@ public class VisitRequestBusiness {
           requesterId,
           "reservation",
           "Signez l'engagement",
-          "Votre demande a ete acceptee. Signez l'engagement de soin du logement, puis payez via GeniusPay.",
+          "Votre demande a ete acceptee. Signez l'engagement de soin du logement, puis allez au paiement.",
           listingId);
       email.sendToUser(requesterId, EmailTemplates.reservationAccepted(title, agreementUrl(id)));
     } else {
@@ -506,7 +507,7 @@ public class VisitRequestBusiness {
         user.id(),
         "reservation",
         "Code cle",
-        "Engagement signe. Donnez le code a 6 chiffres a l'hote pour recuperer la cle, puis payez via GeniusPay.",
+        "Engagement signe. Donnez le code a 6 chiffres a l'hote pour recuperer la cle, puis allez au paiement.",
         listingId);
     if (ownerId != null) {
       notifications.create(
@@ -547,7 +548,7 @@ public class VisitRequestBusiness {
         requesterId,
         "reservation",
         "Cle confirmee",
-        "L'hote a confirme le code. Payez maintenant via GeniusPay.",
+        "L'hote a confirme le code. Allez au paiement maintenant.",
         listingId);
     email.sendToUser(requesterId, EmailTemplates.payHost(guestVisitsUrl()));
     response.setItem(updated);
@@ -888,6 +889,39 @@ public class VisitRequestBusiness {
           default -> str(row.get("selfie_url"));
         };
     return fileStorage.loadIdentityImage(stored);
+  }
+
+  public Response<Map<String, Object>> uploadPaymentReceipt(
+      UUID id, MultipartFile file, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> current = visitRequests.findById(id).orElse(null);
+    if (current == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Demande introuvable", locale));
+      return response;
+    }
+    if (!sameId(current.get("user_id"), user.id()) && !"admin".equals(user.role())) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Action non autorisee", locale));
+      return response;
+    }
+    String status = String.valueOf(current.get("status"));
+    if (!List.of("awaiting_payment", "payment_sent", "confirmed").contains(status)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Envoyez le recu apres le paiement", locale));
+      return response;
+    }
+    String url = fileStorage.storeReceipt(file, EmailTemplates.guestApp(appProperties));
+    Map<String, Object> updated = visitRequests.setPaymentReceipt(id, url).orElse(current);
+    normalizeVisit(updated);
+    response.setItem(updated);
+    response.setStatus(functionalError.success("Recu enregistre", locale));
+    return response;
+  }
+
+  private boolean sameId(Object raw, UUID id) {
+    return raw != null && id != null && raw.toString().equalsIgnoreCase(id.toString());
   }
 
   private String agreementUrl(UUID visitId) {

@@ -16,6 +16,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import com.maresi.api.service.FileStorageService.StoredMedia;
 
 @RestController
@@ -187,6 +188,14 @@ public class VisitRequestController {
         },
         loc,
         exceptionUtils);
+  }
+
+  @PostMapping(value = "/{id}/receipt", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<Response<Map<String, Object>>> uploadReceipt(
+      @PathVariable UUID id, @RequestParam("file") MultipartFile file, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> visitRequestService.uploadPaymentReceipt(id, file, loc), loc, exceptionUtils);
   }
 
   @GetMapping("/{id}/identity/{kind}")

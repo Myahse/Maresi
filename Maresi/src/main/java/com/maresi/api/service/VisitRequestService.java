@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 @Component
 public class VisitRequestService {
@@ -77,5 +78,10 @@ public class VisitRequestService {
 
   public com.maresi.api.service.FileStorageService.StoredMedia loadRequesterIdentity(UUID id, String kind) {
     return visitRequestBusiness.loadRequesterIdentity(id, kind);
+  }
+
+  public Response<Map<String, Object>> uploadPaymentReceipt(
+      UUID id, MultipartFile file, Locale locale) {
+    return visitRequestBusiness.uploadPaymentReceipt(id, file, locale);
   }
 }

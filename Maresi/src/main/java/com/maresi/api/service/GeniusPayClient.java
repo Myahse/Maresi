@@ -37,6 +37,17 @@ public class GeniusPayClient {
       String successUrl,
       String errorUrl,
       Map<String, Object> metadata) {
+    return createCheckoutPayment(amount, description, customer, successUrl, errorUrl, metadata, false);
+  }
+
+  public Map<String, Object> createCheckoutPayment(
+      BigDecimal amount,
+      String description,
+      Map<String, Object> customer,
+      String successUrl,
+      String errorUrl,
+      Map<String, Object> metadata,
+      boolean customerPaysOperatorFees) {
     AppProperties.GeniusPay gp = requireKeys();
 
     Map<String, Object> body = new LinkedHashMap<>();
@@ -47,6 +58,10 @@ public class GeniusPayClient {
     if (successUrl != null && !successUrl.isBlank()) body.put("success_url", successUrl);
     if (errorUrl != null && !errorUrl.isBlank()) body.put("error_url", errorUrl);
     if (metadata != null && !metadata.isEmpty()) body.put("metadata", metadata);
+    if (customerPaysOperatorFees) {
+      body.put("fees_on_customer", true);
+      body.put("customer_pays_fees", true);
+    }
 
     try {
       String json = objectMapper.writeValueAsString(body);

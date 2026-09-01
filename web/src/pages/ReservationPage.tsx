@@ -9,7 +9,7 @@ import { Select } from "@/components/ui/select";
 import { Stepper } from "@/components/ui/stepper";
 import { WizardPane } from "@/components/ui/WizardPane";
 import { cn } from "@/lib/utils";
-import { getProperty, requestVisit } from "@/services/api";
+import { getMyProfile, getProperty, requestVisit } from "@/services/api";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { useAuth } from "@/hooks/useAuth";
 import { usePriceFormatter } from "@/context/CurrencyContext";
@@ -23,7 +23,7 @@ export function ReservationPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { requireAuth } = useAuthModal();
   const { formatPrice } = usePriceFormatter();
 
@@ -71,6 +71,17 @@ export function ReservationPage() {
       requireAuth(() => {});
     }
   }, [isAuthenticated, requireAuth]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (user?.phone && !contact_phone) setContactPhone(user.phone);
+    void getMyProfile()
+      .then((profile) => {
+        if (profile.id_card) setIdCard(profile.id_card);
+        if (profile.phone) setContactPhone((current) => current || profile.phone || "");
+      })
+      .catch(() => undefined);
+  }, [isAuthenticated, user?.phone]);
 
   const validateStep = (s: number): string | null => {
     switch (s) {

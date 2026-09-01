@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { confirmPayment } from "@/services/api";
 
 export function PaymentSuccessPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [params] = useSearchParams();
   const reference = params.get("reference") || params.get("ref") || "";
   const [phase, setPhase] = useState<"idle" | "loading" | "ok" | "pending" | "fail">(
@@ -33,6 +34,12 @@ export function PaymentSuccessPage() {
       cancelled = true;
     };
   }, [reference]);
+
+  useEffect(() => {
+    if (phase !== "ok") return;
+    const timer = window.setTimeout(() => navigate("/visits?paid=1", { replace: true }), 1200);
+    return () => window.clearTimeout(timer);
+  }, [phase, navigate]);
 
   const title =
     phase === "fail"

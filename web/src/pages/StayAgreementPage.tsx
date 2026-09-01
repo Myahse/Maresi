@@ -80,16 +80,16 @@ export function StayAgreementPage() {
   ];
 
   return (
-    <div className="font-jakarta min-h-screen bg-[#f4efe6] py-5 sm:py-8 px-3 sm:px-4">
-      <article className="max-w-3xl mx-auto bg-white shadow-lg border border-[#e6dcc8] px-4 sm:px-12 py-7 sm:py-10">
-        <header className="border-b-2 border-[#0D9488] pb-6 mb-8 text-center">
-          <p className="text-xs tracking-[0.25em] uppercase text-[#0D9488] font-semibold">Maresi</p>
+    <div className="font-jakarta min-h-screen bg-muted text-foreground py-5 sm:py-8 px-3 sm:px-4">
+      <article className="max-w-3xl mx-auto bg-card text-card-foreground shadow-lg border-2 border-border rounded-2xl px-4 sm:px-12 py-7 sm:py-10">
+        <header className="border-b-2 border-brand pb-6 mb-8 text-center">
+          <p className="text-xs tracking-[0.25em] uppercase text-brand font-semibold">Maresi</p>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mt-2">{t("visits.agreementTitle")}</h1>
           <p className="text-sm text-muted-foreground mt-2">{t("visits.agreementDocRef", { id: visit.id.slice(0, 8) })}</p>
         </header>
 
         {signed && (
-          <p className="mb-6 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3">
+          <p className="mb-6 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-foreground text-sm px-4 py-3">
             {t("visits.agreementAlreadySigned", {
               name: visit.agreement_full_name,
               date: visit.agreement_signed_at ? new Date(visit.agreement_signed_at).toLocaleString() : "",
@@ -97,19 +97,19 @@ export function StayAgreementPage() {
           </p>
         )}
 
-        <section className="space-y-2 text-sm leading-relaxed mb-8">
+        <section className="space-y-2 text-sm leading-relaxed mb-8 text-foreground">
           <p>{t("visits.agreementPreamble")}</p>
         </section>
 
-        <section className="grid sm:grid-cols-2 gap-4 text-sm border border-[#e6dcc8] bg-[#faf7f1] p-4 mb-8">
+        <section className="grid sm:grid-cols-2 gap-4 text-sm border border-border bg-muted/60 p-4 mb-8 rounded-xl">
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("visits.agreementProperty")}</p>
-            <p className="font-semibold">{visit.property_title ?? t("common.property")}</p>
+            <p className="font-semibold text-foreground">{visit.property_title ?? t("common.property")}</p>
             {visit.location && <p className="text-muted-foreground">{visit.location}</p>}
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("visits.stayDates")}</p>
-            <p className="font-semibold">
+            <p className="font-semibold text-foreground">
               {formatDate(visit.check_in)}
               {(visit.arrival_time || visit.check_in_time)
                 ? ` · ${String(visit.arrival_time || visit.check_in_time).slice(0, 5)}`
@@ -130,16 +130,16 @@ export function StayAgreementPage() {
 
         <ol className="space-y-5 mb-10">
           {articles.map((text, index) => (
-            <li key={index} className="flex gap-3 text-sm leading-relaxed">
+            <li key={index} className="flex gap-3 text-sm leading-relaxed text-foreground">
               {canSign ? (
                 <input
                   type="checkbox"
-                  className="mt-1 shrink-0"
+                  className="mt-1 shrink-0 h-4 w-4 accent-brand"
                   checked={checks[index]}
                   onChange={() => toggle(index)}
                 />
               ) : (
-                <span className="mt-0.5 shrink-0 font-semibold text-[#0D9488]">{index + 1}.</span>
+                <span className="mt-0.5 shrink-0 font-semibold text-brand">{index + 1}.</span>
               )}
               <span>
                 <span className="font-semibold">{t("visits.agreementArticle", { n: index + 1 })} — </span>
@@ -150,13 +150,12 @@ export function StayAgreementPage() {
         </ol>
 
         {canSign ? (
-          <div className="space-y-4 border-t border-[#e6dcc8] pt-6">
-            <p className="text-sm font-semibold">{t("visits.agreementSignAs")}</p>
+          <div className="space-y-4 border-t border-border pt-6">
+            <p className="text-sm font-semibold text-foreground">{t("visits.agreementSignAs")}</p>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t("visits.agreementNamePlaceholder")}
-              className="max-w-md border-[#d6cbb4]"
             />
             <p className="text-xs text-muted-foreground">{t("visits.agreementSignLegal")}</p>
             {error && <p className="text-sm text-destructive">{error}</p>}
@@ -169,15 +168,15 @@ export function StayAgreementPage() {
             </Button>
           </div>
         ) : (
-          <div className="border-t border-[#e6dcc8] pt-6 text-sm">
+          <div className="border-t border-border pt-6 text-sm">
             <p>
               <span className="text-muted-foreground">{t("visits.signedBy")}: </span>
-              <span className="font-semibold">{visit.agreement_full_name || "—"}</span>
+              <span className="font-semibold text-foreground">{visit.agreement_full_name || "—"}</span>
             </p>
           </div>
         )}
 
-        <footer className="mt-10 pt-4 text-xs text-muted-foreground border-t border-[#eee6d8]">
+        <footer className="mt-10 pt-4 text-xs text-muted-foreground border-t border-border">
           <Link to="/visits" className="text-brand hover:underline">
             ← {t("visits.agreementBackToVisits")}
           </Link>

@@ -255,7 +255,12 @@
     "submit": "Créer le compte",
     "failed": "Échec de l'inscription",
     "hasAccount": "Déjà un compte ?",
-    "signInLink": "Se connecter"
+    "signInLink": "Se connecter",
+    "acceptTerms": "J'ai lu et j'accepte les",
+    "termsRequired": "Acceptez les conditions d'utilisation pour créer le compte."
+  },
+  "legal": {
+    "termsBody": "En créant un compte Maresi, vous confirmez que les informations et pièces d'identité fournies sont les vôtres et exactes.\n\nVous vous engagez à utiliser la plateforme pour chercher ou publier une résidence de bonne foi, à payer les séjours via Maresi, et à traiter logements, voisins et hôtes avec soin.\n\nEn cas d'annulation d'un séjour déjà payé, 90 % peuvent être remboursés si l'hôte n'a pas encore retiré. Les 10 % de Maresi ne sont pas remboursés.\n\nMaresi peut suspendre un compte si les documents sont faux ou si le règlement d'un séjour n'est pas respecté."
   },
   "dashboard": {
     "title": "Parcourir les résidences",
@@ -457,7 +462,7 @@
       "declined": "Refusée",
       "awaiting_agreement": "Signer l'engagement",
       "awaiting_key": "Donner le code clé",
-      "awaiting_payment": "Payer via GeniusPay",
+      "awaiting_payment": "Aller au paiement",
       "payment_sent": "Paiement déclaré",
       "confirmed": "Confirmée",
       "cancelled": "Annulée"
@@ -490,7 +495,7 @@
     "agreementBackToVisits": "Retour à mes réservations",
     "signedBy": "Signé par",
     "keyCode": "Code clé",
-    "keyHint": "Donnez ce code à l'hôte pour récupérer la clé. Ensuite vous paierez via GeniusPay.",
+    "keyHint": "Donnez ce code à l'hôte pour récupérer la clé. Ensuite allez au paiement.",
     "keyWaitingHost": "L'hôte doit saisir ce code pour confirmer la remise de la clé.",
     "extendTitle": "Prolonger le séjour",
     "extendHint": "Demandez plus de nuits. L'hôte doit accepter avant que le départ change.",
@@ -517,8 +522,13 @@
   "payments": {
     "payHostAmount": "À payer",
     "payHostHint": "Ouvrez Wave ou Orange Money, puis indiquez que vous avez payé. L'hôte confirmera.",
-    "payMaresiHint": "Payez Maresi via GeniusPay. L'hôte reçoit 90 % sur son portefeuille. 10 % restent à Maresi.",
-    "paying": "Ouverture de GeniusPay…",
+    "payMaresiHint": "Allez au paiement pour régler le séjour. L'hôte reçoit 90 % sur son portefeuille. 10 % restent à Maresi.",
+    "paying": "Ouverture du paiement…",
+    "goToPayment": "Aller au paiement",
+    "receiptTitle": "Reçu de paiement",
+    "receiptHint": "Envoyez le reçu de votre opérateur (PDF ou image).",
+    "receiptUploaded": "Reçu envoyé.",
+    "receiptFailed": "Impossible d'envoyer le reçu",
     "payWave": "Payer avec Wave",
     "payOrange": "Payer avec Orange Money",
     "callHost": "Appeler l'hôte",
@@ -530,7 +540,7 @@
     "successText": "Votre paiement a été confirmé.",
     "confirming": "Confirmation du paiement en cours…",
     "pendingTitle": "Paiement en cours",
-    "pendingText": "Genius Pay n'a pas encore finalisé ce paiement. Rechargez cette page dans un instant.",
+    "pendingText": "Le paiement n'est pas encore finalisé. Rechargez cette page dans un instant.",
     "errorTitle": "Paiement échoué",
     "errorText": "Le paiement n'a pas abouti. Vous pouvez réessayer depuis Mes visites.",
     "viewSubscription": "Voir mon abonnement",

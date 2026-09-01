@@ -7,6 +7,7 @@ import {
   requestStayExtension,
   startReservationPayment,
   updateVisitRequestStatus,
+  uploadVisitReceipt,
 } from "@/services/api";
 import { VisitRequestCard } from "@/components/visit/VisitRequestCard";
 import { Button } from "@/components/ui/button";
@@ -172,9 +173,41 @@ export function VisitRequestsPage() {
                       disabled={actingId === v.id}
                       onClick={() => void payReservation(v.id)}
                     >
-                      {actingId === v.id ? t("payments.paying") : t("payments.payReservation")}
+                      {actingId === v.id ? t("payments.paying") : t("payments.goToPayment")}
                     </Button>
+                    <ReceiptUpload
+                      visit={v}
+                      actingId={actingId}
+                      onUpload={async (file) => {
+                        setActingId(v.id);
+                        try {
+                          await uploadVisitReceipt(v.id, file);
+                          await reload();
+                        } catch (e) {
+                          setError(actionErrorMessage(e, t("payments.receiptFailed"), t("offline.queued")));
+                        } finally {
+                          setActingId(null);
+                        }
+                      }}
+                    />
                   </div>
+                )}
+                {(v.status === "confirmed" || v.status === "payment_sent") && (
+                  <ReceiptUpload
+                    visit={v}
+                    actingId={actingId}
+                    onUpload={async (file) => {
+                      setActingId(v.id);
+                      try {
+                        await uploadVisitReceipt(v.id, file);
+                        await reload();
+                      } catch (e) {
+                        setError(actionErrorMessage(e, t("payments.receiptFailed"), t("offline.queued")));
+                      } finally {
+                        setActingId(null);
+                      }
+                    }}
+                  />
                 )}
                 {v.overstay && !v.closed_at && (
                   <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
@@ -243,6 +276,37 @@ export function VisitRequestsPage() {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function ReceiptUpload({
+  visit,
+  actingId,
+  onUpload,
+}: {
+  visit: VisitRequest;
+  actingId: string | null;
+  onUpload: (file: File) => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="space-y-2 pt-2 border-t border-border">
+      <p className="text-sm font-semibold">{t("payments.receiptTitle")}</p>
+      <p className="text-xs text-muted-foreground">{t("payments.receiptHint")}</p>
+      {visit.payment_receipt_url ? (
+        <p className="text-xs text-brand font-medium">{t("payments.receiptUploaded")}</p>
+      ) : null}
+      <input
+        type="file"
+        accept="image/*,.pdf,application/pdf"
+        className="block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-brand file:px-4 file:py-2 file:text-white"
+        disabled={actingId === visit.id}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void onUpload(file);
+        }}
+      />
     </div>
   );
 }

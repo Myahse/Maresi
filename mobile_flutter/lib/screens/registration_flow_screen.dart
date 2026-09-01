@@ -62,6 +62,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   String _phoneDial = '+225';
   DateTime? _birthDate;
   String? _gender;
+  bool _acceptedTerms = false;
 
   bool get _isOwner => _role == UserRole.owner;
 
@@ -319,6 +320,10 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     }
     if (firstName.isEmpty || lastName.isEmpty || _birthDate == null || _gender == null) {
       _showMessage(locale.t('register.personalRequired'));
+      return;
+    }
+    if (!_acceptedTerms) {
+      _showMessage(locale.t('register.termsRequired'));
       return;
     }
 
@@ -811,6 +816,14 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
             ),
             onSubmitted: (_) => _submit(),
           ),
+        ),
+        const SizedBox(height: 16),
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          value: _acceptedTerms,
+          onChanged: _loading ? null : (value) => setState(() => _acceptedTerms = value ?? false),
+          title: Text(locale.t('register.acceptTerms')),
+          controlAffinity: ListTileControlAffinity.leading,
         ),
       ],
     );

@@ -129,6 +129,28 @@ public class FileStorageService {
     return storePrepared(prepareImage(file, "identity"), identityDir, baseUrl);
   }
 
+  public String storeReceipt(MultipartFile file, String baseUrl) {
+    if (file == null || file.isEmpty()) {
+      throw ApiException.of(400, "Receipt required");
+    }
+    String name = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase(Locale.ROOT);
+    String type = file.getContentType() == null ? "" : file.getContentType().toLowerCase(Locale.ROOT);
+    boolean pdf = type.contains("pdf") || name.endsWith(".pdf");
+    Path localDir = identityDir != null ? identityDir : propertyDir;
+    if (pdf) {
+      if (file.getSize() > 8L * 1024 * 1024) {
+        throw ApiException.of(400, "File too large");
+      }
+      try {
+        String filename = System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8) + ".pdf";
+        return storePrepared(new PreparedImage(file.getBytes(), "application/pdf", "receipts/" + filename), localDir, baseUrl);
+      } catch (IOException e) {
+        throw ApiException.of(500, "Failed to store file");
+      }
+    }
+    return storePrepared(prepareImage(file, "receipts"), localDir, baseUrl);
+  }
+
   public List<String> acceptOwnedImageUrls(List<String> urls, String baseUrl) {
     if (urls == null || urls.isEmpty()) return List.of();
     List<String> accepted = new ArrayList<>();
@@ -519,6 +541,7 @@ public class FileStorageService {
     if (lower.endsWith(".png")) return "image/png";
     if (lower.endsWith(".gif")) return "image/gif";
     if (lower.endsWith(".webp")) return "image/webp";
+    if (lower.endsWith(".pdf")) return "application/pdf";
     return "image/jpeg";
   }
 

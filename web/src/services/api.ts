@@ -341,6 +341,17 @@ export function startReservationPayment(visitRequestId: string) {
   return api.post<import("@/types").Payment>(`/payments/reservation`, { visitRequestId });
 }
 
+export function uploadVisitReceipt(id: string, file: File) {
+  const token = getToken();
+  const form = new FormData();
+  form.append("file", file);
+  return fetch(`${API_BASE}/visit-requests/${id}/receipt`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  }).then((res) => parseFormResponse<import("@/types").VisitRequest>(res));
+}
+
 export function confirmPayment(reference: string) {
   return api.post<import("@/types").Payment>(`/payments/confirm`, { reference });
 }

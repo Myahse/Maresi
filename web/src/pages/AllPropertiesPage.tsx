@@ -198,15 +198,15 @@ export function AllPropertiesPage() {
           <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
             {error && <p className="text-destructive text-sm px-1 mb-2">{error}</p>}
             {loading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-[88px] rounded-2xl bg-muted animate-pulse" />
+              <div className="space-y-3">
+                {[1, 2].map((i) => (
+                  <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse" />
                 ))}
               </div>
             ) : sortedProperties.length === 0 ? (
               <p className="text-sm text-muted-foreground px-1 py-6 text-center">{t("dashboard.noneFound")}</p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {sortedProperties.map((p) => (
                   <div
                     key={p.id}
@@ -214,11 +214,12 @@ export function AllPropertiesPage() {
                       sheetItemRefs.current[p.id] = el;
                     }}
                     onClick={() => setSelectedId(p.id)}
+                    className={p.id === selectedId ? "ring-2 ring-brand rounded-3xl" : ""}
                   >
                     <PropertyCard
                       property={p}
-                      compact
-                      selected={p.id === selectedId}
+                      rental
+                      className="!w-full"
                       onToggleFavorite={toggleFavorite}
                       isFavorite={favorites.some((f) => f.property_id === p.id)}
                     />

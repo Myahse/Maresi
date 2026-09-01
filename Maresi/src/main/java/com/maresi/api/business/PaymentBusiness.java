@@ -15,8 +15,11 @@ import com.maresi.api.repository.PropertyRepository;
 import com.maresi.api.repository.UserRepository;
 import com.maresi.api.repository.VisitRequestRepository;
 import com.maresi.api.repository.WalletRepository;
+import com.maresi.api.repository.AppSettingsRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
+import com.maresi.api.service.EmailService;
+import com.maresi.api.service.EmailTemplates;
 import com.maresi.api.service.GeniusPayClient;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -49,6 +52,8 @@ public class PaymentBusiness {
   private final AppProperties props;
   private final FunctionalError functionalError;
   private final ObjectMapper objectMapper;
+  private final EmailService email;
+  private final AppSettingsRepository settings;
 
   public PaymentBusiness(
       PaymentRepository payments,
@@ -62,7 +67,9 @@ public class PaymentBusiness {
       RealtimeEventPublisher realtime,
       AppProperties props,
       FunctionalError functionalError,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      EmailService email,
+      AppSettingsRepository settings) {
     this.payments = payments;
     this.subscriptions = subscriptions;
     this.visitRequests = visitRequests;
@@ -75,6 +82,8 @@ public class PaymentBusiness {
     this.props = props;
     this.functionalError = functionalError;
     this.objectMapper = objectMapper;
+    this.email = email;
+    this.settings = settings;
   }
 
   public Response<Map<String, Object>> getMySubscription(Locale locale) {
@@ -202,19 +211,30 @@ public class PaymentBusiness {
       response.setStatus(functionalError.invalidData("Cette reservation n'attend pas de paiement", locale));
       return response;
     }
-    BigDecimal amount = computeReservationAmount(visit);
-    if (amount.compareTo(BigDecimal.valueOf(200)) < 0) {
+    BigDecimal stayAmount = computeReservationAmount(visit);
+    if (stayAmount.compareTo(BigDecimal.valueOf(200)) < 0) {
       response.setHasError(true);
       response.setStatus(functionalError.invalidData("Montant minimum 200 XOF", locale));
       return response;
     }
-    BigDecimal commission = reservationCommission(amount);
-    BigDecimal ownerAmount = amount.subtract(commission);
+    boolean clientPaysFees = settings.clientPaysOperatorFees();
+    BigDecimal amount = stayAmount;
+    if (clientPaysFees) {
+      BigDecimal fee =
+          stayAmount
+              .multiply(settings.operatorFeePercent())
+              .divide(BigDecimal.valueOf(100), 0, RoundingMode.UP);
+      amount = stayAmount.add(fee);
+    }
+    BigDecimal commission = reservationCommission(stayAmount);
+    BigDecimal ownerAmount = stayAmount.subtract(commission);
     Map<String, Object> metadata = new HashMap<>();
     metadata.put("type", "reservation");
     metadata.put("user_id", user.id().toString());
     metadata.put("visit_request_id", visitId.toString());
     metadata.put("commission_percent", props.getPayments().getReservationCommissionPercent());
+    metadata.put("stay_amount", stayAmount.toPlainString());
+    metadata.put("client_pays_operator_fees", clientPaysFees);
     Map<String, Object> payment =
         payments.create(
             user.id(),
@@ -237,7 +257,8 @@ public class PaymentBusiness {
             customer,
             props.getPayments().getSuccessUrl(),
             props.getPayments().getErrorUrl(),
-            metadata);
+            metadata,
+            clientPaysFees);
     payment =
         payments.updateCheckout(
             UUID.fromString(payment.get("id").toString()),
@@ -532,7 +553,7 @@ public class PaymentBusiness {
         wallets.credit(
             ownerId, refundAmount, "stay", paymentId, visitId, "Annulation echouee, solde recrédité");
       }
-      return "Le remboursement GeniusPay a echoue. Reessayez dans un instant.";
+      return "Le remboursement a echoue. Reessayez dans un instant.";
     }
 
     payments.markRefunded(paymentId);
@@ -790,9 +811,9 @@ public class PaymentBusiness {
           "Votre paiement a ete confirme. La reservation est validee.",
           propertyId);
       UUID ownerId = null;
+      BigDecimal stayAmount = stayOwnerShare(payment);
       if (visit != null && visit.get("property_owner_id") != null) {
         ownerId = UUID.fromString(visit.get("property_owner_id").toString());
-        BigDecimal stayAmount = stayOwnerShare(payment);
         if (stayAmount != null && stayAmount.compareTo(BigDecimal.ZERO) > 0) {
           wallets.credit(
               ownerId,
@@ -810,7 +831,27 @@ public class PaymentBusiness {
                 + (stayAmount == null ? "" : stayAmount + " XOF")
                 + " (90%) ont ete ajoutes a votre portefeuille.",
             propertyId);
+        String listingTitle =
+            visit.get("property_title") == null ? "la residence" : String.valueOf(visit.get("property_title"));
+        email.sendToUser(
+            ownerId,
+            EmailTemplates.paymentReceiptHost(
+                listingTitle,
+                stayAmount == null ? "" : stayAmount.toPlainString(),
+                EmailTemplates.hostApp(props) + "/owner/subscription"));
       }
+      String listingTitle =
+          visit != null && visit.get("property_title") != null
+              ? String.valueOf(visit.get("property_title"))
+              : "votre reservation";
+      BigDecimal paid = toMoney(payment.get("amount"));
+      email.sendToUser(
+          userId,
+          EmailTemplates.paymentReceiptGuest(
+              listingTitle,
+              paid == null ? "" : paid.toPlainString(),
+              stayAmount == null ? "" : stayAmount.toPlainString(),
+              EmailTemplates.guestApp(props) + "/visits"));
       realtime.publish("payment.completed", payment, userId, ownerId, true);
     }
   }

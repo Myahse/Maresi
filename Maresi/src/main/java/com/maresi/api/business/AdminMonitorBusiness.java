@@ -13,6 +13,7 @@ import com.maresi.api.repository.PaymentRepository;
 import com.maresi.api.repository.UserRepository;
 import com.maresi.api.repository.VisitRequestRepository;
 import com.maresi.api.repository.WalletRepository;
+import com.maresi.api.repository.AppSettingsRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
 import com.maresi.api.service.EmailService;
@@ -42,6 +43,7 @@ public class AdminMonitorBusiness {
   private final AppProperties props;
   private final FunctionalError functionalError;
   private final HostStatus hostStatus;
+  private final AppSettingsRepository settings;
 
   public AdminMonitorBusiness(
       AdminMonitorRepository monitor,
@@ -56,7 +58,8 @@ public class AdminMonitorBusiness {
       EmailService email,
       AppProperties props,
       FunctionalError functionalError,
-      HostStatus hostStatus) {
+      HostStatus hostStatus,
+      AppSettingsRepository settings) {
     this.monitor = monitor;
     this.activity = activity;
     this.subscriptions = subscriptions;
@@ -70,6 +73,37 @@ public class AdminMonitorBusiness {
     this.props = props;
     this.functionalError = functionalError;
     this.hostStatus = hostStatus;
+    this.settings = settings;
+  }
+
+  public Response<Map<String, Object>> getSettings(Locale locale) {
+    requireAdmin();
+    Response<Map<String, Object>> response = new Response<>();
+    response.setItem(
+        Map.of(
+            "client_pays_operator_fees",
+            settings.clientPaysOperatorFees(),
+            "operator_fee_percent",
+            settings.operatorFeePercent()));
+    response.setStatus(functionalError.success("Reglages", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> updateSettings(
+      Request<Map<String, Object>> request, Locale locale) {
+    requireAdmin();
+    Map<String, Object> body = request.getData() == null ? Map.of() : request.getData();
+    if (body.containsKey("client_pays_operator_fees")) {
+      settings.put(
+          AppSettingsRepository.CLIENT_PAYS_OPERATOR_FEES,
+          boolVal(body.get("client_pays_operator_fees"), false) ? "true" : "false");
+    }
+    if (body.containsKey("operator_fee_percent")) {
+      settings.put(
+          AppSettingsRepository.OPERATOR_FEE_PERCENT,
+          String.valueOf(body.get("operator_fee_percent")));
+    }
+    return getSettings(locale);
   }
 
   public Response<Map<String, Object>> overview(Locale locale) {

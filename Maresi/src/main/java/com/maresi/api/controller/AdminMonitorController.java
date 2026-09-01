@@ -110,6 +110,27 @@ public class AdminMonitorController {
         exceptionUtils);
   }
 
+  @GetMapping("/settings")
+  public ResponseEntity<Response<Map<String, Object>>> settings(Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> adminMonitorService.getSettings(loc), loc, exceptionUtils);
+  }
+
+  @PatchMapping("/settings")
+  public ResponseEntity<Response<Map<String, Object>>> updateSettings(
+      @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return adminMonitorService.updateSettings(request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
   @PatchMapping("/payments/{id}")
   public ResponseEntity<Response<Map<String, Object>>> updatePayment(
       @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {

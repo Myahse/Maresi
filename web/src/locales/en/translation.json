@@ -255,7 +255,12 @@
     "submit": "Create account",
     "failed": "Registration failed",
     "hasAccount": "Already have an account?",
-    "signInLink": "Sign in"
+    "signInLink": "Sign in",
+    "acceptTerms": "I have read and accept the",
+    "termsRequired": "Accept the terms of use to create your account."
+  },
+  "legal": {
+    "termsBody": "By creating a Maresi account you confirm that the information and identity documents you provide are yours and accurate.\n\nYou agree to use the platform to look for or list a residence in good faith, to pay stays through Maresi, and to treat homes, neighbours and hosts with care.\n\nOn cancellation of a paid stay, 90% can be refunded if the host has not already withdrawn. Maresi's 10% is not refunded.\n\nMaresi may suspend an account if documents are false or if the house rules of a stay are broken."
   },
   "dashboard": {
     "title": "Browse residences",
@@ -457,7 +462,7 @@
       "declined": "Declined",
       "awaiting_agreement": "Sign care agreement",
       "awaiting_key": "Share the key code",
-      "awaiting_payment": "Pay with GeniusPay",
+      "awaiting_payment": "Go to payment",
       "payment_sent": "Payment declared",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled"
@@ -490,7 +495,7 @@
     "agreementBackToVisits": "Back to my reservations",
     "signedBy": "Signed by",
     "keyCode": "Key code",
-    "keyHint": "Give this code to the host to receive the key. Then pay via GeniusPay.",
+    "keyHint": "Give this code to the host to receive the key. Then go to payment.",
     "keyWaitingHost": "The host must enter this code to confirm the key handover.",
     "extendTitle": "Extend the stay",
     "extendHint": "Ask for more nights. The host must approve before checkout changes.",
@@ -517,8 +522,13 @@
   "payments": {
     "payHostAmount": "Amount due",
     "payHostHint": "Open Wave or Orange Money, then mark that you paid. The host will confirm.",
-    "payMaresiHint": "Pay Maresi via GeniusPay. The host receives 90% in their wallet. 10% stays with Maresi.",
-    "paying": "Opening GeniusPay…",
+    "payMaresiHint": "Go to payment to settle your stay. The host receives 90% in their wallet. 10% stays with Maresi.",
+    "paying": "Opening payment…",
+    "goToPayment": "Go to payment",
+    "receiptTitle": "Payment receipt",
+    "receiptHint": "Upload the receipt from your operator (PDF or image).",
+    "receiptUploaded": "Receipt uploaded.",
+    "receiptFailed": "Could not upload the receipt",
     "payWave": "Pay with Wave",
     "payOrange": "Pay with Orange Money",
     "callHost": "Call the host",
@@ -530,7 +540,7 @@
     "successText": "Your payment has been confirmed.",
     "confirming": "Confirming your payment…",
     "pendingTitle": "Payment pending",
-    "pendingText": "Genius Pay has not finalized this payment yet. Refresh this page in a moment.",
+    "pendingText": "The payment is not finalized yet. Refresh this page in a moment.",
     "errorTitle": "Payment failed",
     "errorText": "Payment did not complete. You can retry from My visits.",
     "viewSubscription": "View my subscription",

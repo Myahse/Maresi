@@ -138,6 +138,7 @@ export interface VisitRequest {
   extension_amount?: number;
   extension_note?: string;
   closed_at?: string;
+  payment_receipt_url?: string;
   overstay?: boolean;
   can_close?: boolean;
   guest_rating_avg?: number;

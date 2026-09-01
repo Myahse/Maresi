@@ -180,7 +180,7 @@ public final class EmailTemplates {
         "Demande acceptée",
         "Réservation",
         "Bonne nouvelle : l’hôte a accepté",
-        "Bonjour,\n\nVotre demande a été acceptée. Signez maintenant l’engagement de soin du logement.\n\nEnsuite, vous recevrez un code à 6 chiffres à donner à l’hôte pour récupérer la clé. Le paiement se fait ensuite via GeniusPay, dans Maresi.",
+        "Bonjour,\n\nVotre demande a été acceptée. Signez maintenant l’engagement de soin du logement.\n\nEnsuite, vous recevrez un code à 6 chiffres à donner à l’hôte pour récupérer la clé. Le paiement se fait ensuite dans Maresi.",
         details("Résidence", title, "Prochaine étape", "Signer l’engagement"),
         null,
         "Signer l’engagement",
@@ -224,7 +224,7 @@ public final class EmailTemplates {
         "Votre code clé",
         "Clé",
         "Voici votre code clé",
-        "Bonjour,\n\nVotre engagement est enregistré. Donnez uniquement ce code à l’hôte pour récupérer la clé, puis payez via GeniusPay dans Maresi.\n\nGardez ce message : sans ce code, l’hôte ne pourra pas confirmer la remise des clés.",
+        "Bonjour,\n\nVotre engagement est enregistré. Donnez uniquement ce code à l’hôte pour récupérer la clé, puis allez au paiement dans Maresi.\n\nGardez ce message : sans ce code, l’hôte ne pourra pas confirmer la remise des clés.",
         details("Résidence", title),
         new Highlight("Code à 6 chiffres", keyCode),
         null,
@@ -233,13 +233,37 @@ public final class EmailTemplates {
 
   public static Mail payHost(String ctaUrl) {
     return build(
-        "Payez votre réservation",
+        "Allez au paiement",
         "Paiement",
-        "C’est le moment de payer via GeniusPay",
-        "Bonjour,\n\nL’hôte a confirmé le code clé. Payez maintenant Maresi via GeniusPay. L’hôte reçoit 90 % sur son portefeuille.\n\nOuvrez vos visites et lancez le paiement : GeniusPay vous redirige vers Wave ou Orange Money.",
-        details("Moyen", "GeniusPay", "À faire", "Payer la réservation dans Maresi"),
+        "C’est le moment de payer",
+        "Bonjour,\n\nL’hôte a confirmé le code clé. Ouvrez vos visites et allez au paiement. L’hôte reçoit 90 % sur son portefeuille.",
+        details("À faire", "Ouvrir le paiement dans Maresi"),
         null,
-        "Payer maintenant",
+        "Aller au paiement",
+        ctaUrl);
+  }
+
+  public static Mail paymentReceiptGuest(String title, String paid, String hostShare, String ctaUrl) {
+    return build(
+        "Reçu de paiement — Maresi",
+        "Paiement",
+        "Votre paiement est confirmé",
+        "Bonjour,\n\nVoici votre reçu. La réservation est validée. L’hôte a reçu 90 % sur son portefeuille.\n\nJoignez aussi le reçu de votre opérateur (PDF ou image) dans vos visites.",
+        details("Résidence", title, "Montant payé", paid + " XOF", "Part hôte (90%)", hostShare + " XOF"),
+        new Highlight("Reçu", "Conservez cet e-mail"),
+        "Voir mes visites",
+        ctaUrl);
+  }
+
+  public static Mail paymentReceiptHost(String title, String hostShare, String ctaUrl) {
+    return build(
+        "Paiement reçu — portefeuille",
+        "Paiement",
+        "90 % ont été ajoutés à votre portefeuille",
+        "Bonjour,\n\nLe client a payé. Voici le reçu : 90 % du séjour sont maintenant dans votre portefeuille. Vous pouvez retirer vers Wave ou Orange Money.",
+        details("Résidence", title, "Crédit portefeuille", hostShare + " XOF"),
+        null,
+        "Ouvrir le portefeuille",
         ctaUrl);
   }
 

@@ -18,6 +18,7 @@ import { ReservationPage } from "@/pages/ReservationPage";
 import { PaymentSuccessPage, PaymentErrorPage } from "@/pages/PaymentResultPages";
 import { BecomeHostPage } from "@/pages/BecomeHostPage";
 import { AccountIdentityPage } from "@/pages/AccountIdentityPage";
+import { TermsPage } from "@/pages/TermsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { AppSplash } from "@/components/layout/AppSplash";
 import { ClientRealtimeBridge } from "@/components/realtime/ClientRealtimeBridge";
@@ -98,6 +99,7 @@ function App() {
               />
               <Route path="payments/success" element={<PaymentSuccessPage />} />
               <Route path="payments/error" element={<PaymentErrorPage />} />
+              <Route path="terms" element={<TermsPage />} />
               <Route
                 path="account"
                 element={

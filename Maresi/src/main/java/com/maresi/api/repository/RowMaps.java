@@ -182,6 +182,7 @@ public final class RowMaps {
     putIfPresent(rs, m, "extension_responded_at");
     putIfPresent(rs, m, "extension_note");
     putIfPresent(rs, m, "closed_at");
+    putIfPresent(rs, m, "payment_receipt_url");
     return m;
   }
 

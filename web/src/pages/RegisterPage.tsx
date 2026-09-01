@@ -42,6 +42,7 @@ export function RegisterPage() {
   const [selfie, setSelfie] = useState<File | null>(null);
   const [idCardPhoto, setIdCardPhoto] = useState<File | null>(null);
   const [idCardBack, setIdCardBack] = useState<File | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -95,6 +96,10 @@ export function RegisterPage() {
     }
     if (!isValidIdCard(idCard)) {
       setError(t("register.idCardInvalid"));
+      return;
+    }
+    if (!acceptedTerms) {
+      setError(t("register.termsRequired"));
       return;
     }
     setLoading(true);
@@ -325,6 +330,20 @@ export function RegisterPage() {
                   required
                 />
               </div>
+              <label className="flex items-start gap-2 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  className="mt-1 accent-brand"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                />
+                <span>
+                  {t("register.acceptTerms")}{" "}
+                  <Link to="/terms" className="text-brand font-medium hover:underline">
+                    {t("footer.terms")}
+                  </Link>
+                </span>
+              </label>
             </WizardPane>
           )}
 

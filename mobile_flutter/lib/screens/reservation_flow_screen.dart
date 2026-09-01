@@ -43,6 +43,27 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
   final _messageController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _prefillIdentity();
+  }
+
+  Future<void> _prefillIdentity() async {
+    try {
+      final profile = await maresiApi.getMyProfile();
+      if (!mounted) return;
+      final idCard = '${profile['id_card'] ?? ''}'.trim();
+      final phone = '${profile['phone'] ?? ''}'.trim();
+      setState(() {
+        if (idCard.isNotEmpty) _idCardController.text = idCard;
+        if (phone.isNotEmpty && _phoneController.text.trim().isEmpty) {
+          _phoneController.text = phone;
+        }
+      });
+    } catch (_) {}
+  }
+
+  @override
   void dispose() {
     _guestsController.dispose();
     _phoneController.dispose();

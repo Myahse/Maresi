@@ -270,6 +270,20 @@ export function patchAdminPayment(id: string, body: { action: "cancel" | "refund
   return api.patch<import("@/types").Payment>(`/admin/payments/${id}`, body);
 }
 
+export function getAdminSettings() {
+  return api.get<{ client_pays_operator_fees: boolean; operator_fee_percent: number }>(`/admin/settings`);
+}
+
+export function patchAdminSettings(body: {
+  client_pays_operator_fees?: boolean;
+  operator_fee_percent?: number;
+}) {
+  return api.patch<{ client_pays_operator_fees: boolean; operator_fee_percent: number }>(
+    `/admin/settings`,
+    body
+  );
+}
+
 export function reviewHostApplication(
   id: string,
   status: "approved" | "rejected" | "suspended",
