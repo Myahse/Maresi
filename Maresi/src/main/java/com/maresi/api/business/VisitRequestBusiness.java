@@ -17,7 +17,6 @@ import com.maresi.api.config.AppProperties;
 import com.maresi.api.service.EmailService;
 import com.maresi.api.service.EmailTemplates;
 import com.maresi.api.service.FileStorageService;
-import com.maresi.api.service.StayAgreementText;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -892,7 +891,7 @@ public class VisitRequestBusiness {
   }
 
   private String agreementUrl(UUID visitId) {
-    return StayAgreementText.pageUrl(appProperties.getPayments().getSuccessUrl(), visitId);
+    return EmailTemplates.guestApp(appProperties) + "/visits/" + visitId + "/agreement";
   }
 
   private String hostVisitsUrl() {

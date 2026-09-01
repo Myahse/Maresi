@@ -1,11 +1,12 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { LoginPage } from "@/pages/LoginPage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
-import { clientHostRegisterUrl } from "@/lib/clientApp";
+import { CLIENT_APP_URL, clientHostRegisterUrl, guestHandoffUrl } from "@/lib/clientApp";
+import { useAuth } from "@/hooks/useAuth";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
 import { OwnerDashboardPage } from "@/pages/owner/OwnerDashboardPage";
@@ -25,6 +26,24 @@ function ClientRegisterRedirect() {
   useEffect(() => {
     window.location.replace(clientHostRegisterUrl());
   }, []);
+  return null;
+}
+
+function GuestAgreementRedirect() {
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!id) return;
+    const path = `/visits/${id}/agreement`;
+    const token = localStorage.getItem("token");
+    if (token && user) {
+      window.location.replace(guestHandoffUrl({ token, user }, path));
+      return;
+    }
+    window.location.replace(`${CLIENT_APP_URL.replace(/\/$/, "")}${path}`);
+  }, [id, user]);
+
   return null;
 }
 
@@ -58,6 +77,7 @@ function App() {
             <Route path="owner/new" element={<ProtectedRoute approvedOnly><PropertyEditPage /></ProtectedRoute>} />
             <Route path="owner/edit/:id" element={<ProtectedRoute approvedOnly><PropertyEditPage /></ProtectedRoute>} />
             <Route path="owner/visits" element={<ProtectedRoute approvedOnly><OwnerVisitsPage /></ProtectedRoute>} />
+            <Route path="visits/:id/agreement" element={<GuestAgreementRedirect />} />
             <Route path="owner/account" element={<ProtectedRoute><OwnerIdentityPage /></ProtectedRoute>} />
             <Route path="payments/success" element={<PaymentSuccessPage />} />
             <Route path="payments/error" element={<PaymentErrorPage />} />
