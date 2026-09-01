@@ -7,6 +7,7 @@ import { PropertyCard } from "@/components/property/PropertyCard";
 import { PropertyCardSkeleton } from "@/components/property/PropertyCardSkeleton";
 import { getProperties } from "@/services/api";
 import type { Property } from "@/types";
+import { isPremiumPositioned } from "@/lib/listingRank";
 
 const HERO_IMAGE =
   "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1600&q=80";
@@ -33,14 +34,17 @@ export function LandingPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const { featured, others } = useMemo(() => {
-    const primary = properties.filter((p) =>
-      /abidjan/i.test(p.location)
-    );
-    const rest = properties.filter((p) => !/abidjan/i.test(p.location));
+  const { featured, others, featuredIsPremium } = useMemo(() => {
+    const premium = properties.filter(isPremiumPositioned);
+    const rest = properties.filter((p) => !isPremiumPositioned(p));
+    if (premium.length > 0) {
+      return { featured: premium, others: rest, featuredIsPremium: true };
+    }
+    const primary = properties.filter((p) => /abidjan/i.test(p.location));
     return {
       featured: primary.length > 0 ? primary : properties.slice(0, 5),
-      others: primary.length > 0 ? rest : [],
+      others: primary.length > 0 ? properties.filter((p) => !/abidjan/i.test(p.location)) : [],
+      featuredIsPremium: false,
     };
   }, [properties]);
 
@@ -90,13 +94,15 @@ export function LandingPage() {
                 >
                   {t("landing.browseNow")}
                 </button>
-                <button
-                  type="button"
-                  onClick={openRegister}
-                  className="px-6 py-2.5 rounded-full border-2 border-white text-white font-semibold text-sm hover:bg-white/10 transition-colors"
-                >
-                  {t("landing.getStarted")}
-                </button>
+                {!isAuthenticated && (
+                  <button
+                    type="button"
+                    onClick={openRegister}
+                    className="px-6 py-2.5 rounded-full border-2 border-white text-white font-semibold text-sm hover:bg-white/10 transition-colors"
+                  >
+                    {t("landing.getStarted")}
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -115,13 +121,15 @@ export function LandingPage() {
           >
             {t("landing.browseNow")}
           </Link>
-          <button
-            type="button"
-            onClick={openRegister}
-            className="flex-1 text-center py-2.5 rounded-full border-2 border-white text-white font-semibold text-sm"
-          >
-            {t("landing.getStarted")}
-          </button>
+          {!isAuthenticated && (
+            <button
+              type="button"
+              onClick={openRegister}
+              className="flex-1 text-center py-2.5 rounded-full border-2 border-white text-white font-semibold text-sm"
+            >
+              {t("landing.getStarted")}
+            </button>
+          )}
         </div>
       </section>
 
@@ -150,7 +158,9 @@ export function LandingPage() {
           <div className="flex justify-between items-end gap-4 mb-4 sm:mb-6">
             <div>
               <h2 className="text-lg sm:text-2xl font-bold text-foreground">{t("landing.available")}</h2>
-              <p className="text-xs sm:text-sm font-semibold text-muted-foreground">{t("landing.featuredCity")}</p>
+              <p className="text-xs sm:text-sm font-semibold text-muted-foreground">
+                {t(featuredIsPremium ? "landing.featuredPremium" : "landing.featuredCity")}
+              </p>
             </div>
             <button
               type="button"

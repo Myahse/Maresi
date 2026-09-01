@@ -16,13 +16,42 @@ public final class EmailTemplates {
   private EmailTemplates() {}
 
   public static String guestApp(AppProperties props) {
-    String origin = origin(props.getPayments().getSuccessUrl());
-    return origin.isBlank() ? "https://maresi-sepia.vercel.app" : origin;
+    return firstAppOrigin(
+        props.getApps().getGuestUrl(),
+        origin(props.getPayments().getSuccessUrl()),
+        "https://ma-resi.com");
   }
 
   public static String hostApp(AppProperties props) {
-    String origin = origin(props.getPayments().getHostSuccessUrl());
-    return origin.isBlank() ? "https://host.ma-resi.com" : origin;
+    return firstAppOrigin(
+        props.getApps().getHostUrl(),
+        origin(props.getPayments().getHostSuccessUrl()),
+        "https://host.ma-resi.com");
+  }
+
+  private static String firstAppOrigin(String explicit, String fromPayment, String fallback) {
+    String configured = stripSlash(explicit);
+    if (!configured.isBlank()) return configured;
+    String paymentOrigin = stripSlash(fromPayment);
+    if (isStableAppOrigin(paymentOrigin)) return paymentOrigin;
+    return fallback;
+  }
+
+  private static boolean isStableAppOrigin(String origin) {
+    if (origin == null || origin.isBlank()) return false;
+    String lower = origin.toLowerCase();
+    if (lower.contains("localhost") || lower.contains("127.0.0.1")) return false;
+    if (lower.contains("vercel.app") || lower.contains("maresi-sepia")) return false;
+    return lower.startsWith("http://") || lower.startsWith("https://");
+  }
+
+  private static String stripSlash(String url) {
+    if (url == null) return "";
+    String value = url.trim();
+    while (value.endsWith("/")) {
+      value = value.substring(0, value.length() - 1);
+    }
+    return value;
   }
 
   public static String origin(String url) {

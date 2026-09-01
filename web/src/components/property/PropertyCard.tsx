@@ -124,6 +124,11 @@ export function PropertyCard({
             ? t(`propertyTypes.${property.property_type}`)
             : property.property_type}
         </span>
+        {property.premium_positioning && (
+          <span className="absolute top-2 left-2 mt-6 px-2 py-0.5 rounded-full bg-amber-500 text-[10px] sm:text-xs font-bold text-white">
+            {t("properties.premium")}
+          </span>
+        )}
       </div>
 
       <div className="p-4">

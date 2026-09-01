@@ -65,6 +65,7 @@ class PropertyCard extends StatelessWidget {
 
   Widget _buildCompactCard(BuildContext context) {
     final palette = context.palette;
+    final locale = context.watch<LocaleProvider>();
     final imageUrl = property.images.isNotEmpty ? property.images.first : null;
     final title = property.title.isNotEmpty ? property.title : defaultTitle;
     final meta = _metaLine(context);
@@ -98,6 +99,22 @@ class PropertyCard extends StatelessWidget {
                           isFavorite ? Icons.favorite : Icons.favorite_border,
                           color: isFavorite ? AppColors.favorite : palette.heartInactive,
                           size: 22,
+                        ),
+                      ),
+                    ),
+                  if (property.premiumPositioning)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF59E0B),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          locale.t('home.premium'),
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
                         ),
                       ),
                     ),

@@ -130,6 +130,7 @@
     "serviceOwner": "Tableau propriétaire",
     "available": "Disponibles",
     "featuredCity": "Résidences à la une",
+    "featuredPremium": "Annonces en position premium",
     "moreListings": "Plus d'annonces",
     "otherCities": "Autres villes",
     "seeAll": "Tout voir",
@@ -142,7 +143,8 @@
     "allSubtitle": "Recherchez par lieu, type et prix",
     "count": "{{count}} biens trouvés",
     "showMap": "Voir la carte",
-    "showList": "Voir la liste"
+    "showList": "Voir la liste",
+    "premium": "En avant"
   },
   "login": {
     "title": "Connexion",

@@ -49,6 +49,7 @@ export interface Property {
   check_out_time?: string;
   price_midday?: number;
   price_full_day?: number;
+  premium_positioning?: boolean;
 }
 
 export interface VisitRequestPayload {
@@ -170,6 +171,7 @@ export interface OwnerSubscription {
   commission_due?: number;
   wallet_balance?: number;
   wallet_ledger?: WalletLedgerEntry[];
+  premium_positioning?: boolean;
 }
 
 export interface PropertyRating {

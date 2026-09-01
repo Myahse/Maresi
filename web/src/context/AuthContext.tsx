@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { User } from "@/types";
 import * as authService from "@/services/auth";
 
@@ -15,13 +15,8 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setUser(authService.getStoredUser());
-    setLoading(false);
-  }, []);
+  const [user, setUser] = useState<User | null>(() => authService.getStoredUser());
+  const [loading, setLoading] = useState(false);
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await authService.login(email, password);

@@ -13,11 +13,25 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class PropertyRepository {
+  private static final String PREMIUM_POSITIONING =
+      """
+      (
+        COALESCE(s.premium_positioning, FALSE)
+        AND s.status = 'active'
+        AND s.expires_at IS NOT NULL
+        AND s.expires_at > NOW()
+      )""";
+
   private static final String SELECT_JOIN =
       """
-      SELECT p.*, u.full_name AS owner_name, u.email AS owner_email, u.phone AS owner_phone
+      SELECT p.*, u.full_name AS owner_name, u.email AS owner_email, u.phone AS owner_phone,
+             """
+          + PREMIUM_POSITIONING
+          + """
+             AS premium_positioning
       FROM properties p
       JOIN users u ON p.owner_id = u.id
+      LEFT JOIN owner_subscriptions s ON s.user_id = p.owner_id
       """;
 
   private final JdbcTemplate jdbc;
@@ -80,7 +94,7 @@ public class PropertyRepository {
       sql.append(" AND p.property_type = ?");
       params.add(propertyType);
     }
-    sql.append(" ORDER BY p.created_at DESC");
+    sql.append(" ORDER BY ").append(PREMIUM_POSITIONING).append(" DESC, p.created_at DESC");
     return jdbc.query(sql.toString(), (rs, rowNum) -> RowMaps.property(rs), params.toArray());
   }
 

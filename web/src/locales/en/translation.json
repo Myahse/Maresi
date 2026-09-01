@@ -130,6 +130,7 @@
     "serviceOwner": "Owner dashboard",
     "available": "Available",
     "featuredCity": "Featured residences",
+    "featuredPremium": "Premium placement listings",
     "moreListings": "More listings",
     "otherCities": "Other locations",
     "seeAll": "See all",
@@ -142,7 +143,8 @@
     "allSubtitle": "Search by location, type and price",
     "count": "{{count}} properties found",
     "showMap": "Show map",
-    "showList": "Show list"
+    "showList": "Show list",
+    "premium": "Featured"
   },
   "login": {
     "title": "Sign in",

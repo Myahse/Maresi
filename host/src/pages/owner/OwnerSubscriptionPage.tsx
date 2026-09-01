@@ -233,6 +233,11 @@ export function OwnerSubscriptionPage() {
                 })}
               </span>
             </div>
+            {sub?.active ? (
+              <p className="text-sm font-medium text-brand">{t("payments.premiumOn")}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t("payments.premiumOff")}</p>
+            )}
             {sub?.expires_at && (
               <div className="flex justify-between gap-4 text-sm">
                 <span className="text-muted-foreground">{t("payments.expires")}</span>

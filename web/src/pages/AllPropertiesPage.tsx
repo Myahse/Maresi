@@ -10,7 +10,7 @@ import { PropertiesMap } from "@/components/map/PropertiesMap";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { useUserLocation } from "@/context/LocationContext";
-import { distanceKm } from "@/lib/geolocation";
+import { sortListings } from "@/lib/listingRank";
 import type { Property, Favorite } from "@/types";
 
 const defaultFilters: FilterValues = {
@@ -57,20 +57,7 @@ export function AllPropertiesPage() {
     }
   }, [appliedFilters, isAuthenticated, t]);
 
-  const sortedProperties = useMemo(() => {
-    if (!coords) return properties;
-    return [...properties].sort((a, b) => {
-      const da =
-        a.latitude != null && a.longitude != null
-          ? distanceKm(coords, a.latitude, a.longitude)
-          : Number.POSITIVE_INFINITY;
-      const db =
-        b.latitude != null && b.longitude != null
-          ? distanceKm(coords, b.latitude, b.longitude)
-          : Number.POSITIVE_INFINITY;
-      return da - db;
-    });
-  }, [properties, coords]);
+  const sortedProperties = useMemo(() => sortListings(properties, coords), [properties, coords]);
 
   useEffect(() => {
     load();

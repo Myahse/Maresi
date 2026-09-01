@@ -49,6 +49,7 @@ export interface Property {
   check_out_time?: string;
   price_midday?: number;
   price_full_day?: number;
+  premium_positioning?: boolean;
 }
 
 export interface VisitRequestPayload {
@@ -159,6 +160,7 @@ export interface OwnerSubscription {
   expires_at?: string;
   price_fcfa: number;
   active: boolean;
+  premium_positioning?: boolean;
 }
 
 export interface PropertyRating {

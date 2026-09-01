@@ -72,6 +72,7 @@ public final class RowMaps {
     putIfPresent(rs, m, "owner_name");
     putIfPresent(rs, m, "owner_email");
     putIfPresent(rs, m, "owner_phone");
+    m.put("premium_positioning", boolOrFalse(rs, "premium_positioning"));
     return m;
   }
 
@@ -205,6 +206,7 @@ public final class RowMaps {
     putIfPresent(rs, m, "user_email");
     putIfPresent(rs, m, "user_name");
     putIfPresent(rs, m, "user_role");
+    m.put("premium_positioning", boolOrFalse(rs, "premium_positioning"));
     return m;
   }
 
@@ -267,6 +269,15 @@ public final class RowMaps {
       }
     } catch (SQLException ignored) {
       // column not in result set
+    }
+  }
+
+  private static boolean boolOrFalse(ResultSet rs, String col) {
+    try {
+      boolean value = rs.getBoolean(col);
+      return !rs.wasNull() && value;
+    } catch (SQLException ignored) {
+      return false;
     }
   }
 

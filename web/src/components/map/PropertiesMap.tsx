@@ -6,13 +6,9 @@ import { usePriceFormatter } from "@/context/CurrencyContext";
 import { useTranslation } from "react-i18next";
 import { useUserLocation } from "@/context/LocationContext";
 import { GEO_WATCH_OPTIONS } from "@/lib/geolocation";
-import {
-  ABIDJAN_CENTER,
-  MAPBOX_MARKER,
-  MAPBOX_MARKER_ACTIVE,
-  MAPBOX_STYLE,
-  mapboxToken,
-} from "@/lib/mapbox";
+import { listingImageUrls } from "@/lib/media";
+import { isPremiumPositioned } from "@/lib/listingRank";
+import { ABIDJAN_CENTER, MAPBOX_STYLE, mapboxToken } from "@/lib/mapbox";
 
 interface PropertiesMapProps {
   properties: Property[];
@@ -32,11 +28,15 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
   const geolocateRef = useRef<mapboxgl.GeolocateControl | null>(null);
   const onClickRef = useRef(onMarkerClick);
   const formatRef = useRef(formatPrice);
+  const badgeRef = useRef(t("properties.premium"));
+  const hoveredRef = useRef(hoveredId);
   const centeredOnUser = useRef(false);
   const statusRef = useRef(status);
   onClickRef.current = onMarkerClick;
   formatRef.current = formatPrice;
+  badgeRef.current = t("properties.premium");
   statusRef.current = status;
+  hoveredRef.current = hoveredId;
 
   const withCoords = useMemo(
     () =>
@@ -97,23 +97,29 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
     withCoords.forEach((p) => {
       let marker = markersRef.current.get(p.id);
       if (!marker) {
-        marker = new mapboxgl.Marker({ color: p.id === hoveredId ? MAPBOX_MARKER_ACTIVE : MAPBOX_MARKER })
+        const el = cardMarkerElement(
+          p,
+          formatRef.current(p.price),
+          p.id === hoveredRef.current,
+          badgeRef.current
+        );
+        el.addEventListener("click", (event) => {
+          event.stopPropagation();
+          onClickRef.current?.(p.id);
+        });
+        marker = new mapboxgl.Marker({ element: el, anchor: "bottom" })
           .setLngLat([p.longitude, p.latitude])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 12 }).setHTML(
-              `<div class="text-sm font-jakarta min-w-[140px]"><p class="font-bold">${escapeHtml(
-                p.title
-              )}</p><p class="font-semibold">${escapeHtml(formatRef.current(p.price))}</p><p>${escapeHtml(
-                p.location
-              )}</p></div>`
-            )
-          )
           .addTo(map);
-        marker.getElement().style.cursor = "pointer";
-        marker.getElement().addEventListener("click", () => onClickRef.current?.(p.id));
         markersRef.current.set(p.id, marker);
       } else {
         marker.setLngLat([p.longitude, p.latitude]);
+        syncCardMarker(
+          marker.getElement(),
+          p,
+          formatRef.current(p.price),
+          p.id === hoveredRef.current,
+          badgeRef.current
+        );
       }
     });
   }, [withCoords, hoveredId]);
@@ -159,4 +165,33 @@ function escapeHtml(value: string) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function cardMarkerElement(property: Property, price: string, active: boolean, badge: string) {
+  const el = document.createElement("button");
+  el.type = "button";
+  el.setAttribute("aria-label", property.title);
+  syncCardMarker(el, property, price, active, badge);
+  return el;
+}
+
+function syncCardMarker(el: HTMLElement, property: Property, price: string, active: boolean, badge: string) {
+  const premium = isPremiumPositioned(property);
+  const photo = listingImageUrls(property.images)[0] ?? "";
+  el.className = `maresi-map-marker${premium ? " is-premium" : ""}${active ? " is-active" : ""}`;
+  el.style.zIndex = active ? "30" : premium ? "12" : "2";
+  el.innerHTML = `<span class="maresi-map-card-wrap"><span class="maresi-map-card">${
+    premium ? `<span class="maresi-map-badge">${escapeHtml(badge)}</span>` : ""
+  }<img src="${escapeHtml(photo)}" alt="" />
+    <span class="maresi-map-card-body"><span class="maresi-map-card-title">${escapeHtml(
+      property.title
+    )}</span><span class="maresi-map-card-price">${escapeHtml(price)}</span></span>
+  </span><span class="maresi-map-pin"></span></span>`;
+  const img = el.querySelector("img");
+  if (img) {
+    img.onerror = () => {
+      img.onerror = null;
+      img.src = `https://placehold.co/192x128/0D9488/white?text=${encodeURIComponent("Maresi")}`;
+    };
+  }
 }

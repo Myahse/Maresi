@@ -13,6 +13,7 @@ public class AppProperties {
   private Payments payments = new Payments();
   private Push push = new Push();
   private Mail mail = new Mail();
+  private Apps apps = new Apps();
 
   public Jwt getJwt() {
     return jwt;
@@ -84,6 +85,35 @@ public class AppProperties {
 
   public void setMail(Mail mail) {
     this.mail = mail;
+  }
+
+  public Apps getApps() {
+    return apps;
+  }
+
+  public void setApps(Apps apps) {
+    this.apps = apps;
+  }
+
+  public static class Apps {
+    private String guestUrl = "";
+    private String hostUrl = "";
+
+    public String getGuestUrl() {
+      return guestUrl;
+    }
+
+    public void setGuestUrl(String guestUrl) {
+      this.guestUrl = guestUrl == null ? "" : guestUrl;
+    }
+
+    public String getHostUrl() {
+      return hostUrl;
+    }
+
+    public void setHostUrl(String hostUrl) {
+      this.hostUrl = hostUrl == null ? "" : hostUrl;
+    }
   }
 
   public static class Mail {

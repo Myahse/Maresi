@@ -45,13 +45,14 @@ public class OwnerSubscriptionRepository {
   public Map<String, Object> upsertActive(UUID userId, Instant startsAt, Instant expiresAt, UUID lastPaymentId) {
     return jdbc.queryForObject(
         """
-        INSERT INTO owner_subscriptions (user_id, status, starts_at, expires_at, last_payment_id)
-        VALUES (?, 'active', ?, ?, ?)
+        INSERT INTO owner_subscriptions (user_id, status, starts_at, expires_at, last_payment_id, premium_positioning)
+        VALUES (?, 'active', ?, ?, ?, TRUE)
         ON CONFLICT (user_id) DO UPDATE SET
           status = 'active',
           starts_at = EXCLUDED.starts_at,
           expires_at = EXCLUDED.expires_at,
           last_payment_id = EXCLUDED.last_payment_id,
+          premium_positioning = TRUE,
           updated_at = NOW()
         RETURNING *
         """,
@@ -67,7 +68,7 @@ public class OwnerSubscriptionRepository {
     return jdbc.queryForObject(
         """
         UPDATE owner_subscriptions
-        SET status = 'inactive', expires_at = NOW(), updated_at = NOW()
+        SET status = 'inactive', expires_at = NOW(), premium_positioning = FALSE, updated_at = NOW()
         WHERE user_id = ?
         RETURNING *
         """,
