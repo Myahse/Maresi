@@ -36,6 +36,8 @@ export function ReservationPage() {
 
   const [check_in, setCheckIn] = useState("");
   const [check_out, setCheckOut] = useState("");
+  const [arrivalTime, setArrivalTime] = useState("14:00");
+  const [departureTime, setDepartureTime] = useState("12:00");
   const [includeVisit, setIncludeVisit] = useState(searchParams.get("visit") === "1");
   const [visit_date, setVisitDate] = useState("");
   const [visit_time, setVisitTime] = useState("10:00");
@@ -55,7 +57,11 @@ export function ReservationPage() {
   useEffect(() => {
     if (!id) return;
     getProperty(id)
-      .then(setProperty)
+      .then((listing) => {
+        setProperty(listing);
+        if (listing.check_in_time) setArrivalTime(String(listing.check_in_time).slice(0, 5));
+        if (listing.check_out_time) setDepartureTime(String(listing.check_out_time).slice(0, 5));
+      })
       .catch(() => setProperty(null))
       .finally(() => setLoading(false));
   }, [id]);
@@ -72,6 +78,10 @@ export function ReservationPage() {
         if (!check_in || !check_out) return t("wizard.reserve.errors.datesRequired");
         if (!isFutureDate(check_in)) return t("wizard.reserve.errors.checkInFuture");
         if (!isValidDateRange(check_in, check_out)) return t("wizard.reserve.errors.checkOutAfter");
+        if (!arrivalTime || !departureTime) return t("wizard.reserve.errors.timesRequired");
+        if (check_in === check_out && arrivalTime >= departureTime) {
+          return t("wizard.reserve.errors.timesOrder");
+        }
         return null;
       case 1:
         if (!includeVisit) return null;
@@ -123,6 +133,8 @@ export function ReservationPage() {
           propertyId: id,
           check_in,
           check_out,
+          arrival_time: arrivalTime,
+          departure_time: departureTime,
           visit_date: includeVisit ? visit_date : undefined,
           visit_time: includeVisit ? visit_time : undefined,
           guests_count: Number(guests_count),
@@ -198,15 +210,38 @@ export function ReservationPage() {
               <Input id="check_in" type="date" value={check_in} onChange={(e) => setCheckIn(e.target.value)} />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="arrival_time">{t("wizard.reserve.arrivalTime")} *</Label>
+              <Input
+                id="arrival_time"
+                type="time"
+                step={900}
+                value={arrivalTime}
+                onChange={(e) => setArrivalTime(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="check_out">{t("wizard.reserve.checkOut")} *</Label>
               <Input id="check_out" type="date" value={check_out} onChange={(e) => setCheckOut(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="departure_time">{t("wizard.reserve.departureTime")} *</Label>
+              <Input
+                id="departure_time"
+                type="time"
+                step={900}
+                value={departureTime}
+                onChange={(e) => setDepartureTime(e.target.value)}
+                required
+              />
             </div>
           </div>
           {(property.check_in_time || property.check_out_time) && (
             <p className="text-sm text-muted-foreground">
-              {property.check_in_time ? `${t("wizard.reserve.checkIn")} ${String(property.check_in_time).slice(0, 5)}` : ""}
-              {property.check_in_time && property.check_out_time ? " · " : ""}
-              {property.check_out_time ? `${t("wizard.reserve.checkOut")} ${String(property.check_out_time).slice(0, 5)}` : ""}
+              {t("wizard.reserve.houseHoursHint", {
+                arrival: String(property.check_in_time || "14:00").slice(0, 5),
+                departure: String(property.check_out_time || "12:00").slice(0, 5),
+              })}
             </p>
           )}
           {(property.price_midday || property.price_full_day) && (
@@ -344,7 +379,7 @@ export function ReservationPage() {
             <div className="p-4">
               <dt className="text-muted-foreground">{t("wizard.reserve.stay")}</dt>
               <dd className="font-semibold">
-                {check_in} → {check_out}
+                {check_in} {arrivalTime} → {check_out} {departureTime}
               </dd>
             </div>
             <div className="p-4">

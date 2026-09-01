@@ -14,7 +14,7 @@ export function isFutureDate(dateStr: string): boolean {
 
 export function isValidDateRange(checkIn: string, checkOut: string): boolean {
   if (!checkIn || !checkOut) return false;
-  return new Date(checkOut) > new Date(checkIn);
+  return new Date(checkOut) >= new Date(checkIn);
 }
 
 export function isValidPhone(phone: string): boolean {

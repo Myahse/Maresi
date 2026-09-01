@@ -26,14 +26,17 @@ public class VisitRequestRepository {
       Integer guestsCount,
       String contactPhone,
       String idCard,
-      String stayRate) {
+      String stayRate,
+      String arrivalTime,
+      String departureTime) {
     return jdbc.queryForObject(
         """
         INSERT INTO visit_requests (
           user_id, property_id, message, check_in, check_out,
-          visit_date, visit_time, guests_count, contact_phone, id_card, stay_rate
+          visit_date, visit_time, guests_count, contact_phone, id_card, stay_rate,
+          arrival_time, departure_time
         )
-        VALUES (?, ?, ?, CAST(? AS date), CAST(? AS date), CAST(? AS date), ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, CAST(? AS date), CAST(? AS date), CAST(? AS date), ?, ?, ?, ?, ?, CAST(? AS time), CAST(? AS time))
         RETURNING *
         """,
         (rs, rowNum) -> RowMaps.visitRequest(rs),
@@ -47,7 +50,9 @@ public class VisitRequestRepository {
         guestsCount != null ? guestsCount : 1,
         contactPhone,
         idCard,
-        stayRate != null && !stayRate.isBlank() ? stayRate : "night");
+        stayRate != null && !stayRate.isBlank() ? stayRate : "night",
+        arrivalTime,
+        departureTime);
   }
 
   public Optional<Map<String, Object>> findById(UUID id) {
@@ -281,17 +286,17 @@ public class VisitRequestRepository {
             (
               vr.checkin_notified_at IS NULL
               AND vr.check_in IS NOT NULL
-              AND (vr.check_in + COALESCE(p.check_in_time, TIME '14:00'))
+              AND (vr.check_in + COALESCE(vr.arrival_time, p.check_in_time, TIME '14:00'))
                     AT TIME ZONE 'Africa/Abidjan' <= NOW()
-              AND (vr.check_in + COALESCE(p.check_in_time, TIME '14:00'))
+              AND (vr.check_in + COALESCE(vr.arrival_time, p.check_in_time, TIME '14:00'))
                     AT TIME ZONE 'Africa/Abidjan' > NOW() - INTERVAL '12 hours'
             )
             OR (
               vr.checkout_notified_at IS NULL
               AND vr.check_out IS NOT NULL
-              AND (vr.check_out + COALESCE(p.check_out_time, TIME '12:00'))
+              AND (vr.check_out + COALESCE(vr.departure_time, p.check_out_time, TIME '12:00'))
                     AT TIME ZONE 'Africa/Abidjan' <= NOW()
-              AND (vr.check_out + COALESCE(p.check_out_time, TIME '12:00'))
+              AND (vr.check_out + COALESCE(vr.departure_time, p.check_out_time, TIME '12:00'))
                     AT TIME ZONE 'Africa/Abidjan' > NOW() - INTERVAL '12 hours'
             )
           )

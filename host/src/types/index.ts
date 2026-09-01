@@ -62,6 +62,8 @@ export interface VisitRequestPayload {
   check_out: string;
   visit_date?: string;
   visit_time?: string;
+  arrival_time?: string;
+  departure_time?: string;
   guests_count: number;
   contact_phone: string;
   id_card: string;
@@ -103,6 +105,10 @@ export interface VisitRequest {
   check_out?: string;
   visit_date?: string;
   visit_time?: string;
+  arrival_time?: string;
+  departure_time?: string;
+  check_in_time?: string;
+  check_out_time?: string;
   guests_count?: number;
   contact_phone?: string;
   id_card?: string;

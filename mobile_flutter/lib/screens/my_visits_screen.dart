@@ -230,6 +230,10 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
                                   const SizedBox(height: 4),
                                   Text(visit.location!, style: TextStyle(color: palette.textSecondary, fontSize: 13)),
                                 ],
+                                if (visit.checkIn.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Text(visit.stayLabel(), style: TextStyle(color: palette.text, fontSize: 13)),
+                                ],
                                 const SizedBox(height: 8),
                                 Text(
                                   _statusLabel(locale, visit.status),

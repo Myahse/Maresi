@@ -110,7 +110,15 @@ export function StayAgreementPage() {
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("visits.stayDates")}</p>
             <p className="font-semibold">
-              {formatDate(visit.check_in)} → {formatDate(visit.check_out)}
+              {formatDate(visit.check_in)}
+              {(visit.arrival_time || visit.check_in_time)
+                ? ` · ${String(visit.arrival_time || visit.check_in_time).slice(0, 5)}`
+                : ""}
+              {" → "}
+              {formatDate(visit.check_out)}
+              {(visit.departure_time || visit.check_out_time)
+                ? ` · ${String(visit.departure_time || visit.check_out_time).slice(0, 5)}`
+                : ""}
             </p>
             {visit.guests_count != null && (
               <p className="text-muted-foreground">

@@ -35,6 +35,8 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
   bool _includeVisit = false;
   String? _visitDate;
   String _visitTime = '10:00';
+  TimeOfDay _arrival = const TimeOfDay(hour: 14, minute: 0);
+  TimeOfDay _departure = const TimeOfDay(hour: 12, minute: 0);
   final _guestsController = TextEditingController(text: '2');
   final _phoneController = TextEditingController();
   final _idCardController = TextEditingController();
@@ -75,6 +77,25 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
   String _formatDate(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
+  String _formatClock(TimeOfDay time) =>
+      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
+  Future<void> _pickStayTime({required bool arrival}) async {
+    if (_loading) return;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: arrival ? _arrival : _departure,
+    );
+    if (picked == null) return;
+    setState(() {
+      if (arrival) {
+        _arrival = picked;
+      } else {
+        _departure = picked;
+      }
+    });
+  }
+
   bool _isFutureDate(String? value) {
     if (value == null || value.isEmpty) return false;
     final parts = value.split('-');
@@ -96,7 +117,10 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
       case 0:
         if (_checkIn == null || _checkOut == null) return locale.t('reserve.errorDatesRequired');
         if (!_isFutureDate(_checkIn)) return locale.t('reserve.errorCheckInFuture');
-        if (_checkOut!.compareTo(_checkIn!) <= 0) return locale.t('reserve.errorCheckOutAfter');
+        if (_checkOut!.compareTo(_checkIn!) < 0) return locale.t('reserve.errorCheckOutAfter');
+        if (_checkIn == _checkOut && _formatClock(_arrival).compareTo(_formatClock(_departure)) >= 0) {
+          return locale.t('reserve.errorTimesOrder');
+        }
         return null;
       case 1:
         if (!_includeVisit) return null;
@@ -154,6 +178,8 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
           propertyId: widget.property.id,
           checkIn: _checkIn!,
           checkOut: _checkOut!,
+          arrivalTime: _formatClock(_arrival),
+          departureTime: _formatClock(_departure),
           visitDate: _includeVisit ? _visitDate : null,
           visitTime: _includeVisit ? _visitTime : null,
           guestsCount: int.parse(_guestsController.text.trim()),
@@ -292,12 +318,26 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
         ),
         const SizedBox(height: 16),
         _DateField(
+          label: locale.t('reserve.arrivalTime'),
+          value: _formatClock(_arrival),
+          icon: Icons.schedule,
+          onTap: () => _pickStayTime(arrival: true),
+        ),
+        const SizedBox(height: 16),
+        _DateField(
           label: locale.t('reserve.checkOut'),
           value: _checkOut,
           onTap: () async {
             final picked = await _pickDate(locale);
             if (picked != null) setState(() => _checkOut = picked);
           },
+        ),
+        const SizedBox(height: 16),
+        _DateField(
+          label: locale.t('reserve.departureTime'),
+          value: _formatClock(_departure),
+          icon: Icons.schedule,
+          onTap: () => _pickStayTime(arrival: false),
         ),
       ],
     );
@@ -405,7 +445,7 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
         ),
         const SizedBox(height: 16),
         _ReviewRow(label: locale.t('reserve.residence'), value: widget.property.title),
-        _ReviewRow(label: locale.t('reserve.stay'), value: '$_checkIn → $_checkOut'),
+        _ReviewRow(label: locale.t('reserve.stay'), value: '$_checkIn ${_formatClock(_arrival)} → $_checkOut ${_formatClock(_departure)}'),
         _ReviewRow(
           label: locale.t('reserve.visitSlot'),
           value: _includeVisit ? '$_visitDate · $_visitTime' : locale.t('reserve.visitSkipped'),
@@ -419,11 +459,17 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
 }
 
 class _DateField extends StatelessWidget {
-  const _DateField({required this.label, required this.value, required this.onTap});
+  const _DateField({
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.icon = Icons.calendar_today_outlined,
+  });
 
   final String label;
   final String? value;
   final VoidCallback onTap;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -433,8 +479,8 @@ class _DateField extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: InputDecorator(
-          decoration: const InputDecoration(
-            suffixIcon: Icon(Icons.calendar_today_outlined, size: 18),
+          decoration: InputDecoration(
+            suffixIcon: Icon(icon, size: 18),
           ),
           child: Text(
             value ?? '—',

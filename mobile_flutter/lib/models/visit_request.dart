@@ -5,6 +5,8 @@ class VisitRequestPayload {
     required this.checkOut,
     this.visitDate,
     this.visitTime,
+    this.arrivalTime,
+    this.departureTime,
     required this.guestsCount,
     required this.contactPhone,
     required this.idCard,
@@ -16,6 +18,8 @@ class VisitRequestPayload {
   final String checkOut;
   final String? visitDate;
   final String? visitTime;
+  final String? arrivalTime;
+  final String? departureTime;
   final int guestsCount;
   final String contactPhone;
   final String idCard;
@@ -27,6 +31,8 @@ class VisitRequestPayload {
         'check_out': checkOut,
         if (visitDate != null && visitDate!.isNotEmpty) 'visit_date': visitDate,
         if (visitTime != null && visitTime!.isNotEmpty) 'visit_time': visitTime,
+        if (arrivalTime != null && arrivalTime!.isNotEmpty) 'arrival_time': arrivalTime,
+        if (departureTime != null && departureTime!.isNotEmpty) 'departure_time': departureTime,
         'guests_count': guestsCount,
         'contact_phone': contactPhone,
         'id_card': idCard,
@@ -43,6 +49,8 @@ class VisitRequest {
     required this.checkOut,
     required this.visitDate,
     required this.visitTime,
+    this.arrivalTime,
+    this.departureTime,
     this.guestsCount,
     this.contactPhone,
     this.idCard,
@@ -69,6 +77,8 @@ class VisitRequest {
   final String checkOut;
   final String visitDate;
   final String visitTime;
+  final String? arrivalTime;
+  final String? departureTime;
   final int? guestsCount;
   final String? contactPhone;
   final String? idCard;
@@ -96,6 +106,8 @@ class VisitRequest {
       checkOut: json['check_out'] as String? ?? '',
       visitDate: json['visit_date'] as String? ?? '',
       visitTime: json['visit_time'] as String? ?? '',
+      arrivalTime: json['arrival_time'] as String?,
+      departureTime: json['departure_time'] as String?,
       guestsCount: (json['guests_count'] as num?)?.toInt(),
       contactPhone: json['contact_phone'] as String?,
       idCard: json['id_card'] as String?,
@@ -114,5 +126,16 @@ class VisitRequest {
       overstay: json['overstay'] == true,
       closedAt: json['closed_at'] as String?,
     );
+  }
+
+  String stayLabel() {
+    final arrive = _hhmm(arrivalTime);
+    final leave = _hhmm(departureTime);
+    return '${checkIn}${arrive.isEmpty ? '' : ' $arrive'} → ${checkOut}${leave.isEmpty ? '' : ' $leave'}';
+  }
+
+  static String _hhmm(String? value) {
+    if (value == null || value.isEmpty) return '';
+    return value.length >= 5 ? value.substring(0, 5) : value;
   }
 }

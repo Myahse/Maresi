@@ -109,6 +109,20 @@ public class VisitRequestBusiness {
       response.setStatus(functionalError.fieldEmpty("id_card", locale));
       return response;
     }
+    String arrivalTime = clock(body.get("arrival_time"));
+    String departureTime = clock(body.get("departure_time"));
+    if (arrivalTime == null || departureTime == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("arrival_time, departure_time", locale));
+      return response;
+    }
+    if (String.valueOf(body.get("check_in")).equals(String.valueOf(body.get("check_out")))
+        && arrivalTime.compareTo(departureTime) >= 0) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.invalidData("Le meme jour, l'arrivee doit etre avant le depart", locale));
+      return response;
+    }
 
     Map<String, Object> property = properties.findById(listingId).orElse(null);
     if (property == null) {
@@ -129,7 +143,9 @@ public class VisitRequestBusiness {
             intOrNull(body.get("guests_count")),
             str(body.get("contact_phone")),
             idCard,
-            stayRate(body.get("stay_rate")));
+            stayRate(body.get("stay_rate")),
+            arrivalTime,
+            departureTime);
 
     notifyVisitRequestSubmitted(user.id(), listingId, String.valueOf(property.get("title")));
     UUID ownerId =
@@ -150,8 +166,8 @@ public class VisitRequestBusiness {
           EmailTemplates.reservationNew(
               String.valueOf(property.get("title")),
               userName(user.id()),
-              String.valueOf(body.get("check_in")),
-              String.valueOf(body.get("check_out")),
+              stayWhen(body.get("check_in"), arrivalTime),
+              stayWhen(body.get("check_out"), departureTime),
               String.valueOf(body.get("contact_phone")),
               idCard,
               hostVisitsUrl()));
@@ -1001,6 +1017,21 @@ public class VisitRequestBusiness {
     String value = raw.toString().trim().toLowerCase(Locale.ROOT);
     if ("midday".equals(value) || "full_day".equals(value) || "night".equals(value)) return value;
     return "night";
+  }
+
+  private static String clock(Object raw) {
+    if (raw == null) return null;
+    String value = raw.toString().trim();
+    if (value.matches("\\d{2}:\\d{2}")) return value + ":00";
+    if (value.matches("\\d{2}:\\d{2}:\\d{2}")) return value;
+    return null;
+  }
+
+  private static String stayWhen(Object date, String time) {
+    String day = date == null ? "" : date.toString();
+    if (time == null || time.isBlank()) return day;
+    String hour = time.length() >= 5 ? time.substring(0, 5) : time;
+    return day.isBlank() ? hour : day + " · " + hour;
   }
 
   private static UUID uuid(Object v) {

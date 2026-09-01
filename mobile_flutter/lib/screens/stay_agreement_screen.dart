@@ -108,7 +108,7 @@ class _StayAgreementScreenState extends State<StayAgreementScreen> {
                       Text(widget.visit.propertyTitle ?? locale.t('nav.property'), style: const TextStyle(fontWeight: FontWeight.w700)),
                       if (widget.visit.location != null) Text(widget.visit.location!, style: TextStyle(color: palette.textSecondary)),
                       const SizedBox(height: 6),
-                      Text('${widget.visit.checkIn} → ${widget.visit.checkOut}'),
+                      Text(widget.visit.stayLabel()),
                     ],
                   ),
                 ),

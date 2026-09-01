@@ -38,6 +38,8 @@ public class SchemaPatches {
     "ALTER TABLE properties ADD COLUMN IF NOT EXISTS price_midday NUMERIC(12, 2)",
     "ALTER TABLE properties ADD COLUMN IF NOT EXISTS price_full_day NUMERIC(12, 2)",
     "ALTER TABLE visit_requests ADD COLUMN IF NOT EXISTS stay_rate VARCHAR(20) DEFAULT 'night'",
+    "ALTER TABLE visit_requests ADD COLUMN IF NOT EXISTS arrival_time TIME",
+    "ALTER TABLE visit_requests ADD COLUMN IF NOT EXISTS departure_time TIME",
     "ALTER TABLE visit_requests ADD COLUMN IF NOT EXISTS checkin_notified_at TIMESTAMPTZ",
     "ALTER TABLE visit_requests ADD COLUMN IF NOT EXISTS checkout_notified_at TIMESTAMPTZ",
     "ALTER TABLE visit_requests ADD COLUMN IF NOT EXISTS extension_check_out DATE",

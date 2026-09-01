@@ -161,6 +161,8 @@ public final class RowMaps {
     putIfPresent(rs, m, "price_full_day");
     putTime(rs, m, "check_in_time");
     putTime(rs, m, "check_out_time");
+    putTime(rs, m, "arrival_time");
+    putTime(rs, m, "departure_time");
     putIfPresent(rs, m, "agreement_full_name");
     putIfPresent(rs, m, "agreement_accepted");
     putIfPresent(rs, m, "agreement_signed_at");

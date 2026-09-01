@@ -31,6 +31,11 @@ function formatDate(date?: string) {
   });
 }
 
+function formatStay(date?: string, time?: string) {
+  const hour = time ? String(time).slice(0, 5) : "";
+  return hour ? `${formatDate(date)} · ${hour}` : formatDate(date);
+}
+
 export function VisitRequestCard({ visit, showRequester, children }: VisitRequestCardProps) {
   const { t } = useTranslation();
 
@@ -74,7 +79,8 @@ export function VisitRequestCard({ visit, showRequester, children }: VisitReques
               <div>
                 <p className="font-semibold text-foreground">{t("visits.stayDates")}</p>
                 <p>
-                  {formatDate(visit.check_in)} → {formatDate(visit.check_out)}
+                  {formatStay(visit.check_in, visit.arrival_time || visit.check_in_time)} →{" "}
+                  {formatStay(visit.check_out, visit.departure_time || visit.check_out_time)}
                 </p>
               </div>
             </div>
