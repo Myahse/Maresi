@@ -130,6 +130,7 @@ export async function login(email: string, password: string): Promise<AuthRespon
 export function logout(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  void import("@/lib/offline").then((m) => m.clearOfflineSession()).catch(() => undefined);
 }
 
 export function getStoredUser(): User | null {

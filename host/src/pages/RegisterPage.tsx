@@ -5,6 +5,7 @@ import { Building2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BirthDateInput } from "@/components/auth/BirthDateInput";
 import { IdentityPhotoField } from "@/components/auth/IdentityPhotoField";
 import { PhoneInput } from "@/components/auth/PhoneInput";
 import { WizardPane } from "@/components/ui/WizardPane";
@@ -201,26 +202,23 @@ export function RegisterPage() {
                   />
                 </div>
               </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="birthDate">{t("register.birthDate")}</Label>
-                  <Input
-                    id="birthDate"
-                    type="date"
-                    value={birthDate}
-                    max={maxAdultBirthDate()}
-                    onChange={(e) => setBirthDate(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gender">{t("register.gender")}</Label>
+              <div className="space-y-2">
+                <Label htmlFor="birthDate">{t("register.birthDate")}</Label>
+                <BirthDateInput
+                  id="birthDate"
+                  value={birthDate}
+                  max={maxAdultBirthDate()}
+                  onChange={setBirthDate}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gender">{t("register.gender")}</Label>
                   <select
                     id="gender"
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
                     required
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
                   >
                     <option value="">{t("register.genderPlaceholder")}</option>
                     <option value="male">{t("register.genderMale")}</option>
@@ -228,7 +226,6 @@ export function RegisterPage() {
                     <option value="other">{t("register.genderOther")}</option>
                   </select>
                 </div>
-              </div>
             </WizardPane>
           )}
 

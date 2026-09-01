@@ -34,7 +34,7 @@ export function OwnerIdentityPage() {
           <dl className="rounded-2xl border bg-card divide-y text-sm">
             <Row label={t("register.firstName")} value={profile.first_name || profile.full_name.split(" ")[0] || "—"} />
             <Row label={t("register.lastName")} value={profile.last_name || profile.full_name.split(" ").slice(1).join(" ") || "—"} />
-            <Row label={t("register.birthDate")} value={profile.birth_date || "—"} />
+            <Row label={t("register.birthDate")} value={profile.birth_date || profile.birthDate || "—"} />
             <Row
               label={t("register.gender")}
               value={

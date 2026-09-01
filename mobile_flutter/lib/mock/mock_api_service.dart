@@ -337,6 +337,72 @@ class MockApiService implements MaresiApi {
   }
 
   @override
+  Future<VisitRequest> requestStayExtension(String id, String checkOut) async {
+    await _delay();
+    final index = _visitRequests.indexWhere((v) => v.id == id);
+    if (index < 0) throw Exception('Demande introuvable');
+    final current = _visitRequests[index];
+    final updated = VisitRequest(
+      id: current.id,
+      propertyId: current.propertyId,
+      status: current.status,
+      checkIn: current.checkIn,
+      checkOut: current.checkOut,
+      visitDate: current.visitDate,
+      visitTime: current.visitTime,
+      guestsCount: current.guestsCount,
+      contactPhone: current.contactPhone,
+      idCard: current.idCard,
+      message: current.message,
+      propertyTitle: current.propertyTitle,
+      location: current.location,
+      propertyPrice: current.propertyPrice,
+      wavePaymentUrl: current.wavePaymentUrl,
+      orangeMoneyUrl: current.orangeMoneyUrl,
+      ownerPhone: current.ownerPhone,
+      keyCode: current.keyCode,
+      extensionCheckOut: checkOut,
+      extensionStatus: 'pending',
+      extensionAmount: current.propertyPrice,
+    );
+    _visitRequests[index] = updated;
+    return updated;
+  }
+
+  @override
+  Future<VisitRequest> markStayExtensionPaid(String id) async {
+    await _delay();
+    final index = _visitRequests.indexWhere((v) => v.id == id);
+    if (index < 0) throw Exception('Demande introuvable');
+    final current = _visitRequests[index];
+    final updated = VisitRequest(
+      id: current.id,
+      propertyId: current.propertyId,
+      status: current.status,
+      checkIn: current.checkIn,
+      checkOut: current.checkOut,
+      visitDate: current.visitDate,
+      visitTime: current.visitTime,
+      guestsCount: current.guestsCount,
+      contactPhone: current.contactPhone,
+      idCard: current.idCard,
+      message: current.message,
+      propertyTitle: current.propertyTitle,
+      location: current.location,
+      propertyPrice: current.propertyPrice,
+      wavePaymentUrl: current.wavePaymentUrl,
+      orangeMoneyUrl: current.orangeMoneyUrl,
+      ownerPhone: current.ownerPhone,
+      keyCode: current.keyCode,
+      extensionCheckOut: current.extensionCheckOut,
+      extensionStatus: 'payment_sent',
+      extensionAmount: current.extensionAmount,
+    );
+    _visitRequests[index] = updated;
+    return updated;
+  }
+
+  @override
   Future<VisitRequest> signStayAgreement(String id, String fullName) async {
     return updateVisitRequestStatus(id, 'awaiting_payment');
   }

@@ -67,6 +67,10 @@ abstract class MaresiApi {
 
   Future<VisitRequest> updateVisitRequestStatus(String id, String status);
 
+  Future<VisitRequest> requestStayExtension(String id, String checkOut);
+
+  Future<VisitRequest> markStayExtensionPaid(String id);
+
   Future<VisitRequest> signStayAgreement(String id, String fullName);
 
   Future<OwnerSubscription> getMySubscription();

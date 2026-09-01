@@ -34,6 +34,12 @@
     "back": "Back",
     "next": "Next"
   },
+  "offline": {
+    "banner": "No connection. Showing last saved data.",
+    "back": "Back online. Sending {{count}} saved action(s)…",
+    "queued": "Saved. We will send this when the connection returns.",
+    "stale": "This data may be out of date."
+  },
   "push": {
     "title": "Enable notifications",
     "body": "Get alerts for bookings and payments even when the app is closed.",
@@ -191,6 +197,9 @@
     "firstName": "First name",
     "lastName": "Last name",
     "birthDate": "Date of birth",
+    "birthDay": "Day",
+    "birthMonth": "Month",
+    "birthYear": "Year",
     "gender": "Gender",
     "genderPlaceholder": "Choose",
     "genderMale": "Male",
@@ -424,7 +433,28 @@
     "signedBy": "Signed by",
     "keyCode": "Key code",
     "keyHint": "Give this code to the host to receive the key. Then pay the host.",
-    "keyWaitingHost": "The host must enter this code to confirm the key handover."
+    "keyWaitingHost": "The host must enter this code to confirm the key handover.",
+    "extendTitle": "Extend the stay",
+    "extendHint": "Ask for more nights. The host must approve before checkout changes.",
+    "extendUntil": "New checkout",
+    "extendCta": "Request extension",
+    "extendPending": "Request sent. Waiting for the host.",
+    "extendDeclined": "The host declined the extension. Checkout stays {{date}}.",
+    "extendApproved": "Extension accepted until {{date}}.",
+    "extendPayHint": "Pay the extra nights to the host, then mark the payment.",
+    "extendPaidWaiting": "Extra payment declared. The host must confirm.",
+    "extendConfirmed": "Extension confirmed until {{date}}.",
+    "extendAmount": "Extra amount",
+    "extendRequested": "Requested new checkout",
+    "extendDecideTitle": "Extensions to review",
+    "extendConfirmPayTitle": "Extra payments to confirm",
+    "extendAccept": "Approve extension",
+    "extendDecline": "Decline",
+    "extendConfirmPay": "Confirm extra payment",
+    "iPaidExtension": "I paid the extra nights",
+    "overstayTitle": "Overstay",
+    "overstayGuestHint": "Checkout has passed. Request an extension or leave. The host can bill extra nights.",
+    "stayClosed": "Stay closed"
   },
   "payments": {
     "payHostAmount": "Amount due",

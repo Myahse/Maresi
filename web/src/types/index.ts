@@ -7,6 +7,7 @@ export interface User {
   first_name?: string;
   last_name?: string;
   birth_date?: string;
+  birthDate?: string;
   gender?: string;
   role: UserRole;
   phone?: string;
@@ -122,6 +123,16 @@ export interface VisitRequest {
   wave_payment_url?: string;
   orange_money_url?: string;
   owner_phone?: string;
+  extension_check_out?: string;
+  extension_status?: "pending" | "declined" | "awaiting_payment" | "payment_sent" | "confirmed";
+  extension_amount?: number;
+  extension_note?: string;
+  closed_at?: string;
+  overstay?: boolean;
+  can_close?: boolean;
+  guest_rating_avg?: number;
+  guest_rating_count?: number;
+  guest_host_notes?: { score: number; note?: string; created_at?: string }[];
 }
 
 export interface Payment {

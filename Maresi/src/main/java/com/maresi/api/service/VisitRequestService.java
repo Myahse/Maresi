@@ -47,6 +47,34 @@ public class VisitRequestService {
     return visitRequestBusiness.confirmKey(id, request, locale);
   }
 
+  public Response<Map<String, Object>> requestExtension(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    return visitRequestBusiness.requestExtension(id, request, locale);
+  }
+
+  public Response<Map<String, Object>> decideExtension(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    return visitRequestBusiness.decideExtension(id, request, locale);
+  }
+
+  public Response<Map<String, Object>> markExtensionPaid(UUID id, Locale locale) {
+    return visitRequestBusiness.markExtensionPaid(id, locale);
+  }
+
+  public Response<Map<String, Object>> confirmExtensionPayment(UUID id, Locale locale) {
+    return visitRequestBusiness.confirmExtensionPayment(id, locale);
+  }
+
+  public Response<Map<String, Object>> billOverstay(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    return visitRequestBusiness.billOverstay(id, request, locale);
+  }
+
+  public Response<Map<String, Object>> closeStay(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    return visitRequestBusiness.closeStay(id, request, locale);
+  }
+
   public com.maresi.api.service.FileStorageService.StoredMedia loadRequesterIdentity(UUID id, String kind) {
     return visitRequestBusiness.loadRequesterIdentity(id, kind);
   }

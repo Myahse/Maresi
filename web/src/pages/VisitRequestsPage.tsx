@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getMyVisitRequests, updateVisitRequestStatus } from "@/services/api";
+import {
+  getMyVisitRequests,
+  markStayExtensionPaid,
+  requestStayExtension,
+  updateVisitRequestStatus,
+} from "@/services/api";
 import { VisitRequestCard } from "@/components/visit/VisitRequestCard";
 import { Button } from "@/components/ui/button";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
+import { actionErrorMessage } from "@/lib/offline";
 import type { VisitRequest } from "@/types";
 
 function stayAmount(visit: VisitRequest): number {
@@ -23,6 +29,7 @@ export function VisitRequestsPage() {
   const [visits, setVisits] = useState<VisitRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [extendDates, setExtendDates] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
 
   const reload = useCallback(
@@ -56,7 +63,49 @@ export function VisitRequestsPage() {
       await updateVisitRequestStatus(visitId, "cancelled");
       await reload();
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("visits.cancelConfirm"));
+      setError(actionErrorMessage(e, t("visits.cancelConfirm"), t("offline.queued")));
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const canRequestExtension = (visit: VisitRequest) =>
+    !visit.closed_at &&
+    (visit.status === "confirmed" || visit.status === "payment_sent") &&
+    (!visit.extension_status || visit.extension_status === "declined" || visit.extension_status === "confirmed");
+
+  const minExtendDate = (visit: VisitRequest) => {
+    if (!visit.check_out) return "";
+    const d = new Date(`${visit.check_out.slice(0, 10)}T00:00:00`);
+    d.setDate(d.getDate() + 1);
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${d.getFullYear()}-${month}-${day}`;
+  };
+
+  const requestExtension = async (visit: VisitRequest) => {
+    const next = extendDates[visit.id] || minExtendDate(visit);
+    if (!next) return;
+    setActingId(visit.id);
+    setError("");
+    try {
+      await requestStayExtension(visit.id, next);
+      await reload();
+    } catch (e) {
+      setError(actionErrorMessage(e, t("visits.extendCta"), t("offline.queued")));
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const markExtensionPaid = async (visitId: string) => {
+    setActingId(visitId);
+    setError("");
+    try {
+      await markStayExtensionPaid(visitId);
+      await reload();
+    } catch (e) {
+      setError(actionErrorMessage(e, t("payments.payFailed"), t("offline.queued")));
     } finally {
       setActingId(null);
     }
@@ -69,7 +118,7 @@ export function VisitRequestsPage() {
       await updateVisitRequestStatus(visitId, "payment_sent");
       await reload();
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("payments.payFailed"));
+      setError(actionErrorMessage(e, t("payments.payFailed"), t("offline.queued")));
     } finally {
       setActingId(null);
     }
@@ -138,6 +187,67 @@ export function VisitRequestsPage() {
                       onClick={() => void markPaid(v.id)}
                     >
                       {actingId === v.id ? t("common.saving") : t("payments.iPaidHost")}
+                    </Button>
+                  </div>
+                )}
+                {v.overstay && !v.closed_at && (
+                  <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+                    <p className="font-semibold">{t("visits.overstayTitle")}</p>
+                    <p className="mt-1">{t("visits.overstayGuestHint")}</p>
+                  </div>
+                )}
+                {v.closed_at && (
+                  <p className="text-sm text-muted-foreground">{t("visits.stayClosed")}</p>
+                )}
+                {canRequestExtension(v) && (
+                  <div className="space-y-3 pt-2 border-t border-gray-100">
+                    <p className="text-sm font-semibold">{t("visits.extendTitle")}</p>
+                    <p className="text-xs text-muted-foreground">{t("visits.extendHint")}</p>
+                    <label className="block text-sm">
+                      <span className="text-muted-foreground">{t("visits.extendUntil")}</span>
+                      <input
+                        type="date"
+                        className="mt-1 w-full rounded-xl border px-3 py-2"
+                        min={minExtendDate(v)}
+                        value={extendDates[v.id] || minExtendDate(v)}
+                        onChange={(e) => setExtendDates((prev) => ({ ...prev, [v.id]: e.target.value }))}
+                      />
+                    </label>
+                    <Button
+                      className="w-full rounded-full bg-brand hover:bg-brand-dark"
+                      disabled={actingId === v.id}
+                      onClick={() => void requestExtension(v)}
+                    >
+                      {actingId === v.id ? t("common.saving") : t("visits.extendCta")}
+                    </Button>
+                  </div>
+                )}
+                {v.extension_status === "awaiting_payment" && (
+                  <div className="space-y-3 pt-2 border-t border-gray-100">
+                    <p className="text-sm font-semibold">
+                      {t("visits.extendAmount")}: {formatPrice(Number(v.extension_amount ?? 0))}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{t("visits.extendPayHint")}</p>
+                    {v.wave_payment_url && (
+                      <Button asChild className="w-full rounded-full bg-brand hover:bg-brand-dark">
+                        <a href={v.wave_payment_url} target="_blank" rel="noreferrer">
+                          {t("payments.payWave")}
+                        </a>
+                      </Button>
+                    )}
+                    {v.orange_money_url && (
+                      <Button asChild variant="outline" className="w-full rounded-full">
+                        <a href={v.orange_money_url} target="_blank" rel="noreferrer">
+                          {t("payments.payOrange")}
+                        </a>
+                      </Button>
+                    )}
+                    <Button
+                      className="w-full rounded-full bg-brand hover:bg-brand-dark"
+                      disabled={actingId === v.id}
+                      onClick={() => void markExtensionPaid(v.id)}
+                    >
+                      {actingId === v.id ? t("common.saving") : t("visits.iPaidExtension")}
                     </Button>
                   </div>
                 )}

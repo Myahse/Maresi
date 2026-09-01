@@ -99,6 +99,10 @@ export interface VisitRequest {
   owner_note?: string;
   key_code?: string;
   key_confirmed_at?: string;
+  extension_check_out?: string;
+  extension_status?: string;
+  extension_amount?: number;
+  extension_note?: string;
 }
 
 export interface Payment {

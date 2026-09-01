@@ -32,6 +32,12 @@
     "back": "Back",
     "next": "Next"
   },
+  "offline": {
+    "banner": "No connection. Showing last saved data.",
+    "back": "Back online. Sending {{count}} saved action(s)…",
+    "queued": "Saved. We will send this when the connection returns.",
+    "stale": "This data may be out of date."
+  },
   "push": {
     "title": "Enable notifications",
     "body": "Get alerts for bookings and payments even when the app is closed.",
@@ -184,6 +190,9 @@
     "firstName": "First name",
     "lastName": "Last name",
     "birthDate": "Date of birth",
+    "birthDay": "Day",
+    "birthMonth": "Month",
+    "birthYear": "Year",
     "gender": "Gender",
     "genderPlaceholder": "Choose",
     "genderMale": "Male",
@@ -411,7 +420,33 @@
       "payment_sent": "Payment declared",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled"
-    }
+    },
+    "extendTitle": "Extend the stay",
+    "extendPending": "The guest wants to stay until {{date}}.",
+    "extendApproved": "Extension accepted until {{date}}.",
+    "extendPaidWaiting": "The guest declared payment for the extra nights.",
+    "extendConfirmed": "Extension confirmed until {{date}}.",
+    "extendAmount": "Extra amount",
+    "extendRequested": "Requested new checkout",
+    "extendDecideTitle": "Extensions to review",
+    "extendConfirmPayTitle": "Extra payments to confirm",
+    "extendAccept": "Approve extension",
+    "extendDecline": "Decline",
+    "extendConfirmPay": "Confirm extra payment",
+    "overstayTitle": "Overstay",
+    "overstayHint": "The guest is still there after checkout. Bill extra nights (they pay you directly), then review and close.",
+    "overstayBillUntil": "Bill until",
+    "overstayBillCta": "Bill overstay",
+    "closeStayTitle": "Close the stay",
+    "closeStayHint": "Review the guest before closing. They will not see this note — only other hosts, to decide whether to accept them.",
+    "closeStayScore": "Guest score",
+    "closeStayNote": "Private host note",
+    "closeStayNotePlaceholder": "Punctuality, care of the home, respect…",
+    "closeStayCta": "Save review and close",
+    "stayClosed": "Stay closed",
+    "guestHostNotes": "Host notes (hidden from the guest)",
+    "guestNoNotes": "No host notes yet.",
+    "overstaySection": "Overstays to handle"
   },
   "payments": {
     "payReservation": "Pay my reservation",

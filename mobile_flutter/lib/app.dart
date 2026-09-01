@@ -8,6 +8,7 @@ import 'package:maresi_mobile/screens/app_navigator.dart';
 import 'package:maresi_mobile/services/auth_service.dart';
 import 'package:maresi_mobile/services/maresi_client.dart';
 import 'package:maresi_mobile/theme/app_theme.dart';
+import 'package:maresi_mobile/widgets/offline_banner.dart';
 import 'package:provider/provider.dart';
 
 class MaresiApp extends StatefulWidget {
@@ -59,6 +60,14 @@ class _MaresiAppState extends State<MaresiApp> {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
+            builder: (context, child) {
+              return Column(
+                children: [
+                  const OfflineBanner(),
+                  Expanded(child: child ?? const SizedBox.shrink()),
+                ],
+              );
+            },
             home: const AppNavigator(),
           );
         },

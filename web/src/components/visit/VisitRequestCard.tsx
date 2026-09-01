@@ -116,6 +116,34 @@ export function VisitRequestCard({ visit, showRequester, children }: VisitReques
           </div>
         )}
 
+        {visit.extension_status && visit.extension_check_out && (
+          <div className="rounded-xl border border-brand/30 bg-accent p-3 text-sm space-y-1">
+            <p className="font-semibold text-foreground">{t("visits.extendTitle")}</p>
+            <p>
+              {t("visits.extendRequested")}: {formatDate(visit.extension_check_out)}
+            </p>
+            {visit.extension_amount != null && (
+              <p>
+                {t("visits.extendAmount")}: {visit.extension_amount} XOF
+              </p>
+            )}
+            {visit.extension_status === "pending" && <p>{t("visits.extendPending")}</p>}
+            {visit.extension_status === "declined" && (
+              <p>{t("visits.extendDeclined", { date: formatDate(visit.check_out) })}</p>
+            )}
+            {visit.extension_status === "awaiting_payment" && (
+              <p>{t("visits.extendApproved", { date: formatDate(visit.check_out) })}</p>
+            )}
+            {visit.extension_status === "payment_sent" && <p>{t("visits.extendPaidWaiting")}</p>}
+            {visit.extension_status === "confirmed" && (
+              <p>{t("visits.extendConfirmed", { date: formatDate(visit.check_out) })}</p>
+            )}
+            {visit.extension_note && visit.extension_status === "declined" && (
+              <p className="text-red-700">{visit.extension_note}</p>
+            )}
+          </div>
+        )}
+
         {visit.owner_note && visit.status === "declined" && (
           <p className="text-sm text-red-700 bg-red-50 rounded-xl p-3">
             <span className="font-semibold">{t("visits.ownerNote")}: </span>

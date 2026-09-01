@@ -276,6 +276,7 @@ public class VisitRequestRepository {
         FROM visit_requests vr
         JOIN properties p ON vr.property_id = p.id
         WHERE vr.status IN ('confirmed', 'payment_sent')
+          AND vr.closed_at IS NULL
           AND (
             (
               vr.checkin_notified_at IS NULL
@@ -297,6 +298,164 @@ public class VisitRequestRepository {
         LIMIT 80
         """,
         (rs, rowNum) -> RowMaps.visitRequest(rs));
+  }
+
+  public Optional<Map<String, Object>> requestExtension(
+      UUID id, UUID userId, java.sql.Date newCheckOut, java.math.BigDecimal amount) {
+    return jdbc.query(
+            """
+            UPDATE visit_requests
+            SET extension_check_out = ?,
+                extension_status = 'pending',
+                extension_amount = ?,
+                extension_requested_at = NOW(),
+                extension_responded_at = NULL,
+                extension_note = NULL
+            WHERE id = ?
+              AND user_id = ?
+              AND status IN ('confirmed', 'payment_sent')
+              AND (extension_status IS NULL OR extension_status IN ('declined', 'confirmed'))
+            RETURNING *
+            """,
+            (rs, rowNum) -> RowMaps.visitRequest(rs),
+            newCheckOut,
+            amount,
+            id,
+            userId)
+        .stream()
+        .findFirst();
+  }
+
+  public Optional<Map<String, Object>> approveExtension(UUID id, UUID ownerId, String note) {
+    return jdbc.query(
+            """
+            UPDATE visit_requests vr
+            SET check_out = vr.extension_check_out,
+                extension_status = 'awaiting_payment',
+                extension_responded_at = NOW(),
+                extension_note = COALESCE(?, vr.extension_note),
+                checkout_notified_at = NULL
+            FROM properties p
+            WHERE vr.property_id = p.id
+              AND p.owner_id = ?
+              AND vr.id = ?
+              AND vr.extension_status = 'pending'
+              AND vr.extension_check_out IS NOT NULL
+            RETURNING vr.*
+            """,
+            (rs, rowNum) -> RowMaps.visitRequest(rs),
+            note,
+            ownerId,
+            id)
+        .stream()
+        .findFirst();
+  }
+
+  public Optional<Map<String, Object>> declineExtension(UUID id, UUID ownerId, String note) {
+    return jdbc.query(
+            """
+            UPDATE visit_requests vr
+            SET extension_status = 'declined',
+                extension_responded_at = NOW(),
+                extension_note = COALESCE(?, vr.extension_note)
+            FROM properties p
+            WHERE vr.property_id = p.id
+              AND p.owner_id = ?
+              AND vr.id = ?
+              AND vr.extension_status = 'pending'
+            RETURNING vr.*
+            """,
+            (rs, rowNum) -> RowMaps.visitRequest(rs),
+            note,
+            ownerId,
+            id)
+        .stream()
+        .findFirst();
+  }
+
+  public Optional<Map<String, Object>> markExtensionPaid(UUID id, UUID userId) {
+    return jdbc.query(
+            """
+            UPDATE visit_requests
+            SET extension_status = 'payment_sent'
+            WHERE id = ? AND user_id = ? AND extension_status = 'awaiting_payment'
+            RETURNING *
+            """,
+            (rs, rowNum) -> RowMaps.visitRequest(rs),
+            id,
+            userId)
+        .stream()
+        .findFirst();
+  }
+
+  public Optional<Map<String, Object>> confirmExtensionPayment(UUID id, UUID ownerId) {
+    return jdbc.query(
+            """
+            UPDATE visit_requests vr
+            SET extension_status = 'confirmed'
+            FROM properties p
+            WHERE vr.property_id = p.id
+              AND p.owner_id = ?
+              AND vr.id = ?
+              AND vr.extension_status = 'payment_sent'
+            RETURNING vr.*
+            """,
+            (rs, rowNum) -> RowMaps.visitRequest(rs),
+            ownerId,
+            id)
+        .stream()
+        .findFirst();
+  }
+
+  public Optional<Map<String, Object>> billOverstay(
+      UUID id, UUID ownerId, java.sql.Date newCheckOut, java.math.BigDecimal amount) {
+    return jdbc.query(
+            """
+            UPDATE visit_requests vr
+            SET check_out = ?,
+                extension_check_out = ?,
+                extension_status = 'awaiting_payment',
+                extension_amount = ?,
+                extension_requested_at = NOW(),
+                extension_responded_at = NOW(),
+                checkout_notified_at = NULL
+            FROM properties p
+            WHERE vr.property_id = p.id
+              AND p.owner_id = ?
+              AND vr.id = ?
+              AND vr.closed_at IS NULL
+              AND vr.status IN ('confirmed', 'payment_sent')
+              AND (vr.extension_status IS NULL OR vr.extension_status IN ('declined', 'confirmed'))
+            RETURNING vr.*
+            """,
+            (rs, rowNum) -> RowMaps.visitRequest(rs),
+            newCheckOut,
+            newCheckOut,
+            amount,
+            ownerId,
+            id)
+        .stream()
+        .findFirst();
+  }
+
+  public Optional<Map<String, Object>> closeStay(UUID id, UUID ownerId) {
+    return jdbc.query(
+            """
+            UPDATE visit_requests vr
+            SET closed_at = NOW()
+            FROM properties p
+            WHERE vr.property_id = p.id
+              AND p.owner_id = ?
+              AND vr.id = ?
+              AND vr.closed_at IS NULL
+              AND vr.status IN ('confirmed', 'payment_sent')
+            RETURNING vr.*
+            """,
+            (rs, rowNum) -> RowMaps.visitRequest(rs),
+            ownerId,
+            id)
+        .stream()
+        .findFirst();
   }
 
   public void markStayNotified(UUID id, String kind) {

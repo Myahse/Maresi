@@ -34,6 +34,12 @@
     "back": "Retour",
     "next": "Suivant"
   },
+  "offline": {
+    "banner": "Pas de connexion. Affichage des dernières données enregistrées.",
+    "back": "De retour en ligne. Envoi de {{count}} action(s) en attente…",
+    "queued": "Enregistré. Nous enverrons cela dès que la connexion reviendra.",
+    "stale": "Ces données peuvent ne pas être à jour."
+  },
   "push": {
     "title": "Activer les notifications",
     "body": "Recevez une alerte pour les réservations et paiements, même si l’app est fermée.",
@@ -191,6 +197,9 @@
     "firstName": "Prénom",
     "lastName": "Nom",
     "birthDate": "Date de naissance",
+    "birthDay": "Jour",
+    "birthMonth": "Mois",
+    "birthYear": "Année",
     "gender": "Genre",
     "genderPlaceholder": "Choisir",
     "genderMale": "Homme",
@@ -424,7 +433,28 @@
     "signedBy": "Signé par",
     "keyCode": "Code clé",
     "keyHint": "Donnez ce code à l'hôte pour récupérer la clé. Ensuite vous paierez l'hôte.",
-    "keyWaitingHost": "L'hôte doit saisir ce code pour confirmer la remise de la clé."
+    "keyWaitingHost": "L'hôte doit saisir ce code pour confirmer la remise de la clé.",
+    "extendTitle": "Prolonger le séjour",
+    "extendHint": "Demandez plus de nuits. L'hôte doit accepter avant que le départ change.",
+    "extendUntil": "Nouveau départ",
+    "extendCta": "Demander la prolongation",
+    "extendPending": "Demande envoyée. En attente de l'hôte.",
+    "extendDeclined": "L'hôte a refusé la prolongation. Le départ reste le {{date}}.",
+    "extendApproved": "Prolongation acceptée jusqu'au {{date}}.",
+    "extendPayHint": "Payez les nuits supplémentaires à l'hôte, puis déclarez le paiement.",
+    "extendPaidWaiting": "Paiement du supplément déclaré. L'hôte doit confirmer.",
+    "extendConfirmed": "Prolongation confirmée jusqu'au {{date}}.",
+    "extendAmount": "Supplément",
+    "extendRequested": "Nouveau départ demandé",
+    "extendDecideTitle": "Prolongations à valider",
+    "extendConfirmPayTitle": "Suppléments à confirmer",
+    "extendAccept": "Accepter la prolongation",
+    "extendDecline": "Refuser",
+    "extendConfirmPay": "Confirmer le supplément",
+    "iPaidExtension": "J'ai payé le supplément",
+    "overstayTitle": "Dépassement",
+    "overstayGuestHint": "La date de départ est passée. Demandez une prolongation ou partez. L'hôte peut facturer les nuits en trop.",
+    "stayClosed": "Séjour clos"
   },
   "payments": {
     "payHostAmount": "À payer",

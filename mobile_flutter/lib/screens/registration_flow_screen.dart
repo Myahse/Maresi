@@ -38,6 +38,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   final _passwordController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _birthDateController = TextEditingController();
   final _idCardController = TextEditingController();
   final _phoneController = TextEditingController();
   final _locationController = TextEditingController();
@@ -72,6 +73,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     _passwordController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _birthDateController.dispose();
     _idCardController.dispose();
     _phoneController.dispose();
     _locationController.dispose();
@@ -181,7 +183,10 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
       lastDate: lastDate,
     );
     if (picked == null) return;
-    setState(() => _birthDate = picked);
+    setState(() {
+      _birthDate = picked;
+      _birthDateController.text = _formatIsoDate(picked);
+    });
   }
 
   void _continueFromPersonal() {
@@ -526,17 +531,14 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
         const SizedBox(height: 16),
         _LabeledField(
           label: locale.t('register.birthDate'),
-          child: InkWell(
-            onTap: _loading ? null : _pickBirthDate,
-            child: InputDecorator(
-              decoration: const InputDecoration(),
-              child: Text(
-                _birthDate == null ? '—' : _formatIsoDate(_birthDate!),
-                style: TextStyle(
-                  fontSize: 16,
-                  color: _birthDate == null ? context.palette.textLight : context.palette.text,
-                ),
-              ),
+          child: TextField(
+            readOnly: true,
+            enabled: !_loading,
+            onTap: _pickBirthDate,
+            controller: _birthDateController,
+            decoration: InputDecoration(
+              hintText: locale.t('register.birthDateHint'),
+              suffixIcon: const Icon(Icons.calendar_today_outlined),
             ),
           ),
         ),

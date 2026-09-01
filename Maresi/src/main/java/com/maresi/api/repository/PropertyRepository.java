@@ -40,11 +40,7 @@ public class PropertyRepository {
              'payment_sent',
              'confirmed'
            )
-           AND (
-             vr.status <> 'confirmed'
-             OR vr.check_out IS NULL
-             OR vr.check_out >= CURRENT_DATE
-           )
+           AND vr.closed_at IS NULL
        )
       """;
 

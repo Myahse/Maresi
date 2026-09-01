@@ -60,7 +60,7 @@ class _IdentityDossierScreenState extends State<IdentityDossierScreen> {
                   const SizedBox(height: 20),
                   _row(locale.t('register.firstName'), _firstName(profile)),
                   _row(locale.t('register.lastName'), _lastName(profile)),
-                  _row(locale.t('register.birthDate'), '${profile['birth_date'] ?? '—'}'),
+                  _row(locale.t('register.birthDate'), '${profile['birth_date'] ?? profile['birthDate'] ?? '—'}'),
                   _row(locale.t('register.gender'), _genderLabel(locale, profile['gender']?.toString())),
                   _row(locale.t('auth.emailLabel'), '${profile['email'] ?? ''}'),
                   _row(locale.t('register.phone'), '${profile['phone'] ?? '—'}'),

@@ -114,6 +114,81 @@ public class VisitRequestController {
         exceptionUtils);
   }
 
+  @PostMapping("/{id}/extension")
+  public ResponseEntity<Response<Map<String, Object>>> requestExtension(
+      @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return visitRequestService.requestExtension(id, request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
+  @PostMapping("/{id}/extension/decision")
+  public ResponseEntity<Response<Map<String, Object>>> decideExtension(
+      @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return visitRequestService.decideExtension(id, request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
+  @PostMapping("/{id}/extension/paid")
+  public ResponseEntity<Response<Map<String, Object>>> markExtensionPaid(
+      @PathVariable UUID id, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> visitRequestService.markExtensionPaid(id, loc), loc, exceptionUtils);
+  }
+
+  @PostMapping("/{id}/extension/confirm")
+  public ResponseEntity<Response<Map<String, Object>>> confirmExtensionPayment(
+      @PathVariable UUID id, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> visitRequestService.confirmExtensionPayment(id, loc), loc, exceptionUtils);
+  }
+
+  @PostMapping("/{id}/overstay")
+  public ResponseEntity<Response<Map<String, Object>>> billOverstay(
+      @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return visitRequestService.billOverstay(id, request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
+  @PostMapping("/{id}/close")
+  public ResponseEntity<Response<Map<String, Object>>> closeStay(
+      @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return visitRequestService.closeStay(id, request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
   @GetMapping("/{id}/identity/{kind}")
   public ResponseEntity<byte[]> identityPhoto(@PathVariable UUID id, @PathVariable String kind) {
     StoredMedia media = visitRequestService.loadRequesterIdentity(id, kind);

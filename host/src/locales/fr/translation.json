@@ -32,6 +32,12 @@
     "back": "Retour",
     "next": "Suivant"
   },
+  "offline": {
+    "banner": "Pas de connexion. Affichage des dernières données enregistrées.",
+    "back": "De retour en ligne. Envoi de {{count}} action(s) en attente…",
+    "queued": "Enregistré. Nous enverrons cela dès que la connexion reviendra.",
+    "stale": "Ces données peuvent ne pas être à jour."
+  },
   "push": {
     "title": "Activer les notifications",
     "body": "Recevez une alerte pour les réservations et paiements, même si l’app est fermée.",
@@ -184,6 +190,9 @@
     "firstName": "Prénom",
     "lastName": "Nom",
     "birthDate": "Date de naissance",
+    "birthDay": "Jour",
+    "birthMonth": "Mois",
+    "birthYear": "Année",
     "gender": "Genre",
     "genderPlaceholder": "Choisir",
     "genderMale": "Homme",
@@ -411,7 +420,33 @@
       "payment_sent": "Paiement déclaré",
       "confirmed": "Confirmée",
       "cancelled": "Annulée"
-    }
+    },
+    "extendTitle": "Prolonger le séjour",
+    "extendPending": "Le client demande de rester jusqu'au {{date}}.",
+    "extendApproved": "Prolongation acceptée jusqu'au {{date}}.",
+    "extendPaidWaiting": "Le client a déclaré le paiement du supplément.",
+    "extendConfirmed": "Prolongation confirmée jusqu'au {{date}}.",
+    "extendAmount": "Supplément",
+    "extendRequested": "Nouveau départ demandé",
+    "extendDecideTitle": "Prolongations à valider",
+    "extendConfirmPayTitle": "Suppléments à confirmer",
+    "extendAccept": "Accepter la prolongation",
+    "extendDecline": "Refuser",
+    "extendConfirmPay": "Confirmer le supplément",
+    "overstayTitle": "Dépassement",
+    "overstayHint": "Le client est encore là après la date de départ. Facturez les nuits en trop (il paie l'hôte), puis notez-le et clôturez.",
+    "overstayBillUntil": "Facturer jusqu'au",
+    "overstayBillCta": "Facturer le dépassement",
+    "closeStayTitle": "Clôturer le séjour",
+    "closeStayHint": "Notez le client avant de clôturer. Lui ne verra pas cette note : seulement les autres hôtes, pour décider s'ils l'acceptent.",
+    "closeStayScore": "Note du client",
+    "closeStayNote": "Note privée entre hôtes",
+    "closeStayNotePlaceholder": "Ponctualité, soin du logement, respect…",
+    "closeStayCta": "Enregistrer et clôturer",
+    "stayClosed": "Séjour clos",
+    "guestHostNotes": "Avis des hôtes (invisible pour le client)",
+    "guestNoNotes": "Aucun avis hôte pour l'instant.",
+    "overstaySection": "Dépassements à gérer"
   },
   "payments": {
     "payReservation": "Payer ma réservation",

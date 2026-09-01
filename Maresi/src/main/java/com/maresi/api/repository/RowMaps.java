@@ -160,6 +160,13 @@ public final class RowMaps {
     putIfPresent(rs, m, "wave_payment_url");
     putIfPresent(rs, m, "orange_money_url");
     putIfPresent(rs, m, "owner_phone");
+    putDate(rs, m, "extension_check_out");
+    putIfPresent(rs, m, "extension_status");
+    putIfPresent(rs, m, "extension_amount");
+    putIfPresent(rs, m, "extension_requested_at");
+    putIfPresent(rs, m, "extension_responded_at");
+    putIfPresent(rs, m, "extension_note");
+    putIfPresent(rs, m, "closed_at");
     return m;
   }
 

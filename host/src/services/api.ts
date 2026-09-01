@@ -1,4 +1,15 @@
 import type { Property, PropertyRating, RatingStats } from "@/types";
+import {
+  enqueueRequest,
+  flushQueue,
+  isBrowserOnline,
+  isNetworkFailure,
+  readCache,
+  shouldCachePath,
+  shouldQueuePath,
+  sleep,
+  writeCache,
+} from "@/lib/offline";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -32,21 +43,64 @@ function unwrapEnvelope<T>(data: unknown): T {
   return data as T;
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function rawRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
   if (token) (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  const data = await res.json().catch(() => ({}));
-  // Backend may return 4xx with hasError + status.message (Peya envelope)
-  if (!res.ok || (data && typeof data === "object" && (data as Envelope).hasError)) {
-    throw new Error(envelopeMessage(data as Envelope, res.statusText || "Request failed"));
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(`${API_BASE}${path}`, { ...options, headers, signal: controller.signal });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || (data && typeof data === "object" && (data as Envelope).hasError)) {
+      throw new Error(envelopeMessage(data as Envelope, res.statusText || "Request failed"));
+    }
+    return unwrapEnvelope<T>(data);
+  } finally {
+    window.clearTimeout(timer);
   }
-  return unwrapEnvelope<T>(data);
+}
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const method = (options.method || "GET").toUpperCase();
+  const isRead = method === "GET";
+  const attempts = isRead ? 3 : 2;
+  let lastError: Error | null = null;
+
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const result = await rawRequest<T>(path, options);
+      if (shouldCachePath(path, method)) writeCache(path, result);
+      return result;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      const retry = isRead && isNetworkFailure(error) && i < attempts - 1;
+      if (!retry) break;
+      await sleep(400 * 2 ** i);
+    }
+  }
+
+  if (isRead) {
+    const cached = readCache<T>(path);
+    if (cached !== undefined) return cached;
+  }
+  if (shouldQueuePath(path, method) && (lastError && isNetworkFailure(lastError) || !isBrowserOnline())) {
+    enqueueRequest({ path, method, body: typeof options.body === "string" ? options.body : undefined });
+    throw new Error("OFFLINE_QUEUED");
+  }
+  throw lastError ?? new Error("Request failed");
+}
+
+function startQueueFlush() {
+  void flushQueue((item) => rawRequest(item.path, { method: item.method, body: item.body }));
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("online", startQueueFlush);
+  startQueueFlush();
 }
 
 function wrapBody(body: unknown): string {
@@ -192,6 +246,30 @@ export function getOwnerVisitRequests() {
 
 export function confirmVisitKey(id: string, code: string) {
   return api.post<import("@/types").VisitRequest>(`/visit-requests/${id}/key`, { code });
+}
+
+export function decideStayExtension(id: string, status: "approved" | "declined", note?: string) {
+  return api.post<import("@/types").VisitRequest>(`/visit-requests/${id}/extension/decision`, {
+    status,
+    note,
+  });
+}
+
+export function billStayOverstay(id: string, checkOut: string) {
+  return api.post<import("@/types").VisitRequest>(`/visit-requests/${id}/overstay`, {
+    check_out: checkOut,
+  });
+}
+
+export function closeStay(id: string, score: number, note?: string) {
+  return api.post<import("@/types").VisitRequest>(`/visit-requests/${id}/close`, {
+    score,
+    note,
+  });
+}
+
+export function confirmStayExtensionPayment(id: string) {
+  return api.post<import("@/types").VisitRequest>(`/visit-requests/${id}/extension/confirm`, {});
 }
 
 export function updateVisitRequestStatus(

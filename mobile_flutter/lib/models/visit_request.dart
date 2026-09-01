@@ -54,6 +54,12 @@ class VisitRequest {
     this.orangeMoneyUrl,
     this.ownerPhone,
     this.keyCode,
+    this.extensionCheckOut,
+    this.extensionStatus,
+    this.extensionAmount,
+    this.extensionNote,
+    this.overstay = false,
+    this.closedAt,
   });
 
   final String id;
@@ -74,6 +80,12 @@ class VisitRequest {
   final String? orangeMoneyUrl;
   final String? ownerPhone;
   final String? keyCode;
+  final String? extensionCheckOut;
+  final String? extensionStatus;
+  final num? extensionAmount;
+  final String? extensionNote;
+  final bool overstay;
+  final String? closedAt;
 
   factory VisitRequest.fromJson(Map<String, dynamic> json) {
     return VisitRequest(
@@ -95,6 +107,12 @@ class VisitRequest {
       orangeMoneyUrl: json['orange_money_url'] as String?,
       ownerPhone: json['owner_phone'] as String?,
       keyCode: json['key_code'] as String?,
+      extensionCheckOut: json['extension_check_out'] as String?,
+      extensionStatus: json['extension_status'] as String?,
+      extensionAmount: json['extension_amount'] as num?,
+      extensionNote: json['extension_note'] as String?,
+      overstay: json['overstay'] == true,
+      closedAt: json['closed_at'] as String?,
     );
   }
 }

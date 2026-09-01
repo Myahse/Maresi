@@ -8,6 +8,7 @@ import com.maresi.api.realtime.RealtimeEventPublisher;
 import com.maresi.api.repository.NotificationRepository;
 import com.maresi.api.repository.PaymentRepository;
 import com.maresi.api.repository.PropertyRepository;
+import com.maresi.api.repository.GuestReviewRepository;
 import com.maresi.api.repository.VisitRequestRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
@@ -16,7 +17,9 @@ import com.maresi.api.service.EmailService;
 import com.maresi.api.service.FileStorageService;
 import com.maresi.api.service.StayAgreementText;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -26,6 +29,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class VisitRequestBusiness {
   private final VisitRequestRepository visitRequests;
+  private final GuestReviewRepository guestReviews;
   private final PropertyRepository properties;
   private final NotificationRepository notifications;
   private final PaymentRepository payments;
@@ -38,6 +42,7 @@ public class VisitRequestBusiness {
 
   public VisitRequestBusiness(
       VisitRequestRepository visitRequests,
+      GuestReviewRepository guestReviews,
       PropertyRepository properties,
       NotificationRepository notifications,
       PaymentRepository payments,
@@ -48,6 +53,7 @@ public class VisitRequestBusiness {
       FileStorageService fileStorage,
       AppProperties appProperties) {
     this.visitRequests = visitRequests;
+    this.guestReviews = guestReviews;
     this.properties = properties;
     this.notifications = notifications;
     this.payments = payments;
@@ -159,6 +165,11 @@ public class VisitRequestBusiness {
   public Response<Map<String, Object>> listMine(Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
     var items = visitRequests.findByUser(SecurityUtils.requireUser().id());
+    items.forEach(
+        item -> {
+          normalizeVisit(item);
+          hideHostOnlyGuestFile(item);
+        });
     response.setItems(items);
     response.setCount((long) items.size());
     response.setStatus(functionalError.success("Demandes", locale));
@@ -190,6 +201,12 @@ public class VisitRequestBusiness {
     if (owner && !guest && !admin) {
       hideKeyCode(item);
     }
+    normalizeVisit(item);
+    if (owner || admin) {
+      attachHostOnlyGuestFile(item);
+    } else {
+      hideHostOnlyGuestFile(item);
+    }
     response.setItem(item);
     response.setStatus(functionalError.success("Demande", locale));
     return response;
@@ -201,6 +218,8 @@ public class VisitRequestBusiness {
     for (Map<String, Object> item : items) {
       exposeIdentityLinks(item);
       hideKeyCode(item);
+      normalizeVisit(item);
+      attachHostOnlyGuestFile(item);
     }
     response.setItems(items);
     response.setCount((long) items.size());
@@ -543,6 +562,346 @@ public class VisitRequestBusiness {
     return response;
   }
 
+  public Response<Map<String, Object>> requestExtension(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> current = visitRequests.findById(id).orElse(null);
+    if (current == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Demande introuvable", locale));
+      return response;
+    }
+    if (!user.id().toString().equalsIgnoreCase(String.valueOf(current.get("user_id")))) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Action non autorisee", locale));
+      return response;
+    }
+    if (current.get("closed_at") != null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Ce sejour est deja clos", locale));
+      return response;
+    }
+    String stayStatus = String.valueOf(current.get("status"));
+    if (!List.of("confirmed", "payment_sent").contains(stayStatus)) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.invalidData("Prolongez uniquement un sejour confirme", locale));
+      return response;
+    }
+    String extStatus = str(current.get("extension_status"));
+    if (extStatus != null && !List.of("declined", "confirmed").contains(extStatus)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Une prolongation est deja en cours", locale));
+      return response;
+    }
+    LocalDate currentOut = parseDate(current.get("check_out"));
+    LocalDate newOut = parseDate(request.getData() != null ? request.getData().get("check_out") : null);
+    if (currentOut == null || newOut == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("check_out", locale));
+      return response;
+    }
+    if (!newOut.isAfter(currentOut)) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.invalidData("La nouvelle date de depart doit etre apres le depart actuel", locale));
+      return response;
+    }
+    if (currentOut.isBefore(LocalDate.now())) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Le sejour est deja termine", locale));
+      return response;
+    }
+    BigDecimal amount = extraNightsAmount(current, currentOut, newOut);
+    Map<String, Object> updated =
+        visitRequests.requestExtension(id, user.id(), java.sql.Date.valueOf(newOut), amount).orElse(null);
+    if (updated == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Impossible d'envoyer la demande", locale));
+      return response;
+    }
+    Map<String, Object> item = visitRequests.findById(id).orElse(updated);
+    normalizeVisit(item);
+    UUID ownerId = ownerId(item, current);
+    UUID listingId = UUID.fromString(item.get("property_id").toString());
+    String title = String.valueOf(item.get("property_title") == null ? "la residence" : item.get("property_title"));
+    if (ownerId != null) {
+      notifications.create(
+          ownerId,
+          "reservation",
+          "Demande de prolongation",
+          "Le client souhaite rester jusqu'au " + newOut + ". Acceptez ou refusez.",
+          listingId);
+      email.sendToUser(
+          ownerId,
+          "Maresi — prolongation demandee",
+          "Le client souhaite prolonger son sejour a "
+              + title
+              + " jusqu'au "
+              + newOut
+              + ".\nMontant supplementaire : "
+              + amount
+              + " XOF.\n\nAcceptez ou refusez dans Maresi Hote.");
+    }
+    realtime.publish("visit.status_changed", item, user.id(), ownerId, true);
+    response.setItem(item);
+    response.setStatus(functionalError.success("Prolongation demandee", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> decideExtension(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> data = request.getData() == null ? Map.of() : request.getData();
+    String decision = str(data.get("status"));
+    if (decision == null) decision = str(data.get("decision"));
+    if (decision != null) decision = decision.trim().toLowerCase(Locale.ROOT);
+    if (!"approved".equals(decision) && !"declined".equals(decision)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Decidez approved ou declined", locale));
+      return response;
+    }
+    String note = str(data.get("note"));
+    if (note == null) note = str(data.get("ownerNote"));
+    Map<String, Object> updated =
+        "approved".equals(decision)
+            ? visitRequests.approveExtension(id, user.id(), note).orElse(null)
+            : visitRequests.declineExtension(id, user.id(), note).orElse(null);
+    if (updated == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Aucune prolongation en attente", locale));
+      return response;
+    }
+    Map<String, Object> item = visitRequests.findById(id).orElse(updated);
+    normalizeVisit(item);
+    UUID requesterId = UUID.fromString(item.get("user_id").toString());
+    UUID listingId = UUID.fromString(item.get("property_id").toString());
+    String title = String.valueOf(item.get("property_title") == null ? "la residence" : item.get("property_title"));
+    if ("approved".equals(decision)) {
+      notifications.create(
+          requesterId,
+          "reservation",
+          "Prolongation acceptee",
+          "L'hote a accepte. Payez les nuits supplementaires.",
+          listingId);
+      email.sendToUser(
+          requesterId,
+          "Maresi — prolongation acceptee",
+          "L'hote a accepte de prolonger votre sejour a "
+              + title
+              + " jusqu'au "
+              + item.get("check_out")
+              + ".\nPayez le supplement ("
+              + item.get("extension_amount")
+              + " XOF) a l'hote, puis declarez le paiement.");
+    } else {
+      notifications.create(
+          requesterId,
+          "reservation",
+          "Prolongation refusee",
+          "L'hote a refuse la prolongation. Le depart reste inchange.",
+          listingId);
+      email.sendToUser(
+          requesterId,
+          "Maresi — prolongation refusee",
+          "L'hote a refuse de prolonger votre sejour a " + title + ".");
+    }
+    realtime.publish("visit.status_changed", item, requesterId, user.id(), true);
+    response.setItem(item);
+    response.setStatus(functionalError.success("Prolongation mise a jour", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> markExtensionPaid(UUID id, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> updated = visitRequests.markExtensionPaid(id, user.id()).orElse(null);
+    if (updated == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Aucun supplement a declarer", locale));
+      return response;
+    }
+    Map<String, Object> item = visitRequests.findById(id).orElse(updated);
+    normalizeVisit(item);
+    UUID ownerId = ownerId(item, updated);
+    UUID listingId = UUID.fromString(item.get("property_id").toString());
+    if (ownerId != null) {
+      notifications.create(
+          ownerId,
+          "reservation",
+          "Supplement declare",
+          "Le client indique avoir paye la prolongation. Confirmez la reception.",
+          listingId);
+    }
+    realtime.publish("visit.status_changed", item, user.id(), ownerId, true);
+    response.setItem(item);
+    response.setStatus(functionalError.success("Supplement declare", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> confirmExtensionPayment(UUID id, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> updated = visitRequests.confirmExtensionPayment(id, user.id()).orElse(null);
+    if (updated == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Aucun supplement a confirmer", locale));
+      return response;
+    }
+    Map<String, Object> item = visitRequests.findById(id).orElse(updated);
+    normalizeVisit(item);
+    UUID requesterId = UUID.fromString(item.get("user_id").toString());
+    UUID listingId = UUID.fromString(item.get("property_id").toString());
+    notifications.create(
+        requesterId,
+        "reservation",
+        "Prolongation confirmee",
+        "L'hote a confirme le paiement des nuits supplementaires.",
+        listingId);
+    realtime.publish("visit.status_changed", item, requesterId, user.id(), true);
+    response.setItem(item);
+    response.setStatus(functionalError.success("Prolongation confirmee", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> billOverstay(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> current = visitRequests.findById(id).orElse(null);
+    if (current == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Demande introuvable", locale));
+      return response;
+    }
+    if (current.get("closed_at") != null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Ce sejour est deja clos", locale));
+      return response;
+    }
+    LocalDate currentOut = parseDate(current.get("check_out"));
+    LocalDate newOut = parseDate(request.getData() != null ? request.getData().get("check_out") : null);
+    if (currentOut == null || newOut == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("check_out", locale));
+      return response;
+    }
+    if (!currentOut.isBefore(LocalDate.now())) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Le sejour n'est pas encore en depassement", locale));
+      return response;
+    }
+    if (!newOut.isAfter(currentOut)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("La nouvelle date doit depasser le depart", locale));
+      return response;
+    }
+    BigDecimal amount = extraNightsAmount(current, currentOut, newOut);
+    Map<String, Object> updated =
+        visitRequests.billOverstay(id, user.id(), java.sql.Date.valueOf(newOut), amount).orElse(null);
+    if (updated == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Impossible de facturer le depassement", locale));
+      return response;
+    }
+    Map<String, Object> item = visitRequests.findById(id).orElse(updated);
+    normalizeVisit(item);
+    attachHostOnlyGuestFile(item);
+    UUID requesterId = UUID.fromString(item.get("user_id").toString());
+    UUID listingId = UUID.fromString(item.get("property_id").toString());
+    notifications.create(
+        requesterId,
+        "reservation",
+        "Depassement a payer",
+        "L'hote facture les nuits de depassement. Payez-le directement, puis declarez le paiement.",
+        listingId);
+    email.sendToUser(
+        requesterId,
+        "Maresi — depassement a payer",
+        "Votre sejour a depasse la date de depart. Payez "
+            + amount
+            + " XOF a l'hote pour rester jusqu'au "
+            + newOut
+            + ".");
+    Map<String, Object> published = new java.util.HashMap<>(item);
+    hideHostOnlyGuestFile(published);
+    realtime.publish("visit.status_changed", published, requesterId, user.id(), true);
+    response.setItem(item);
+    response.setStatus(functionalError.success("Depassement facture", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> closeStay(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> current = visitRequests.findById(id).orElse(null);
+    if (current == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Demande introuvable", locale));
+      return response;
+    }
+    if (current.get("closed_at") != null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Ce sejour est deja clos", locale));
+      return response;
+    }
+    if (!List.of("confirmed", "payment_sent").contains(String.valueOf(current.get("status")))) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Cloturez uniquement un sejour confirme", locale));
+      return response;
+    }
+    LocalDate currentOut = parseDate(current.get("check_out"));
+    if (currentOut != null && currentOut.isAfter(LocalDate.now())) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Attendez la date de depart pour cloturer", locale));
+      return response;
+    }
+    Map<String, Object> data = request.getData() == null ? Map.of() : request.getData();
+    int score;
+    try {
+      score = data.get("score") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(data.get("score")));
+    } catch (Exception e) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("score", locale));
+      return response;
+    }
+    if (score < 1 || score > 5) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Note de 1 a 5", locale));
+      return response;
+    }
+    String note = str(data.get("note"));
+    if (note != null) note = note.trim();
+    if (note != null && note.isEmpty()) note = null;
+    UUID guestId = UUID.fromString(current.get("user_id").toString());
+    UUID listingId = UUID.fromString(current.get("property_id").toString());
+    if (guestReviews.existsForVisit(id)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataExist("Avis client deja enregistre", locale));
+      return response;
+    }
+    guestReviews.create(id, guestId, user.id(), listingId, score, note);
+    guestReviews.refreshGuestAggregate(guestId);
+    Map<String, Object> updated = visitRequests.closeStay(id, user.id()).orElse(null);
+    if (updated == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Cloture non autorisee", locale));
+      return response;
+    }
+    Map<String, Object> item = visitRequests.findById(id).orElse(updated);
+    normalizeVisit(item);
+    attachHostOnlyGuestFile(item);
+    Map<String, Object> published = new java.util.HashMap<>(item);
+    hideHostOnlyGuestFile(published);
+    realtime.publish("visit.status_changed", published, guestId, user.id(), true);
+    response.setItem(item);
+    response.setStatus(functionalError.success("Sejour clos", locale));
+    return response;
+  }
+
   public FileStorageService.StoredMedia loadRequesterIdentity(UUID visitId, String kind) {
     AuthUser user = SecurityUtils.requireUser();
     Map<String, Object> row = visitRequests.findRequesterIdentity(visitId).orElse(null);
@@ -581,6 +940,92 @@ public class VisitRequestBusiness {
     }
     if (item.get("requester_id_back_url") != null) {
       item.put("requester_id_back_url", "/api/visit-requests/" + id + "/identity/id-back");
+    }
+  }
+
+  private void normalizeVisit(Map<String, Object> visit) {
+    if (visit == null) return;
+    Object amount = visit.get("extension_amount");
+    if (amount instanceof BigDecimal money) {
+      visit.put("extension_amount", money.setScale(0, RoundingMode.HALF_UP).intValue());
+    }
+    visit.put("overstay", isOverstay(visit));
+    visit.put("can_close", canClose(visit));
+  }
+
+  private static boolean isOverstay(Map<String, Object> visit) {
+    if (visit.get("closed_at") != null) return false;
+    String status = String.valueOf(visit.get("status"));
+    if (!List.of("confirmed", "payment_sent").contains(status)) return false;
+    LocalDate out = parseDate(visit.get("check_out"));
+    return out != null && out.isBefore(LocalDate.now());
+  }
+
+  private static boolean canClose(Map<String, Object> visit) {
+    if (visit.get("closed_at") != null) return false;
+    String status = String.valueOf(visit.get("status"));
+    if (!List.of("confirmed", "payment_sent").contains(status)) return false;
+    LocalDate out = parseDate(visit.get("check_out"));
+    return out == null || !out.isAfter(LocalDate.now());
+  }
+
+  private void attachHostOnlyGuestFile(Map<String, Object> visit) {
+    if (visit == null || visit.get("user_id") == null) return;
+    UUID guestId = UUID.fromString(visit.get("user_id").toString());
+    Map<String, Object> stats = guestReviews.statistics(guestId);
+    visit.put("guest_rating_avg", stats.get("average"));
+    visit.put("guest_rating_count", stats.get("count"));
+    visit.put("guest_host_notes", guestReviews.findByGuestForHosts(guestId));
+    guestReviews.findByVisit(UUID.fromString(visit.get("id").toString())).ifPresent(r -> visit.put("host_guest_review", r));
+  }
+
+  private static void hideHostOnlyGuestFile(Map<String, Object> visit) {
+    if (visit == null) return;
+    visit.remove("guest_rating_avg");
+    visit.remove("guest_rating_count");
+    visit.remove("guest_host_notes");
+    visit.remove("host_guest_review");
+    visit.remove("guest_review_note");
+  }
+
+  private static UUID ownerId(Map<String, Object> item, Map<String, Object> fallback) {
+    Object raw = item.get("property_owner_id");
+    if (raw == null && fallback != null) raw = fallback.get("property_owner_id");
+    return raw == null ? null : UUID.fromString(raw.toString());
+  }
+
+  private static LocalDate parseDate(Object raw) {
+    if (raw == null) return null;
+    try {
+      return LocalDate.parse(raw.toString().substring(0, 10));
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private static BigDecimal extraNightsAmount(
+      Map<String, Object> visit, LocalDate currentOut, LocalDate newOut) {
+    String rate = visit.get("stay_rate") == null ? "night" : visit.get("stay_rate").toString();
+    BigDecimal unit = toMoney(visit.get("property_price"));
+    if ("midday".equals(rate) && visit.get("price_midday") != null) {
+      unit = toMoney(visit.get("price_midday"));
+    } else if ("full_day".equals(rate) && visit.get("price_full_day") != null) {
+      unit = toMoney(visit.get("price_full_day"));
+    }
+    if (unit == null) unit = BigDecimal.ZERO;
+    long nights = ChronoUnit.DAYS.between(currentOut, newOut);
+    if (nights < 1) nights = 1;
+    return unit.multiply(BigDecimal.valueOf(nights)).setScale(2, RoundingMode.HALF_UP);
+  }
+
+  private static BigDecimal toMoney(Object raw) {
+    if (raw == null) return null;
+    if (raw instanceof BigDecimal money) return money;
+    if (raw instanceof Number n) return BigDecimal.valueOf(n.doubleValue());
+    try {
+      return new BigDecimal(raw.toString());
+    } catch (Exception e) {
+      return null;
     }
   }
 

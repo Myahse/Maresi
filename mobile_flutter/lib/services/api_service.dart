@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:maresi_mobile/config/app_config.dart';
@@ -9,14 +11,107 @@ import 'package:maresi_mobile/models/property_rating.dart';
 import 'package:maresi_mobile/models/user.dart';
 import 'package:maresi_mobile/models/visit_request.dart';
 import 'package:maresi_mobile/services/maresi_api.dart';
+import 'package:maresi_mobile/services/offline_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// HTTP client for the Maresi Spring Boot API.
 class ApiService implements MaresiApi {
-  ApiService._();
+  ApiService._() {
+    OfflineStore.instance.sender = _sendQueued;
+  }
   static final ApiService instance = ApiService._();
 
+  static const _getTimeout = Duration(seconds: 12);
+  static const _writeTimeout = Duration(seconds: 15);
+
   final Set<String> _favoritePropertyIds = {};
+
+  bool _isNetworkFailure(Object error) {
+    if (error is TimeoutException || error is SocketException || error is HttpException) {
+      return true;
+    }
+    final text = error.toString().toLowerCase();
+    return text.contains('socket') ||
+        text.contains('timed out') ||
+        text.contains('timeout') ||
+        text.contains('failed host lookup') ||
+        text.contains('connection') ||
+        text.contains('network');
+  }
+
+  Future<http.Response> _sendOnce(String method, Uri uri, {String? body}) async {
+    final headers = await _authHeaders();
+    final timeout = method == 'GET' ? _getTimeout : _writeTimeout;
+    final Future<http.Response> request = switch (method) {
+      'GET' => http.get(uri, headers: headers),
+      'POST' => http.post(uri, headers: headers, body: body),
+      'PATCH' => http.patch(uri, headers: headers, body: body),
+      'PUT' => http.put(uri, headers: headers, body: body),
+      'DELETE' => http.delete(uri, headers: headers),
+      _ => throw Exception('Unsupported method'),
+    };
+    return request.timeout(timeout);
+  }
+
+  Future<void> _sendQueued(QueuedRequest item) async {
+    final uri = Uri.parse('${AppConfig.apiPrefix}${item.path}');
+    final res = await _sendOnce(item.method, uri, body: item.body);
+    final data = _parseBody(res);
+    if (res.statusCode >= 400) _throwFromResponse(res, data);
+  }
+
+  Future<dynamic> _jsonRequest(
+    String method,
+    String path, {
+    String? body,
+    bool cache = false,
+    bool queue = false,
+  }) async {
+    final uri = Uri.parse('${AppConfig.apiPrefix}$path');
+    final isRead = method == 'GET';
+    final attempts = isRead ? 3 : 2;
+    Object? lastError;
+
+    for (var i = 0; i < attempts; i++) {
+      try {
+        final res = await _sendOnce(method, uri, body: body);
+        final data = _parseBody(res);
+        if (res.statusCode >= 400) _throwFromResponse(res, data);
+        final unwrapped = _unwrapEnvelope(data);
+        if (cache && isRead) await OfflineStore.instance.writeCache(path, unwrapped);
+        OfflineStore.instance.markOnline();
+        unawaited(OfflineStore.instance.flush());
+        return unwrapped;
+      } catch (e) {
+        lastError = e;
+        if (!_isNetworkFailure(e)) break;
+        if (isRead && i < attempts - 1) {
+          await Future<void>.delayed(Duration(milliseconds: 400 * (1 << i)));
+          continue;
+        }
+        break;
+      }
+    }
+
+    if (isRead && cache && lastError != null && _isNetworkFailure(lastError)) {
+      final cached = await OfflineStore.instance.readCache(path);
+      if (cached != null) {
+        OfflineStore.instance.markOffline();
+        return cached;
+      }
+    }
+
+    if (queue && (lastError == null || _isNetworkFailure(lastError!))) {
+      await OfflineStore.instance.enqueue(method: method, path: path, body: body);
+      throw OfflineQueuedException();
+    }
+
+    if (lastError != null && _isNetworkFailure(lastError)) {
+      OfflineStore.instance.markOffline();
+    }
+    if (lastError is Exception) throw lastError;
+    throw Exception(lastError?.toString() ?? 'Request failed');
+  }
 
   Future<Map<String, String>> _authHeaders() async {
     final headers = {'Content-Type': 'application/json'};
@@ -117,24 +212,14 @@ class ApiService implements MaresiApi {
       query['property_type'] = propertyType;
     }
 
-    final uri = Uri.parse('${AppConfig.apiPrefix}/properties').replace(
-      queryParameters: query.isEmpty ? null : query,
-    );
-    final res = await http.get(uri, headers: await _authHeaders());
-    final data = _parseBody(res);
-    if (res.statusCode >= 400) _throwFromResponse(res, data);
-    final list = _unwrapEnvelope(data) as List<dynamic>? ?? [];
+    final qs = query.isEmpty ? '' : '?${Uri(queryParameters: query).query}';
+    final list = await _jsonRequest('GET', '/properties$qs', cache: true) as List<dynamic>? ?? [];
     return list.map((e) => Property.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<Property> getProperty(String id) async {
-    final res = await http.get(
-      Uri.parse('${AppConfig.apiPrefix}/properties/$id'),
-      headers: await _authHeaders(),
-    );
-    final data = _parseBody(res);
-    if (res.statusCode >= 400) _throwFromResponse(res, data);
-    return Property.fromJson(_unwrapEnvelope(data) as Map<String, dynamic>);
+    final data = await _jsonRequest('GET', '/properties/$id', cache: true);
+    return Property.fromJson(data as Map<String, dynamic>);
   }
 
   Future<List<Favorite>> listFavorites() async {
@@ -187,7 +272,10 @@ class ApiService implements MaresiApi {
 
   bool isFavorite(String propertyId) => _favoritePropertyIds.contains(propertyId);
 
-  void clearSessionCache() => _favoritePropertyIds.clear();
+  void clearSessionCache() {
+    _favoritePropertyIds.clear();
+    unawaited(OfflineStore.instance.clearSession());
+  }
 
   Future<AuthResponse> login({
     required String email,
@@ -308,57 +396,72 @@ class ApiService implements MaresiApi {
 
   @override
   Future<VisitRequest> createVisitRequest(VisitRequestPayload payload) async {
-    final res = await http.post(
-      Uri.parse('${AppConfig.apiPrefix}/visit-requests'),
-      headers: await _authHeaders(),
+    final data = await _jsonRequest(
+      'POST',
+      '/visit-requests',
       body: _wrapBody(payload.toJson()),
+      queue: true,
     );
-    final data = _parseBody(res);
-    if (res.statusCode >= 400) _throwFromResponse(res, data);
-    return VisitRequest.fromJson(_unwrapEnvelope(data) as Map<String, dynamic>);
+    return VisitRequest.fromJson(data as Map<String, dynamic>);
   }
 
-  @override
-  Future<List<VisitRequest>> listMyVisitRequests() async {
-    final res = await http.get(
-      Uri.parse('${AppConfig.apiPrefix}/visit-requests'),
-      headers: await _authHeaders(),
-    );
-    final data = _parseBody(res);
-    if (res.statusCode >= 400) _throwFromResponse(res, data);
-    final unwrapped = _unwrapEnvelope(data);
+  List<VisitRequest> _visitsFrom(dynamic unwrapped) {
     final list = unwrapped is List
         ? unwrapped
         : (unwrapped is Map && unwrapped['items'] is List)
             ? unwrapped['items'] as List
-            : (data is Map && data['items'] is List)
-                ? data['items'] as List
-                : <dynamic>[];
+            : <dynamic>[];
     return list.map((e) => VisitRequest.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   @override
+  Future<List<VisitRequest>> listMyVisitRequests() async {
+    final unwrapped = await _jsonRequest('GET', '/visit-requests', cache: true);
+    return _visitsFrom(unwrapped);
+  }
+
+  @override
   Future<VisitRequest> updateVisitRequestStatus(String id, String status) async {
-    final res = await http.patch(
-      Uri.parse('${AppConfig.apiPrefix}/visit-requests/$id/status'),
-      headers: await _authHeaders(),
+    final data = await _jsonRequest(
+      'PATCH',
+      '/visit-requests/$id/status',
       body: _wrapBody({'status': status}),
+      queue: true,
     );
-    final data = _parseBody(res);
-    if (res.statusCode >= 400) _throwFromResponse(res, data);
-    return VisitRequest.fromJson(_unwrapEnvelope(data) as Map<String, dynamic>);
+    return VisitRequest.fromJson(data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<VisitRequest> requestStayExtension(String id, String checkOut) async {
+    final data = await _jsonRequest(
+      'POST',
+      '/visit-requests/$id/extension',
+      body: _wrapBody({'check_out': checkOut}),
+      queue: true,
+    );
+    return VisitRequest.fromJson(data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<VisitRequest> markStayExtensionPaid(String id) async {
+    final data = await _jsonRequest(
+      'POST',
+      '/visit-requests/$id/extension/paid',
+      body: _wrapBody({}),
+      queue: true,
+    );
+    return VisitRequest.fromJson(data as Map<String, dynamic>);
   }
 
   @override
   Future<VisitRequest> signStayAgreement(String id, String fullName) async {
-    final res = await http.post(
-      Uri.parse('${AppConfig.apiPrefix}/visit-requests/$id/agreement'),
-      headers: await _authHeaders(),
+    final data = await _jsonRequest(
+      'POST',
+      '/visit-requests/$id/agreement',
       body: _wrapBody({'full_name': fullName, 'accepted': true}),
+      queue: true,
     );
-    final data = _parseBody(res);
-    if (res.statusCode >= 400) _throwFromResponse(res, data);
-    return VisitRequest.fromJson(_unwrapEnvelope(data) as Map<String, dynamic>);
+    return VisitRequest.fromJson(data as Map<String, dynamic>);
   }
 
   @override

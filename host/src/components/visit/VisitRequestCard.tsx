@@ -118,6 +118,29 @@ export function VisitRequestCard({ visit, showRequester, children }: VisitReques
                 )}
               </div>
             )}
+            <div className="rounded-lg border border-border bg-background p-3 space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t("visits.guestHostNotes")}
+              </p>
+              <p className="text-sm font-semibold">
+                {t("visits.closeStayScore")}:{" "}
+                {visit.guest_rating_count
+                  ? `${Number(visit.guest_rating_avg ?? 0).toFixed(1)} / 5 (${visit.guest_rating_count})`
+                  : "—"}
+              </p>
+              {(visit.guest_host_notes ?? []).length === 0 ? (
+                <p className="text-xs text-muted-foreground">{t("visits.guestNoNotes")}</p>
+              ) : (
+                <ul className="space-y-2">
+                  {(visit.guest_host_notes ?? []).map((note, i) => (
+                    <li key={`${note.created_at ?? i}`} className="text-sm">
+                      <span className="font-semibold">{note.score}/5</span>
+                      {note.note ? ` — ${note.note}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             {visit.agreement_full_name && (
               <p className="text-xs text-muted-foreground">
                 {t("visits.signedBy")}: {visit.agreement_full_name}
@@ -175,6 +198,35 @@ export function VisitRequestCard({ visit, showRequester, children }: VisitReques
           <div className="flex gap-2 text-sm text-muted-foreground bg-muted rounded-xl p-3">
             <MessageSquare className="h-4 w-4 shrink-0 text-brand" />
             <p className="whitespace-pre-wrap">{visit.message}</p>
+          </div>
+        )}
+
+        {visit.extension_status && visit.extension_check_out && (
+          <div className="rounded-xl border border-brand/30 bg-accent p-3 text-sm space-y-1">
+            <p className="font-semibold text-foreground">{t("visits.extendTitle")}</p>
+            {visit.extension_status === "pending" && (
+              <p>{t("visits.extendPending", { date: formatDate(visit.extension_check_out) })}</p>
+            )}
+            {visit.extension_status !== "pending" && (
+              <p>
+                {t("visits.extendRequested")}: {formatDate(visit.extension_check_out)}
+              </p>
+            )}
+            {visit.extension_amount != null && (
+              <p>
+                {t("visits.extendAmount")}: {visit.extension_amount} XOF
+              </p>
+            )}
+            {visit.extension_status === "awaiting_payment" && (
+              <p>{t("visits.extendApproved", { date: formatDate(visit.check_out) })}</p>
+            )}
+            {visit.extension_status === "payment_sent" && <p>{t("visits.extendPaidWaiting")}</p>}
+            {visit.extension_status === "confirmed" && (
+              <p>{t("visits.extendConfirmed", { date: formatDate(visit.check_out) })}</p>
+            )}
+            {visit.extension_note && visit.extension_status === "declined" && (
+              <p className="text-red-700">{visit.extension_note}</p>
+            )}
           </div>
         )}
 
