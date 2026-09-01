@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { isWakingError } from "@/services/api";
 import {
   Dialog,
   DialogContent,
@@ -41,7 +42,9 @@ export function LoginModal({ open, onClose, onRegister }: LoginModalProps) {
       reset();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("login.failed"));
+      setError(
+        isWakingError(err) ? t("login.serverStarting") : err instanceof Error ? err.message : t("login.failed")
+      );
     } finally {
       setLoading(false);
     }

@@ -12,6 +12,10 @@ import {
 } from "@/lib/offline";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
+/** Render free cold start often exceeds 15s; aborting looks like "Fetch is aborted". */
+const REQUEST_TIMEOUT_MS = 90_000;
+export const SERVER_WAKING_MESSAGE =
+  "Le serveur démarre. Patientez quelques secondes et réessayez.";
 
 function getToken(): string | null {
   return localStorage.getItem("token");
@@ -43,6 +47,29 @@ function unwrapEnvelope<T>(data: unknown): T {
   return data as T;
 }
 
+function isAbortError(error: unknown): boolean {
+  if (typeof error === "object" && error !== null && "name" in error) {
+    if ((error as { name: string }).name === "AbortError") return true;
+  }
+  const text = error instanceof Error ? error.message : String(error);
+  return /abort/i.test(text);
+}
+
+export function isWakingError(error: unknown): boolean {
+  if (isAbortError(error)) return true;
+  const text = error instanceof Error ? error.message : String(error);
+  return text === SERVER_WAKING_MESSAGE || /serveur démarre/i.test(text);
+}
+
+function toRequestError(error: unknown): Error {
+  if (isAbortError(error)) return new Error(SERVER_WAKING_MESSAGE);
+  return error instanceof Error ? error : new Error(String(error));
+}
+
+function isAuthPath(path: string): boolean {
+  return path.startsWith("/auth/");
+}
+
 async function rawRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const headers: HeadersInit = {
@@ -51,7 +78,7 @@ async function rawRequest<T>(path: string, options: RequestInit = {}): Promise<T
   };
   if (token) (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
   const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), 15000);
+  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
     const res = await fetch(`${API_BASE}${path}`, { ...options, headers, signal: controller.signal });
     const data = await res.json().catch(() => ({}));
@@ -59,6 +86,8 @@ async function rawRequest<T>(path: string, options: RequestInit = {}): Promise<T
       throw new Error(envelopeMessage(data as Envelope, res.statusText || "Request failed"));
     }
     return unwrapEnvelope<T>(data);
+  } catch (error) {
+    throw toRequestError(error);
   } finally {
     window.clearTimeout(timer);
   }
@@ -77,9 +106,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       return result;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      const retry = isRead && isNetworkFailure(error) && i < attempts - 1;
+      const retry =
+        (isRead || isAuthPath(path)) && isNetworkFailure(error) && i < attempts - 1;
       if (!retry) break;
-      await sleep(400 * 2 ** i);
+      await sleep(800 * 2 ** i);
     }
   }
 
@@ -94,6 +124,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   throw lastError ?? new Error("Request failed");
 }
 
+function wakeApi() {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  void fetch(`${API_BASE}/health`, { method: "GET", cache: "no-store", signal: controller.signal })
+    .catch(() => undefined)
+    .finally(() => window.clearTimeout(timer));
+}
+
 function startQueueFlush() {
   void flushQueue((item) => rawRequest(item.path, { method: item.method, body: item.body }));
 }
@@ -101,6 +139,7 @@ function startQueueFlush() {
 if (typeof window !== "undefined") {
   window.addEventListener("online", startQueueFlush);
   startQueueFlush();
+  wakeApi();
 }
 
 function wrapBody(body: unknown): string {

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { isWakingError } from "@/services/api";
 import { CLIENT_APP_URL } from "@/lib/clientApp";
 
 export function LoginPage() {
@@ -32,7 +33,9 @@ export function LoginPage() {
       }
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("login.failed"));
+      setError(
+        isWakingError(err) ? t("login.serverStarting") : err instanceof Error ? err.message : t("login.failed")
+      );
     } finally {
       setLoading(false);
     }

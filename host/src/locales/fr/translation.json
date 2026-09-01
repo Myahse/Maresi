@@ -147,6 +147,7 @@
     "emailPlaceholder": "vous@exemple.com",
     "submit": "Se connecter",
     "failed": "Échec de la connexion",
+    "serverStarting": "Le serveur démarre. Patientez quelques secondes et réessayez.",
     "noAccount": "Pas encore de compte ?",
     "registerLink": "S'inscrire",
     "registerOnClient": "Créer un compte hôte",

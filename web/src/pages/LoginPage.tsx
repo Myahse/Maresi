@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { isWakingError } from "@/services/api";
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -36,7 +37,9 @@ export function LoginPage() {
       await login(email, password);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("login.failed"));
+      setError(
+        isWakingError(err) ? t("login.serverStarting") : err instanceof Error ? err.message : t("login.failed")
+      );
     } finally {
       setLoading(false);
     }

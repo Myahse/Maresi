@@ -150,6 +150,7 @@
     "emailPlaceholder": "you@example.com",
     "submit": "Sign in",
     "failed": "Login failed",
+    "serverStarting": "The server is starting. Wait a few seconds and try again.",
     "noAccount": "Don't have an account?",
     "registerLink": "Register",
     "forgot": "Forgot password?"

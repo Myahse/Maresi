@@ -151,5 +151,5 @@ export function sleep(ms: number) {
 export function isNetworkFailure(error: unknown) {
   if (error instanceof DOMException && error.name === "AbortError") return true;
   const text = error instanceof Error ? error.message : String(error);
-  return /failed to fetch|network|offline|abort|timeout|load failed/i.test(text);
+  return /failed to fetch|network|offline|abort|timeout|load failed|serveur démarre/i.test(text);
 }
