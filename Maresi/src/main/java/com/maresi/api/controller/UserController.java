@@ -15,9 +15,14 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/users")
@@ -36,6 +41,22 @@ public class UserController {
   public ResponseEntity<Response<Map<String, Object>>> me(Locale locale) {
     Locale loc = ControllerSupport.locale(locale);
     return ControllerSupport.run(() -> userService.me(loc), loc, exceptionUtils);
+  }
+
+  @PatchMapping(value = "/me/identity", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @Operation(summary = "Mettre a jour la piece d'identite", security = @SecurityRequirement(name = "bearerAuth"))
+  public ResponseEntity<Response<Map<String, Object>>> updateIdentity(
+      @RequestParam(name = "id_card", required = false) String idCard,
+      @RequestPart(name = "selfie", required = false) MultipartFile selfie,
+      @RequestPart(name = "id_card_photo", required = false) MultipartFile idCardPhoto,
+      @RequestPart(name = "id_card_back", required = false) MultipartFile idCardBack,
+      Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+    return ControllerSupport.run(
+        () -> userService.updateIdentity(idCard, selfie, idCardPhoto, idCardBack, baseUrl, loc),
+        loc,
+        exceptionUtils);
   }
 
   @GetMapping("/{id}/identity/{kind}")

@@ -52,6 +52,29 @@ class _IdentityDossierScreenState extends State<IdentityDossierScreen> {
               padding: const EdgeInsets.all(20),
               children: [
                 Text(locale.t('account.hint'), style: TextStyle(color: palette.textSecondary)),
+                if (profile != null && profile['account_status'] == 'suspended') ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF1F2),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFFECACA)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(locale.t('account.suspendedTitle'), style: const TextStyle(fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${profile['review_message'] ?? locale.t('account.suspendedHint')}',
+                          style: const TextStyle(height: 1.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 if (_error != null) ...[
                   const SizedBox(height: 12),
                   Text(_error!, style: const TextStyle(color: Colors.red)),

@@ -50,6 +50,8 @@ export function normalizeAuthResponse(raw: unknown): AuthResponse {
       ...(typeof u.birth_date === "string" && u.birth_date ? { birth_date: u.birth_date } : {}),
       ...(typeof u.gender === "string" && u.gender ? { gender: u.gender } : {}),
       ...(typeof u.phone === "string" && u.phone ? { phone: u.phone } : {}),
+      ...(typeof u.account_status === "string" && u.account_status ? { account_status: u.account_status as User["account_status"] } : {}),
+      ...(typeof u.review_message === "string" && u.review_message ? { review_message: u.review_message } : {}),
     } as User,
   };
 }
@@ -155,6 +157,15 @@ export function logout(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
   void import("@/lib/offline").then((m) => m.clearOfflineSession()).catch(() => undefined);
+}
+
+export function mergeStoredUser(partial: Partial<User>): User | null {
+  const current = getStoredUser();
+  if (!current) return null;
+  const next = { ...current, ...partial };
+  if (!partial.review_message) delete next.review_message;
+  localStorage.setItem(USER_KEY, JSON.stringify(next));
+  return next;
 }
 
 export function getStoredUser(): User | null {

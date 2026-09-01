@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maresi_mobile/models/property.dart';
 import 'package:maresi_mobile/models/visit_request.dart';
+import 'package:maresi_mobile/providers/auth_provider.dart';
 import 'package:maresi_mobile/providers/locale_provider.dart';
 import 'package:maresi_mobile/services/maresi_client.dart';
 import 'package:maresi_mobile/theme/app_colors.dart';
@@ -140,6 +141,12 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
   }
 
   Future<void> _submit() async {
+    final locale = context.read<LocaleProvider>();
+    final auth = context.read<AuthProvider>();
+    if (auth.user?.isSuspended == true) {
+      _showMessage(locale.t('account.suspendedHint'));
+      return;
+    }
     setState(() => _loading = true);
     try {
       await maresiApi.createVisitRequest(

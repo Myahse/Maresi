@@ -30,6 +30,15 @@ public final class RowMaps {
     putIfPresent(rs, m, "selfie_url");
     putIfPresent(rs, m, "id_card_photo_url");
     putIfPresent(rs, m, "id_card_back_url");
+    String status = null;
+    try {
+      status = rs.getString("account_status");
+    } catch (SQLException ignored) {
+    }
+    m.put("account_status", status == null || status.isBlank() ? "ok" : status);
+    putIfPresent(rs, m, "review_message");
+    putTimestamp(rs, m, "review_requested_at");
+    putTimestamp(rs, m, "identity_updated_at");
     return m;
   }
 
@@ -250,6 +259,15 @@ public final class RowMaps {
     m.put("updated_at", toIso(rs.getTimestamp("updated_at")));
     putIfPresent(rs, m, "user_email");
     return m;
+  }
+
+  private static void putTimestamp(ResultSet rs, Map<String, Object> m, String col) {
+    try {
+      String iso = toIso(rs.getTimestamp(col));
+      if (iso != null) m.put(col, iso);
+    } catch (SQLException ignored) {
+      // column not in result set
+    }
   }
 
   private static void putDate(ResultSet rs, Map<String, Object> m, String col) {

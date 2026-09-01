@@ -41,6 +41,7 @@ public class AdminMonitorRepository {
             WHERE status = 'active' AND expires_at IS NOT NULL AND expires_at > NOW()
             """));
     m.put("host_applications_pending", count("SELECT COUNT(*) FROM host_applications WHERE status = 'pending'"));
+    m.put("users_suspended", count("SELECT COUNT(*) FROM users WHERE account_status = 'suspended'"));
     m.put("properties", count("SELECT COUNT(*) FROM properties"));
     m.put("visits", count("SELECT COUNT(*) FROM visit_requests"));
     m.put("visits_pending", count("SELECT COUNT(*) FROM visit_requests WHERE status = 'pending'"));
@@ -99,7 +100,7 @@ public class AdminMonitorRepository {
   public List<Map<String, Object>> listUsers() {
     return jdbc.query(
         """
-        SELECT id, email, full_name, role, phone, created_at
+        SELECT id, email, full_name, role, phone, created_at, account_status, review_requested_at
         FROM users
         ORDER BY created_at DESC
         """,

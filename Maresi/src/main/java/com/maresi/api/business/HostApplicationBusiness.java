@@ -28,6 +28,7 @@ public class HostApplicationBusiness {
   private final RealtimeEventPublisher realtime;
   private final FunctionalError functionalError;
   private final EmailService email;
+  private final UserBusiness userBusiness;
 
   public HostApplicationBusiness(
       HostApplicationRepository applications,
@@ -36,7 +37,8 @@ public class HostApplicationBusiness {
       JwtService jwtService,
       RealtimeEventPublisher realtime,
       FunctionalError functionalError,
-      EmailService email) {
+      EmailService email,
+      UserBusiness userBusiness) {
     this.applications = applications;
     this.users = users;
     this.notifications = notifications;
@@ -44,11 +46,15 @@ public class HostApplicationBusiness {
     this.realtime = realtime;
     this.functionalError = functionalError;
     this.email = email;
+    this.userBusiness = userBusiness;
   }
 
   public Response<Map<String, Object>> submit(Request<Map<String, Object>> request, Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
     AuthUser user = SecurityUtils.requireUser();
+    if (userBusiness.rejectIfSuspended(response, user.id(), locale)) {
+      return response;
+    }
     if ("owner".equals(user.role()) || "admin".equals(user.role())) {
       response.setHasError(true);
       response.setStatus(functionalError.disallowed("Compte deja hote ou admin", locale));

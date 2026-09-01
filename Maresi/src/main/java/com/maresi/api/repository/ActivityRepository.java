@@ -52,18 +52,23 @@ public class ActivityRepository {
   }
 
   public List<Map<String, Object>> listForActor(UUID actorId, int limit) {
+    return listForUser(actorId, limit);
+  }
+
+  public List<Map<String, Object>> listForUser(UUID userId, int limit) {
     int safe = Math.min(Math.max(limit, 1), 300);
     return jdbc.query(
         """
         SELECT a.*, u.full_name AS actor_name, u.email AS actor_email, u.role AS actor_role
         FROM activity_events a
         LEFT JOIN users u ON u.id = a.actor_id
-        WHERE a.actor_id = ?
+        WHERE a.actor_id = ? OR a.entity_id = ?
         ORDER BY a.created_at DESC
         LIMIT ?
         """,
         (rs, rowNum) -> mapRow(rs),
-        actorId,
+        userId,
+        userId,
         safe);
   }
 

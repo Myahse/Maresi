@@ -80,6 +80,21 @@ public class AdminMonitorController {
     return ControllerSupport.run(() -> adminMonitorService.userTrail(userId, loc), loc, exceptionUtils);
   }
 
+  @PatchMapping("/users/{userId}")
+  public ResponseEntity<Response<Map<String, Object>>> reviewUser(
+      @PathVariable UUID userId, @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return adminMonitorService.reviewUser(userId, request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
   @PatchMapping("/subscriptions/{userId}")
   public ResponseEntity<Response<Map<String, Object>>> updateSubscription(
       @PathVariable UUID userId, @RequestBody Request<Map<String, Object>> request, Locale locale) {

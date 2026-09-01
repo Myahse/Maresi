@@ -64,6 +64,7 @@ export function AdminOverviewPage() {
     { key: "payments_pending", to: "/payments", label: t("admin.paymentsPending") },
     { key: "subscriptions_active", to: "/subscriptions", label: t("admin.navSubscriptions") },
     { key: "host_applications_pending", to: "/applications", label: t("admin.navApplications") },
+    { key: "users_suspended", to: "/users", label: t("admin.suspended") },
   ];
 
   return (

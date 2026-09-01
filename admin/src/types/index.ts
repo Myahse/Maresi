@@ -15,6 +15,9 @@ export interface User {
   selfie_url?: string;
   id_card_photo_url?: string;
   id_card_back_url?: string;
+  account_status?: "ok" | "suspended";
+  review_message?: string;
+  review_requested_at?: string;
 }
 
 export interface Property {
@@ -147,6 +150,7 @@ export interface AdminOverview {
   revenue_completed: number;
   subscriptions_active: number;
   host_applications_pending: number;
+  users_suspended?: number;
   properties?: number;
   visits?: number;
   visits_pending?: number;

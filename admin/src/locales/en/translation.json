@@ -27,6 +27,8 @@
     "photos": "Photos",
     "saving": "Saving...",
     "signingIn": "Signing in...",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "creatingAccount": "Creating account...",
     "user": "there",
     "cancel": "Cancel"
@@ -144,7 +146,8 @@
     "submit": "Register",
     "failed": "Registration failed",
     "hasAccount": "Already have an account?",
-    "signInLink": "Sign in"
+    "signInLink": "Sign in",
+    "idCardNumber": "ID document"
   },
   "dashboard": {
     "title": "Browse residences",
@@ -468,7 +471,17 @@
     "refund": "Refund",
     "confirmStop": "Stop this subscription?",
     "confirmCancel": "Cancel this pending payment?",
-    "confirmRefund": "Refund this payment? The subscription or reservation will also be reversed."
+    "confirmRefund": "Refund this payment? The subscription or reservation will also be reversed.",
+    "reviewTitle": "Identity review",
+    "reviewHint": "Client signup is not blocked. If a document is unreadable, send a message with a correction link. You can suspend the account until they update it.",
+    "reviewPlaceholder": "e.g. The ID front is not readable. Please take a clearer photo.",
+    "reviewSuspend": "Suspend the account until they correct it",
+    "reviewSend": "Send the email",
+    "reviewUnsuspend": "Restore the account",
+    "reviewMessageRequired": "Write a short message explaining what to correct.",
+    "suspended": "Suspended",
+    "ok": "OK",
+    "status": "Status"
   },
   "hostGate": {
     "wrongRole": "This app is for approved hosts. Apply from the client site."

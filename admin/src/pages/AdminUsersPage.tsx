@@ -58,6 +58,7 @@ export function AdminUsersPage() {
                 <th className="p-3">{t("common.email")}</th>
                 <th className="p-3">{t("admin.name")}</th>
                 <th className="p-3">{t("admin.role")}</th>
+                <th className="p-3">{t("admin.status")}</th>
                 <th className="p-3">{t("admin.phone")}</th>
                 <th className="p-3">{t("admin.actions")}</th>
               </tr>
@@ -72,6 +73,13 @@ export function AdminUsersPage() {
                     </Link>
                   </td>
                   <td className="p-3">{u.role}</td>
+                  <td className="p-3">
+                    {u.account_status === "suspended" ? (
+                      <span className="text-destructive font-semibold">{t("admin.suspended")}</span>
+                    ) : (
+                      t("admin.ok")
+                    )}
+                  </td>
                   <td className="p-3">{u.phone || "—"}</td>
                   <td className="p-3">
                     {u.role === "owner" ? (

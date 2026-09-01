@@ -9,6 +9,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<{ user: User; token: string }>;
   register: (data: Parameters<typeof authService.register>[0]) => Promise<authService.RegisterResult>;
   applySession: (res: { user: User; token: string }) => void;
+  patchUser: (partial: Partial<User>) => void;
   logout: () => void;
 }
 
@@ -35,6 +36,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(res.user);
   }, []);
 
+  const patchUser = useCallback((partial: Partial<User>) => {
+    const next = authService.mergeStoredUser(partial);
+    if (next) setUser(next);
+  }, []);
+
   const logout = useCallback(() => {
     authService.logout();
     setUser(null);
@@ -48,9 +54,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       register,
       applySession,
+      patchUser,
       logout,
     }),
-    [user, loading, login, register, applySession, logout]
+    [user, loading, login, register, applySession, patchUser, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

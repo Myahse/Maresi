@@ -197,6 +197,15 @@ export function getMyProfile() {
   return api.get<import("@/types").UserProfile>("/users/me");
 }
 
+export function updateMyIdentity(formData: FormData) {
+  const token = getToken();
+  return fetch(`${API_BASE}/users/me/identity`, {
+    method: "PATCH",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  }).then((res) => parseFormResponse<import("@/types").UserProfile>(res));
+}
+
 export function getProperty(id: string) {
   return api.get<Property>(`/properties/${id}`);
 }

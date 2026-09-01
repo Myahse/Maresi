@@ -7,6 +7,8 @@ class User {
     required this.fullName,
     required this.role,
     this.phone,
+    this.accountStatus,
+    this.reviewMessage,
   });
 
   final String id;
@@ -14,6 +16,10 @@ class User {
   final String fullName;
   final UserRole role;
   final String? phone;
+  final String? accountStatus;
+  final String? reviewMessage;
+
+  bool get isSuspended => accountStatus == 'suspended';
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -25,6 +31,8 @@ class User {
         orElse: () => UserRole.client,
       ),
       phone: json['phone'] as String?,
+      accountStatus: json['account_status'] as String? ?? json['accountStatus'] as String?,
+      reviewMessage: json['review_message'] as String? ?? json['reviewMessage'] as String?,
     );
   }
 
@@ -34,6 +42,8 @@ class User {
         'full_name': fullName,
         'role': role.name,
         if (phone != null) 'phone': phone,
+        if (accountStatus != null) 'account_status': accountStatus,
+        if (reviewMessage != null) 'review_message': reviewMessage,
       };
 }
 

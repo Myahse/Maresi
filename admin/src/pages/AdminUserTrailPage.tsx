@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getAdminUserTrail } from "@/services/api";
+import { getAdminUserTrail, patchAdminUserReview } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtime } from "@/hooks/useRealtime";
 import { AuthImage } from "@/components/media/AuthImage";
+import { Button } from "@/components/ui/button";
 import type { AdminActivity, Payment, RealtimeEvent, User, VisitRequest } from "@/types";
 
 export function AdminUserTrailPage() {
@@ -17,6 +18,9 @@ export function AdminUserTrailPage() {
   const [activity, setActivity] = useState<AdminActivity[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [suspend, setSuspend] = useState(true);
+  const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -49,6 +53,30 @@ export function AdminUserTrailPage() {
     ["/topic/admin"]
   );
 
+  const review = async (action: "request_correction" | "unsuspend") => {
+    if (!userId) return;
+    if (action === "request_correction" && message.trim().length < 8) {
+      setError(t("admin.reviewMessageRequired"));
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const updated = await patchAdminUserReview(userId, {
+        action,
+        message: message.trim() || undefined,
+        suspend,
+      });
+      setAccount(updated);
+      setMessage("");
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("admin.empty"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="font-jakarta max-w-5xl mx-auto px-4 py-8 space-y-6">
       <Link to="/users" className="text-sm text-brand">
@@ -76,8 +104,12 @@ export function AdminUserTrailPage() {
                 <p>{account.email}</p>
                 <p>
                   {account.role} · {account.phone || "—"}
+                  {account.account_status === "suspended" ? ` · ${t("admin.suspended")}` : ""}
                 </p>
                 {account.id_card && <p>{t("register.idCardNumber", { defaultValue: "ID" })}: {account.id_card}</p>}
+                {account.review_message && (
+                  <p className="mt-2 text-destructive">{account.review_message}</p>
+                )}
               </div>
               {(account.selfie_url || account.id_card_photo_url || account.id_card_back_url) && (
                 <div>
@@ -98,6 +130,43 @@ export function AdminUserTrailPage() {
                         <p className="text-xs text-muted-foreground mb-1">{t("admin.idBack")}</p>
                         <AuthImage src={account.id_card_back_url} alt={t("admin.idBack")} className="h-36 w-full rounded-xl object-cover bg-muted" />
                       </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {account.role !== "admin" && (
+                <div className="border-t pt-4 space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t("admin.reviewTitle")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{t("admin.reviewHint")}</p>
+                  <textarea
+                    className="w-full border rounded-md p-2 text-sm min-h-[90px]"
+                    placeholder={t("admin.reviewPlaceholder")}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                  />
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={suspend} onChange={(e) => setSuspend(e.target.checked)} />
+                    {t("admin.reviewSuspend")}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      className="rounded-full bg-brand"
+                      disabled={busy}
+                      onClick={() => void review("request_correction")}
+                    >
+                      {t("admin.reviewSend")}
+                    </Button>
+                    {account.account_status === "suspended" && (
+                      <Button
+                        variant="outline"
+                        className="rounded-full"
+                        disabled={busy}
+                        onClick={() => void review("unsuspend")}
+                      >
+                        {t("admin.reviewUnsuspend")}
+                      </Button>
                     )}
                   </div>
                 </div>

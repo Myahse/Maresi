@@ -27,6 +27,8 @@
     "photos": "Photos",
     "saving": "Enregistrement...",
     "signingIn": "Connexion...",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
     "creatingAccount": "Création du compte...",
     "user": "vous",
     "back": "Retour",
@@ -618,6 +620,14 @@
     "kicker": "Votre dossier",
     "title": "Informations du compte",
     "hint": "Tout ce qui a été enregistré à la création : identité, téléphone et photos.",
-    "loadFailed": "Impossible de charger le dossier."
+    "loadFailed": "Impossible de charger le dossier.",
+    "suspendedTitle": "Compte suspendu",
+    "suspendedHint": "Mettez à jour vos pièces d'identité pour débloquer votre compte.",
+    "updateTitle": "Corriger le dossier",
+    "updateHint": "Changez le numéro de pièce et/ou remplacez les photos floues ou illisibles.",
+    "updateRequired": "Modifiez le numéro ou ajoutez au moins une nouvelle photo.",
+    "updateSubmit": "Envoyer la correction",
+    "updateSuccess": "Dossier mis à jour. Un administrateur pourra le revérifier.",
+    "updateFailed": "Impossible d'enregistrer la correction."
   }
 }

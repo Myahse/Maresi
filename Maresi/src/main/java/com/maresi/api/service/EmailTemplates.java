@@ -358,6 +358,37 @@ public final class EmailTemplates {
         null);
   }
 
+  public static Mail identityCorrection(String name, String message, boolean suspended, String ctaUrl) {
+    String extra =
+        suspended
+            ? "Votre compte est suspendu jusqu’à ce que vous mettiez à jour votre dossier. Vous pouvez toujours vous connecter pour corriger vos informations."
+            : "Vous pouvez continuer à utiliser Maresi, mais merci de corriger ces informations dès que possible.";
+    String body = message == null || message.isBlank() ? extra : message.trim() + "\n\n" + extra;
+    return build(
+        "Mettez à jour vos informations",
+        "Compte",
+        "Une correction est nécessaire",
+        greet(name, body),
+        List.of(),
+        null,
+        "Mettre à jour mes informations",
+        ctaUrl);
+  }
+
+  public static Mail identityUpdatedAdmin(String name, String email, String role) {
+    return build(
+        "Dossier d’identité mis à jour",
+        "Admin",
+        "Un compte a corrigé son dossier",
+        "Bonjour,\n\n"
+            + personName(name)
+            + " a mis à jour ses informations d’identité après une demande de correction. Vérifiez le dossier dans l’espace admin.",
+        details("Nom", personName(name), "E-mail", email, "Rôle", role),
+        null,
+        null,
+        null);
+  }
+
   public static Mail newReview(String name, int score, String listing, String comment) {
     List<Detail> rows = new ArrayList<>(details("Résidence", listing, "Note", score + " / 5", "Voyageur", name));
     if (comment != null && !comment.isBlank()) {

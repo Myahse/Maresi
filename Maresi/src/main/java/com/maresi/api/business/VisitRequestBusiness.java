@@ -42,6 +42,7 @@ public class VisitRequestBusiness {
   private final FileStorageService fileStorage;
   private final AppProperties appProperties;
   private final UserRepository users;
+  private final UserBusiness userBusiness;
 
   public VisitRequestBusiness(
       VisitRequestRepository visitRequests,
@@ -55,7 +56,8 @@ public class VisitRequestBusiness {
       EmailService email,
       FileStorageService fileStorage,
       AppProperties appProperties,
-      UserRepository users) {
+      UserRepository users,
+      UserBusiness userBusiness) {
     this.visitRequests = visitRequests;
     this.guestReviews = guestReviews;
     this.properties = properties;
@@ -68,11 +70,15 @@ public class VisitRequestBusiness {
     this.fileStorage = fileStorage;
     this.appProperties = appProperties;
     this.users = users;
+    this.userBusiness = userBusiness;
   }
 
   public Response<Map<String, Object>> create(Request<Map<String, Object>> request, Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
     AuthUser user = SecurityUtils.requireUser();
+    if (userBusiness.rejectIfSuspended(response, user.id(), locale)) {
+      return response;
+    }
     Map<String, Object> body = request.getData();
     UUID listingId = uuid(body.get("propertyId"));
     if (listingId == null) {

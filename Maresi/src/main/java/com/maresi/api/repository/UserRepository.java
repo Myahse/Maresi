@@ -15,13 +15,22 @@ public class UserRepository {
     this.jdbc = jdbc;
   }
 
+  private static final String PUBLIC_COLS =
+      """
+      id, email, full_name, first_name, last_name, birth_date, gender,
+      role, phone, email_verified, created_at,
+      account_status, review_message, review_requested_at, identity_updated_at
+      """;
+
+  private static final String IDENTITY_COLS =
+      PUBLIC_COLS
+          + """
+      , id_card, selfie_url, id_card_photo_url, id_card_back_url
+      """;
+
   public Optional<Map<String, Object>> findById(UUID id) {
     return jdbc.query(
-            """
-            SELECT id, email, full_name, first_name, last_name, birth_date, gender,
-                   role, phone, email_verified, created_at
-            FROM users WHERE id = ?
-            """,
+            "SELECT " + PUBLIC_COLS + " FROM users WHERE id = ?",
             (rs, rowNum) -> RowMaps.userPublic(rs),
             id)
         .stream()
@@ -30,12 +39,7 @@ public class UserRepository {
 
   public Optional<Map<String, Object>> findIdentity(UUID id) {
     return jdbc.query(
-            """
-            SELECT id, email, full_name, first_name, last_name, birth_date, gender,
-                   role, phone, email_verified, created_at,
-                   id_card, selfie_url, id_card_photo_url, id_card_back_url
-            FROM users WHERE id = ?
-            """,
+            "SELECT " + IDENTITY_COLS + " FROM users WHERE id = ?",
             (rs, rowNum) -> RowMaps.userIdentity(rs),
             id)
         .stream()
@@ -45,8 +49,10 @@ public class UserRepository {
   public Optional<Map<String, Object>> findByEmail(String email) {
     return jdbc.query(
             """
-            SELECT id, email, password_hash, full_name, first_name, last_name, birth_date, gender,
-                   role, phone, email_verified
+            SELECT """
+                + PUBLIC_COLS
+                + """
+            , password_hash
             FROM users WHERE email = ?
             """,
             (rs, rowNum) -> {
@@ -61,10 +67,7 @@ public class UserRepository {
 
   public Optional<Map<String, Object>> findByPhone(String phone) {
     return jdbc.query(
-            """
-            SELECT id, email, full_name, first_name, last_name, birth_date, gender, role, phone, email_verified
-            FROM users WHERE phone = ?
-            """,
+            "SELECT " + PUBLIC_COLS + " FROM users WHERE phone = ?",
             (rs, rowNum) -> RowMaps.userPublic(rs),
             phone)
         .stream()
@@ -139,6 +142,55 @@ public class UserRepository {
         SET email_verified = TRUE, email_verified_at = NOW(), updated_at = NOW()
         WHERE id = ?
         """,
+        id);
+  }
+
+  public void requestCorrection(UUID id, String message, boolean suspend) {
+    jdbc.update(
+        """
+        UPDATE users
+        SET review_message = ?,
+            review_requested_at = NOW(),
+            account_status = CASE WHEN ? THEN 'suspended' ELSE account_status END,
+            updated_at = NOW()
+        WHERE id = ?
+        """,
+        message,
+        suspend,
+        id);
+  }
+
+  public void unsuspend(UUID id) {
+    jdbc.update(
+        """
+        UPDATE users
+        SET account_status = 'ok', updated_at = NOW()
+        WHERE id = ?
+        """,
+        id);
+  }
+
+  public void updateIdentity(
+      UUID id, String idCard, String selfieUrl, String idFrontUrl, String idBackUrl, boolean liftSuspension) {
+    jdbc.update(
+        """
+        UPDATE users
+        SET id_card = COALESCE(?, id_card),
+            selfie_url = COALESCE(?, selfie_url),
+            id_card_photo_url = COALESCE(?, id_card_photo_url),
+            id_card_back_url = COALESCE(?, id_card_back_url),
+            identity_updated_at = NOW(),
+            account_status = CASE WHEN ? THEN 'ok' ELSE account_status END,
+            review_message = CASE WHEN ? THEN NULL ELSE review_message END,
+            updated_at = NOW()
+        WHERE id = ?
+        """,
+        idCard,
+        selfieUrl,
+        idFrontUrl,
+        idBackUrl,
+        liftSuspension,
+        liftSuspension,
         id);
   }
 

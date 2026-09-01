@@ -27,6 +27,8 @@
     "photos": "Photos",
     "saving": "Enregistrement...",
     "signingIn": "Connexion...",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
     "creatingAccount": "Création du compte...",
     "user": "vous"
   },
@@ -143,7 +145,8 @@
     "submit": "S'inscrire",
     "failed": "Échec de l'inscription",
     "hasAccount": "Déjà un compte ?",
-    "signInLink": "Se connecter"
+    "signInLink": "Se connecter",
+    "idCardNumber": "Pièce d'identité"
   },
   "dashboard": {
     "title": "Parcourir les résidences",
@@ -467,7 +470,17 @@
     "refund": "Rembourser",
     "confirmStop": "Couper cet abonnement ?",
     "confirmCancel": "Annuler ce paiement en attente ?",
-    "confirmRefund": "Rembourser ce paiement ? L’abonnement ou la réservation sera aussi annulé."
+    "confirmRefund": "Rembourser ce paiement ? L’abonnement ou la réservation sera aussi annulé.",
+    "reviewTitle": "Vérification d'identité",
+    "reviewHint": "L'inscription client n'est pas bloquée. Si une pièce est illisible, envoyez un message avec le lien de correction. Vous pouvez suspendre le compte jusqu'à la mise à jour.",
+    "reviewPlaceholder": "Ex. Le recto de la pièce n'est pas lisible. Merci de reprendre une photo nette.",
+    "reviewSuspend": "Suspendre le compte jusqu'à la correction",
+    "reviewSend": "Envoyer l'e-mail",
+    "reviewUnsuspend": "Rétablir le compte",
+    "reviewMessageRequired": "Écrivez un message d'au moins quelques mots pour expliquer la correction.",
+    "suspended": "Suspendu",
+    "ok": "OK",
+    "status": "Statut"
   },
   "hostGate": {
     "wrongRole": "Cette app est réservée aux hôtes validés. Faites la demande depuis le site client."

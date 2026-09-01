@@ -27,16 +27,19 @@ public class PropertyBusiness {
   private final FileStorageService fileStorage;
   private final FunctionalError functionalError;
   private final OwnerSubscriptionRepository subscriptions;
+  private final UserBusiness userBusiness;
 
   public PropertyBusiness(
       PropertyRepository properties,
       FileStorageService fileStorage,
       FunctionalError functionalError,
-      OwnerSubscriptionRepository subscriptions) {
+      OwnerSubscriptionRepository subscriptions,
+      UserBusiness userBusiness) {
     this.properties = properties;
     this.fileStorage = fileStorage;
     this.functionalError = functionalError;
     this.subscriptions = subscriptions;
+    this.userBusiness = userBusiness;
   }
 
   public Response<Map<String, Object>> list(
@@ -104,6 +107,9 @@ public class PropertyBusiness {
       Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
     AuthUser user = SecurityUtils.requireUser();
+    if (userBusiness.rejectIfSuspended(response, user.id(), locale)) {
+      return response;
+    }
     long existing = properties.countByOwner(user.id());
     if (existing >= FREE_LISTINGS && !subscriptions.isActive(user.id())) {
       throw ApiException.of(
@@ -147,6 +153,9 @@ public class PropertyBusiness {
       Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
     AuthUser user = SecurityUtils.requireUser();
+    if (userBusiness.rejectIfSuspended(response, user.id(), locale)) {
+      return response;
+    }
     Map<String, Object> existing = properties.findById(id).orElse(null);
     if (existing == null) {
       response.setHasError(true);

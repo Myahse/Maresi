@@ -44,6 +44,11 @@ public class AdminMonitorService {
     return business.userTrail(userId, locale);
   }
 
+  public Response<Map<String, Object>> reviewUser(
+      UUID userId, Request<Map<String, Object>> request, Locale locale) {
+    return business.reviewUser(userId, request, locale);
+  }
+
   public Response<Map<String, Object>> updateSubscription(
       UUID userId, Request<Map<String, Object>> request, Locale locale) {
     return business.updateSubscription(userId, request, locale);

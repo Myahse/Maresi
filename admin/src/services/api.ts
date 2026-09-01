@@ -255,6 +255,13 @@ export function getAdminSubscriptions() {
   return api.get<import("@/types").OwnerSubscription[]>(`/admin/subscriptions`);
 }
 
+export function patchAdminUserReview(
+  userId: string,
+  body: { action: "request_correction" | "unsuspend"; message?: string; suspend?: boolean }
+) {
+  return api.patch<import("@/types").User>(`/admin/users/${userId}`, body);
+}
+
 export function patchAdminSubscription(userId: string, body: { status: string; days?: number }) {
   return api.patch<import("@/types").OwnerSubscription>(`/admin/subscriptions/${userId}`, body);
 }

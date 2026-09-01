@@ -27,6 +27,8 @@
     "photos": "Photos",
     "saving": "Saving...",
     "signingIn": "Signing in...",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "creatingAccount": "Creating account...",
     "user": "there",
     "back": "Back",
@@ -618,6 +620,14 @@
     "kicker": "Your file",
     "title": "Account details",
     "hint": "Everything collected at signup: identity, phone and photos.",
-    "loadFailed": "Could not load your file."
+    "loadFailed": "Could not load your file.",
+    "suspendedTitle": "Account suspended",
+    "suspendedHint": "Update your identity documents to unlock your account.",
+    "updateTitle": "Update your file",
+    "updateHint": "Change the ID number and/or replace blurry or unreadable photos.",
+    "updateRequired": "Change the ID number or add at least one new photo.",
+    "updateSubmit": "Send the correction",
+    "updateSuccess": "File updated. An administrator can review it again.",
+    "updateFailed": "Could not save the correction."
   }
 }

@@ -3,6 +3,7 @@ import { Camera, CreditCard } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { compressImageFile } from "@/lib/compressImage";
 import { cn } from "@/lib/utils";
+import { AuthImage } from "@/components/visit/AuthImage";
 
 interface IdentityPhotoFieldProps {
   id: string;
@@ -11,6 +12,7 @@ interface IdentityPhotoFieldProps {
   file: File | null;
   onChange: (file: File | null) => void;
   capture?: "user" | "environment";
+  currentSrc?: string;
 }
 
 export function IdentityPhotoField({
@@ -20,6 +22,7 @@ export function IdentityPhotoField({
   file,
   onChange,
   capture,
+  currentSrc,
 }: IdentityPhotoFieldProps) {
   const { t } = useTranslation();
   const [preview, setPreview] = useState<string | null>(null);
@@ -63,6 +66,8 @@ export function IdentityPhotoField({
       >
         {preview ? (
           <img src={preview} alt="" className="w-full h-40 object-cover" />
+        ) : currentSrc ? (
+          <AuthImage src={currentSrc} alt="" className="w-full h-40 object-cover" />
         ) : (
           <div className="flex flex-col items-center gap-2 px-4 py-8 text-muted-foreground">
             {capture === "user" ? <Camera className="h-8 w-8" /> : <CreditCard className="h-8 w-8" />}

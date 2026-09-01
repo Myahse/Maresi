@@ -11,6 +11,8 @@ export interface User {
   gender?: string;
   role: UserRole;
   phone?: string;
+  account_status?: "ok" | "suspended";
+  review_message?: string;
 }
 
 export interface UserProfile extends User {

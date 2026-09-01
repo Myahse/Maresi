@@ -1,5 +1,6 @@
 package com.maresi.api.business;
 
+import com.maresi.api.config.AppProperties;
 import com.maresi.api.contracts.FunctionalError;
 import com.maresi.api.contracts.Request;
 import com.maresi.api.contracts.Response;
@@ -14,6 +15,8 @@ import com.maresi.api.repository.VisitRequestRepository;
 import com.maresi.api.repository.WalletRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
+import com.maresi.api.service.EmailService;
+import com.maresi.api.service.EmailTemplates;
 import com.maresi.api.service.GeniusPayClient;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -35,6 +38,8 @@ public class AdminMonitorBusiness {
   private final UserRepository users;
   private final WalletRepository wallets;
   private final GeniusPayClient geniusPay;
+  private final EmailService email;
+  private final AppProperties props;
   private final FunctionalError functionalError;
 
   public AdminMonitorBusiness(
@@ -47,6 +52,8 @@ public class AdminMonitorBusiness {
       UserRepository users,
       WalletRepository wallets,
       GeniusPayClient geniusPay,
+      EmailService email,
+      AppProperties props,
       FunctionalError functionalError) {
     this.monitor = monitor;
     this.activity = activity;
@@ -57,6 +64,8 @@ public class AdminMonitorBusiness {
     this.users = users;
     this.wallets = wallets;
     this.geniusPay = geniusPay;
+    this.email = email;
+    this.props = props;
     this.functionalError = functionalError;
   }
 
@@ -107,9 +116,87 @@ public class AdminMonitorBusiness {
     item.put("user", account);
     item.put("visits", visitRequests.findByUserOrOwner(userId));
     item.put("payments", monitor.listPaymentsForUser(userId));
-    item.put("activity", activity.listForActor(userId, 150));
+    item.put("activity", activity.listForUser(userId, 150));
     response.setItem(item);
     response.setStatus(functionalError.success("Dossier utilisateur", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> reviewUser(
+      UUID userId, Request<Map<String, Object>> request, Locale locale) {
+    AuthUser admin = requireAdmin();
+    Response<Map<String, Object>> response = new Response<>();
+    Map<String, Object> account = users.findIdentity(userId).orElse(null);
+    if (account == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Utilisateur introuvable", locale));
+      return response;
+    }
+    if ("admin".equals(String.valueOf(account.get("role")))) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Impossible de modifier un compte admin", locale));
+      return response;
+    }
+    Map<String, Object> body = request.getData() != null ? request.getData() : Map.of();
+    String action = str(body.get("action"));
+    if ("unsuspend".equals(action)) {
+      users.unsuspend(userId);
+      notifications.create(
+          userId,
+          "account",
+          "Compte retabli",
+          "Un administrateur a retabli votre compte. Vous pouvez a nouveau reserver.",
+          null);
+      activity.record(
+          "user.unsuspend",
+          "user",
+          userId,
+          admin.id(),
+          "Compte retabli",
+          Map.of());
+      Map<String, Object> updated = users.findIdentity(userId).orElse(account);
+      UserBusiness.exposeIdentityLinks(updated, userId);
+      response.setItem(updated);
+      response.setStatus(functionalError.success("Compte retabli", locale));
+      return response;
+    }
+    if (!"request_correction".equals(action)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("action: request_correction ou unsuspend", locale));
+      return response;
+    }
+    String message = str(body.get("message"));
+    if (message == null || message.length() < 8) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("message", locale));
+      return response;
+    }
+    boolean suspend = boolVal(body.get("suspend"), true);
+    users.requestCorrection(userId, message, suspend);
+    String cta =
+        "owner".equals(String.valueOf(account.get("role")))
+            ? EmailTemplates.hostApp(props) + "/owner/account"
+            : EmailTemplates.guestApp(props) + "/account";
+    email.sendToUser(
+        userId,
+        EmailTemplates.identityCorrection(EmailTemplates.personName(account), message, suspend, cta));
+    notifications.create(
+        userId,
+        "account",
+        suspend ? "Compte suspendu — correction demandee" : "Correction demandee",
+        message,
+        null);
+    activity.record(
+        "user.review",
+        "user",
+        userId,
+        admin.id(),
+        suspend ? "Correction demandee et compte suspendu" : "Correction demandee",
+        Map.of("suspend", suspend, "message", message));
+    Map<String, Object> updated = users.findIdentity(userId).orElse(account);
+    UserBusiness.exposeIdentityLinks(updated, userId);
+    response.setItem(updated);
+    response.setStatus(functionalError.success("Demande envoyee", locale));
     return response;
   }
 
@@ -319,5 +406,14 @@ public class AdminMonitorBusiness {
     } catch (Exception e) {
       return fallback;
     }
+  }
+
+  private static boolean boolVal(Object v, boolean fallback) {
+    if (v == null) return fallback;
+    if (v instanceof Boolean b) return b;
+    String s = v.toString().trim().toLowerCase();
+    if ("true".equals(s) || "1".equals(s) || "yes".equals(s)) return true;
+    if ("false".equals(s) || "0".equals(s) || "no".equals(s)) return false;
+    return fallback;
   }
 }
