@@ -11,6 +11,7 @@ import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.JwtService;
 import com.maresi.api.security.SecurityUtils;
 import com.maresi.api.service.EmailService;
+import com.maresi.api.service.EmailTemplates;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -100,15 +101,9 @@ public class HostApplicationBusiness {
           null);
     }
     realtime.publish("host.application.submitted", created, user.id(), null, true);
-    email.sendToUser(
-        user.id(),
-        "Maresi — demande hote envoyee",
-        "Votre demande pour devenir hote est en attente de validation.");
+    email.sendToUser(user.id(), EmailTemplates.hostApplySent());
     for (UUID adminId : users.findIdsByRole("admin")) {
-      email.sendToUser(
-          adminId,
-          "Maresi — nouvelle demande hote",
-          fullName.trim() + " souhaite devenir hote. Telephone : " + phone.trim() + ".");
+      email.sendToUser(adminId, EmailTemplates.hostApplyAdmin(fullName.trim(), phone.trim()));
     }
 
     response.setItem(created);
@@ -181,10 +176,7 @@ public class HostApplicationBusiness {
           "Compte hote active",
           "Votre demande a ete acceptee. Connectez-vous a l'application hote.",
           null);
-      email.sendToUser(
-          applicantId,
-          "Maresi — compte hote active",
-          "Votre demande a ete acceptee. Connectez-vous a l'application hote.");
+      email.sendToUser(applicantId, EmailTemplates.hostActivated("https://maresi-host.vercel.app"));
     } else {
       notifications.create(
           applicantId,
@@ -194,12 +186,7 @@ public class HostApplicationBusiness {
               ? adminNote
               : "Votre demande pour devenir hote a ete refusee.",
           null);
-      email.sendToUser(
-          applicantId,
-          "Maresi — demande hote refusee",
-          adminNote != null && !adminNote.isBlank()
-              ? adminNote
-              : "Votre demande pour devenir hote a ete refusee.");
+      email.sendToUser(applicantId, EmailTemplates.hostRefused(adminNote));
     }
 
     realtime.publish("host.application.reviewed", payload, applicantId, null, true);

@@ -3,6 +3,7 @@ package com.maresi.api.job;
 import com.maresi.api.repository.NotificationRepository;
 import com.maresi.api.repository.VisitRequestRepository;
 import com.maresi.api.service.EmailService;
+import com.maresi.api.service.EmailTemplates;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -66,10 +67,10 @@ public class StayReminderJob {
       String guestBody = "C'est l'heure. Votre arrivee pour " + title + " commence maintenant.";
       String hostBody = "C'est l'heure. Le client arrive pour " + title + ".";
       notifications.create(guestId, "reservation", "Heure d'arrivee", guestBody, listingId);
-      email.sendToUser(guestId, "Maresi — c'est l'heure d'arriver", guestBody);
+      email.sendToUser(guestId, EmailTemplates.checkinGuest(title));
       if (ownerId != null) {
         notifications.create(ownerId, "reservation", "Heure d'arrivee", hostBody, listingId);
-        email.sendToUser(ownerId, "Maresi — arrivee du client", hostBody);
+        email.sendToUser(ownerId, EmailTemplates.checkinHost(title));
       }
       visitRequests.markStayNotified(visitId, "checkin");
     }
@@ -77,10 +78,10 @@ public class StayReminderJob {
       String guestBody = "C'est l'heure. Votre depart de " + title + " est maintenant.";
       String hostBody = "C'est l'heure. Le client doit quitter " + title + ".";
       notifications.create(guestId, "reservation", "Heure de depart", guestBody, listingId);
-      email.sendToUser(guestId, "Maresi — c'est l'heure de partir", guestBody);
+      email.sendToUser(guestId, EmailTemplates.checkoutGuest(title));
       if (ownerId != null) {
         notifications.create(ownerId, "reservation", "Heure de depart", hostBody, listingId);
-        email.sendToUser(ownerId, "Maresi — depart du client", hostBody);
+        email.sendToUser(ownerId, EmailTemplates.checkoutHost(title));
       }
       visitRequests.markStayNotified(visitId, "checkout");
     }

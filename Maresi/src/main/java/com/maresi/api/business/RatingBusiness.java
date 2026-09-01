@@ -9,6 +9,7 @@ import com.maresi.api.repository.PropertyRepository;
 import com.maresi.api.repository.RatingRepository;
 import com.maresi.api.repository.UserRepository;
 import com.maresi.api.service.EmailService;
+import com.maresi.api.service.EmailTemplates;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
 import java.util.LinkedHashMap;
@@ -90,7 +91,7 @@ public class RatingBusiness {
       String body = name + " a laisse un avis (" + score + "/5) sur " + listing + ".";
       if (comment != null) body += "\n\"" + comment + "\"";
       notifications.create(ownerId, "review", "Nouvel avis", body, propertyId);
-      email.sendToUser(ownerId, "Maresi — nouvel avis", body);
+      email.sendToUser(ownerId, EmailTemplates.newReview(name, score, listing, comment));
     }
     response.setItem(saved);
     response.setStatus(functionalError.success("Avis", locale));

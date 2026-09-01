@@ -8,6 +8,7 @@ import com.maresi.api.repository.NotificationRepository;
 import com.maresi.api.repository.UserRepository;
 import com.maresi.api.security.JwtService;
 import com.maresi.api.service.EmailService;
+import com.maresi.api.service.EmailTemplates;
 import com.maresi.api.service.FileStorageService;
 import com.maresi.api.service.OtpService;
 import com.maresi.api.service.SmsService;
@@ -199,7 +200,13 @@ public class AuthBusiness {
             ? "Votre compte hote est pret. Publiez une residence et recevez des demandes."
             : "Votre compte est pret. Parcourez les residences et reservez.";
     notifications.create(id, "account", title, body, null);
-    email.sendToUser(id, "Maresi — " + title, body + "\n\nTelephone enregistre : " + str(user.get("phone")));
+    String phone = str(user.get("phone"));
+    String name = EmailTemplates.personName(user);
+    email.sendToUser(
+        id,
+        host
+            ? EmailTemplates.welcomeHost(name, phone, EmailTemplates.hostApp(props))
+            : EmailTemplates.welcomeGuest(name, phone, EmailTemplates.guestApp(props) + "/properties"));
   }
 
   public Response<Map<String, Object>> login(Request<Map<String, Object>> request, Locale locale) {

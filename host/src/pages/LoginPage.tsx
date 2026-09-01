@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { CLIENT_APP_URL } from "@/lib/clientApp";
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -61,9 +62,9 @@ export function LoginPage() {
           </Button>
           <p className="text-sm text-muted-foreground">
             {t("login.noAccount")}{" "}
-            <Link to="/register" className="text-brand font-medium hover:underline">
-              {t("login.registerLink")}
-            </Link>
+            <a href={`${CLIENT_APP_URL.replace(/\/$/, "")}/register?intent=host`} className="text-brand font-medium hover:underline">
+              {t("login.registerOnClient")}
+            </a>
           </p>
         </CardFooter>
       </form>

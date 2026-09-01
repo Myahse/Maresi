@@ -148,7 +148,8 @@
     "submit": "Sign in",
     "failed": "Login failed",
     "noAccount": "Don't have an account?",
-    "registerLink": "Register"
+    "registerLink": "Register",
+    "registerOnClient": "Create a host account"
   },
   "theme": {
     "toDark": "Switch to dark mode",

@@ -12,7 +12,7 @@ import { WizardPane } from "@/components/ui/WizardPane";
 import { useAuth } from "@/hooks/useAuth";
 import { isAdultBirthDate, isValidIdCard, maxAdultBirthDate } from "@/lib/validation";
 import { isCompletePhone } from "@/lib/phoneCountries";
-import { HOST_APP_URL } from "@/lib/hostApp";
+import { hostHandoffUrl } from "@/lib/hostApp";
 import { cn } from "@/lib/utils";
 
 type RoleIntent = "client" | "owner";
@@ -22,8 +22,9 @@ export function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(0);
-  const [role, setRole] = useState<RoleIntent | null>(null);
+  const hostIntent = new URLSearchParams(window.location.search).get("intent") === "host";
+  const [role, setRole] = useState<RoleIntent | null>(hostIntent ? "owner" : null);
+  const [step, setStep] = useState(hostIntent ? 1 : 0);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -107,7 +108,7 @@ export function RegisterPage() {
         id_card_back: idCardBack ?? undefined,
       });
       if (res.user.role === "owner") {
-        window.location.assign(HOST_APP_URL);
+        window.location.assign(hostHandoffUrl(res));
         return;
       }
       navigate("/properties", { replace: true });

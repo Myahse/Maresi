@@ -148,7 +148,8 @@
     "submit": "Se connecter",
     "failed": "Échec de la connexion",
     "noAccount": "Pas encore de compte ?",
-    "registerLink": "S'inscrire"
+    "registerLink": "S'inscrire",
+    "registerOnClient": "Créer un compte hôte"
   },
   "theme": {
     "toDark": "Passer en mode sombre",

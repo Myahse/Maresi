@@ -72,12 +72,22 @@ public class EmailService {
 
   @Async
   public void sendToUser(UUID userId, String subject, String body) {
-    sendToUser(userId, subject, body, null);
+    sendToUser(userId, EmailTemplates.simple(subject.replaceFirst("^Maresi — ", ""), body));
+  }
+
+  @Async
+  public void sendToUser(UUID userId, EmailTemplates.Mail mail) {
+    sendToUser(userId, mail, null);
   }
 
   @Async
   public void sendToUser(UUID userId, String subject, String body, Attachment attachment) {
-    if (userId == null) return;
+    sendToUser(userId, EmailTemplates.simple(subject.replaceFirst("^Maresi — ", ""), body), attachment);
+  }
+
+  @Async
+  public void sendToUser(UUID userId, EmailTemplates.Mail mail, Attachment attachment) {
+    if (userId == null || mail == null) return;
     String to =
         users
             .findById(userId)
@@ -89,33 +99,34 @@ public class EmailService {
       log.warn("Email skipped; user {} has no address", userId);
       return;
     }
-    send(to, subject, body, attachment);
+    send(to, mail, attachment);
   }
 
   public void send(String to, String subject, String body) {
-    send(to, subject, body, null);
+    send(to, EmailTemplates.simple(subject.replaceFirst("^Maresi — ", ""), body), null);
   }
 
-  public void send(String to, String subject, String body, Attachment attachment) {
-    if (to == null || to.isBlank()) return;
+  public void send(String to, EmailTemplates.Mail mail, Attachment attachment) {
+    if (to == null || to.isBlank() || mail == null) return;
     if (apiReady()) {
-      sendViaApi(to.trim(), subject, body, attachment);
+      sendViaApi(to.trim(), mail, attachment);
       return;
     }
     if (smtpReady()) {
-      sendViaSmtp(to.trim(), subject, body, attachment);
+      sendViaSmtp(to.trim(), mail, attachment);
       return;
     }
-    log.warn("[mail skipped] neither Brevo API nor SMTP is configured; to={} subject={}", to, subject);
+    log.warn("[mail skipped] neither Brevo API nor SMTP is configured; to={} subject={}", to, mail.subject());
   }
 
-  private void sendViaApi(String to, String subject, String body, Attachment attachment) {
+  private void sendViaApi(String to, EmailTemplates.Mail mail, Attachment attachment) {
     try {
       Map<String, Object> payload = new LinkedHashMap<>();
       payload.put("sender", Map.of("name", fromName(), "email", fromEmail()));
       payload.put("to", List.of(Map.of("email", to)));
-      payload.put("subject", subject);
-      payload.put("textContent", body);
+      payload.put("subject", mail.subject());
+      payload.put("textContent", mail.text());
+      payload.put("htmlContent", mail.html());
       if (attachment != null && attachment.content() != null && attachment.content().length > 0) {
         payload.put(
             "attachment",
@@ -137,38 +148,38 @@ public class EmailService {
               .build();
       HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
       if (response.statusCode() >= 200 && response.statusCode() < 300) {
-        log.info("Email sent via Brevo API to {} subject={}", to, subject);
+        log.info("Email sent via Brevo API to {} subject={}", to, mail.subject());
       } else {
         log.warn(
             "Email not sent to {} subject={}: Brevo API HTTP {} {}",
             to,
-            subject,
+            mail.subject(),
             response.statusCode(),
             brief(response.body()));
       }
     } catch (Exception e) {
-      log.warn("Email not sent to {} subject={}: {}", to, subject, e.getMessage());
+      log.warn("Email not sent to {} subject={}: {}", to, mail.subject(), e.getMessage());
     }
   }
 
-  private void sendViaSmtp(String to, String subject, String body, Attachment attachment) {
+  private void sendViaSmtp(String to, EmailTemplates.Mail mail, Attachment attachment) {
     try {
       MimeMessage message = mailSender.createMimeMessage();
       boolean multipart = attachment != null && attachment.content() != null;
-      MimeMessageHelper helper = new MimeMessageHelper(message, multipart, "UTF-8");
+      MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
       helper.setFrom(fromInternetAddress());
       helper.setTo(to);
-      helper.setSubject(subject);
-      helper.setText(body, false);
+      helper.setSubject(mail.subject());
+      helper.setText(mail.text(), mail.html());
       if (multipart) {
         helper.addAttachment(
             attachment.filename() != null ? attachment.filename() : "engagement-soin-maresi.txt",
             new ByteArrayResource(attachment.content()));
       }
       mailSender.send(message);
-      log.info("Email sent via SMTP to {} subject={}", to, subject);
+      log.info("Email sent via SMTP to {} subject={}", to, mail.subject());
     } catch (Exception e) {
-      log.warn("Email not sent to {} subject={}: {}", to, subject, e.getMessage());
+      log.warn("Email not sent to {} subject={}: {}", to, mail.subject(), e.getMessage());
     }
   }
 

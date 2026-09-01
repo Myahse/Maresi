@@ -9,7 +9,7 @@ abstract final class AppTheme {
   static ThemeData get dark => _build(Brightness.dark, MaresiPalette.dark, const Color(0xFF121212));
 
   static ThemeData _build(Brightness brightness, MaresiPalette palette, Color scaffoldBg) {
-    final textTheme = GoogleFonts.plusJakartaSansTextTheme(
+    final textTheme = GoogleFonts.manropeTextTheme(
       ThemeData(brightness: brightness).textTheme,
     );
 

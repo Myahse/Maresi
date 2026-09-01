@@ -58,13 +58,13 @@ export function BottomNav() {
                 >
                   {t("header.login")}
                 </Link>
-                <Link
-                  to="/register"
+                <a
+                  href={`${CLIENT_APP_URL.replace(/\/$/, "")}/register?intent=host`}
                   className="rounded-full bg-brand px-3 py-2.5 text-sm font-semibold text-white text-center"
                   onClick={() => setMoreOpen(false)}
                 >
-                  {t("header.register")}
-                </Link>
+                  {t("login.registerOnClient")}
+                </a>
                 <a
                   href={CLIENT_APP_URL}
                   className="rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-muted"

@@ -5,8 +5,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
-        jakarta: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
+        sans: ['"Manrope"', '"Segoe UI"', "system-ui", "sans-serif"],
+        jakarta: ['"Manrope"', '"Segoe UI"', "system-ui", "sans-serif"],
+        manrope: ['"Manrope"', '"Segoe UI"', "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

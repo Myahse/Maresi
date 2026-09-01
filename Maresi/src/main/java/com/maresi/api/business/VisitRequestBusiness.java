@@ -9,11 +9,13 @@ import com.maresi.api.repository.NotificationRepository;
 import com.maresi.api.repository.PaymentRepository;
 import com.maresi.api.repository.PropertyRepository;
 import com.maresi.api.repository.GuestReviewRepository;
+import com.maresi.api.repository.UserRepository;
 import com.maresi.api.repository.VisitRequestRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
 import com.maresi.api.config.AppProperties;
 import com.maresi.api.service.EmailService;
+import com.maresi.api.service.EmailTemplates;
 import com.maresi.api.service.FileStorageService;
 import com.maresi.api.service.StayAgreementText;
 import java.math.BigDecimal;
@@ -39,6 +41,7 @@ public class VisitRequestBusiness {
   private final EmailService email;
   private final FileStorageService fileStorage;
   private final AppProperties appProperties;
+  private final UserRepository users;
 
   public VisitRequestBusiness(
       VisitRequestRepository visitRequests,
@@ -51,7 +54,8 @@ public class VisitRequestBusiness {
       FunctionalError functionalError,
       EmailService email,
       FileStorageService fileStorage,
-      AppProperties appProperties) {
+      AppProperties appProperties,
+      UserRepository users) {
     this.visitRequests = visitRequests;
     this.guestReviews = guestReviews;
     this.properties = properties;
@@ -63,6 +67,7 @@ public class VisitRequestBusiness {
     this.email = email;
     this.fileStorage = fileStorage;
     this.appProperties = appProperties;
+    this.users = users;
   }
 
   public Response<Map<String, Object>> create(Request<Map<String, Object>> request, Locale locale) {
@@ -124,38 +129,28 @@ public class VisitRequestBusiness {
     UUID ownerId =
         property.get("owner_id") != null ? UUID.fromString(property.get("owner_id").toString()) : null;
     if (ownerId != null) {
+      String requester = userName(user.id());
       notifications.create(
           ownerId,
           "reservation",
           "Nouvelle reservation",
-          "Un client a demande " + property.get("title") + ".",
+          (requester.isBlank() ? "Un client" : requester) + " a demande " + property.get("title") + ".",
           listingId);
     }
     realtime.publish("visit.created", created, user.id(), ownerId, true);
     if (ownerId != null) {
       email.sendToUser(
           ownerId,
-          "Maresi — nouvelle reservation",
-          "Un client a demande "
-              + property.get("title")
-              + ".\n"
-              + "Sejour : "
-              + body.get("check_in")
-              + " → "
-              + body.get("check_out")
-              + "\n"
-              + "Telephone : "
-              + body.get("contact_phone")
-              + "\n"
-              + "Piece d'identite : "
-              + idCard
-              + "\n"
-              + "Ouvrez Maresi Hote pour voir la photo, la CNI et accepter ou refuser.");
+          EmailTemplates.reservationNew(
+              String.valueOf(property.get("title")),
+              userName(user.id()),
+              String.valueOf(body.get("check_in")),
+              String.valueOf(body.get("check_out")),
+              String.valueOf(body.get("contact_phone")),
+              idCard,
+              hostVisitsUrl()));
     }
-    email.sendToUser(
-        user.id(),
-        "Maresi — demande envoyee",
-        "Votre demande pour " + property.get("title") + " a ete envoyee a l'hote.");
+    email.sendToUser(user.id(), EmailTemplates.reservationSent(String.valueOf(property.get("title"))));
 
     response.setItem(created);
     response.setStatus(functionalError.success("Demande de reservation", locale));
@@ -281,20 +276,10 @@ public class VisitRequestBusiness {
           "Signez l'engagement",
           "Votre demande a ete acceptee. Signez l'engagement de soin du logement, puis payez via GeniusPay.",
           listingId);
-      email.sendToUser(
-          requesterId,
-          "Maresi — demande acceptee",
-          "L'hote a accepte votre demande pour "
-              + title
-              + ".\n\nOuvrez cette page pour lire et signer l'engagement de soin du logement :\n"
-              + agreementUrl(id)
-              + "\n\nApres signature, vous recevrez un code a 6 chiffres a donner a l'hote. Ensuite, payez l'hote.");
+      email.sendToUser(requesterId, EmailTemplates.reservationAccepted(title, agreementUrl(id)));
     } else {
       notifyVisitRequestStatusUpdated(requesterId, listingId, status);
-      email.sendToUser(
-          requesterId,
-          "Maresi — demande refusee",
-          "L'hote a refuse votre demande pour " + title + ".");
+      email.sendToUser(requesterId, EmailTemplates.reservationDeclined(title));
     }
     response.setItem(updated);
     response.setStatus(functionalError.success("Statut mis a jour", locale));
@@ -509,19 +494,9 @@ public class VisitRequestBusiness {
           "Attente du code cle",
           "Le client a signe. Demandez le code a 6 chiffres, saisissez-le, puis le client paiera.",
           listingId);
-      email.sendToUser(
-          ownerId,
-          "Maresi — code cle",
-          "Le client a signe l'engagement pour "
-              + listingTitle
-              + ". Demandez-lui le code a 6 chiffres, saisissez-le dans Maresi Hote, puis il paiera.");
+      email.sendToUser(ownerId, EmailTemplates.keyCodeHost(listingTitle, userName(user.id()), hostVisitsUrl()));
     }
-    email.sendToUser(
-        user.id(),
-        "Maresi — votre code cle",
-        "Merci. Votre engagement est enregistre.\nVotre code cle : "
-            + keyCode
-            + "\n\nDonnez ce code a l'hote pour recuperer la cle. Ensuite, payez l'hote dans Maresi.");
+    email.sendToUser(user.id(), EmailTemplates.keyCodeGuest(listingTitle, keyCode));
     response.setItem(updated);
     response.setStatus(functionalError.success("Engagement signe", locale));
     return response;
@@ -553,10 +528,7 @@ public class VisitRequestBusiness {
         "Cle confirmee",
         "L'hote a confirme le code. Payez maintenant l'hote.",
         listingId);
-    email.sendToUser(
-        requesterId,
-        "Maresi — payez l'hote",
-        "L'hote a confirme le code cle. Payez l'hote depuis Maresi (Wave ou Orange Money).");
+    email.sendToUser(requesterId, EmailTemplates.payHost(guestVisitsUrl()));
     response.setItem(updated);
     response.setStatus(functionalError.success("Code confirme", locale));
     return response;
@@ -634,15 +606,7 @@ public class VisitRequestBusiness {
           "Le client souhaite rester jusqu'au " + newOut + ". Acceptez ou refusez.",
           listingId);
       email.sendToUser(
-          ownerId,
-          "Maresi — prolongation demandee",
-          "Le client souhaite prolonger son sejour a "
-              + title
-              + " jusqu'au "
-              + newOut
-              + ".\nMontant supplementaire : "
-              + amount
-              + " XOF.\n\nAcceptez ou refusez dans Maresi Hote.");
+          ownerId, EmailTemplates.extensionRequested(title, userName(user.id()), String.valueOf(newOut), String.valueOf(amount), hostVisitsUrl()));
     }
     realtime.publish("visit.status_changed", item, user.id(), ownerId, true);
     response.setItem(item);
@@ -687,15 +651,7 @@ public class VisitRequestBusiness {
           "L'hote a accepte. Payez les nuits supplementaires.",
           listingId);
       email.sendToUser(
-          requesterId,
-          "Maresi — prolongation acceptee",
-          "L'hote a accepte de prolonger votre sejour a "
-              + title
-              + " jusqu'au "
-              + item.get("check_out")
-              + ".\nPayez le supplement ("
-              + item.get("extension_amount")
-              + " XOF) a l'hote, puis declarez le paiement.");
+          requesterId, EmailTemplates.extensionAccepted(title, String.valueOf(item.get("check_out"))));
     } else {
       notifications.create(
           requesterId,
@@ -703,10 +659,7 @@ public class VisitRequestBusiness {
           "Prolongation refusee",
           "L'hote a refuse la prolongation. Le depart reste inchange.",
           listingId);
-      email.sendToUser(
-          requesterId,
-          "Maresi — prolongation refusee",
-          "L'hote a refuse de prolonger votre sejour a " + title + ".");
+      email.sendToUser(requesterId, EmailTemplates.extensionDeclined(title));
     }
     realtime.publish("visit.status_changed", item, requesterId, user.id(), true);
     response.setItem(item);
@@ -819,12 +772,7 @@ public class VisitRequestBusiness {
         listingId);
     email.sendToUser(
         requesterId,
-        "Maresi — depassement a payer",
-        "Votre sejour a depasse la date de depart. Payez "
-            + amount
-            + " XOF a l'hote pour rester jusqu'au "
-            + newOut
-            + ".");
+        EmailTemplates.overstayDue(String.valueOf(amount), String.valueOf(newOut), guestVisitsUrl()));
     Map<String, Object> published = new java.util.HashMap<>(item);
     hideHostOnlyGuestFile(published);
     realtime.publish("visit.status_changed", published, requesterId, user.id(), true);
@@ -923,6 +871,19 @@ public class VisitRequestBusiness {
 
   private String agreementUrl(UUID visitId) {
     return StayAgreementText.pageUrl(appProperties.getPayments().getSuccessUrl(), visitId);
+  }
+
+  private String hostVisitsUrl() {
+    return EmailTemplates.hostApp(appProperties) + "/owner/visits";
+  }
+
+  private String guestVisitsUrl() {
+    return EmailTemplates.guestApp(appProperties) + "/visits";
+  }
+
+  private String userName(UUID userId) {
+    if (userId == null) return "";
+    return users.findById(userId).map(EmailTemplates::personName).orElse("");
   }
 
   private static void hideKeyCode(Map<String, Object> item) {
