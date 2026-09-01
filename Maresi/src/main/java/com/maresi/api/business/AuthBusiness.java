@@ -50,6 +50,7 @@ public class AuthBusiness {
   private final EmailService email;
   private final NotificationRepository notifications;
   private final HostApplicationBusiness hostApplications;
+  private final HostStatus hostStatus;
 
   public AuthBusiness(
       AppProperties props,
@@ -64,7 +65,8 @@ public class AuthBusiness {
       FunctionalError functionalError,
       EmailService email,
       NotificationRepository notifications,
-      HostApplicationBusiness hostApplications) {
+      HostApplicationBusiness hostApplications,
+      HostStatus hostStatus) {
     this.props = props;
     this.users = users;
     this.authTokens = authTokens;
@@ -78,6 +80,7 @@ public class AuthBusiness {
     this.email = email;
     this.notifications = notifications;
     this.hostApplications = hostApplications;
+    this.hostStatus = hostStatus;
   }
 
   public Response<Map<String, Object>> register(Request<Map<String, Object>> request, Locale locale) {
@@ -227,8 +230,9 @@ public class AuthBusiness {
     UUID userId = user.get("id") instanceof UUID u ? u : UUID.fromString(user.get("id").toString());
     if (hostIntent) {
       users.setHostIntent(userId, true);
+      user.put("host_intent", true);
     }
-    sendVerificationEmail(user, true);
+    sendVerificationEmail(user, true, hostIntent);
     Map<String, Object> item = new HashMap<>();
     item.put("needs_email_verification", true);
     item.put("email", email);
@@ -414,10 +418,15 @@ public class AuthBusiness {
       }
     }
     Map<String, Object> item = new HashMap<>();
+    if (user != null) {
+      hostStatus.attach(user);
+    }
+    boolean hostTrack = hostSignup || (user != null && hostStatus.isHostTrack(user));
     item.put("verified", true);
     item.put("email", user != null ? user.get("email") : null);
     item.put("role", user != null ? user.get("role") : null);
-    item.put("host_application", hostSignup);
+    item.put("host_application", hostTrack);
+    item.put("host_status", user != null ? user.get("host_status") : null);
     response.setItem(item);
     response.setStatus(functionalError.success("E-mail confirmé", locale));
     return response;
@@ -433,7 +442,7 @@ public class AuthBusiness {
     }
     users.findByEmail(emailAddr.trim()).ifPresent(user -> {
       if (!isEmailVerified(user)) {
-        sendVerificationEmail(user, false);
+        sendVerificationEmail(user, false, false);
       }
     });
     Map<String, Object> item = new HashMap<>();
@@ -493,14 +502,16 @@ public class AuthBusiness {
     return response;
   }
 
-  private void sendVerificationEmail(Map<String, Object> user, boolean replaceExisting) {
+  private void sendVerificationEmail(Map<String, Object> user, boolean replaceExisting, boolean hostSignup) {
     UUID id = user.get("id") instanceof UUID u ? u : UUID.fromString(user.get("id").toString());
     String token = newToken();
     if (replaceExisting) {
       authTokens.invalidateOpen(id, "email_verify");
     }
     authTokens.create(id, "email_verify", hashToken(token), Instant.now().plus(Duration.ofHours(24)));
-    String url = EmailTemplates.guestApp(props) + "/verify-email?token=" + token;
+    boolean host = hostSignup || hostStatus.isHostTrack(user);
+    String origin = host ? EmailTemplates.hostApp(props) : EmailTemplates.guestApp(props);
+    String url = origin + "/verify-email?token=" + token;
     email.sendToUserNow(id, EmailTemplates.verifyEmail(EmailTemplates.personName(user), url));
   }
 
@@ -563,6 +574,7 @@ public class AuthBusiness {
     String email = str(user.get("email"));
     String role = str(user.get("role"));
     String phone = str(user.get("phone"));
+    hostStatus.attach(user);
     String token = jwtService.sign(id, email, role, phone);
     Map<String, Object> out = new HashMap<>();
     out.put("user", user);

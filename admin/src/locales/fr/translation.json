@@ -418,6 +418,7 @@
     "empty": "Aucune demande.",
     "approve": "Accepter",
     "reject": "Refuser",
+    "suspend": "Suspendre",
     "note": "Note admin",
     "live": "Événements en direct",
     "wrongRole": "Connectez-vous avec un compte admin.",

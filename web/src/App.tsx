@@ -24,6 +24,7 @@ import { ClientRealtimeBridge } from "@/components/realtime/ClientRealtimeBridge
 import { PushPrompt } from "@/components/realtime/PushPrompt";
 import { LocationPrompt } from "@/components/location/LocationPrompt";
 import { AuthModalProvider } from "@/context/AuthModalContext";
+import { HostExitRedirect } from "@/components/HostExitRedirect";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
       <LocationPrompt />
       <BrowserRouter>
         <AuthModalProvider>
+          <HostExitRedirect />
           <Routes>
             <Route path="/" element={<MainLayout />}>
               <Route index element={<LandingPage />} />

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Building2, CalendarDays, Plus, User, Wallet } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { isApprovedHost } from "@/lib/hostAccess";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -13,7 +14,8 @@ export function BottomNav() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
+  const approved = isApprovedHost(user);
   const [moreOpen, setMoreOpen] = useState(false);
 
   const listingsActive = pathname === "/" || pathname === "/owner";
@@ -58,13 +60,13 @@ export function BottomNav() {
                 >
                   {t("header.login")}
                 </Link>
-                <a
-                  href={`${CLIENT_APP_URL.replace(/\/$/, "")}/register?intent=host`}
+                <Link
+                  to="/register"
                   className="rounded-full bg-brand px-3 py-2.5 text-sm font-semibold text-white text-center"
                   onClick={() => setMoreOpen(false)}
                 >
                   {t("login.registerOnClient")}
-                </a>
+                </Link>
                 <a
                   href={CLIENT_APP_URL}
                   className="rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-muted"
@@ -109,7 +111,7 @@ export function BottomNav() {
           </li>
           <li>
             <Link
-              to="/owner/new"
+              to={approved ? "/owner/new" : "/owner/application"}
               className="flex h-16 w-full flex-col items-center justify-center gap-0.5 text-[10px] font-semibold text-brand"
               onClick={() => setMoreOpen(false)}
             >

@@ -43,7 +43,7 @@ export function AdminApplicationsPage() {
 
   useRealtime(isAuthenticated && user?.role === "admin", onEvent, ["/topic/admin"]);
 
-  const act = async (id: string, status: "approved" | "rejected") => {
+  const act = async (id: string, status: "approved" | "rejected" | "suspended") => {
     try {
       await reviewHostApplication(id, status, note || undefined);
       setNote("");
@@ -91,6 +91,9 @@ export function AdminApplicationsPage() {
                     </Button>
                     <Button variant="outline" className="rounded-full" onClick={() => void act(app.id, "rejected")}>
                       {t("admin.reject")}
+                    </Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => void act(app.id, "suspended")}>
+                      {t("admin.suspend")}
                     </Button>
                   </div>
                 )}

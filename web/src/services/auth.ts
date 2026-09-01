@@ -52,6 +52,7 @@ export function normalizeAuthResponse(raw: unknown): AuthResponse {
       ...(typeof u.phone === "string" && u.phone ? { phone: u.phone } : {}),
       ...(typeof u.account_status === "string" && u.account_status ? { account_status: u.account_status as User["account_status"] } : {}),
       ...(typeof u.review_message === "string" && u.review_message ? { review_message: u.review_message } : {}),
+      ...(typeof u.host_status === "string" && u.host_status ? { host_status: u.host_status as User["host_status"] } : {}),
     } as User,
   };
 }

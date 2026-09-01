@@ -25,6 +25,7 @@ public class UserBusiness {
   private final EmailService email;
   private final NotificationRepository notifications;
   private final ActivityRepository activity;
+  private final HostStatus hostStatus;
 
   public UserBusiness(
       UserRepository users,
@@ -32,13 +33,15 @@ public class UserBusiness {
       FunctionalError functionalError,
       EmailService email,
       NotificationRepository notifications,
-      ActivityRepository activity) {
+      ActivityRepository activity,
+      HostStatus hostStatus) {
     this.users = users;
     this.fileStorage = fileStorage;
     this.functionalError = functionalError;
     this.email = email;
     this.notifications = notifications;
     this.activity = activity;
+    this.hostStatus = hostStatus;
   }
 
   public Response<Map<String, Object>> me(Locale locale) {
@@ -51,6 +54,7 @@ public class UserBusiness {
       return response;
     }
     exposeIdentityLinks(profile, user.id());
+    hostStatus.attach(profile);
     response.setItem(profile);
     response.setStatus(functionalError.success("Profil", locale));
     return response;

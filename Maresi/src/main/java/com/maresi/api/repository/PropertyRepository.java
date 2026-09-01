@@ -13,13 +13,14 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class PropertyRepository {
+  /** Paid active plan = premium placement. Avoids crashing if premium_positioning is missing. */
   private static final String PREMIUM_POSITIONING =
       """
-      (
-        COALESCE(s.premium_positioning, FALSE)
-        AND s.status = 'active'
+      COALESCE(
+        s.status = 'active'
         AND s.expires_at IS NOT NULL
-        AND s.expires_at > NOW()
+        AND s.expires_at > NOW(),
+        FALSE
       )""";
 
   private static final String SELECT_JOIN =

@@ -308,6 +308,16 @@ ALTER TABLE users
   ADD COLUMN IF NOT EXISTS selfie_url VARCHAR(500),
   ADD COLUMN IF NOT EXISTS id_card_photo_url VARCHAR(500);
 
+-- ========== 024_premium_positioning.sql ==========
+ALTER TABLE owner_subscriptions
+  ADD COLUMN IF NOT EXISTS premium_positioning BOOLEAN NOT NULL DEFAULT FALSE;
+
+UPDATE owner_subscriptions
+SET premium_positioning = TRUE
+WHERE status = 'active'
+  AND expires_at IS NOT NULL
+  AND expires_at > NOW();
+
 -- ========== 025_account_identity_review.sql ==========
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS account_status VARCHAR(20) NOT NULL DEFAULT 'ok',

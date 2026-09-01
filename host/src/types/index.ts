@@ -13,6 +13,7 @@ export interface User {
   phone?: string;
   account_status?: "ok" | "suspended";
   review_message?: string;
+  host_status?: "none" | "pending" | "rejected" | "approved";
 }
 
 export interface UserProfile extends User {

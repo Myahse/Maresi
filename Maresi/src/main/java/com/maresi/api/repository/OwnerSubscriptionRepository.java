@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -43,37 +44,79 @@ public class OwnerSubscriptionRepository {
   }
 
   public Map<String, Object> upsertActive(UUID userId, Instant startsAt, Instant expiresAt, UUID lastPaymentId) {
-    return jdbc.queryForObject(
-        """
-        INSERT INTO owner_subscriptions (user_id, status, starts_at, expires_at, last_payment_id, premium_positioning)
-        VALUES (?, 'active', ?, ?, ?, TRUE)
-        ON CONFLICT (user_id) DO UPDATE SET
-          status = 'active',
-          starts_at = EXCLUDED.starts_at,
-          expires_at = EXCLUDED.expires_at,
-          last_payment_id = EXCLUDED.last_payment_id,
-          premium_positioning = TRUE,
-          updated_at = NOW()
-        RETURNING *
-        """,
-        (rs, rowNum) -> RowMaps.ownerSubscription(rs),
-        userId,
-        Timestamp.from(startsAt),
-        Timestamp.from(expiresAt),
-        lastPaymentId);
+    Timestamp start = Timestamp.from(startsAt);
+    Timestamp expires = Timestamp.from(expiresAt);
+    try {
+      return jdbc.queryForObject(
+          """
+          INSERT INTO owner_subscriptions (user_id, status, starts_at, expires_at, last_payment_id, premium_positioning)
+          VALUES (?, 'active', ?, ?, ?, TRUE)
+          ON CONFLICT (user_id) DO UPDATE SET
+            status = 'active',
+            starts_at = EXCLUDED.starts_at,
+            expires_at = EXCLUDED.expires_at,
+            last_payment_id = EXCLUDED.last_payment_id,
+            premium_positioning = TRUE,
+            updated_at = NOW()
+          RETURNING *
+          """,
+          (rs, rowNum) -> RowMaps.ownerSubscription(rs),
+          userId,
+          start,
+          expires,
+          lastPaymentId);
+    } catch (DataAccessException e) {
+      if (!missingPremiumPositioning(e)) throw e;
+      return jdbc.queryForObject(
+          """
+          INSERT INTO owner_subscriptions (user_id, status, starts_at, expires_at, last_payment_id)
+          VALUES (?, 'active', ?, ?, ?)
+          ON CONFLICT (user_id) DO UPDATE SET
+            status = 'active',
+            starts_at = EXCLUDED.starts_at,
+            expires_at = EXCLUDED.expires_at,
+            last_payment_id = EXCLUDED.last_payment_id,
+            updated_at = NOW()
+          RETURNING *
+          """,
+          (rs, rowNum) -> RowMaps.ownerSubscription(rs),
+          userId,
+          start,
+          expires,
+          lastPaymentId);
+    }
   }
 
   public Map<String, Object> setInactive(UUID userId) {
     ensureRow(userId);
-    return jdbc.queryForObject(
-        """
-        UPDATE owner_subscriptions
-        SET status = 'inactive', expires_at = NOW(), premium_positioning = FALSE, updated_at = NOW()
-        WHERE user_id = ?
-        RETURNING *
-        """,
-        (rs, rowNum) -> RowMaps.ownerSubscription(rs),
-        userId);
+    try {
+      return jdbc.queryForObject(
+          """
+          UPDATE owner_subscriptions
+          SET status = 'inactive', expires_at = NOW(), premium_positioning = FALSE, updated_at = NOW()
+          WHERE user_id = ?
+          RETURNING *
+          """,
+          (rs, rowNum) -> RowMaps.ownerSubscription(rs),
+          userId);
+    } catch (DataAccessException e) {
+      if (!missingPremiumPositioning(e)) throw e;
+      return jdbc.queryForObject(
+          """
+          UPDATE owner_subscriptions
+          SET status = 'inactive', expires_at = NOW(), updated_at = NOW()
+          WHERE user_id = ?
+          RETURNING *
+          """,
+          (rs, rowNum) -> RowMaps.ownerSubscription(rs),
+          userId);
+    }
+  }
+
+  private static boolean missingPremiumPositioning(DataAccessException e) {
+    Throwable cause = e.getMostSpecificCause();
+    String message = cause != null ? cause.getMessage() : e.getMessage();
+    return message != null && message.contains("premium_positioning");
   }
 
   public Map<String, Object> ensureRow(UUID userId) {

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { isWakingError } from "@/services/api";
-import { CLIENT_APP_URL } from "@/lib/clientApp";
+import { canAccessHostApp } from "@/lib/hostAccess";
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -27,12 +27,12 @@ export function LoginPage() {
     setLoading(true);
     try {
       const res = await login(email, password);
-      if (res.user.role !== "owner") {
+      if (!canAccessHostApp(res.user)) {
         logout();
         setError(t("hostGate.wrongRole"));
         return;
       }
-      navigate(from, { replace: true });
+      navigate(from === "/owner" && res.user.role !== "owner" ? "/" : from, { replace: true });
     } catch (err) {
       setError(
         isWakingError(err) ? t("login.serverStarting") : err instanceof Error ? err.message : t("login.failed")
@@ -71,9 +71,9 @@ export function LoginPage() {
           </Button>
           <p className="text-sm text-muted-foreground">
             {t("login.noAccount")}{" "}
-            <a href={`${CLIENT_APP_URL.replace(/\/$/, "")}/register?intent=host`} className="text-brand font-medium hover:underline">
+            <Link to="/register" className="text-brand font-medium hover:underline">
               {t("login.registerOnClient")}
-            </a>
+            </Link>
           </p>
         </CardFooter>
       </form>

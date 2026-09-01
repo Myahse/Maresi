@@ -4,6 +4,7 @@ import com.maresi.api.contracts.FunctionalError;
 import com.maresi.api.contracts.Request;
 import com.maresi.api.contracts.Response;
 import com.maresi.api.realtime.RealtimeEventPublisher;
+import com.maresi.api.config.AppProperties;
 import com.maresi.api.repository.HostApplicationRepository;
 import com.maresi.api.repository.NotificationRepository;
 import com.maresi.api.repository.UserRepository;
@@ -29,6 +30,7 @@ public class HostApplicationBusiness {
   private final FunctionalError functionalError;
   private final EmailService email;
   private final UserBusiness userBusiness;
+  private final AppProperties props;
 
   public HostApplicationBusiness(
       HostApplicationRepository applications,
@@ -38,7 +40,8 @@ public class HostApplicationBusiness {
       RealtimeEventPublisher realtime,
       FunctionalError functionalError,
       EmailService email,
-      UserBusiness userBusiness) {
+      UserBusiness userBusiness,
+      AppProperties props) {
     this.applications = applications;
     this.users = users;
     this.notifications = notifications;
@@ -47,6 +50,7 @@ public class HostApplicationBusiness {
     this.functionalError = functionalError;
     this.email = email;
     this.userBusiness = userBusiness;
+    this.props = props;
   }
 
   public Response<Map<String, Object>> submit(Request<Map<String, Object>> request, Locale locale) {
@@ -138,7 +142,8 @@ public class HostApplicationBusiness {
           null);
     }
     realtime.publish("host.application.submitted", created, userId, null, true);
-    email.sendToUser(userId, EmailTemplates.hostApplySent());
+    email.sendToUser(
+        userId, EmailTemplates.hostApplySent(EmailTemplates.hostApp(props) + "/login"));
     for (UUID adminId : users.findIdsByRole("admin")) {
       email.sendToUser(adminId, EmailTemplates.hostApplyAdmin(fullName, phone));
     }
@@ -173,13 +178,40 @@ public class HostApplicationBusiness {
     AuthUser admin = requireAdmin();
     Map<String, Object> body = request.getData() != null ? request.getData() : Map.of();
     String status = str(body.get("status"));
-    if (status == null || !List.of("approved", "rejected").contains(status)) {
+    if (status == null || !List.of("approved", "rejected", "suspended").contains(status)) {
       response.setHasError(true);
       response.setStatus(functionalError.invalidData("Statut invalide", locale));
       return response;
     }
     String adminNote = str(body.get("admin_note"));
     if (adminNote == null) adminNote = str(body.get("adminNote"));
+
+    if ("suspended".equals(status)) {
+      Map<String, Object> existing = applications.findById(id).orElse(null);
+      if (existing == null) {
+        response.setHasError(true);
+        response.setStatus(functionalError.dataNotFound("Demande introuvable", locale));
+        return response;
+      }
+      UUID applicantId = UUID.fromString(existing.get("user_id").toString());
+      String message =
+          adminNote != null && !adminNote.isBlank()
+              ? adminNote
+              : "Votre compte hote est suspendu. Mettez a jour votre dossier pour reappliquer.";
+      users.requestCorrection(applicantId, message, true);
+      email.sendToUser(
+          applicantId,
+          EmailTemplates.identityCorrection(
+              EmailTemplates.personName(existing),
+              message,
+              true,
+              EmailTemplates.hostApp(props) + "/owner/account"));
+      notifications.create(applicantId, "account", "Compte hote suspendu", message, null);
+      realtime.publish("host.application.reviewed", existing, applicantId, null, true);
+      response.setItem(existing);
+      response.setStatus(functionalError.success("Compte suspendu", locale));
+      return response;
+    }
 
     Map<String, Object> updated = applications.review(id, status, adminNote, admin.id()).orElse(null);
     if (updated == null) {
@@ -209,7 +241,7 @@ public class HostApplicationBusiness {
           "Compte hote active",
           "Votre demande a ete acceptee. Connectez-vous a l'application hote.",
           null);
-      email.sendToUser(applicantId, EmailTemplates.hostActivated("https://host.ma-resi.com"));
+      email.sendToUser(applicantId, EmailTemplates.hostActivated(EmailTemplates.hostApp(props)));
     } else {
       notifications.create(
           applicantId,
@@ -219,7 +251,10 @@ public class HostApplicationBusiness {
               ? adminNote
               : "Votre demande pour devenir hote a ete refusee.",
           null);
-      email.sendToUser(applicantId, EmailTemplates.hostRefused(adminNote));
+      email.sendToUser(
+          applicantId,
+          EmailTemplates.hostRefused(
+              adminNote, EmailTemplates.hostApp(props) + "/owner/application"));
     }
 
     realtime.publish("host.application.reviewed", payload, applicantId, null, true);

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getProperty, addFavorite, removeFavorite, getFavorites } from "@/services/api";
 import type { Property } from "@/types";
-import { MapPin, Heart, Mail, Phone, BedDouble, Users } from "lucide-react";
+import { MapPin, Heart, Mail, Phone, BedDouble, Users, Share2 } from "lucide-react";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { PropertyLocationMap } from "@/components/map/PropertyLocationMap";
@@ -15,6 +15,7 @@ import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
 import { cn } from "@/lib/utils";
 import { listingImageUrls } from "@/lib/media";
 import { isPropertyType, normalizeAmenities } from "@/lib/amenities";
+import { shareListingPage } from "@/lib/listingShare";
 
 export function PropertyDetailsPage() {
   const { t } = useTranslation();
@@ -28,6 +29,7 @@ export function PropertyDetailsPage() {
   const [activeImage, setActiveImage] = useState(0);
   const [ratingAvg, setRatingAvg] = useState(0);
   const [ratingCount, setRatingCount] = useState(0);
+  const [shareNote, setShareNote] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -53,6 +55,26 @@ export function PropertyDetailsPage() {
       `https://placehold.co/800x400/0D9488/white?text=${encodeURIComponent(t("propertyDetails.noImage"))}`,
     [t]
   );
+
+  useEffect(() => {
+    if (!property) return;
+    const previous = document.title;
+    document.title = `${property.title} — Maresi`;
+    return () => {
+      document.title = previous;
+    };
+  }, [property]);
+
+  const handleShare = async () => {
+    if (!property) return;
+    setShareNote("");
+    try {
+      const result = await shareListingPage({ id: property.id, title: property.title });
+      if (result === "copied") setShareNote(t("propertyDetails.linkCopied"));
+    } catch {
+      /* user cancelled the share sheet */
+    }
+  };
 
   const toggleFavorite = () => {
     if (!id) return;
@@ -223,6 +245,11 @@ export function PropertyDetailsPage() {
                 <Heart className={cn("h-4 w-4 mr-2", isFavorite && "fill-pink-500 text-pink-500")} />
                 {isFavorite ? t("common.saved") : t("common.save")}
               </Button>
+              <Button className="w-full rounded-full" variant="outline" onClick={() => void handleShare()}>
+                <Share2 className="h-4 w-4 mr-2" />
+                {t("propertyDetails.share")}
+              </Button>
+              {shareNote && <p className="text-xs text-center text-brand">{shareNote}</p>}
             </CardContent>
           </Card>
           <Card className="rounded-2xl border-2 border-brand/30 bg-brand/5">

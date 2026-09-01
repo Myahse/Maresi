@@ -419,6 +419,7 @@
     "empty": "No applications yet.",
     "approve": "Approve",
     "reject": "Reject",
+    "suspend": "Suspend",
     "note": "Admin note",
     "live": "Live events",
     "wrongRole": "Sign in with an admin account.",

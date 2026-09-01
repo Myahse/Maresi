@@ -149,6 +149,17 @@ public class UserRepository {
     }
   }
 
+  public boolean hasHostIntent(UUID id) {
+    try {
+      Boolean value =
+          jdbc.queryForObject("SELECT host_intent FROM users WHERE id = ?", Boolean.class, id);
+      return Boolean.TRUE.equals(value);
+    } catch (DataAccessException e) {
+      if (missingHostIntentColumn(e)) return false;
+      throw e;
+    }
+  }
+
   public boolean consumeHostIntent(UUID id) {
     try {
       Integer updated =

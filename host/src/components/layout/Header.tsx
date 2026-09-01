@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { isApprovedHost } from "@/lib/hostAccess";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -9,7 +10,8 @@ const navLinkClass = "text-sm font-semibold text-white/90 hover:text-white trans
 
 export function Header() {
   const { t } = useTranslation();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
+  const approved = isApprovedHost(user);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -31,12 +33,20 @@ export function Header() {
                   <Link to="/owner" className={navLinkClass}>
                     {t("owner.title")}
                   </Link>
-                  <Link to="/owner/visits" className={navLinkClass}>
-                    {t("dashboard.cards.validateVisits")}
-                  </Link>
-                  <Link to="/owner/subscription" className={navLinkClass}>
-                    {t("payments.walletNav")}
-                  </Link>
+                  {approved ? (
+                    <>
+                      <Link to="/owner/visits" className={navLinkClass}>
+                        {t("dashboard.cards.validateVisits")}
+                      </Link>
+                      <Link to="/owner/subscription" className={navLinkClass}>
+                        {t("payments.walletNav")}
+                      </Link>
+                    </>
+                  ) : (
+                    <Link to="/owner/application" className={navLinkClass}>
+                      {t("hostApply.title")}
+                    </Link>
+                  )}
                 </>
               )}
             </nav>

@@ -10,4 +10,12 @@ class AppConfig {
 
   /// `flutter run --dart-define=USE_MOCK=true` for offline demo data.
   static const useMockData = bool.fromEnvironment('USE_MOCK', defaultValue: false);
+
+  static const listingBaseUrl = String.fromEnvironment(
+    'LISTING_URL',
+    defaultValue: 'https://ma-resi.com',
+  );
+
+  static String listingPageUrl(String id) =>
+      '${listingBaseUrl.replaceAll(RegExp(r'/+$'), '')}/properties/$id';
 }

@@ -1,3 +1,4 @@
+import { canAccessHostApp } from "@/lib/hostAccess";
 import { api } from "./api";
 import type { User, UserRole } from "@/types";
 
@@ -52,6 +53,7 @@ export function normalizeAuthResponse(raw: unknown): AuthResponse {
       ...(typeof u.phone === "string" && u.phone ? { phone: u.phone } : {}),
       ...(typeof u.account_status === "string" && u.account_status ? { account_status: u.account_status as User["account_status"] } : {}),
       ...(typeof u.review_message === "string" && u.review_message ? { review_message: u.review_message } : {}),
+      ...(typeof u.host_status === "string" && u.host_status ? { host_status: u.host_status as User["host_status"] } : {}),
     } as User,
   };
 }
@@ -73,7 +75,7 @@ export function consumeHandoff(): AuthResponse | null {
   try {
     const raw = decodeURIComponent(hash.slice("handoff=".length));
     const parsed = normalizeAuthResponse(JSON.parse(raw));
-    if (parsed.user.role !== "owner") return null;
+    if (!canAccessHostApp(parsed.user)) return null;
     history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
     return persistAuth(parsed);
   } catch {
@@ -159,6 +161,20 @@ export async function forgotPassword(email: string): Promise<void> {
 
 export async function resetPassword(token: string, password: string): Promise<void> {
   await api.post("/auth/reset-password", { token, password });
+}
+
+export async function verifyEmail(token: string): Promise<{
+  verified?: boolean;
+  role?: string;
+  email?: string;
+  host_application?: boolean;
+  host_status?: string;
+}> {
+  return api.post("/auth/verify-email", { token });
+}
+
+export async function resendVerification(email: string): Promise<void> {
+  await api.post("/auth/resend-verification", { email: email.trim() });
 }
 
 export function logout(): void {

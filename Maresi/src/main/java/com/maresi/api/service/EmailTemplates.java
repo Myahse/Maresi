@@ -304,16 +304,16 @@ public final class EmailTemplates {
         ctaUrl);
   }
 
-  public static Mail hostApplySent() {
+  public static Mail hostApplySent(String ctaUrl) {
     return build(
         "Demande hôte envoyée",
         "Compte hôte",
         "Nous avons bien reçu votre demande",
-        "Bonjour,\n\nVotre demande pour devenir hôte est en cours de vérification.\n\nNous vous écrivons dès qu’un administrateur Maresi l’accepte ou la refuse. Vous pourrez alors publier vos résidences.",
+        "Bonjour,\n\nVotre demande pour devenir hôte est en cours de vérification.\n\nOuvrez Maresi Hôte pour suivre votre dossier. Vous pourrez publier des résidences seulement après validation.",
         List.of(),
         null,
-        null,
-        null);
+        "Ouvrir Maresi Hôte",
+        ctaUrl);
   }
 
   public static Mail hostApplyAdmin(String fullName, String phone) {
@@ -340,7 +340,7 @@ public final class EmailTemplates {
         ctaUrl);
   }
 
-  public static Mail hostRefused(String note) {
+  public static Mail hostRefused(String note, String ctaUrl) {
     String reason =
         note != null && !note.isBlank()
             ? note
@@ -351,11 +351,11 @@ public final class EmailTemplates {
         "Votre demande n’a pas été acceptée",
         "Bonjour,\n\n"
             + reason
-            + "\n\nVous pouvez rester sur Maresi en tant que voyageur, ou déposer une nouvelle demande plus tard avec un dossier plus complet.",
+            + "\n\nCorrigez les points indiqués, puis renvoyez votre demande depuis Maresi Hôte.",
         List.of(),
         null,
-        null,
-        null);
+        "Corriger et renvoyer",
+        ctaUrl);
   }
 
   public static Mail identityCorrection(String name, String message, boolean suspended, String ctaUrl) {

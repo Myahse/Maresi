@@ -110,6 +110,14 @@ public class PropertyBusiness {
     if (userBusiness.rejectIfSuspended(response, user.id(), locale)) {
       return response;
     }
+    if (!"owner".equals(user.role())) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.disallowed(
+              "Votre compte hôte n'est pas encore validé. Vous ne pouvez pas publier d'annonce.",
+              locale));
+      return response;
+    }
     long existing = properties.countByOwner(user.id());
     if (existing >= FREE_LISTINGS && !subscriptions.isActive(user.id())) {
       throw ApiException.of(

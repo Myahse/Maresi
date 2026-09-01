@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Building2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -13,17 +12,14 @@ import { WizardPane } from "@/components/ui/WizardPane";
 import { useAuth } from "@/hooks/useAuth";
 import { isAdultBirthDate, isValidIdCard, maxAdultBirthDate } from "@/lib/validation";
 import { isCompletePhone } from "@/lib/phoneCountries";
-import { CLIENT_APP_URL, guestHandoffUrl } from "@/lib/clientApp";
 import { cn } from "@/lib/utils";
-
-type RoleIntent = "client" | "owner";
 
 export function RegisterPage() {
   const { t } = useTranslation();
-  const { register, logout } = useAuth();
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const [step, setStep] = useState(0);
-  const [role, setRole] = useState<RoleIntent | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -38,21 +34,12 @@ export function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const lastStep = 3;
-  const steps = [
-    t("register.stepRole"),
-    t("register.stepPersonal"),
-    t("register.stepAccount"),
-    t("register.stepIdentity"),
-  ];
+  const lastStep = 2;
+  const steps = [t("register.stepPersonal"), t("register.stepAccount"), t("register.stepIdentity")];
 
   const goNext = () => {
     setError("");
-    if (step === 0 && !role) {
-      setError(t("register.roleRequired"));
-      return;
-    }
-    if (step === 1) {
+    if (step === 0) {
       if (!firstName.trim() || !lastName.trim() || !birthDate || !gender) {
         setError(t("register.personalRequired"));
         return;
@@ -62,7 +49,7 @@ export function RegisterPage() {
         return;
       }
     }
-    if (step === 2) {
+    if (step === 1) {
       if (!email.trim() || password.length < 6 || !isCompletePhone(phone)) {
         setError(t("register.accountRequired"));
         return;
@@ -78,10 +65,6 @@ export function RegisterPage() {
       return;
     }
     setError("");
-    if (!role) {
-      setError(t("register.roleRequired"));
-      return;
-    }
     if (!selfie || !idCardPhoto) {
       setError(t("register.photosRequired"));
       return;
@@ -100,25 +83,17 @@ export function RegisterPage() {
         birth_date: birthDate,
         gender,
         phone: phone.trim(),
-        role,
+        role: "owner",
         id_card: idCard.trim(),
         selfie,
         id_card_photo: idCardPhoto,
         id_card_back: idCardBack ?? undefined,
       });
       if ("needsEmailVerification" in res && res.needsEmailVerification) {
-        const intent = role === "owner" ? "&intent=host" : "";
-        window.location.assign(
-          `${CLIENT_APP_URL.replace(/\/$/, "")}/verify-email?sent=1&email=${encodeURIComponent(res.email)}${intent}`
-        );
+        navigate(`/verify-email?sent=1&email=${encodeURIComponent(res.email)}`, { replace: true });
         return;
       }
-      if (role === "owner" && "token" in res) {
-        window.location.assign(guestHandoffUrl(res, "/become-host?apply=1"));
-        return;
-      }
-      logout();
-      window.location.assign(CLIENT_APP_URL);
+      navigate("/owner/application", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : t("register.failed"));
     } finally {
@@ -130,8 +105,8 @@ export function RegisterPage() {
     <div className="w-full max-w-2xl mx-auto">
       <div className="rounded-2xl border border-border bg-card text-card-foreground p-6 sm:p-8">
         <p className="text-sm font-semibold text-brand">{t("register.kicker")}</p>
-        <h1 className="mt-1 text-2xl font-bold">{t("register.title")}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{t("register.description")}</p>
+        <h1 className="mt-1 text-2xl font-bold">{t("register.hostTitle")}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{t("register.hostOnlyHint")}</p>
 
         <ol className="mt-6 flex gap-2">
           {steps.map((label, i) => (
@@ -156,37 +131,6 @@ export function RegisterPage() {
 
           {step === 0 && (
             <WizardPane step={0}>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => setRole("client")}
-                className={cn(
-                  "text-left rounded-xl border-2 p-5 transition-colors",
-                  role === "client" ? "border-brand bg-accent" : "border-border hover:border-brand"
-                )}
-              >
-                <Search className="h-8 w-8 text-brand mb-3" />
-                <p className="font-bold">{t("register.clientTitle")}</p>
-                <p className="text-sm text-muted-foreground mt-1">{t("register.clientHint")}</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole("owner")}
-                className={cn(
-                  "text-left rounded-xl border-2 p-5 transition-colors",
-                  role === "owner" ? "border-brand bg-accent" : "border-border hover:border-brand"
-                )}
-              >
-                <Building2 className="h-8 w-8 text-brand mb-3" />
-                <p className="font-bold">{t("register.hostTitle")}</p>
-                <p className="text-sm text-muted-foreground mt-1">{t("register.hostHint")}</p>
-              </button>
-            </div>
-            </WizardPane>
-          )}
-
-          {step === 1 && (
-            <WizardPane step={1}>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">{t("register.firstName")}</Label>
@@ -220,24 +164,24 @@ export function RegisterPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="gender">{t("register.gender")}</Label>
-                  <select
-                    id="gender"
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                    required
-                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-                  >
-                    <option value="">{t("register.genderPlaceholder")}</option>
-                    <option value="male">{t("register.genderMale")}</option>
-                    <option value="female">{t("register.genderFemale")}</option>
-                    <option value="other">{t("register.genderOther")}</option>
-                  </select>
-                </div>
+                <select
+                  id="gender"
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  required
+                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                >
+                  <option value="">{t("register.genderPlaceholder")}</option>
+                  <option value="male">{t("register.genderMale")}</option>
+                  <option value="female">{t("register.genderFemale")}</option>
+                  <option value="other">{t("register.genderOther")}</option>
+                </select>
+              </div>
             </WizardPane>
           )}
 
-          {step === 2 && (
-            <WizardPane step={2}>
+          {step === 1 && (
+            <WizardPane step={1}>
               <div className="space-y-2">
                 <Label htmlFor="email">{t("common.email")}</Label>
                 <Input
@@ -267,8 +211,8 @@ export function RegisterPage() {
             </WizardPane>
           )}
 
-          {step === 3 && (
-            <WizardPane step={3}>
+          {step === 2 && (
+            <WizardPane step={2}>
               <p className="text-sm text-muted-foreground">{t("register.identityHint")}</p>
               <div className="grid sm:grid-cols-2 gap-4">
                 <IdentityPhotoField

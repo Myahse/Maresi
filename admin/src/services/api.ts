@@ -272,7 +272,7 @@ export function patchAdminPayment(id: string, body: { action: "cancel" | "refund
 
 export function reviewHostApplication(
   id: string,
-  status: "approved" | "rejected",
+  status: "approved" | "rejected" | "suspended",
   adminNote?: string
 ) {
   return api.patch<import("@/types").HostApplication>(`/admin/host-applications/${id}`, {

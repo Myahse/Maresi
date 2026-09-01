@@ -1,14 +1,14 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
-import type { UserRole } from "@/types";
+import { canAccessHostApp, isApprovedHost } from "@/lib/hostAccess";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  roles?: UserRole[];
+  approvedOnly?: boolean;
 }
 
-export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, approvedOnly }: ProtectedRouteProps) {
   const { t } = useTranslation();
   const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
@@ -21,16 +21,16 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !canAccessHostApp(user)) {
     return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (roles && user && !roles.includes(user.role)) {
-    return <Navigate to="/login" replace />;
   }
 
   if (user?.account_status === "suspended" && location.pathname !== "/owner/account") {
     return <Navigate to="/owner/account" replace />;
+  }
+
+  if (approvedOnly && !isApprovedHost(user)) {
+    return <Navigate to="/owner/application" replace />;
   }
 
   return <>{children}</>;

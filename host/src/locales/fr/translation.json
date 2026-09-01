@@ -175,6 +175,17 @@
     "mismatch": "Les deux mots de passe ne correspondent pas.",
     "missingToken": "Ce lien est incomplet. Demandez un nouveau lien."
   },
+  "verify": {
+    "title": "Confirmez votre e-mail",
+    "description": "Nous devons confirmer votre adresse pour activer le compte hôte.",
+    "checking": "Confirmation en cours…",
+    "success": "Votre e-mail est confirmé. Vous pouvez vous connecter.",
+    "sent": "Un e-mail de confirmation a été envoyé. Ouvrez le lien dans le message.",
+    "resend": "Renvoyer l’e-mail",
+    "resendWait": "Renvoyer dans {{seconds}} s",
+    "failed": "Impossible de confirmer cet e-mail",
+    "hostPending": "Votre e-mail est confirmé. Votre demande hôte est chez un admin. Connectez-vous à Maresi Hôte et attendez la validation avant de publier des annonces."
+  },
   "theme": {
     "toDark": "Passer en mode sombre",
     "toLight": "Passer en mode clair"
@@ -196,6 +207,7 @@
     "clientHint": "Parcourir chambres et appartements et réserver un séjour.",
     "hostTitle": "Je suis propriétaire",
     "hostHint": "Mettre en location votre résidence. Un admin validera votre demande avant publication.",
+    "hostOnlyHint": "Créez votre compte hôte ici. Après confirmation de l’e-mail, vous restez sur Maresi Hôte. La publication d’annonces attend la validation d’un admin.",
     "roleRequired": "Choisissez si vous êtes client ou hôte.",
     "personalRequired": "Saisissez votre prénom, nom, date de naissance et genre.",
     "ageRequired": "Vous devez avoir au moins 18 ans.",
@@ -567,6 +579,8 @@
     "noVisits": "Aucune demande de visite pour le moment.",
     "manageVisits": "Gérer les demandes",
     "pendingCount": "{{count}} demande(s) en attente de validation",
+    "share": "Partager",
+    "linkCopied": "Lien copié. Ils ouvriront la page de l'annonce.",
     "visitValidation": "Valider les réservations",
     "visitValidationHint": "Vérifiez l'identité du client, puis acceptez ou refusez. Après acceptation, il signe un engagement de soin puis paie Maresi.",
     "pendingRequests": "En attente de votre réponse",
@@ -601,7 +615,9 @@
     "pendingHint": "Nous vous préviendrons après examen par un admin.",
     "approved": "Vous êtes validé comme hôte.",
     "openHostApp": "Ouvrir l'app hôte",
-    "rejected": "Votre demande a été refusée. Vous pouvez réessayer."
+    "rejected": "Votre demande a été refusée. Vous pouvez réessayer.",
+    "fixHint": "Corrigez les points indiqués, mettez à jour vos pièces si besoin, puis renvoyez la demande.",
+    "openRequest": "Voir ma demande"
   },
   "admin": {
     "title": "Demandes hôte",
@@ -614,7 +630,7 @@
     "filter": "Statut"
   },
   "hostGate": {
-    "wrongRole": "Cette app est réservée aux hôtes validés. Faites la demande depuis le site client."
+    "wrongRole": "Cette app est réservée aux hôtes. Créez un compte hôte ou connectez-vous avec celui déjà déposé."
   },
   "account": {
     "kicker": "Votre dossier",

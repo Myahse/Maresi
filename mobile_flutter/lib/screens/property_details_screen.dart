@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:maresi_mobile/config/app_config.dart';
 import 'package:maresi_mobile/models/property.dart';
 import 'package:maresi_mobile/models/property_types.dart';
 import 'package:maresi_mobile/providers/auth_provider.dart';
@@ -77,6 +78,15 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
         _loading = false;
       });
     }
+  }
+
+  Future<void> _shareListing(Property property) async {
+    final url = AppConfig.listingPageUrl(property.id);
+    final text = '${property.title}\n$url';
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    final message = context.read<LocaleProvider>().t('details.linkCopied');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _launch(Uri uri) async {
@@ -215,10 +225,20 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                         Positioned(
                           top: topPadding + 8,
                           right: 16,
-                          child: _CircleIconButton(
-                            icon: isFavorite ? Icons.favorite : Icons.favorite_border,
-                            iconColor: isFavorite ? AppColors.favorite : palette.text,
-                            onTap: () => favorites.toggle(property),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _CircleIconButton(
+                                icon: Icons.ios_share,
+                                onTap: () => _shareListing(property),
+                              ),
+                              const SizedBox(width: 8),
+                              _CircleIconButton(
+                                icon: isFavorite ? Icons.favorite : Icons.favorite_border,
+                                iconColor: isFavorite ? AppColors.favorite : palette.text,
+                                onTap: () => favorites.toggle(property),
+                              ),
+                            ],
                           ),
                         ),
                         if (images.length > 1)

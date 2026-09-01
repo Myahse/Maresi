@@ -175,6 +175,17 @@
     "mismatch": "The two passwords do not match.",
     "missingToken": "This link is incomplete. Request a new one."
   },
+  "verify": {
+    "title": "Confirm your email",
+    "description": "We need to confirm your address to activate your host account.",
+    "checking": "Confirming…",
+    "success": "Your email is confirmed. You can sign in.",
+    "sent": "A confirmation email was sent. Open the link in the message.",
+    "resend": "Resend the email",
+    "resendWait": "Resend in {{seconds}} s",
+    "failed": "Could not confirm this email",
+    "hostPending": "Your email is confirmed. Your host request is with an admin. You can sign in to Maresi Host and wait for approval before publishing listings."
+  },
   "theme": {
     "toDark": "Switch to dark mode",
     "toLight": "Switch to light mode"
@@ -196,6 +207,7 @@
     "clientHint": "Browse rooms and apartments and book a stay.",
     "hostTitle": "I am an owner",
     "hostHint": "List your residence. An admin reviews your request before you can publish.",
+    "hostOnlyHint": "Create your host account here. After you confirm your email you stay on Maresi Host. Publishing listings waits for admin approval.",
     "roleRequired": "Choose whether you are a guest or a host.",
     "personalRequired": "Enter your first name, last name, birth date and gender.",
     "ageRequired": "You must be at least 18 years old.",
@@ -567,6 +579,8 @@
     "noVisits": "No visit requests yet.",
     "manageVisits": "Manage requests",
     "pendingCount": "{{count}} pending request(s) to validate",
+    "share": "Share",
+    "linkCopied": "Link copied. They will open the listing page.",
     "visitValidation": "Validate reservations",
     "visitValidationHint": "Review the guest's identity, then accept or decline. After you accept, they sign a care agreement and pay Maresi.",
     "pendingRequests": "Awaiting your response",
@@ -601,7 +615,9 @@
     "pendingHint": "We will notify you when an admin reviews it.",
     "approved": "You are approved as a host.",
     "openHostApp": "Open host app",
-    "rejected": "Your application was declined. You can apply again."
+    "rejected": "Your application was declined. You can apply again.",
+    "fixHint": "Fix the points in the note, update your ID photos if needed, then send a new request.",
+    "openRequest": "View my request"
   },
   "admin": {
     "title": "Host applications",
@@ -614,7 +630,7 @@
     "filter": "Status"
   },
   "hostGate": {
-    "wrongRole": "This app is for approved hosts. Apply from the client site."
+    "wrongRole": "This app is for hosts. Create a host account or sign in with the one you already submitted."
   },
   "account": {
     "kicker": "Your file",

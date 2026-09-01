@@ -189,7 +189,7 @@
     "resendWait": "Renvoyer dans {{seconds}} s",
     "failed": "Impossible de confirmer cet e-mail",
     "openHost": "Ouvrir Maresi Hôte",
-    "hostPending": "Votre demande hôte a été envoyée à un admin. Connectez-vous, puis attendez la validation."
+    "hostPending": "Votre demande hôte a été envoyée. Connectez-vous sur Maresi Hôte et attendez la validation."
   },
   "theme": {
     "toDark": "Passer en mode sombre",
@@ -410,7 +410,9 @@
     "location": "Lieu",
     "reserveTitle": "Réserver cette résidence",
     "reserveHint": "Réservation en plusieurs étapes avec validation propriétaire.",
-    "startReservation": "Commencer la réservation"
+    "startReservation": "Commencer la réservation",
+    "share": "Partager l'annonce",
+    "linkCopied": "Lien copié. Envoyez-le pour ouvrir cette page."
   },
   "account": {
     "kicker": "Votre dossier",

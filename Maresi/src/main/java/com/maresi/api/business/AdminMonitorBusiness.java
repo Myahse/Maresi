@@ -41,6 +41,7 @@ public class AdminMonitorBusiness {
   private final EmailService email;
   private final AppProperties props;
   private final FunctionalError functionalError;
+  private final HostStatus hostStatus;
 
   public AdminMonitorBusiness(
       AdminMonitorRepository monitor,
@@ -54,7 +55,8 @@ public class AdminMonitorBusiness {
       GeniusPayClient geniusPay,
       EmailService email,
       AppProperties props,
-      FunctionalError functionalError) {
+      FunctionalError functionalError,
+      HostStatus hostStatus) {
     this.monitor = monitor;
     this.activity = activity;
     this.subscriptions = subscriptions;
@@ -67,6 +69,7 @@ public class AdminMonitorBusiness {
     this.email = email;
     this.props = props;
     this.functionalError = functionalError;
+    this.hostStatus = hostStatus;
   }
 
   public Response<Map<String, Object>> overview(Locale locale) {
@@ -173,8 +176,9 @@ public class AdminMonitorBusiness {
     }
     boolean suspend = boolVal(body.get("suspend"), true);
     users.requestCorrection(userId, message, suspend);
+    hostStatus.attach(account);
     String cta =
-        "owner".equals(String.valueOf(account.get("role")))
+        hostStatus.isHostTrack(account)
             ? EmailTemplates.hostApp(props) + "/owner/account"
             : EmailTemplates.guestApp(props) + "/account";
     email.sendToUser(

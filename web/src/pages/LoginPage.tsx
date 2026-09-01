@@ -14,7 +14,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { consumeHostIntent, peekHostIntent } from "@/lib/hostIntent";
+import { consumeHostIntent } from "@/lib/hostIntent";
+import { isHostAppUser } from "@/lib/hostAccess";
+import { hostHandoffUrl } from "@/lib/hostApp";
 import { isWakingError } from "@/services/api";
 
 export function LoginPage() {
@@ -30,21 +32,17 @@ export function LoginPage() {
   const from = fromLocation?.pathname
     ? `${fromLocation.pathname}${fromLocation.search ?? ""}`
     : "/properties";
-  const hostIntent =
-    new URLSearchParams(location.search).get("intent") === "host" || peekHostIntent();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
       const res = await login(email, password);
-      if (hostIntent && res.user.role === "client") {
-        consumeHostIntent();
-        navigate("/become-host?apply=1", { replace: true });
+      consumeHostIntent();
+      if (isHostAppUser(res.user)) {
+        window.location.assign(hostHandoffUrl(res));
         return;
       }
-      consumeHostIntent();
       navigate(from, { replace: true });
     } catch (err) {
       setError(

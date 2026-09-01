@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { getProperties, deleteProperty, getOwnerVisitRequests, getMySubscription } from "@/services/api";
 import { listingImageUrl } from "@/lib/media";
+import { shareListingPage } from "@/lib/listingShare";
+import { isApprovedHost } from "@/lib/hostAccess";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import type { OwnerSubscription, Property, VisitRequest } from "@/types";
 
@@ -20,6 +22,7 @@ export function OwnerDashboardPage() {
   const [wallet, setWallet] = useState<OwnerSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [shareNote, setShareNote] = useState("");
 
   const refreshVisits = useCallback(() => {
     return getOwnerVisitRequests()
@@ -56,8 +59,10 @@ export function OwnerDashboardPage() {
     void load();
   }, [user, t]);
 
+  const approved = isApprovedHost(user);
+
   const handleAdd = () => {
-    navigate("/owner/new");
+    navigate(approved ? "/owner/new" : "/owner/application");
   };
 
   const handleEdit = (id: string) => {
@@ -71,6 +76,16 @@ export function OwnerDashboardPage() {
       setProperties((prev) => prev.filter((p) => p.id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : t("owner.deleteFailed"));
+    }
+  };
+
+  const handleShare = async (property: Property) => {
+    setShareNote("");
+    try {
+      const result = await shareListingPage({ id: property.id, title: property.title });
+      if (result === "copied") setShareNote(t("owner.linkCopied"));
+    } catch {
+      /* user cancelled the share sheet */
     }
   };
 
@@ -96,30 +111,57 @@ export function OwnerDashboardPage() {
           <Button variant="outline" onClick={() => navigate("/owner/account")}>
             {t("account.title")}
           </Button>
-          <Button variant="outline" onClick={() => navigate("/owner/subscription")}>
-            {t("payments.walletNav")}
-          </Button>
-          <Button onClick={handleAdd}>{t("owner.addProperty")}</Button>
+          {approved ? (
+            <>
+              <Button variant="outline" onClick={() => navigate("/owner/subscription")}>
+                {t("payments.walletNav")}
+              </Button>
+              <Button onClick={handleAdd}>{t("owner.addProperty")}</Button>
+            </>
+          ) : (
+            <Button variant="outline" onClick={() => navigate("/owner/application")}>
+              {t("hostApply.title")}
+            </Button>
+          )}
         </div>
       </div>
-      <Card className="border-2 border-brand/20">
-        <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-          <CardTitle className="text-base">{t("payments.walletTitle")}</CardTitle>
-          <Button size="sm" className="rounded-full bg-brand hover:bg-brand-dark" onClick={() => navigate("/owner/subscription")}>
-            {t("payments.walletManage")}
-          </Button>
-        </CardHeader>
-        <CardContent className="flex items-end justify-between gap-4">
-          <span className="text-sm text-muted-foreground">{t("payments.walletBalance")}</span>
-          <span className="text-2xl font-bold text-brand">
-            {formatPrice(Number(wallet?.wallet_balance ?? 0))}
-          </span>
-        </CardContent>
-      </Card>
+      {!approved && (
+        <Card className="border-2 border-brand/30 bg-brand/5">
+          <CardContent className="pt-6 space-y-2">
+            <p className="font-semibold">
+              {user?.host_status === "rejected" ? t("hostApply.rejected") : t("hostApply.pending")}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {user?.host_status === "rejected" ? t("hostApply.fixHint") : t("hostApply.pendingHint")}
+            </p>
+            <Button variant="outline" onClick={() => navigate("/owner/application")}>
+              {t("hostApply.openRequest")}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+      {approved && (
+      {approved && (
+        <Card className="border-2 border-brand/20">
+          <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
+            <CardTitle className="text-base">{t("payments.walletTitle")}</CardTitle>
+            <Button size="sm" className="rounded-full bg-brand hover:bg-brand-dark" onClick={() => navigate("/owner/subscription")}>
+              {t("payments.walletManage")}
+            </Button>
+          </CardHeader>
+          <CardContent className="flex items-end justify-between gap-4">
+            <span className="text-sm text-muted-foreground">{t("payments.walletBalance")}</span>
+            <span className="text-2xl font-bold text-brand">
+              {formatPrice(Number(wallet?.wallet_balance ?? 0))}
+            </span>
+          </CardContent>
+        </Card>
+      )}
       {error && <p className="text-destructive">{error}</p>}
+      {shareNote && <p className="text-sm text-brand">{shareNote}</p>}
       {loading ? (
         <p className="text-muted-foreground">{t("common.loading")}</p>
-      ) : properties.length === 0 ? (
+      ) : !approved ? null : properties.length === 0 ? (
         <p className="text-muted-foreground">
           {t("owner.empty")}{" "}
           <button type="button" className="text-primary hover:underline" onClick={handleAdd}>
@@ -157,6 +199,11 @@ export function OwnerDashboardPage() {
                     )}
                   </CardTitle>
                   <div className="flex gap-2">
+                    {p.is_active !== false && (
+                      <Button size="sm" variant="outline" onClick={() => void handleShare(p)}>
+                        {t("owner.share")}
+                      </Button>
+                    )}
                     <Button size="sm" variant="outline" onClick={() => handleEdit(p.id)}>
                       {t("common.edit")}
                     </Button>
