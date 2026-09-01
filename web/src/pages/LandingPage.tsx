@@ -134,7 +134,7 @@ export function LandingPage() {
       </section>
 
       {/* Services pills */}
-      <section className="hidden sm:block w-full px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-4">
+      <section className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
         <div className="max-w-8xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <h2 className="text-xs sm:text-sm font-bold text-foreground shrink-0">{t("landing.dedicatedServices")}</h2>

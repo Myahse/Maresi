@@ -80,8 +80,8 @@ export function StayAgreementPage() {
   ];
 
   return (
-    <div className="font-jakarta min-h-screen bg-[#f4efe6] py-8 px-4">
-      <article className="max-w-3xl mx-auto bg-white shadow-lg border border-[#e6dcc8] px-6 sm:px-12 py-10">
+    <div className="font-jakarta min-h-screen bg-[#f4efe6] py-5 sm:py-8 px-3 sm:px-4">
+      <article className="max-w-3xl mx-auto bg-white shadow-lg border border-[#e6dcc8] px-4 sm:px-12 py-7 sm:py-10">
         <header className="border-b-2 border-[#0D9488] pb-6 mb-8 text-center">
           <p className="text-xs tracking-[0.25em] uppercase text-[#0D9488] font-semibold">Maresi</p>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mt-2">{t("visits.agreementTitle")}</h1>
@@ -161,7 +161,7 @@ export function StayAgreementPage() {
             <p className="text-xs text-muted-foreground">{t("visits.agreementSignLegal")}</p>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button
-              className="rounded-full bg-brand hover:bg-brand-dark"
+              className="w-full sm:w-auto rounded-full bg-brand hover:bg-brand-dark"
               disabled={!ready || saving}
               onClick={() => void submit()}
             >

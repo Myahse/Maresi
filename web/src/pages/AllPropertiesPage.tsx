@@ -1,6 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Map, List } from "lucide-react";
 import { getProperties, getFavorites, addFavorite, removeFavorite } from "@/services/api";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { PropertyFilters, type FilterValues } from "@/components/property/PropertyFilters";
@@ -32,7 +31,18 @@ export function AllPropertiesPage() {
   const [error, setError] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showMobileMap, setShowMobileMap] = useState(false);
+  const [isPhone, setIsPhone] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches
+  );
+  const sheetItemRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const onChange = () => setIsPhone(media.matches);
+    onChange();
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -58,12 +68,16 @@ export function AllPropertiesPage() {
 
   const sortedProperties = useMemo(() => sortListings(properties, coords), [properties, coords]);
   const activeId = selectedId ?? hoveredId;
-  const selectedProperty = sortedProperties.find((p) => p.id === selectedId) ?? null;
   const previewProperty = sortedProperties.find((p) => p.id === activeId) ?? null;
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    sheetItemRefs.current[selectedId]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedId]);
 
   const toggleFavorite = (propertyId: string) => {
     requireAuth(async () => {
@@ -82,57 +96,30 @@ export function AllPropertiesPage() {
     });
   };
 
-  const listPanel = (
+  const applyFilters = (next?: FilterValues) => {
+    const v = next ?? filters;
+    setFilters(v);
+    setAppliedFilters(v);
+  };
+
+  const resetFilters = () => {
+    setFilters(defaultFilters);
+    setAppliedFilters(defaultFilters);
+  };
+
+  const desktopList = (
     <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
       <div className="mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t("properties.allTitle")}</h1>
         <p className="text-muted-foreground mt-1 text-sm">{t("properties.allSubtitle")}</p>
       </div>
 
-      <button
-        type="button"
-        className="md:hidden mb-4 flex items-center gap-2 px-4 py-2 rounded-full border-2 border-brand text-brand text-sm font-semibold"
-        onClick={() => setShowMobileMap((v) => !v)}
-      >
-        {showMobileMap ? <List className="h-4 w-4" /> : <Map className="h-4 w-4" />}
-        {showMobileMap ? t("properties.showList") : t("properties.showMap")}
-      </button>
-
-      {showMobileMap && (
-        <div className="md:hidden mb-4 space-y-3">
-          <div className="h-64 rounded-2xl overflow-hidden border-2 border-border">
-            <PropertiesMap
-              properties={sortedProperties}
-              hoveredId={activeId}
-              onMarkerClick={setSelectedId}
-              onBackgroundClick={() => setSelectedId(null)}
-              className="h-full"
-            />
-          </div>
-          {selectedProperty && (
-            <PropertyCard
-              property={selectedProperty}
-              rental
-              onToggleFavorite={toggleFavorite}
-              isFavorite={favorites.some((f) => f.property_id === selectedProperty.id)}
-            />
-          )}
-        </div>
-      )}
-
-      <div className="bg-card rounded-2xl border-2 border-border p-4 sm:p-5 mb-6 shadow-sm sticky top-0 z-10 md:static">
+      <div className="bg-card rounded-2xl border-2 border-border p-4 sm:p-5 mb-6 shadow-sm">
         <PropertyFilters
           values={filters}
           onChange={setFilters}
-          onApply={(next) => {
-            const v = next ?? filters;
-            setFilters(v);
-            setAppliedFilters(v);
-          }}
-          onReset={() => {
-            setFilters(defaultFilters);
-            setAppliedFilters(defaultFilters);
-          }}
+          onApply={applyFilters}
+          onReset={resetFilters}
         />
       </div>
 
@@ -172,9 +159,82 @@ export function AllPropertiesPage() {
     </div>
   );
 
+  if (isPhone) {
+    return (
+      <div className="fixed inset-x-0 top-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] bg-muted">
+        <PropertiesMap
+          properties={sortedProperties}
+          hoveredId={activeId}
+          onMarkerClick={setSelectedId}
+          onBackgroundClick={() => setSelectedId(null)}
+          cooperativeGestures={false}
+          className="absolute inset-0 h-full w-full"
+        />
+        <div className="absolute top-3 left-3 right-14 z-10">
+          <div className="rounded-2xl border-2 border-border bg-card/95 backdrop-blur-md p-3 shadow-lg">
+            <PropertyFilters
+              compact
+              values={filters}
+              onChange={setFilters}
+              onApply={applyFilters}
+              onReset={resetFilters}
+            />
+          </div>
+        </div>
+        <div className="absolute inset-x-0 bottom-0 z-20 flex max-h-[48vh] min-h-[220px] flex-col rounded-t-3xl border-t border-border bg-card shadow-[0_-10px_30px_rgba(0,0,0,0.14)]">
+          <div className="flex justify-center pt-2">
+            <span className="h-1.5 w-10 rounded-full bg-border" />
+          </div>
+          <div className="flex items-end justify-between gap-3 px-4 pb-2 pt-1">
+            <div>
+              <h1 className="text-base font-bold text-foreground">{t("properties.listSheet")}</h1>
+              {!loading && (
+                <p className="text-xs text-muted-foreground">
+                  {t("properties.count", { count: sortedProperties.length })}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+            {error && <p className="text-destructive text-sm px-1 mb-2">{error}</p>}
+            {loading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-[88px] rounded-2xl bg-muted animate-pulse" />
+                ))}
+              </div>
+            ) : sortedProperties.length === 0 ? (
+              <p className="text-sm text-muted-foreground px-1 py-6 text-center">{t("dashboard.noneFound")}</p>
+            ) : (
+              <div className="space-y-2">
+                {sortedProperties.map((p) => (
+                  <div
+                    key={p.id}
+                    ref={(el) => {
+                      sheetItemRefs.current[p.id] = el;
+                    }}
+                    onClick={() => setSelectedId(p.id)}
+                  >
+                    <PropertyCard
+                      property={p}
+                      compact
+                      selected={p.id === selectedId}
+                      onToggleFavorite={toggleFavorite}
+                      isFavorite={favorites.some((f) => f.property_id === p.id)}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="font-jakarta bg-muted flex flex-col md:flex-row md:fixed md:inset-x-0 md:top-0 md:bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:top-[4.5rem] lg:bottom-0 md:min-h-0">
-      <div className="hidden md:block md:w-[35%] md:h-full border-r border-border relative">
+    <div className="flex fixed inset-x-0 top-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:top-[4.5rem] lg:bottom-0 min-h-0 bg-muted">
+      <div className="w-[35%] h-full border-r border-border relative">
         <PropertiesMap
           properties={sortedProperties}
           hoveredId={activeId}
@@ -196,7 +256,9 @@ export function AllPropertiesPage() {
           </div>
         )}
       </div>
-      <div className="flex-1 md:min-h-0 md:overflow-y-auto md:overscroll-y-contain md:w-[65%] md:h-full">{listPanel}</div>
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain w-[65%] h-full">
+        {desktopList}
+      </div>
     </div>
   );
 }

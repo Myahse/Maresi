@@ -187,12 +187,12 @@ export function ReservationPage() {
   }
 
   return (
-    <div className="font-jakarta container mx-auto px-4 py-8 max-w-2xl">
+    <div className="font-jakarta container mx-auto px-4 pt-6 pb-28 md:py-8 max-w-2xl">
       <Link to={`/properties/${id}`} className="text-sm text-brand hover:underline">
         ← {property.title}
       </Link>
-      <h1 className="text-2xl font-bold text-foreground mt-4 mb-2">{t("wizard.reserve.title")}</h1>
-      <p className="text-muted-foreground text-sm mb-8">{t("wizard.reserve.subtitle")}</p>
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground mt-3 mb-2">{t("wizard.reserve.title")}</h1>
+      <p className="text-muted-foreground text-sm mb-6">{t("wizard.reserve.subtitle")}</p>
 
       <Stepper steps={steps} currentStep={step} className="mb-8" />
 
@@ -359,7 +359,7 @@ export function ReservationPage() {
             <Label htmlFor="message">{t("wizard.reserve.message")}</Label>
             <textarea
               id="message"
-              className="w-full min-h-[100px] rounded-xl border border-input px-3 py-2 text-sm"
+              className="w-full min-h-[100px] rounded-xl border border-input px-3 py-2 text-base sm:text-sm"
               placeholder={t("common.optional")}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -405,26 +405,28 @@ export function ReservationPage() {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-3 mt-8">
-        {step > 0 && (
-          <Button type="button" variant="outline" className="rounded-full" onClick={back}>
-            {t("wizard.back")}
-          </Button>
-        )}
-        {step < steps.length - 1 ? (
-          <Button type="button" className="rounded-full bg-brand hover:bg-brand-dark ml-auto" onClick={next}>
-            {t("wizard.next")}
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            className="rounded-full bg-brand hover:bg-brand-dark ml-auto"
-            disabled={submitting}
-            onClick={submit}
-          >
-            {submitting ? t("common.saving") : t("wizard.reserve.submit")}
-          </Button>
-        )}
+      <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-card/95 backdrop-blur-md px-4 py-3 md:static md:border-0 md:bg-transparent md:p-0 md:mt-8">
+        <div className="flex gap-3 max-w-2xl mx-auto">
+          {step > 0 && (
+            <Button type="button" variant="outline" className="rounded-full flex-1 md:flex-none" onClick={back}>
+              {t("wizard.back")}
+            </Button>
+          )}
+          {step < steps.length - 1 ? (
+            <Button type="button" className="rounded-full bg-brand hover:bg-brand-dark flex-1 md:ml-auto md:flex-none" onClick={next}>
+              {t("wizard.next")}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              className="rounded-full bg-brand hover:bg-brand-dark flex-1 md:ml-auto md:flex-none"
+              disabled={submitting}
+              onClick={submit}
+            >
+              {submitting ? t("common.saving") : t("wizard.reserve.submit")}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

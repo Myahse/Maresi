@@ -506,7 +506,7 @@ public class VisitRequestBusiness {
         user.id(),
         "reservation",
         "Code cle",
-        "Engagement signe. Donnez le code a 6 chiffres a l'hote pour recuperer la cle, puis payez l'hote.",
+        "Engagement signe. Donnez le code a 6 chiffres a l'hote pour recuperer la cle, puis payez via GeniusPay.",
         listingId);
     if (ownerId != null) {
       notifications.create(
@@ -547,7 +547,7 @@ public class VisitRequestBusiness {
         requesterId,
         "reservation",
         "Cle confirmee",
-        "L'hote a confirme le code. Payez maintenant l'hote.",
+        "L'hote a confirme le code. Payez maintenant via GeniusPay.",
         listingId);
     email.sendToUser(requesterId, EmailTemplates.payHost(guestVisitsUrl()));
     response.setItem(updated);

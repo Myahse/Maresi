@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,12 +20,20 @@ interface PropertyFiltersProps {
   onChange: (values: FilterValues) => void;
   onApply: (next?: FilterValues) => void;
   onReset: () => void;
+  compact?: boolean;
 }
 
-export function PropertyFilters({ values, onChange, onApply, onReset }: PropertyFiltersProps) {
+export function PropertyFilters({
+  values,
+  onChange,
+  onApply,
+  onReset,
+  compact = false,
+}: PropertyFiltersProps) {
   const { t, i18n } = useTranslation();
   const { coords, status, requestAccess } = useUserLocation();
   const pendingNear = useRef(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const applyNearMe = async (from = coords) => {
     if (!from) return;
@@ -51,6 +59,88 @@ export function PropertyFilters({ values, onChange, onApply, onReset }: Property
     void applyNearMe(coords);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coords]);
+
+  if (compact) {
+    return (
+      <div className="space-y-3">
+        <div className="flex gap-2">
+          <Input
+            placeholder={t("filters.locationPlaceholder")}
+            value={values.location}
+            onChange={(e) => onChange({ ...values, location: e.target.value })}
+            className="flex-1 bg-card"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-full shrink-0 border-2 px-3"
+            onClick={() => void useNearMe()}
+          >
+            {t("location.nearMe")}
+          </Button>
+          <Button
+            type="button"
+            onClick={() => onApply()}
+            className="bg-brand hover:bg-brand-dark rounded-full font-semibold shrink-0"
+          >
+            {t("common.search")}
+          </Button>
+        </div>
+        <button
+          type="button"
+          className="text-xs font-semibold text-brand"
+          onClick={() => setMoreOpen((open) => !open)}
+        >
+          {moreOpen ? t("filters.less") : t("filters.more")}
+        </button>
+        {moreOpen && (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1 col-span-2">
+              <Label>{t("filters.type")}</Label>
+              <Select
+                value={values.property_type}
+                onChange={(e) => onChange({ ...values, property_type: e.target.value })}
+              >
+                <option value="">{t("common.any")}</option>
+                {PROPERTY_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {t(`propertyTypes.${type}`)}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>{t("filters.minPrice")}</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="0"
+                value={values.minPrice}
+                onChange={(e) => onChange({ ...values, minPrice: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>{t("filters.maxPrice")}</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder={t("filters.maxPlaceholder")}
+                value={values.maxPrice}
+                onChange={(e) => onChange({ ...values, maxPrice: e.target.value })}
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={onReset}
+              className="rounded-full border-2 col-span-2"
+            >
+              {t("common.reset")}
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6 items-end">

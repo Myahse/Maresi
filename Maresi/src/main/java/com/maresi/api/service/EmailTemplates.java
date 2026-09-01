@@ -180,7 +180,7 @@ public final class EmailTemplates {
         "Demande acceptée",
         "Réservation",
         "Bonne nouvelle : l’hôte a accepté",
-        "Bonjour,\n\nVotre demande a été acceptée. Signez maintenant l’engagement de soin du logement.\n\nEnsuite, vous recevrez un code à 6 chiffres à donner à l’hôte pour récupérer la clé. Le paiement se fait ensuite directement à l’hôte (Wave ou Orange Money).",
+        "Bonjour,\n\nVotre demande a été acceptée. Signez maintenant l’engagement de soin du logement.\n\nEnsuite, vous recevrez un code à 6 chiffres à donner à l’hôte pour récupérer la clé. Le paiement se fait ensuite via GeniusPay, dans Maresi.",
         details("Résidence", title, "Prochaine étape", "Signer l’engagement"),
         null,
         "Signer l’engagement",
@@ -224,7 +224,7 @@ public final class EmailTemplates {
         "Votre code clé",
         "Clé",
         "Voici votre code clé",
-        "Bonjour,\n\nVotre engagement est enregistré. Donnez uniquement ce code à l’hôte pour récupérer la clé, puis payez-le dans Maresi.\n\nGardez ce message : sans ce code, l’hôte ne pourra pas confirmer la remise des clés.",
+        "Bonjour,\n\nVotre engagement est enregistré. Donnez uniquement ce code à l’hôte pour récupérer la clé, puis payez via GeniusPay dans Maresi.\n\nGardez ce message : sans ce code, l’hôte ne pourra pas confirmer la remise des clés.",
         details("Résidence", title),
         new Highlight("Code à 6 chiffres", keyCode),
         null,
@@ -233,11 +233,11 @@ public final class EmailTemplates {
 
   public static Mail payHost(String ctaUrl) {
     return build(
-        "Payez l’hôte",
+        "Payez votre réservation",
         "Paiement",
-        "C’est le moment de payer l’hôte",
-        "Bonjour,\n\nL’hôte a confirmé le code clé. Payez-le maintenant depuis Maresi, via Wave ou Orange Money.\n\nUne fois le paiement envoyé, déclarez-le dans l’application pour que l’hôte puisse confirmer.",
-        details("Moyen", "Wave ou Orange Money", "À faire", "Payer l’hôte, puis déclarer"),
+        "C’est le moment de payer via GeniusPay",
+        "Bonjour,\n\nL’hôte a confirmé le code clé. Payez maintenant Maresi via GeniusPay. L’hôte reçoit 90 % sur son portefeuille.\n\nOuvrez vos visites et lancez le paiement : GeniusPay vous redirige vers Wave ou Orange Money.",
+        details("Moyen", "GeniusPay", "À faire", "Payer la réservation dans Maresi"),
         null,
         "Payer maintenant",
         ctaUrl);

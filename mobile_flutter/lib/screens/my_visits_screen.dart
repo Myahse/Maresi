@@ -49,11 +49,6 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
     }
   }
 
-  Future<void> _openLink(String url) async {
-    final uri = Uri.parse(url);
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
-
   bool _canCancel(String status) =>
       status == 'pending' ||
       status == 'awaiting_agreement' ||
@@ -157,10 +152,14 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
     }
   }
 
-  Future<void> _markPaid(VisitRequest visit) async {
+  Future<void> _payReservation(VisitRequest visit) async {
     setState(() => _actingId = visit.id);
     try {
-      await maresiApi.updateVisitRequestStatus(visit.id, 'payment_sent');
+      final payment = await maresiApi.startReservationPayment(visit.id);
+      final url = payment.checkoutUrl;
+      if (url != null && url.isNotEmpty) {
+        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      }
       if (!mounted) return;
       await _load();
     } catch (e) {
@@ -309,30 +308,15 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
                                 ],
                                 if (visit.status == 'awaiting_payment') ...[
                                   const SizedBox(height: 8),
-                                  Text(locale.t('payments.payHostHint'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
-                                  if (visit.wavePaymentUrl != null && visit.wavePaymentUrl!.isNotEmpty) ...[
-                                    const SizedBox(height: 8),
-                                    FilledButton(
-                                      onPressed: () => _openLink(visit.wavePaymentUrl!),
-                                      style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
-                                      child: Text(locale.t('payments.payWave')),
-                                    ),
-                                  ],
-                                  if (visit.orangeMoneyUrl != null && visit.orangeMoneyUrl!.isNotEmpty) ...[
-                                    const SizedBox(height: 8),
-                                    OutlinedButton(
-                                      onPressed: () => _openLink(visit.orangeMoneyUrl!),
-                                      child: Text(locale.t('payments.payOrange')),
-                                    ),
-                                  ],
+                                  Text(locale.t('payments.payMaresiHint'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
                                   const SizedBox(height: 12),
                                   FilledButton(
-                                    onPressed: _actingId == visit.id ? null : () => _markPaid(visit),
+                                    onPressed: _actingId == visit.id ? null : () => _payReservation(visit),
                                     style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
                                     child: Text(
                                       _actingId == visit.id
                                           ? locale.t('payments.paying')
-                                          : locale.t('payments.iPaidHost'),
+                                          : locale.t('payments.payReservation'),
                                     ),
                                   ),
                                 ],

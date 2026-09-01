@@ -5,6 +5,7 @@ import {
   getMyVisitRequests,
   markStayExtensionPaid,
   requestStayExtension,
+  startReservationPayment,
   updateVisitRequestStatus,
 } from "@/services/api";
 import { VisitRequestCard } from "@/components/visit/VisitRequestCard";
@@ -111,12 +112,16 @@ export function VisitRequestsPage() {
     }
   };
 
-  const markPaid = async (visitId: string) => {
+  const payReservation = async (visitId: string) => {
     setActingId(visitId);
     setError("");
     try {
-      await updateVisitRequestStatus(visitId, "payment_sent");
-      await reload();
+      const payment = await startReservationPayment(visitId);
+      if (payment.checkout_url) {
+        window.location.assign(payment.checkout_url);
+        return;
+      }
+      setError(t("payments.payFailed"));
     } catch (e) {
       setError(actionErrorMessage(e, t("payments.payFailed"), t("offline.queued")));
     } finally {
@@ -125,9 +130,9 @@ export function VisitRequestsPage() {
   };
 
   return (
-    <div className="font-jakarta max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-foreground mb-2">{t("visits.title")}</h1>
-      <p className="text-muted-foreground text-sm mb-6">{t("visits.subtitle")}</p>
+    <div className="font-jakarta max-w-3xl mx-auto px-4 py-6 sm:py-8">
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">{t("visits.title")}</h1>
+      <p className="text-muted-foreground text-sm mb-5">{t("visits.subtitle")}</p>
       {error && <p className="text-sm text-destructive mb-4">{error}</p>}
 
       {loading ? (
@@ -161,32 +166,13 @@ export function VisitRequestsPage() {
                     <p className="text-sm font-semibold text-foreground">
                       {t("payments.payHostAmount")}: {formatPrice(stayAmount(v))}
                     </p>
-                    <p className="text-xs text-muted-foreground">{t("payments.payHostHint")}</p>
-                    {v.wave_payment_url && (
-                      <Button asChild className="w-full rounded-full bg-brand hover:bg-brand-dark">
-                        <a href={v.wave_payment_url} target="_blank" rel="noreferrer">
-                          {t("payments.payWave")}
-                        </a>
-                      </Button>
-                    )}
-                    {v.orange_money_url && (
-                      <Button asChild variant="outline" className="w-full rounded-full">
-                        <a href={v.orange_money_url} target="_blank" rel="noreferrer">
-                          {t("payments.payOrange")}
-                        </a>
-                      </Button>
-                    )}
-                    {v.owner_phone && (
-                      <Button asChild variant="outline" className="w-full rounded-full">
-                        <a href={`tel:${v.owner_phone}`}>{t("payments.callHost")}</a>
-                      </Button>
-                    )}
+                    <p className="text-xs text-muted-foreground">{t("payments.payMaresiHint")}</p>
                     <Button
                       className="w-full rounded-full bg-brand hover:bg-brand-dark"
                       disabled={actingId === v.id}
-                      onClick={() => void markPaid(v.id)}
+                      onClick={() => void payReservation(v.id)}
                     >
-                      {actingId === v.id ? t("common.saving") : t("payments.iPaidHost")}
+                      {actingId === v.id ? t("payments.paying") : t("payments.payReservation")}
                     </Button>
                   </div>
                 )}
@@ -228,20 +214,6 @@ export function VisitRequestsPage() {
                       {t("visits.extendAmount")}: {formatPrice(Number(v.extension_amount ?? 0))}
                     </p>
                     <p className="text-xs text-muted-foreground">{t("visits.extendPayHint")}</p>
-                    {v.wave_payment_url && (
-                      <Button asChild className="w-full rounded-full bg-brand hover:bg-brand-dark">
-                        <a href={v.wave_payment_url} target="_blank" rel="noreferrer">
-                          {t("payments.payWave")}
-                        </a>
-                      </Button>
-                    )}
-                    {v.orange_money_url && (
-                      <Button asChild variant="outline" className="w-full rounded-full">
-                        <a href={v.orange_money_url} target="_blank" rel="noreferrer">
-                          {t("payments.payOrange")}
-                        </a>
-                      </Button>
-                    )}
                     <Button
                       className="w-full rounded-full bg-brand hover:bg-brand-dark"
                       disabled={actingId === v.id}

@@ -15,6 +15,9 @@ interface PropertyCardProps {
   isFavorite?: boolean;
   /** immo-style horizontal card for landing scroll rows */
   rental?: boolean;
+  /** Short row for the phone map sheet */
+  compact?: boolean;
+  selected?: boolean;
   className?: string;
 }
 
@@ -23,6 +26,8 @@ export function PropertyCard({
   onToggleFavorite,
   isFavorite,
   rental = true,
+  compact = false,
+  selected = false,
   className,
 }: PropertyCardProps) {
   const { t } = useTranslation();
@@ -182,6 +187,57 @@ export function PropertyCard({
       </div>
     </>
   );
+
+  if (compact) {
+    return (
+      <article
+        className={cn(
+          "flex gap-3 rounded-2xl border-2 bg-card overflow-hidden cursor-pointer",
+          selected ? "border-brand shadow-md" : "border-border",
+          className
+        )}
+        onClick={goToDetails}
+        role="link"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && goToDetails()}
+      >
+        <img
+          src={photos[0]}
+          alt={property.title}
+          className="h-[88px] w-[88px] shrink-0 object-cover bg-muted"
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = placeholder;
+          }}
+        />
+        <div className="min-w-0 flex-1 py-2 pr-2">
+          <h3 className="font-bold text-sm text-foreground line-clamp-1">{property.title}</h3>
+          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span className="truncate">{property.location}</span>
+          </p>
+          <p className="text-brand font-bold text-sm mt-1">
+            {formatPrice(property.price)}
+            <span className="text-muted-foreground font-normal text-xs"> {t("common.night")}</span>
+          </p>
+        </div>
+        {onToggleFavorite && (
+          <button
+            type="button"
+            className="self-start p-2"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleFavorite(property.id);
+            }}
+            aria-label={isFavorite ? "Remove favorite" : "Add favorite"}
+          >
+            <Heart className={cn("h-4 w-4", isFavorite ? "fill-pink-500 text-pink-500" : "text-muted-foreground")} />
+          </button>
+        )}
+      </article>
+    );
+  }
 
   const cardClass = cn(
     "bg-card rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-border",

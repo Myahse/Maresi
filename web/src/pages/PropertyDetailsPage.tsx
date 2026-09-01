@@ -103,7 +103,7 @@ export function PropertyDetailsPage() {
   const images = resolvedImages.length ? resolvedImages : [placeholderImage];
 
   return (
-    <div className="font-jakarta container mx-auto px-4 py-8 max-w-5xl">
+    <div className="font-jakarta container mx-auto px-4 py-6 sm:py-8 max-w-5xl">
       <div className="rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-border aspect-video mb-3 bg-muted shadow-sm">
         <img
           src={images[activeImage]}
@@ -235,7 +235,7 @@ export function PropertyDetailsPage() {
           />
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 pb-36 md:pb-0">
           <Card className="rounded-2xl border-2 border-border">
             <CardHeader className="pb-2">
               <p className="text-sm font-medium text-muted-foreground">{t("propertyDetails.contactOwner")}</p>
@@ -263,7 +263,7 @@ export function PropertyDetailsPage() {
               {shareNote && <p className="text-xs text-center text-brand">{shareNote}</p>}
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-2 border-brand/30 bg-brand/5">
+          <Card className="hidden md:block rounded-2xl border-2 border-brand/30 bg-brand/5">
             <CardHeader className="pb-2">
               <p className="text-sm font-bold text-foreground">{t("propertyDetails.reserveTitle")}</p>
               <p className="text-xs text-muted-foreground mt-1">{t("propertyDetails.reserveHint")}</p>
@@ -288,6 +288,20 @@ export function PropertyDetailsPage() {
               </button>
             </CardContent>
           </Card>
+        </div>
+      </div>
+
+      <div className="md:hidden fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-card/95 backdrop-blur-md px-4 py-3">
+        <div className="flex flex-col gap-2">
+          <Button
+            className="w-full rounded-full bg-brand hover:bg-brand-dark"
+            onClick={() => handleReserve(false)}
+          >
+            {t("propertyDetails.startReservation")}
+          </Button>
+          <Button className="w-full rounded-full" variant="outline" onClick={() => handleReserve(true)}>
+            {t("propertyDetails.requestVisit")}
+          </Button>
         </div>
       </div>
     </div>

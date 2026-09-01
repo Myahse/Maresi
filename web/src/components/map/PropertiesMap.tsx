@@ -15,6 +15,7 @@ interface PropertiesMapProps {
   onMarkerClick?: (id: string) => void;
   onBackgroundClick?: () => void;
   className?: string;
+  cooperativeGestures?: boolean;
 }
 
 export function PropertiesMap({
@@ -23,6 +24,7 @@ export function PropertiesMap({
   onMarkerClick,
   onBackgroundClick,
   className,
+  cooperativeGestures = true,
 }: PropertiesMapProps) {
   const { t } = useTranslation();
   const token = mapboxToken();
@@ -59,7 +61,7 @@ export function PropertiesMap({
       style: MAPBOX_STYLE,
       center: first ? [first.longitude, first.latitude] : ABIDJAN_CENTER,
       zoom: 12,
-      cooperativeGestures: true,
+      cooperativeGestures,
       dragRotate: false,
       pitchWithRotate: false,
       touchPitch: false,
@@ -82,7 +84,12 @@ export function PropertiesMap({
       if (statusRef.current === "granted") geolocate.trigger();
     });
     mapRef.current = map;
+    const resize = () => map.resize();
+    map.on("load", resize);
+    const observer = new ResizeObserver(resize);
+    observer.observe(containerRef.current);
     return () => {
+      observer.disconnect();
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current.clear();
       geolocateRef.current = null;

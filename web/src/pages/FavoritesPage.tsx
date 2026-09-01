@@ -45,8 +45,8 @@ export function FavoritesPage() {
   if (loading) return <div className="container mx-auto px-4 py-8">{t("common.loading")}</div>;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">{t("favorites.title")}</h1>
+    <div className="container mx-auto px-4 py-6 sm:py-8">
+      <h1 className="text-xl sm:text-2xl font-bold mb-5 sm:mb-6">{t("favorites.title")}</h1>
       {items.length === 0 ? (
         <p className="text-muted-foreground">
           {t("favorites.empty")}{" "}
