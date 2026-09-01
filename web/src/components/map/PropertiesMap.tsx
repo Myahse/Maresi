@@ -2,10 +2,10 @@ import { useEffect, useMemo, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import type { Property } from "@/types";
-import { usePriceFormatter } from "@/context/CurrencyContext";
 import { useTranslation } from "react-i18next";
 import { useUserLocation } from "@/context/LocationContext";
 import { GEO_WATCH_OPTIONS } from "@/lib/geolocation";
+import { listingImageUrls } from "@/lib/media";
 import { isPremiumPositioned } from "@/lib/listingRank";
 import { ABIDJAN_CENTER, MAPBOX_STYLE, mapboxToken } from "@/lib/mapbox";
 
@@ -25,7 +25,6 @@ export function PropertiesMap({
   className,
 }: PropertiesMapProps) {
   const { t } = useTranslation();
-  const { formatPrice } = usePriceFormatter();
   const token = mapboxToken();
   const { coords, status } = useUserLocation();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -34,13 +33,11 @@ export function PropertiesMap({
   const geolocateRef = useRef<mapboxgl.GeolocateControl | null>(null);
   const onClickRef = useRef(onMarkerClick);
   const onBackgroundRef = useRef(onBackgroundClick);
-  const formatRef = useRef(formatPrice);
   const hoveredRef = useRef(hoveredId);
   const centeredOnUser = useRef(false);
   const statusRef = useRef(status);
   onClickRef.current = onMarkerClick;
   onBackgroundRef.current = onBackgroundClick;
-  formatRef.current = formatPrice;
   statusRef.current = status;
   hoveredRef.current = hoveredId;
 
@@ -108,7 +105,7 @@ export function PropertiesMap({
     withCoords.forEach((p) => {
       let marker = markersRef.current.get(p.id);
       if (!marker) {
-        const el = priceMarkerElement(p, formatRef.current(p.price), p.id === hoveredRef.current);
+        const el = photoMarkerElement(p, p.id === hoveredRef.current);
         el.addEventListener("click", (event) => {
           event.stopPropagation();
           onClickRef.current?.(p.id);
@@ -119,7 +116,7 @@ export function PropertiesMap({
         markersRef.current.set(p.id, marker);
       } else {
         marker.setLngLat([p.longitude, p.latitude]);
-        syncPriceMarker(marker.getElement(), p, formatRef.current(p.price), p.id === hoveredRef.current);
+        syncPhotoMarker(marker.getElement(), p, p.id === hoveredRef.current);
       }
     });
   }, [withCoords, hoveredId]);
@@ -159,17 +156,36 @@ export function PropertiesMap({
   );
 }
 
-function priceMarkerElement(property: Property, price: string, active: boolean) {
+function photoMarkerElement(property: Property, active: boolean) {
   const el = document.createElement("button");
   el.type = "button";
   el.setAttribute("aria-label", property.title);
-  syncPriceMarker(el, property, price, active);
+  syncPhotoMarker(el, property, active);
   return el;
 }
 
-function syncPriceMarker(el: HTMLElement, property: Property, price: string, active: boolean) {
+function syncPhotoMarker(el: HTMLElement, property: Property, active: boolean) {
   const premium = isPremiumPositioned(property);
+  const photo = listingImageUrls(property.images)[0] ?? "";
+  const fallback = `https://placehold.co/96x96/0D9488/white?text=${encodeURIComponent("M")}`;
   el.className = `maresi-map-marker${premium ? " is-premium" : ""}${active ? " is-active" : ""}`;
   el.style.zIndex = active ? "30" : premium ? "12" : "2";
-  el.textContent = price;
+  el.innerHTML = `<span class="maresi-map-pin"><span class="maresi-map-photo"><img src="${escapeHtml(
+    photo || fallback
+  )}" alt="" /></span><span class="maresi-map-stem"></span><span class="maresi-map-dot"></span></span>`;
+  const img = el.querySelector("img");
+  if (img) {
+    img.onerror = () => {
+      img.onerror = null;
+      img.src = fallback;
+    };
+  }
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
