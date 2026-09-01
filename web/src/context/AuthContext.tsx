@@ -19,7 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(
     () => authService.consumeHandoff()?.user ?? authService.getStoredUser()
   );
-  const [loading, setLoading] = useState(false);
+  const loading = false;
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await authService.login(email, password);

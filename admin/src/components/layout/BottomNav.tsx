@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ClipboardList, CreditCard, LayoutDashboard, Users, Wallet } from "lucide-react";
+import { ClipboardList, LayoutDashboard, Users, Wallet } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
