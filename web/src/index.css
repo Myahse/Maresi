@@ -80,81 +80,25 @@
 }
 
 .maresi-map-marker {
-  border: 0;
-  background: transparent;
-  padding: 0;
+  border: 2px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: #0d9488;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
   cursor: pointer;
   transform-origin: bottom center;
 }
-.maresi-map-card {
-  width: 96px;
-  background: #fff;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2);
-  border: 2px solid #fff;
-  text-align: left;
-}
-.maresi-map-card img {
-  display: block;
-  width: 100%;
-  height: 64px;
-  object-fit: cover;
-  background: #e8eeed;
-}
-.maresi-map-card-body {
-  padding: 6px 8px 8px;
-}
-.maresi-map-card-title {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.25;
-  color: #134e4a;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.maresi-map-card-price {
-  margin: 3px 0 0;
-  font-size: 11px;
-  font-weight: 800;
-  color: #0d9488;
-}
-.maresi-map-pin {
-  width: 12px;
-  height: 12px;
-  margin: -1px auto 0;
-  background: #fff;
-  transform: rotate(45deg);
-  box-shadow: 2px 2px 6px rgba(15, 23, 42, 0.12);
-}
-.maresi-map-marker.is-premium .maresi-map-card {
+.maresi-map-marker.is-premium {
   border-color: #f59e0b;
 }
-.maresi-map-marker.is-premium .maresi-map-pin {
-  background: #f59e0b;
-}
-.maresi-map-marker.is-active .maresi-map-card {
+.maresi-map-marker.is-active {
   border-color: #0d9488;
-  transform: scale(1.06);
-}
-.maresi-map-badge {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  z-index: 1;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: #f59e0b;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-.maresi-map-card-wrap {
-  position: relative;
+  transform: scale(1.08);
 }
 
 @layer utilities {

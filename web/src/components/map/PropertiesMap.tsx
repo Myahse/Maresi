@@ -6,7 +6,6 @@ import { usePriceFormatter } from "@/context/CurrencyContext";
 import { useTranslation } from "react-i18next";
 import { useUserLocation } from "@/context/LocationContext";
 import { GEO_WATCH_OPTIONS } from "@/lib/geolocation";
-import { listingImageUrls } from "@/lib/media";
 import { isPremiumPositioned } from "@/lib/listingRank";
 import { ABIDJAN_CENTER, MAPBOX_STYLE, mapboxToken } from "@/lib/mapbox";
 
@@ -14,10 +13,17 @@ interface PropertiesMapProps {
   properties: Property[];
   hoveredId?: string | null;
   onMarkerClick?: (id: string) => void;
+  onBackgroundClick?: () => void;
   className?: string;
 }
 
-export function PropertiesMap({ properties, hoveredId, onMarkerClick, className }: PropertiesMapProps) {
+export function PropertiesMap({
+  properties,
+  hoveredId,
+  onMarkerClick,
+  onBackgroundClick,
+  className,
+}: PropertiesMapProps) {
   const { t } = useTranslation();
   const { formatPrice } = usePriceFormatter();
   const token = mapboxToken();
@@ -27,14 +33,14 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const geolocateRef = useRef<mapboxgl.GeolocateControl | null>(null);
   const onClickRef = useRef(onMarkerClick);
+  const onBackgroundRef = useRef(onBackgroundClick);
   const formatRef = useRef(formatPrice);
-  const badgeRef = useRef(t("properties.premium"));
   const hoveredRef = useRef(hoveredId);
   const centeredOnUser = useRef(false);
   const statusRef = useRef(status);
   onClickRef.current = onMarkerClick;
+  onBackgroundRef.current = onBackgroundClick;
   formatRef.current = formatPrice;
-  badgeRef.current = t("properties.premium");
   statusRef.current = status;
   hoveredRef.current = hoveredId;
 
@@ -70,6 +76,11 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
     });
     map.addControl(geolocate, "top-right");
     geolocateRef.current = geolocate;
+    map.on("click", (event) => {
+      const target = event.originalEvent.target;
+      if (target instanceof Element && target.closest(".maresi-map-marker")) return;
+      onBackgroundRef.current?.();
+    });
     map.on("load", () => {
       if (statusRef.current === "granted") geolocate.trigger();
     });
@@ -97,12 +108,7 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
     withCoords.forEach((p) => {
       let marker = markersRef.current.get(p.id);
       if (!marker) {
-        const el = cardMarkerElement(
-          p,
-          formatRef.current(p.price),
-          p.id === hoveredRef.current,
-          badgeRef.current
-        );
+        const el = priceMarkerElement(p, formatRef.current(p.price), p.id === hoveredRef.current);
         el.addEventListener("click", (event) => {
           event.stopPropagation();
           onClickRef.current?.(p.id);
@@ -113,13 +119,7 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
         markersRef.current.set(p.id, marker);
       } else {
         marker.setLngLat([p.longitude, p.latitude]);
-        syncCardMarker(
-          marker.getElement(),
-          p,
-          formatRef.current(p.price),
-          p.id === hoveredRef.current,
-          badgeRef.current
-        );
+        syncPriceMarker(marker.getElement(), p, formatRef.current(p.price), p.id === hoveredRef.current);
       }
     });
   }, [withCoords, hoveredId]);
@@ -159,39 +159,17 @@ export function PropertiesMap({ properties, hoveredId, onMarkerClick, className 
   );
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function cardMarkerElement(property: Property, price: string, active: boolean, badge: string) {
+function priceMarkerElement(property: Property, price: string, active: boolean) {
   const el = document.createElement("button");
   el.type = "button";
   el.setAttribute("aria-label", property.title);
-  syncCardMarker(el, property, price, active, badge);
+  syncPriceMarker(el, property, price, active);
   return el;
 }
 
-function syncCardMarker(el: HTMLElement, property: Property, price: string, active: boolean, badge: string) {
+function syncPriceMarker(el: HTMLElement, property: Property, price: string, active: boolean) {
   const premium = isPremiumPositioned(property);
-  const photo = listingImageUrls(property.images)[0] ?? "";
   el.className = `maresi-map-marker${premium ? " is-premium" : ""}${active ? " is-active" : ""}`;
   el.style.zIndex = active ? "30" : premium ? "12" : "2";
-  el.innerHTML = `<span class="maresi-map-card-wrap"><span class="maresi-map-card">${
-    premium ? `<span class="maresi-map-badge">${escapeHtml(badge)}</span>` : ""
-  }<img src="${escapeHtml(photo)}" alt="" />
-    <span class="maresi-map-card-body"><span class="maresi-map-card-title">${escapeHtml(
-      property.title
-    )}</span><span class="maresi-map-card-price">${escapeHtml(price)}</span></span>
-  </span><span class="maresi-map-pin"></span></span>`;
-  const img = el.querySelector("img");
-  if (img) {
-    img.onerror = () => {
-      img.onerror = null;
-      img.src = `https://placehold.co/192x128/0D9488/white?text=${encodeURIComponent("Maresi")}`;
-    };
-  }
+  el.textContent = price;
 }

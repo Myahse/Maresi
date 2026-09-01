@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Map, List } from "lucide-react";
 import { getProperties, getFavorites, addFavorite, removeFavorite } from "@/services/api";
@@ -22,7 +21,6 @@ const defaultFilters: FilterValues = {
 
 export function AllPropertiesPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { requireAuth } = useAuthModal();
   const { coords } = useUserLocation();
@@ -33,6 +31,7 @@ export function AllPropertiesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showMobileMap, setShowMobileMap] = useState(false);
 
   const load = useCallback(async () => {
@@ -58,6 +57,9 @@ export function AllPropertiesPage() {
   }, [appliedFilters, isAuthenticated, t]);
 
   const sortedProperties = useMemo(() => sortListings(properties, coords), [properties, coords]);
+  const activeId = selectedId ?? hoveredId;
+  const selectedProperty = sortedProperties.find((p) => p.id === selectedId) ?? null;
+  const previewProperty = sortedProperties.find((p) => p.id === activeId) ?? null;
 
   useEffect(() => {
     load();
@@ -97,13 +99,24 @@ export function AllPropertiesPage() {
       </button>
 
       {showMobileMap && (
-        <div className="md:hidden mb-4 h-64 rounded-2xl overflow-hidden border-2 border-border">
-          <PropertiesMap
-            properties={sortedProperties}
-            hoveredId={hoveredId}
-            onMarkerClick={(id) => navigate(`/properties/${id}`)}
-            className="h-full"
-          />
+        <div className="md:hidden mb-4 space-y-3">
+          <div className="h-64 rounded-2xl overflow-hidden border-2 border-border">
+            <PropertiesMap
+              properties={sortedProperties}
+              hoveredId={activeId}
+              onMarkerClick={setSelectedId}
+              onBackgroundClick={() => setSelectedId(null)}
+              className="h-full"
+            />
+          </div>
+          {selectedProperty && (
+            <PropertyCard
+              property={selectedProperty}
+              rental
+              onToggleFavorite={toggleFavorite}
+              isFavorite={favorites.some((f) => f.property_id === selectedProperty.id)}
+            />
+          )}
         </div>
       )}
 
@@ -161,13 +174,27 @@ export function AllPropertiesPage() {
 
   return (
     <div className="font-jakarta bg-muted flex flex-col md:flex-row md:fixed md:inset-x-0 md:top-0 md:bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:top-[4.5rem] lg:bottom-0 md:min-h-0">
-      <div className="hidden md:block md:w-[35%] md:h-full border-r border-border">
+      <div className="hidden md:block md:w-[35%] md:h-full border-r border-border relative">
         <PropertiesMap
           properties={sortedProperties}
-          hoveredId={hoveredId}
-          onMarkerClick={(id) => navigate(`/properties/${id}`)}
+          hoveredId={activeId}
+          onMarkerClick={setSelectedId}
+          onBackgroundClick={() => setSelectedId(null)}
           className="h-full"
         />
+        {previewProperty && (
+          <div className="absolute inset-x-3 bottom-3 z-10 flex justify-center pointer-events-none">
+            <div className="pointer-events-auto w-full max-w-[340px]">
+              <PropertyCard
+                property={previewProperty}
+                rental
+                className="!w-full shadow-xl"
+                onToggleFavorite={toggleFavorite}
+                isFavorite={favorites.some((f) => f.property_id === previewProperty.id)}
+              />
+            </div>
+          </div>
+        )}
       </div>
       <div className="flex-1 md:min-h-0 md:overflow-y-auto md:overscroll-y-contain md:w-[65%] md:h-full">{listPanel}</div>
     </div>
