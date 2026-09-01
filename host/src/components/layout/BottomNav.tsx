@@ -8,7 +8,7 @@ import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { cn } from "@/lib/utils";
-import { CLIENT_APP_URL } from "@/lib/clientApp";
+import { CLIENT_APP_URL, clientHostRegisterUrl } from "@/lib/clientApp";
 
 export function BottomNav() {
   const { t } = useTranslation();
@@ -60,13 +60,13 @@ export function BottomNav() {
                 >
                   {t("header.login")}
                 </Link>
-                <Link
-                  to="/register"
+                <a
+                  href={clientHostRegisterUrl()}
                   className="rounded-full bg-brand px-3 py-2.5 text-sm font-semibold text-white text-center"
                   onClick={() => setMoreOpen(false)}
                 >
                   {t("login.registerOnClient")}
-                </Link>
+                </a>
                 <a
                   href={CLIENT_APP_URL}
                   className="rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-muted"

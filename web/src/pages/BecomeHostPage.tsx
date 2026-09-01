@@ -10,7 +10,7 @@ export function BecomeHostPage() {
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
-      window.location.assign(`${HOST_APP_URL.replace(/\/$/, "")}/register`);
+      window.location.assign("/register?intent=host");
       return;
     }
     if (isHostAppUser(user)) return;
@@ -25,7 +25,7 @@ export function BecomeHostPage() {
       window.location.assign(token ? hostHandoffUrl({ token, user: next }) : HOST_APP_URL);
     };
     if (!name || !phone) {
-      window.location.assign(`${HOST_APP_URL.replace(/\/$/, "")}/register`);
+      window.location.assign("/account");
       return;
     }
     submitHostApplication({ full_name: name, phone: phone })

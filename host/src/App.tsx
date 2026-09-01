@@ -1,10 +1,11 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { LoginPage } from "@/pages/LoginPage";
-import { RegisterPage } from "@/pages/RegisterPage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
+import { clientHostRegisterUrl } from "@/lib/clientApp";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
 import { OwnerDashboardPage } from "@/pages/owner/OwnerDashboardPage";
@@ -19,6 +20,13 @@ import { AppSplash } from "@/components/layout/AppSplash";
 import { HostRealtimeBridge } from "@/components/realtime/HostRealtimeBridge";
 import { PushPrompt } from "@/components/realtime/PushPrompt";
 import { LocationPrompt } from "@/components/location/LocationPrompt";
+
+function ClientRegisterRedirect() {
+  useEffect(() => {
+    window.location.replace(clientHostRegisterUrl());
+  }, []);
+  return null;
+}
 
 function App() {
   return (
@@ -39,9 +47,7 @@ function App() {
             <Route path="reset-password" element={<AuthLayout />}>
               <Route index element={<ResetPasswordPage />} />
             </Route>
-            <Route path="register" element={<AuthLayout />}>
-              <Route index element={<RegisterPage />} />
-            </Route>
+            <Route path="register" element={<ClientRegisterRedirect />} />
             <Route path="verify-email" element={<AuthLayout />}>
               <Route index element={<VerifyEmailPage />} />
             </Route>

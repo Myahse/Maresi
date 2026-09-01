@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuth } from "@/hooks/useAuth";
 import { isWakingError } from "@/services/api";
 import { canAccessHostApp } from "@/lib/hostAccess";
+import { clientHostRegisterUrl } from "@/lib/clientApp";
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -71,9 +72,9 @@ export function LoginPage() {
           </Button>
           <p className="text-sm text-muted-foreground">
             {t("login.noAccount")}{" "}
-            <Link to="/register" className="text-brand font-medium hover:underline">
+            <a href={clientHostRegisterUrl()} className="text-brand font-medium hover:underline">
               {t("login.registerOnClient")}
-            </Link>
+            </a>
           </p>
         </CardFooter>
       </form>

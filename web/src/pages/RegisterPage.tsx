@@ -13,8 +13,8 @@ import { WizardPane } from "@/components/ui/WizardPane";
 import { useAuth } from "@/hooks/useAuth";
 import { isAdultBirthDate, isValidIdCard, maxAdultBirthDate } from "@/lib/validation";
 import { isCompletePhone } from "@/lib/phoneCountries";
-import { consumeHostIntent } from "@/lib/hostIntent";
-import { HOST_APP_URL } from "@/lib/hostApp";
+import { consumeHostIntent, markHostIntent } from "@/lib/hostIntent";
+import { HOST_APP_URL, hostHandoffUrl } from "@/lib/hostApp";
 import { cn } from "@/lib/utils";
 
 type RoleIntent = "client" | "owner";
@@ -25,13 +25,11 @@ export function RegisterPage() {
   const navigate = useNavigate();
 
   const hostIntent = new URLSearchParams(window.location.search).get("intent") === "host";
-  const [role, setRole] = useState<RoleIntent | null>(null);
-  const [step, setStep] = useState(0);
+  const [role, setRole] = useState<RoleIntent | null>(hostIntent ? "owner" : null);
+  const [step, setStep] = useState(hostIntent ? 1 : 0);
 
   useEffect(() => {
-    if (hostIntent) {
-      window.location.assign(`${HOST_APP_URL.replace(/\/$/, "")}/register`);
-    }
+    if (hostIntent) markHostIntent();
   }, [hostIntent]);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -116,12 +114,21 @@ export function RegisterPage() {
         id_card_back: idCardBack ?? undefined,
       });
       if ("needsEmailVerification" in res && res.needsEmailVerification) {
-        const intent = role === "owner" ? "&intent=host" : "";
-        navigate(`/verify-email?sent=1&email=${encodeURIComponent(res.email)}${intent}`, { replace: true });
+        if (role === "owner") {
+          window.location.assign(
+            `${HOST_APP_URL.replace(/\/$/, "")}/verify-email?sent=1&email=${encodeURIComponent(res.email)}`
+          );
+          return;
+        }
+        navigate(`/verify-email?sent=1&email=${encodeURIComponent(res.email)}`, { replace: true });
         return;
       }
       if (role === "owner") {
-        navigate("/become-host?apply=1", { replace: true });
+        if ("token" in res && res.token) {
+          window.location.assign(hostHandoffUrl({ token: res.token, user: res.user }));
+          return;
+        }
+        window.location.assign(HOST_APP_URL);
         return;
       }
       navigate("/properties", { replace: true });
@@ -181,7 +188,8 @@ export function RegisterPage() {
               <button
                 type="button"
                 onClick={() => {
-                  window.location.assign(`${HOST_APP_URL.replace(/\/$/, "")}/register`);
+                  markHostIntent();
+                  setRole("owner");
                 }}
                 className={cn(
                   "text-left rounded-xl border-2 p-5 transition-colors",

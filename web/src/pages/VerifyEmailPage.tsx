@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HOST_APP_URL } from "@/lib/hostApp";
-import { markHostIntent } from "@/lib/hostIntent";
 import { resendVerification, verifyEmail } from "@/services/auth";
 
 export function VerifyEmailPage() {
@@ -24,7 +23,13 @@ export function VerifyEmailPage() {
   const [cooldown, setCooldown] = useState(sent ? 20 : 0);
 
   useEffect(() => {
-    if (params.get("intent") === "host") markHostIntent();
+    if (params.get("intent") !== "host") return;
+    const next = new URLSearchParams(params);
+    next.delete("intent");
+    const qs = next.toString();
+    window.location.replace(
+      `${HOST_APP_URL.replace(/\/$/, "")}/verify-email${qs ? `?${qs}` : ""}`
+    );
   }, [params]);
 
   useEffect(() => {
@@ -34,7 +39,7 @@ export function VerifyEmailPage() {
   }, [cooldown]);
 
   useEffect(() => {
-    if (!token) return;
+    if (params.get("intent") === "host" || !token) return;
     let cancelled = false;
     verifyEmail(token)
       .then((res) => {
