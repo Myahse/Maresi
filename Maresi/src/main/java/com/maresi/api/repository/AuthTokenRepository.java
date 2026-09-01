@@ -38,6 +38,30 @@ public class AuthTokenRepository {
         java.sql.Timestamp.from(expiresAt));
   }
 
+  public Optional<Map<String, Object>> findByHash(String tokenHash, String purpose) {
+    return jdbc
+        .query(
+            """
+            SELECT id, user_id, purpose, expires_at, used_at
+            FROM auth_tokens
+            WHERE token_hash = ? AND purpose = ?
+            """,
+            (rs, rowNum) -> {
+              java.sql.Timestamp used = rs.getTimestamp("used_at");
+              java.sql.Timestamp expires = rs.getTimestamp("expires_at");
+              return Map.<String, Object>of(
+                  "id", rs.getObject("id"),
+                  "user_id", rs.getObject("user_id"),
+                  "purpose", rs.getString("purpose"),
+                  "used_at", used == null ? "" : used.toInstant().toString(),
+                  "expires_at", expires == null ? "" : expires.toInstant().toString());
+            },
+            tokenHash,
+            purpose)
+        .stream()
+        .findFirst();
+  }
+
   public Optional<Map<String, Object>> findValid(String tokenHash, String purpose) {
     return jdbc
         .query(

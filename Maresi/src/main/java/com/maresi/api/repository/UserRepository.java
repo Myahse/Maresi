@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -141,15 +142,30 @@ public class UserRepository {
   }
 
   public void setHostIntent(UUID id, boolean intent) {
-    jdbc.update("UPDATE users SET host_intent = ? WHERE id = ?", intent, id);
+    try {
+      jdbc.update("UPDATE users SET host_intent = ? WHERE id = ?", intent, id);
+    } catch (DataAccessException e) {
+      if (!missingHostIntentColumn(e)) throw e;
+    }
   }
 
   public boolean consumeHostIntent(UUID id) {
-    int updated =
-        jdbc.update(
-            "UPDATE users SET host_intent = FALSE WHERE id = ? AND host_intent = TRUE",
-            id);
-    return updated > 0;
+    try {
+      Integer updated =
+          jdbc.update(
+              "UPDATE users SET host_intent = FALSE WHERE id = ? AND host_intent = TRUE",
+              id);
+      return updated != null && updated > 0;
+    } catch (DataAccessException e) {
+      if (missingHostIntentColumn(e)) return false;
+      throw e;
+    }
+  }
+
+  private static boolean missingHostIntentColumn(DataAccessException e) {
+    Throwable cause = e.getMostSpecificCause();
+    String message = cause != null ? cause.getMessage() : e.getMessage();
+    return message != null && message.contains("host_intent");
   }
 
   public void requestCorrection(UUID id, String message, boolean suspend) {

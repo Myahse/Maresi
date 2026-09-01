@@ -368,22 +368,49 @@ public class AuthBusiness {
       response.setStatus(functionalError.invalidData("Lien de confirmation invalide ou expiré", locale));
       return response;
     }
-    Map<String, Object> row = authTokens.findValid(hashToken(token), "email_verify").orElse(null);
+    Map<String, Object> row = authTokens.findByHash(hashToken(token), "email_verify").orElse(null);
     if (row == null) {
       response.setHasError(true);
       response.setStatus(functionalError.invalidData("Lien de confirmation invalide ou expiré", locale));
       return response;
     }
     UUID userId = (UUID) row.get("user_id");
-    users.markEmailVerified(userId);
-    authTokens.markUsed((UUID) row.get("id"));
-    boolean hostSignup = users.consumeHostIntent(userId);
+    UUID tokenId = (UUID) row.get("id");
+    boolean tokenOpen = str(row.get("used_at")) == null || str(row.get("used_at")).isBlank();
+    Instant expiresAt = parseInstant(row.get("expires_at"));
+    boolean expired = expiresAt != null && expiresAt.isBefore(Instant.now());
     Map<String, Object> user = users.findById(userId).orElse(null);
+    boolean alreadyVerified = user != null && isEmailVerified(user);
+    if (tokenOpen && expired && !alreadyVerified) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Lien de confirmation invalide ou expiré", locale));
+      return response;
+    }
+    if (!tokenOpen && !alreadyVerified) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Lien de confirmation invalide ou expiré", locale));
+      return response;
+    }
+    users.markEmailVerified(userId);
+    if (tokenOpen) {
+      authTokens.markUsed(tokenId);
+    }
+    user = users.findById(userId).orElse(user);
+    boolean hostSignup = false;
+    try {
+      hostSignup = users.consumeHostIntent(userId);
+    } catch (RuntimeException ignored) {
+      hostSignup = false;
+    }
     if (user != null) {
-      if (hostSignup) {
-        hostApplications.submitFromVerifiedSignup(user);
-      } else {
-        welcomeNewAccount(user);
+      try {
+        if (hostSignup) {
+          hostApplications.submitFromVerifiedSignup(user);
+        } else if (!alreadyVerified) {
+          welcomeNewAccount(user);
+        }
+      } catch (RuntimeException ignored) {
+        /* email is confirmed even if welcome/host apply fails */
       }
     }
     Map<String, Object> item = new HashMap<>();
@@ -579,6 +606,17 @@ public class AuthBusiness {
     if (Set.of("female", "femme", "f").contains(gender)) return "female";
     if (Set.of("other", "autre").contains(gender)) return "other";
     return null;
+  }
+
+  private static Instant parseInstant(Object raw) {
+    if (raw == null) return null;
+    String value = raw.toString().trim();
+    if (value.isEmpty()) return null;
+    try {
+      return Instant.parse(value);
+    } catch (Exception ignored) {
+      return null;
+    }
   }
 
   private static String str(Object v) {
