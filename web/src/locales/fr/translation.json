@@ -521,8 +521,8 @@
   },
   "payments": {
     "payHostAmount": "À payer",
-    "payHostHint": "Ouvrez Wave ou Orange Money, puis indiquez que vous avez payé. L'hôte confirmera.",
-    "payMaresiHint": "Allez au paiement pour régler le séjour. L'hôte reçoit 90 % sur son portefeuille. 10 % restent à Maresi.",
+    "payHostHint": "Payez via votre opérateur mobile money dans l'application Maresi.",
+    "payMaresiHint": "Payez via votre opérateur mobile money dans l'application Maresi.",
     "paying": "Ouverture du paiement…",
     "goToPayment": "Aller au paiement",
     "receiptTitle": "Reçu de paiement",

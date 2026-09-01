@@ -236,20 +236,20 @@ public final class EmailTemplates {
         "Allez au paiement",
         "Paiement",
         "C’est le moment de payer",
-        "Bonjour,\n\nL’hôte a confirmé le code clé. Ouvrez vos visites et allez au paiement. L’hôte reçoit 90 % sur son portefeuille.",
-        details("À faire", "Ouvrir le paiement dans Maresi"),
+        "Bonjour,\n\nL’hôte a confirmé le code clé. Payez via votre opérateur mobile money dans l’application Maresi.",
+        details("À faire", "Payer dans Maresi"),
         null,
         "Aller au paiement",
         ctaUrl);
   }
 
-  public static Mail paymentReceiptGuest(String title, String paid, String hostShare, String ctaUrl) {
+  public static Mail paymentReceiptGuest(String title, String paid, String ctaUrl) {
     return build(
         "Reçu de paiement — Maresi",
         "Paiement",
         "Votre paiement est confirmé",
-        "Bonjour,\n\nVoici votre reçu. La réservation est validée. L’hôte a reçu 90 % sur son portefeuille.\n\nJoignez aussi le reçu de votre opérateur (PDF ou image) dans vos visites.",
-        details("Résidence", title, "Montant payé", paid + " XOF", "Part hôte (90%)", hostShare + " XOF"),
+        "Bonjour,\n\nVotre paiement a bien été reçu. La réservation est validée.\n\nJoignez aussi le reçu de votre opérateur (PDF ou image) dans vos visites.",
+        details("Résidence", title, "Montant", paid + " XOF"),
         new Highlight("Reçu", "Conservez cet e-mail"),
         "Voir mes visites",
         ctaUrl);

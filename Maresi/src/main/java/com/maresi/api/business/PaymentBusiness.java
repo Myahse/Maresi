@@ -850,7 +850,6 @@ public class PaymentBusiness {
           EmailTemplates.paymentReceiptGuest(
               listingTitle,
               paid == null ? "" : paid.toPlainString(),
-              stayAmount == null ? "" : stayAmount.toPlainString(),
               EmailTemplates.guestApp(props) + "/visits"));
       realtime.publish("payment.completed", payment, userId, ownerId, true);
     }

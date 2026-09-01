@@ -521,8 +521,8 @@
   },
   "payments": {
     "payHostAmount": "Amount due",
-    "payHostHint": "Open Wave or Orange Money, then mark that you paid. The host will confirm.",
-    "payMaresiHint": "Go to payment to settle your stay. The host receives 90% in their wallet. 10% stays with Maresi.",
+    "payHostHint": "Pay with your mobile money operator in the Maresi app.",
+    "payMaresiHint": "Pay with your mobile money operator in the Maresi app.",
     "paying": "Opening payment…",
     "goToPayment": "Go to payment",
     "receiptTitle": "Payment receipt",
