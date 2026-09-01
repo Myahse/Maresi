@@ -474,6 +474,8 @@
     "confirmStop": "Couper cet abonnement ?",
     "confirmCancel": "Annuler ce paiement en attente ?",
     "confirmRefund": "Rembourser ce paiement ? L’abonnement ou la réservation sera aussi annulé.",
+    "cancelVisit": "Annuler le séjour",
+    "confirmCancelVisit": "Annuler cette réservation ? Si elle est déjà payée, 90 % seront remboursés seulement si l'hôte n'a pas encore retiré.",
     "reviewTitle": "Vérification d'identité",
     "reviewHint": "L'inscription client n'est pas bloquée. Si une pièce est illisible, envoyez un message avec le lien de correction. Vous pouvez suspendre le compte jusqu'à la mise à jour.",
     "reviewPlaceholder": "Ex. Le recto de la pièce n'est pas lisible. Merci de reprendre une photo nette.",

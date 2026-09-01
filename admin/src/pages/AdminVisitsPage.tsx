@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getAdminVisits } from "@/services/api";
+import { Button } from "@/components/ui/button";
+import { getAdminVisits, patchAdminVisit } from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtime } from "@/hooks/useRealtime";
 import type { RealtimeEvent, VisitRequest } from "@/types";
@@ -13,6 +14,7 @@ export function AdminVisitsPage() {
   const [filter, setFilter] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState("");
 
   const load = useCallback(async () => {
     setError("");
@@ -42,6 +44,23 @@ export function AdminVisitsPage() {
   );
 
   const shown = items.filter((v) => !filter || v.status === filter);
+
+  const cancelVisit = async (id: string) => {
+    if (!window.confirm(t("admin.confirmCancelVisit"))) return;
+    setBusy(id);
+    setError("");
+    try {
+      await patchAdminVisit(id, { action: "cancel" });
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("admin.empty"));
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const canAdminCancel = (status: VisitRequest["status"]) =>
+    status !== "cancelled" && status !== "declined";
 
   return (
     <div className="font-jakarta max-w-6xl mx-auto px-4 py-8 space-y-4">
@@ -76,6 +95,7 @@ export function AdminVisitsPage() {
                 <th className="p-3">{t("common.status")}</th>
                 <th className="p-3">{t("visits.keyCode")}</th>
                 <th className="p-3">{t("admin.when")}</th>
+                <th className="p-3">{t("admin.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -91,6 +111,18 @@ export function AdminVisitsPage() {
                   <td className="p-3">{t(`visits.status.${v.status}`, { defaultValue: v.status })}</td>
                   <td className="p-3 font-mono">{v.key_code || "—"}</td>
                   <td className="p-3">{v.requested_at ? new Date(v.requested_at).toLocaleString() : "—"}</td>
+                  <td className="p-3">
+                    {canAdminCancel(v.status) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy === v.id}
+                        onClick={() => void cancelVisit(v.id)}
+                      >
+                        {busy === v.id ? t("common.loading") : t("admin.cancelVisit")}
+                      </Button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

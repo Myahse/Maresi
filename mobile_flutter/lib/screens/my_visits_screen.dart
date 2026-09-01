@@ -53,9 +53,9 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
       status == 'pending' ||
       status == 'awaiting_agreement' ||
       status == 'awaiting_key' ||
-      status == 'awaiting_payment' ||
-      status == 'payment_sent' ||
-      status == 'confirmed';
+      status == 'awaiting_payment';
+
+  bool _isPaidStay(String status) => status == 'payment_sent' || status == 'confirmed';
 
   Future<void> _cancelStay(VisitRequest visit) async {
     final locale = context.read<LocaleProvider>();
@@ -320,11 +320,11 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
                                     ),
                                   ),
                                 ],
+                                if (_isPaidStay(visit.status)) ...[
+                                  const SizedBox(height: 8),
+                                  Text(locale.t('visits.cancelPaidHint'), style: TextStyle(color: palette.textSecondary, fontSize: 12)),
+                                ],
                                 if (_canCancel(visit.status)) ...[
-                                  if (visit.status == 'confirmed' || visit.status == 'payment_sent') ...[
-                                    const SizedBox(height: 8),
-                                    Text(locale.t('visits.cancelPaidHint'), style: TextStyle(color: palette.textSecondary, fontSize: 12)),
-                                  ],
                                   const SizedBox(height: 8),
                                   OutlinedButton(
                                     onPressed: _actingId == visit.id ? null : () => _cancelStay(visit),

@@ -68,6 +68,21 @@ public class AdminMonitorController {
     return ControllerSupport.run(() -> adminMonitorService.visits(loc), loc, exceptionUtils);
   }
 
+  @PatchMapping("/visits/{id}")
+  public ResponseEntity<Response<Map<String, Object>>> cancelVisit(
+      @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return adminMonitorService.cancelVisit(id, request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
   @GetMapping("/activity")
   public ResponseEntity<Response<Map<String, Object>>> activity(Locale locale) {
     Locale loc = ControllerSupport.locale(locale);

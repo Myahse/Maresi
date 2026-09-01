@@ -514,8 +514,8 @@ public class PaymentBusiness {
   }
 
   /**
-   * Refund a paid stay when the guest cancels. Host wallet is taken first so we only
-   * refund if they have not already withdrawn.
+   * Admin-only refund of a paid stay. Host wallet is taken first so we only refund
+   * if they have not already withdrawn.
    *
    * @return error message, or null if there was nothing to refund / refund succeeded
    */

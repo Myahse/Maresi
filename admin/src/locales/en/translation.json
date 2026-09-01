@@ -475,6 +475,8 @@
     "confirmStop": "Stop this subscription?",
     "confirmCancel": "Cancel this pending payment?",
     "confirmRefund": "Refund this payment? The subscription or reservation will also be reversed.",
+    "cancelVisit": "Cancel stay",
+    "confirmCancelVisit": "Cancel this reservation? If it is already paid, 90% will be refunded only if the host has not withdrawn.",
     "reviewTitle": "Identity review",
     "reviewHint": "Client signup is not blocked. If a document is unreadable, send a message with a correction link. You can suspend the account until they update it.",
     "reviewPlaceholder": "e.g. The ID front is not readable. Please take a clearer photo.",

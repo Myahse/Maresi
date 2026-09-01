@@ -344,6 +344,12 @@ class MockApiService implements MaresiApi {
     final index = _visitRequests.indexWhere((v) => v.id == id);
     if (index < 0) throw Exception('Demande introuvable');
     final current = _visitRequests[index];
+    if (status == 'cancelled' &&
+        (current.status == 'confirmed' || current.status == 'payment_sent')) {
+      throw Exception(
+        'Après paiement, seul un administrateur peut annuler. Contactez le support Maresi.',
+      );
+    }
     final updated = VisitRequest(
       id: current.id,
       propertyId: current.propertyId,

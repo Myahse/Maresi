@@ -260,7 +260,7 @@
     "termsRequired": "Accept the terms of use to create your account."
   },
   "legal": {
-    "termsBody": "By creating a Maresi account you confirm that the information and identity documents you provide are yours and accurate.\n\nYou agree to use the platform to look for or list a residence in good faith, to pay stays through Maresi, and to treat homes, neighbours and hosts with care.\n\nOn cancellation of a paid stay, 90% can be refunded if the host has not already withdrawn. Maresi's 10% is not refunded.\n\nMaresi may suspend an account if documents are false or if the house rules of a stay are broken."
+    "termsBody": "By creating a Maresi account you confirm that the information and identity documents you provide are yours and accurate.\n\nYou agree to use the platform to look for or list a residence in good faith, to pay stays through Maresi, and to treat homes, neighbours and hosts with care.\n\nAfter payment the reservation is locked. Only a Maresi administrator can cancel it, after you explain the reason (contact@maresi.com).\n\nMaresi may suspend an account if documents are false or if the house rules of a stay are broken."
   },
   "dashboard": {
     "title": "Browse residences",
@@ -469,7 +469,7 @@
     },
     "cancelCta": "Cancel reservation",
     "cancelConfirm": "Cancel this reservation?",
-    "cancelPaidHint": "If you already paid, 90% is refunded. Maresi's 10% commission is not refunded. Not possible if the host has already withdrawn.",
+    "cancelPaidHint": "After payment the stay is locked. To cancel, contact a Maresi admin at contact@maresi.com and explain why.",
     "agreementTitle": "Stay care agreement",
     "agreementBody": "Before paying, you confirm you will treat this home with care.",
     "agreementOpen": "Open and sign the agreement",

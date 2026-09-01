@@ -53,9 +53,10 @@ export function VisitRequestsPage() {
     status === "pending" ||
     status === "awaiting_agreement" ||
     status === "awaiting_key" ||
-    status === "awaiting_payment" ||
-    status === "payment_sent" ||
-    status === "confirmed";
+    status === "awaiting_payment";
+
+  const isPaidStay = (status: VisitRequest["status"]) =>
+    status === "payment_sent" || status === "confirmed";
 
   const cancelStay = async (visitId: string) => {
     if (!window.confirm(t("visits.cancelConfirm"))) return;
@@ -256,11 +257,11 @@ export function VisitRequestsPage() {
                     </Button>
                   </div>
                 )}
+                {isPaidStay(v.status) && (
+                  <p className="text-xs text-muted-foreground pt-2">{t("visits.cancelPaidHint")}</p>
+                )}
                 {canCancel(v.status) && (
                   <div className="pt-2">
-                    {(v.status === "confirmed" || v.status === "payment_sent") && (
-                      <p className="text-xs text-muted-foreground mb-2">{t("visits.cancelPaidHint")}</p>
-                    )}
                     <Button
                       variant="outline"
                       className="w-full rounded-full"

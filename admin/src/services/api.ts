@@ -230,6 +230,10 @@ export function getAdminVisits() {
   return api.get<import("@/types").VisitRequest[]>(`/admin/visits`);
 }
 
+export function patchAdminVisit(id: string, body: { action: "cancel" }) {
+  return api.patch<import("@/types").VisitRequest>(`/admin/visits/${id}`, body);
+}
+
 export function getAdminActivity() {
   return api.get<import("@/types").AdminActivity[]>(`/admin/activity`);
 }

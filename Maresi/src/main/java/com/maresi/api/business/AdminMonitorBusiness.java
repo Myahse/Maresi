@@ -44,6 +44,7 @@ public class AdminMonitorBusiness {
   private final FunctionalError functionalError;
   private final HostStatus hostStatus;
   private final AppSettingsRepository settings;
+  private final PaymentBusiness paymentBusiness;
 
   public AdminMonitorBusiness(
       AdminMonitorRepository monitor,
@@ -59,7 +60,8 @@ public class AdminMonitorBusiness {
       AppProperties props,
       FunctionalError functionalError,
       HostStatus hostStatus,
-      AppSettingsRepository settings) {
+      AppSettingsRepository settings,
+      PaymentBusiness paymentBusiness) {
     this.monitor = monitor;
     this.activity = activity;
     this.subscriptions = subscriptions;
@@ -74,6 +76,7 @@ public class AdminMonitorBusiness {
     this.functionalError = functionalError;
     this.hostStatus = hostStatus;
     this.settings = settings;
+    this.paymentBusiness = paymentBusiness;
   }
 
   public Response<Map<String, Object>> getSettings(Locale locale) {
@@ -132,6 +135,63 @@ public class AdminMonitorBusiness {
   public Response<Map<String, Object>> visits(Locale locale) {
     requireAdmin();
     return list(monitor.listVisits(), "Reservations", locale);
+  }
+
+  public Response<Map<String, Object>> cancelVisit(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    requireAdmin();
+    Response<Map<String, Object>> response = new Response<>();
+    Map<String, Object> visit = visitRequests.findById(id).orElse(null);
+    if (visit == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Reservation introuvable", locale));
+      return response;
+    }
+    String action = request.getData() == null ? null : str(request.getData().get("action"));
+    if (!"cancel".equals(action)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("action: cancel", locale));
+      return response;
+    }
+    String status = String.valueOf(visit.get("status"));
+    if ("cancelled".equals(status) || "declined".equals(status)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Cette reservation est deja close", locale));
+      return response;
+    }
+    if ("confirmed".equals(status) || "payment_sent".equals(status)) {
+      String refundError = paymentBusiness.refundPaidStayOnCancel(visit);
+      if (refundError != null) {
+        response.setHasError(true);
+        response.setStatus(functionalError.invalidData(refundError, locale));
+        return response;
+      }
+    } else {
+      payments.abandonPendingReservations(id);
+    }
+    Map<String, Object> updated = visitRequests.updateStatusById(id, "cancelled").orElse(visit);
+    UUID guestId = UUID.fromString(updated.get("user_id").toString());
+    UUID listingId =
+        updated.get("property_id") == null
+            ? null
+            : UUID.fromString(updated.get("property_id").toString());
+    notifications.create(
+        guestId,
+        "reservation",
+        "Reservation annulee",
+        "Un administrateur a annule cette reservation.",
+        listingId);
+    if (updated.get("property_owner_id") != null) {
+      notifications.create(
+          UUID.fromString(updated.get("property_owner_id").toString()),
+          "reservation",
+          "Reservation annulee",
+          "Un administrateur a annule cette reservation.",
+          listingId);
+    }
+    response.setItem(updated);
+    response.setStatus(functionalError.success("Reservation annulee par l'admin", locale));
+    return response;
   }
 
   public Response<Map<String, Object>> activity(Locale locale) {

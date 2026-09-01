@@ -322,34 +322,27 @@ public class VisitRequestBusiness {
       response.setStatus(functionalError.invalidData("Cette reservation ne peut plus etre annulee", locale));
       return response;
     }
-    if (!List.of("pending", "awaiting_agreement", "awaiting_key", "awaiting_payment", "payment_sent", "confirmed").contains(currentStatus)) {
+    if (List.of("payment_sent", "confirmed").contains(currentStatus)) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.disallowed(
+              "Apres paiement, seul un administrateur peut annuler. Contactez le support Maresi.",
+              locale));
+      return response;
+    }
+    if (!List.of("pending", "awaiting_agreement", "awaiting_key", "awaiting_payment").contains(currentStatus)) {
       response.setHasError(true);
       response.setStatus(functionalError.invalidData("Cette reservation ne peut plus etre annulee", locale));
       return response;
     }
-    if ("confirmed".equals(currentStatus) || "payment_sent".equals(currentStatus)) {
-      if (stayHasStarted(current)) {
-        response.setHasError(true);
-        response.setStatus(
-            functionalError.invalidData("Le sejour a commence. L'annulation n'est plus possible.", locale));
-        return response;
-      }
-      String refundError = paymentBusiness.refundPaidStayOnCancel(current);
-      if (refundError != null) {
-        response.setHasError(true);
-        response.setStatus(functionalError.invalidData(refundError, locale));
-        return response;
-      }
-    } else {
-      payments.abandonPendingReservations(id);
-    }
+    payments.abandonPendingReservations(id);
     Map<String, Object> updated = visitRequests.updateStatusById(id, "cancelled").orElse(current);
     UUID listingId = UUID.fromString(updated.get("property_id").toString());
     UUID ownerId =
         current.get("property_owner_id") != null
             ? UUID.fromString(current.get("property_owner_id").toString())
             : null;
-    if (ownerId != null && !"confirmed".equals(currentStatus) && !"payment_sent".equals(currentStatus)) {
+    if (ownerId != null) {
       notifications.create(
           ownerId,
           "reservation",
@@ -361,17 +354,6 @@ public class VisitRequestBusiness {
     response.setItem(updated);
     response.setStatus(functionalError.success("Reservation annulee", locale));
     return response;
-  }
-
-  private static boolean stayHasStarted(Map<String, Object> visit) {
-    Object checkIn = visit.get("check_in");
-    if (checkIn == null) return false;
-    try {
-      LocalDate in = LocalDate.parse(String.valueOf(checkIn).substring(0, 10));
-      return !in.isAfter(LocalDate.now());
-    } catch (Exception e) {
-      return false;
-    }
   }
 
   private Response<Map<String, Object>> guestMarkPaid(

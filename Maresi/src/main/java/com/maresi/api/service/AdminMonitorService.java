@@ -36,6 +36,11 @@ public class AdminMonitorService {
     return business.visits(locale);
   }
 
+  public Response<Map<String, Object>> cancelVisit(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    return business.cancelVisit(id, request, locale);
+  }
+
   public Response<Map<String, Object>> activity(Locale locale) {
     return business.activity(locale);
   }
