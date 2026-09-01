@@ -339,7 +339,7 @@ export function RegisterPage() {
                 />
                 <span>
                   {t("register.acceptTerms")}{" "}
-                  <Link to="/terms" className="text-brand font-medium hover:underline">
+                  <Link to="/terms" target="_blank" rel="noreferrer" className="text-brand font-medium hover:underline">
                     {t("footer.terms")}
                   </Link>
                 </span>

@@ -18,4 +18,7 @@ class AppConfig {
 
   static String listingPageUrl(String id) =>
       '${listingBaseUrl.replaceAll(RegExp(r'/+$'), '')}/properties/$id';
+
+  static String get termsUrl =>
+      '${listingBaseUrl.replaceAll(RegExp(r'/+$'), '')}/terms';
 }

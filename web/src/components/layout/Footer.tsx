@@ -42,6 +42,11 @@ export function Footer() {
                       {t("header.dashboard")}
                     </Link>
                   </li>
+                  <li>
+                    <Link to="/terms" className={linkClass}>
+                      {t("footer.terms")}
+                    </Link>
+                  </li>
                   {!user && (
                     <li>
                       <button type="button" onClick={openRegister} className={linkClass}>

@@ -16,7 +16,9 @@ import 'package:maresi_mobile/widgets/maresi_card.dart';
 import 'package:maresi_mobile/widgets/maresi_stepper.dart';
 import 'package:maresi_mobile/widgets/maresi_wizard_actions.dart';
 import 'package:maresi_mobile/widgets/property_photos_picker.dart';
+import 'package:maresi_mobile/config/app_config.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RegistrationFlowScreen extends StatefulWidget {
   const RegistrationFlowScreen({super.key});
@@ -823,6 +825,13 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
           value: _acceptedTerms,
           onChanged: _loading ? null : (value) => setState(() => _acceptedTerms = value ?? false),
           title: Text(locale.t('register.acceptTerms')),
+          subtitle: TextButton(
+            onPressed: () => launchUrl(
+              Uri.parse(AppConfig.termsUrl),
+              mode: LaunchMode.externalApplication,
+            ),
+            child: Text(locale.t('register.readTerms')),
+          ),
           controlAffinity: ListTileControlAffinity.leading,
         ),
       ],

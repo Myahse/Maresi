@@ -257,6 +257,7 @@
     "hasAccount": "Déjà un compte ?",
     "signInLink": "Se connecter",
     "acceptTerms": "J'ai lu et j'accepte les",
+    "readTerms": "Lire les conditions",
     "termsRequired": "Acceptez les conditions d'utilisation pour créer le compte."
   },
   "legal": {
