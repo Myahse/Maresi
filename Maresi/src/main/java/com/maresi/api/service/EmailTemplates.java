@@ -471,11 +471,11 @@ public final class EmailTemplates {
   private static String highlightHtml(Highlight highlight) {
     if (highlight == null || highlight.value() == null || highlight.value().isBlank()) return "";
     return """
-        <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="margin:4px 0 24px;">
+        <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
           <tr>
-            <td style="background:#ecfdf8;border:1px dashed #5eead4;border-radius:18px;padding:22px 16px;text-align:center;">
-              <p style="margin:0 0 8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:#0f766e;">%s</p>
-              <p style="margin:0;font-size:36px;letter-spacing:.22em;font-weight:800;color:#115e59;font-family:Manrope,'Segoe UI',Arial,sans-serif;">%s</p>
+            <td style="background:#f8fafc;border:1px solid #e2e8f0;padding:16px 18px;">
+              <p style="margin:0 0 6px;font-size:12px;color:#64748b;">%s</p>
+              <p style="margin:0;font-size:28px;letter-spacing:.16em;font-weight:700;color:#0f172a;font-family:Manrope,'Segoe UI',Arial,sans-serif;">%s</p>
             </td>
           </tr>
         </table>
@@ -487,19 +487,16 @@ public final class EmailTemplates {
     if (rows == null || rows.isEmpty()) return "";
     StringBuilder sb = new StringBuilder();
     sb.append(
-        "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:4px 0 24px;background:#f6fbf9;border:1px solid #d5e8e4;border-radius:18px;overflow:hidden;\">");
-    for (int i = 0; i < rows.size(); i++) {
-      Detail row = rows.get(i);
-      if (i > 0) {
-        sb.append("<tr><td style=\"padding:0 18px;\"><div style=\"height:1px;background:#d5e8e4;font-size:0;line-height:0;\">&nbsp;</div></td></tr>");
-      }
-      sb.append("<tr><td style=\"padding:14px 18px;\">")
-          .append("<p style=\"margin:0 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:#5b7c76;\">")
+        "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:4px 0 24px;border-top:1px solid #e2e8f0;\">");
+    for (Detail row : rows) {
+      sb.append("<tr>")
+          .append("<td style=\"padding:11px 0;font-size:13px;color:#64748b;width:38%;border-bottom:1px solid #e2e8f0;vertical-align:top;\">")
           .append(escape(row.label()))
-          .append("</p>")
-          .append("<p style=\"margin:0;font-size:16px;line-height:1.45;font-weight:700;color:#134e4a;\">")
+          .append("</td>")
+          .append("<td style=\"padding:11px 0;font-size:14px;font-weight:600;color:#0f172a;border-bottom:1px solid #e2e8f0;\">")
           .append(escape(row.value()).replace("\n", "<br>"))
-          .append("</p></td></tr>");
+          .append("</td>")
+          .append("</tr>");
     }
     sb.append("</table>");
     return sb.toString();
@@ -509,21 +506,9 @@ public final class EmailTemplates {
     if (text == null || text.isBlank()) return "";
     String[] parts = text.split("\\n\\n+");
     StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < parts.length; i++) {
-      String part = parts[i].trim();
-      if (i == 0 && part.regionMatches(true, 0, "Bonjour", 0, 7)) {
-        sb.append(
-                "<p style=\"margin:0 0 12px;font-size:13px;font-weight:800;letter-spacing:.04em;color:#0f766e;\">")
-            .append(escape(part.replaceAll(",\\s*$", "")))
-            .append("</p>");
-        continue;
-      }
-      boolean firstBody = i == 0 || (i == 1 && parts[0].regionMatches(true, 0, "Bonjour", 0, 7));
-      sb.append("<p style=\"margin:0 0 14px;font-size:")
-          .append(firstBody ? "16px" : "15px")
-          .append(";line-height:1.65;color:")
-          .append(firstBody ? "#1e2937" : "#475569")
-          .append(";\">")
+    for (String raw : parts) {
+      String part = raw.trim();
+      sb.append("<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#334155;\">")
           .append(escape(part).replace("\n", "<br>"))
           .append("</p>");
     }
@@ -549,16 +534,10 @@ public final class EmailTemplates {
     if (ctaLabel != null && ctaUrl != null && !ctaUrl.isBlank()) {
       button =
           """
-          <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="margin:10px 0 8px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;">
             <tr>
-              <td align="center">
-                <table role="presentation" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td align="center" style="border-radius:999px;background:#0D9488;">
-                      <a href="%s" style="display:inline-block;padding:13px 28px;font-size:15px;font-weight:800;color:#ffffff;text-decoration:none;letter-spacing:.01em;font-family:Manrope,'Segoe UI',Arial,sans-serif;">%s</a>
-                    </td>
-                  </tr>
-                </table>
+              <td style="background:#0D9488;">
+                <a href="%s" style="display:inline-block;padding:11px 18px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;font-family:Manrope,'Segoe UI',Arial,sans-serif;">%s</a>
               </td>
             </tr>
           </table>
@@ -572,32 +551,23 @@ public final class EmailTemplates {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <title>%s</title>
-          <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
         </head>
-        <body style="margin:0;padding:0;background:#e8f1ef;font-family:Manrope,'Segoe UI',Arial,sans-serif;">
-          <div style="display:none;max-height:0;overflow:hidden;">%s · Maresi Abidjan</div>
-          <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="background:#e8f1ef;padding:32px 12px;">
+        <body style="margin:0;padding:0;background:#f4f4f5;font-family:Manrope,'Segoe UI',Arial,sans-serif;">
+          <div style="display:none;max-height:0;overflow:hidden;">%s</div>
+          <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:28px 12px;">
             <tr>
               <td align="center">
-                <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+                <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid #e4e4e7;">
                   <tr>
-                    <td style="padding:0 8px 14px;font-family:Manrope,'Segoe UI',Arial,sans-serif;">
-                      <p style="margin:0;font-size:15px;font-weight:800;font-style:italic;color:#0f766e;">Maresi</p>
-                    </td>
-                  </tr>
-                </table>
-                <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:22px;overflow:hidden;border:1px solid #d5e6e2;">
-                  <tr>
-                    <td style="background:#0f766e;padding:28px 28px 24px;color:#ffffff;">
-                      <p style="margin:0 0 14px;display:inline-block;padding:4px 10px;border-radius:999px;background:rgba(204,251,241,.18);font-family:Manrope,'Segoe UI',Arial,sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:#ccfbf1;">%s</p>
-                      <h1 style="margin:0;font-size:26px;line-height:1.25;font-weight:800;font-family:Manrope,'Segoe UI',Arial,sans-serif;">%s</h1>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="height:5px;background:#99f6e4;font-size:0;line-height:0;">&nbsp;</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:28px 28px 12px;font-family:Manrope,'Segoe UI',Arial,sans-serif;">
+                    <td style="padding:28px 28px 0;font-family:Manrope,'Segoe UI',Arial,sans-serif;">
+                      <table role="presentation" width="100%%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="font-size:15px;font-weight:700;color:#0D9488;">Maresi</td>
+                          <td align="right" style="font-size:12px;color:#71717a;">%s</td>
+                        </tr>
+                      </table>
+                      <div style="margin:16px 0 0;border-top:1px solid #e4e4e7;font-size:0;line-height:0;">&nbsp;</div>
+                      <h1 style="margin:20px 0 16px;font-size:20px;line-height:1.35;font-weight:600;color:#18181b;">%s</h1>
                       %s
                       %s
                       %s
@@ -605,9 +575,11 @@ public final class EmailTemplates {
                     </td>
                   </tr>
                   <tr>
-                    <td style="padding:16px 28px 26px;border-top:1px solid #e6f0ed;font-family:Manrope,'Segoe UI',Arial,sans-serif;">
-                      <p style="margin:0;font-size:13px;line-height:1.55;color:#0f766e;">Maresi · Abidjan · résidences et séjours</p>
-                      <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:#94a3b8;">Message automatique. Pour une question sur un séjour, répondez à l’hôte dans l’application.</p>
+                    <td style="padding:8px 28px 28px;font-family:Manrope,'Segoe UI',Arial,sans-serif;">
+                      <div style="border-top:1px solid #e4e4e7;padding-top:16px;">
+                        <p style="margin:0;font-size:12px;line-height:1.5;color:#71717a;">Maresi · Abidjan</p>
+                        <p style="margin:6px 0 0;font-size:12px;line-height:1.5;color:#a1a1aa;">Message automatique. Pour une question sur un séjour, écrivez à l’hôte dans l’application.</p>
+                      </div>
                     </td>
                   </tr>
                 </table>
