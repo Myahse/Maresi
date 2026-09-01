@@ -17,7 +17,11 @@ public class UserRepository {
 
   public Optional<Map<String, Object>> findById(UUID id) {
     return jdbc.query(
-            "SELECT id, email, full_name, role, phone, created_at FROM users WHERE id = ?",
+            """
+            SELECT id, email, full_name, first_name, last_name, birth_date, gender,
+                   role, phone, created_at
+            FROM users WHERE id = ?
+            """,
             (rs, rowNum) -> RowMaps.userPublic(rs),
             id)
         .stream()
@@ -27,7 +31,8 @@ public class UserRepository {
   public Optional<Map<String, Object>> findIdentity(UUID id) {
     return jdbc.query(
             """
-            SELECT id, email, full_name, role, phone, created_at,
+            SELECT id, email, full_name, first_name, last_name, birth_date, gender,
+                   role, phone, created_at,
                    id_card, selfie_url, id_card_photo_url, id_card_back_url
             FROM users WHERE id = ?
             """,
@@ -39,7 +44,11 @@ public class UserRepository {
 
   public Optional<Map<String, Object>> findByEmail(String email) {
     return jdbc.query(
-            "SELECT id, email, password_hash, full_name, role, phone FROM users WHERE email = ?",
+            """
+            SELECT id, email, password_hash, full_name, first_name, last_name, birth_date, gender,
+                   role, phone
+            FROM users WHERE email = ?
+            """,
             (rs, rowNum) -> {
               Map<String, Object> m = RowMaps.userPublic(rs);
               m.put("password_hash", rs.getString("password_hash"));
@@ -52,7 +61,10 @@ public class UserRepository {
 
   public Optional<Map<String, Object>> findByPhone(String phone) {
     return jdbc.query(
-            "SELECT id, email, full_name, role, phone FROM users WHERE phone = ?",
+            """
+            SELECT id, email, full_name, first_name, last_name, birth_date, gender, role, phone
+            FROM users WHERE phone = ?
+            """,
             (rs, rowNum) -> RowMaps.userPublic(rs),
             phone)
         .stream()
@@ -63,6 +75,10 @@ public class UserRepository {
       String email,
       String passwordHash,
       String fullName,
+      String firstName,
+      String lastName,
+      java.sql.Date birthDate,
+      String gender,
       String role,
       String phone,
       String idCard,
@@ -72,16 +88,20 @@ public class UserRepository {
     return jdbc.queryForObject(
         """
         INSERT INTO users (
-          email, password_hash, full_name, role, phone, id_card,
-          selfie_url, id_card_photo_url, id_card_back_url
+          email, password_hash, full_name, first_name, last_name, birth_date, gender,
+          role, phone, id_card, selfie_url, id_card_photo_url, id_card_back_url
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        RETURNING id, email, full_name, role, phone, created_at
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        RETURNING id, email, full_name, first_name, last_name, birth_date, gender, role, phone, created_at
         """,
         (rs, rowNum) -> RowMaps.userPublic(rs),
         email,
         passwordHash,
         fullName,
+        firstName,
+        lastName,
+        birthDate,
+        gender,
         role,
         phone,
         idCard,

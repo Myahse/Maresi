@@ -12,9 +12,11 @@ import com.maresi.api.service.FileStorageService;
 import com.maresi.api.service.OtpService;
 import com.maresi.api.service.SmsService;
 import com.maresi.api.util.PhoneNormalizer;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -92,16 +94,52 @@ public class AuthBusiness {
 
     String email = str(body.get("email"));
     String password = str(body.get("password"));
+    String firstName = str(body.get("first_name"));
+    if (firstName == null) firstName = str(body.get("firstName"));
+    String lastName = str(body.get("last_name"));
+    if (lastName == null) lastName = str(body.get("lastName"));
     String fullName = str(body.get("fullName"));
     if (fullName == null) fullName = str(body.get("full_name"));
+    if ((fullName == null || fullName.isBlank()) && firstName != null && lastName != null) {
+      fullName = firstName.trim() + " " + lastName.trim();
+    }
+    if (firstName == null && fullName != null && !fullName.isBlank()) {
+      String[] parts = fullName.trim().split("\\s+", 2);
+      firstName = parts[0];
+      lastName = parts.length > 1 ? parts[1] : parts[0];
+    }
+    LocalDate birthLocal =
+        parseBirthDate(body.get("birth_date") != null ? body.get("birth_date") : body.get("birthDate"));
+    String gender = normalizeGender(body.get("gender"));
     String phone = PhoneNormalizer.normalize(str(body.get("phone")));
     String idCard = str(body.get("id_card"));
     if (idCard == null) idCard = str(body.get("idCard"));
     String role = resolveRole(str(body.get("role")));
 
-    if (email == null || password == null || fullName == null) {
+    if (email == null
+        || password == null
+        || firstName == null
+        || firstName.isBlank()
+        || lastName == null
+        || lastName.isBlank()) {
       response.setHasError(true);
-      response.setStatus(functionalError.fieldEmpty("email, password, fullName", locale));
+      response.setStatus(functionalError.fieldEmpty("email, password, first_name, last_name", locale));
+      return response;
+    }
+    if (birthLocal == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("birth_date", locale));
+      return response;
+    }
+    if (birthLocal.isAfter(LocalDate.now().minusYears(18))) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Vous devez avoir au moins 18 ans", locale));
+      return response;
+    }
+    java.sql.Date birthDate = java.sql.Date.valueOf(birthLocal);
+    if (gender == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("gender", locale));
       return response;
     }
     if (phone == null) {
@@ -135,7 +173,11 @@ public class AuthBusiness {
         users.create(
             email,
             passwordEncoder.encode(password),
-            fullName,
+            fullName.trim(),
+            firstName.trim(),
+            lastName.trim(),
+            birthDate,
+            gender,
             role,
             phone,
             idCard.trim(),
@@ -302,6 +344,26 @@ public class AuthBusiness {
     String trimmed = idCard.trim();
     if (trimmed.length() < 5) return false;
     return trimmed.matches("[A-Za-z0-9\\-/\\s]+");
+  }
+
+  private static LocalDate parseBirthDate(Object raw) {
+    if (raw == null) return null;
+    String value = raw.toString().trim();
+    if (value.isEmpty()) return null;
+    try {
+      return LocalDate.parse(value);
+    } catch (Exception ignored) {
+      return null;
+    }
+  }
+
+  private static String normalizeGender(Object raw) {
+    if (raw == null) return null;
+    String gender = raw.toString().trim().toLowerCase(Locale.ROOT);
+    if (Set.of("male", "homme", "m").contains(gender)) return "male";
+    if (Set.of("female", "femme", "f").contains(gender)) return "female";
+    if (Set.of("other", "autre").contains(gender)) return "other";
+    return null;
   }
 
   private static String str(Object v) {

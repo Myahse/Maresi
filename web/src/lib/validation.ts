@@ -22,6 +22,29 @@ export function isValidPhone(phone: string): boolean {
   return /^\+?[\d]{8,15}$/.test(cleaned);
 }
 
+export const MIN_REGISTER_AGE = 18;
+
+export function maxAdultBirthDate(minAge = MIN_REGISTER_AGE): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - minAge);
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${month}-${day}`;
+}
+
+export function isAdultBirthDate(iso: string, minAge = MIN_REGISTER_AGE): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+  const [year, month, day] = iso.split("-").map(Number);
+  const birth = new Date(year, month - 1, day);
+  if (birth.getFullYear() !== year || birth.getMonth() !== month - 1 || birth.getDate() !== day) {
+    return false;
+  }
+  const limit = new Date();
+  limit.setHours(0, 0, 0, 0);
+  limit.setFullYear(limit.getFullYear() - minAge);
+  return birth <= limit;
+}
+
 export function isValidIdCard(value: string): boolean {
   const trimmed = value.trim();
   if (trimmed.length < 5) return false;

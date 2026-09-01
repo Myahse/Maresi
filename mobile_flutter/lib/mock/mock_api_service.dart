@@ -165,6 +165,10 @@ class MockApiService implements MaresiApi {
     required String email,
     required String password,
     required String fullName,
+    required String firstName,
+    required String lastName,
+    required String birthDate,
+    required String gender,
     required UserRole role,
     required String idCard,
     required String phone,
@@ -173,7 +177,13 @@ class MockApiService implements MaresiApi {
     String? idCardBackPath,
   }) async {
     await _delay();
-    if (password.length < 6 || fullName.trim().isEmpty || idCard.trim().length < 5) {
+    if (password.length < 6 ||
+        fullName.trim().isEmpty ||
+        firstName.trim().isEmpty ||
+        lastName.trim().isEmpty ||
+        birthDate.trim().isEmpty ||
+        gender.trim().isEmpty ||
+        idCard.trim().length < 5) {
       throw Exception('Données invalides');
     }
     final user = User(

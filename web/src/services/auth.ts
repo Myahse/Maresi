@@ -25,9 +25,12 @@ export function normalizeAuthResponse(raw: unknown): AuthResponse {
     throw new Error("Invalid auth response");
   }
   const u = userRaw as Record<string, unknown>;
+  const firstName = typeof u.first_name === "string" ? u.first_name : typeof u.firstName === "string" ? u.firstName : "";
+  const lastName = typeof u.last_name === "string" ? u.last_name : typeof u.lastName === "string" ? u.lastName : "";
   const fullName =
     (typeof u.full_name === "string" && u.full_name) ||
     (typeof u.fullName === "string" && u.fullName) ||
+    [firstName, lastName].filter(Boolean).join(" ") ||
     "";
   const email = typeof u.email === "string" ? u.email : "";
   const id = u.id != null ? String(u.id) : "";
@@ -42,6 +45,10 @@ export function normalizeAuthResponse(raw: unknown): AuthResponse {
       email,
       full_name: fullName || email,
       role,
+      ...(firstName ? { first_name: firstName } : {}),
+      ...(lastName ? { last_name: lastName } : {}),
+      ...(typeof u.birth_date === "string" && u.birth_date ? { birth_date: u.birth_date } : {}),
+      ...(typeof u.gender === "string" && u.gender ? { gender: u.gender } : {}),
       ...(typeof u.phone === "string" && u.phone ? { phone: u.phone } : {}),
     } as User,
   };
@@ -64,7 +71,10 @@ export function getToken(): string | null {
 export async function register(data: {
   email: string;
   password: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
+  birth_date: string;
+  gender: string;
   role?: "client" | "owner";
   phone: string;
   id_card: string;
@@ -72,11 +82,18 @@ export async function register(data: {
   id_card_photo: File;
   id_card_back?: File;
 }): Promise<AuthResponse> {
+  const firstName = data.first_name.trim();
+  const lastName = data.last_name.trim();
+  const fullName = `${firstName} ${lastName}`.trim();
   const form = new FormData();
   form.append("email", data.email.trim());
   form.append("password", data.password);
-  form.append("fullName", data.full_name.trim());
-  form.append("full_name", data.full_name.trim());
+  form.append("first_name", firstName);
+  form.append("last_name", lastName);
+  form.append("birth_date", data.birth_date);
+  form.append("gender", data.gender);
+  form.append("fullName", fullName);
+  form.append("full_name", fullName);
   form.append("role", data.role === "owner" ? "owner" : "client");
   form.append("id_card", data.id_card.trim());
   form.append("phone", data.phone.trim());

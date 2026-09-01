@@ -214,6 +214,10 @@ class ApiService implements MaresiApi {
     required String email,
     required String password,
     required String fullName,
+    required String firstName,
+    required String lastName,
+    required String birthDate,
+    required String gender,
     required UserRole role,
     required String idCard,
     required String phone,
@@ -226,6 +230,10 @@ class ApiService implements MaresiApi {
     request.fields['password'] = password;
     request.fields['fullName'] = fullName.trim();
     request.fields['full_name'] = fullName.trim();
+    request.fields['first_name'] = firstName.trim();
+    request.fields['last_name'] = lastName.trim();
+    request.fields['birth_date'] = birthDate;
+    request.fields['gender'] = gender;
     request.fields['role'] = role.name;
     request.fields['id_card'] = idCard.trim();
     request.fields['phone'] = phone.trim();

@@ -9,7 +9,7 @@ import { IdentityPhotoField } from "@/components/auth/IdentityPhotoField";
 import { PhoneInput } from "@/components/auth/PhoneInput";
 import { WizardPane } from "@/components/ui/WizardPane";
 import { useAuth } from "@/hooks/useAuth";
-import { isValidIdCard } from "@/lib/validation";
+import { isAdultBirthDate, isValidIdCard, maxAdultBirthDate } from "@/lib/validation";
 import { isCompletePhone } from "@/lib/phoneCountries";
 import { CLIENT_APP_URL } from "@/lib/clientApp";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,10 @@ export function RegisterPage() {
 
   const [step, setStep] = useState(0);
   const [role, setRole] = useState<RoleIntent | null>(null);
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [gender, setGender] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
@@ -34,7 +37,13 @@ export function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const steps = [t("register.stepRole"), t("register.stepAccount"), t("register.stepIdentity")];
+  const lastStep = 3;
+  const steps = [
+    t("register.stepRole"),
+    t("register.stepPersonal"),
+    t("register.stepAccount"),
+    t("register.stepIdentity"),
+  ];
 
   const goNext = () => {
     setError("");
@@ -43,17 +52,27 @@ export function RegisterPage() {
       return;
     }
     if (step === 1) {
-      if (!fullName.trim() || !email.trim() || password.length < 6 || !isCompletePhone(phone)) {
+      if (!firstName.trim() || !lastName.trim() || !birthDate || !gender) {
+        setError(t("register.personalRequired"));
+        return;
+      }
+      if (!isAdultBirthDate(birthDate)) {
+        setError(t("register.ageRequired"));
+        return;
+      }
+    }
+    if (step === 2) {
+      if (!email.trim() || password.length < 6 || !isCompletePhone(phone)) {
         setError(t("register.accountRequired"));
         return;
       }
     }
-    setStep((s) => Math.min(s + 1, 2));
+    setStep((s) => Math.min(s + 1, lastStep));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step < 2) {
+    if (step < lastStep) {
       goNext();
       return;
     }
@@ -75,7 +94,10 @@ export function RegisterPage() {
       const res = await register({
         email,
         password,
-        full_name: fullName,
+        first_name: firstName,
+        last_name: lastName,
+        birth_date: birthDate,
+        gender,
         phone: phone.trim(),
         role,
         id_card: idCard.trim(),
@@ -157,15 +179,61 @@ export function RegisterPage() {
 
           {step === 1 && (
             <WizardPane step={1}>
-              <div className="space-y-2">
-                <Label htmlFor="fullName">{t("register.fullName")}</Label>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">{t("register.firstName")}</Label>
+                  <Input
+                    id="firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    autoComplete="given-name"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">{t("register.lastName")}</Label>
+                  <Input
+                    id="lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    autoComplete="family-name"
+                    required
+                  />
+                </div>
               </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="birthDate">{t("register.birthDate")}</Label>
+                  <Input
+                    id="birthDate"
+                    type="date"
+                    value={birthDate}
+                    max={maxAdultBirthDate()}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gender">{t("register.gender")}</Label>
+                  <select
+                    id="gender"
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    required
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">{t("register.genderPlaceholder")}</option>
+                    <option value="male">{t("register.genderMale")}</option>
+                    <option value="female">{t("register.genderFemale")}</option>
+                    <option value="other">{t("register.genderOther")}</option>
+                  </select>
+                </div>
+              </div>
+            </WizardPane>
+          )}
+
+          {step === 2 && (
+            <WizardPane step={2}>
               <div className="space-y-2">
                 <Label htmlFor="email">{t("common.email")}</Label>
                 <Input
@@ -195,8 +263,8 @@ export function RegisterPage() {
             </WizardPane>
           )}
 
-          {step === 2 && (
-            <WizardPane step={2}>
+          {step === 3 && (
+            <WizardPane step={3}>
               <p className="text-sm text-muted-foreground">{t("register.identityHint")}</p>
               <div className="grid sm:grid-cols-2 gap-4">
                 <IdentityPhotoField
@@ -246,7 +314,7 @@ export function RegisterPage() {
             <Button type="submit" className="flex-1 bg-brand hover:bg-brand-dark text-white" disabled={loading}>
               {loading
                 ? t("common.creatingAccount")
-                : step < 2
+                : step < lastStep
                   ? t("common.next")
                   : t("register.submit")}
             </Button>

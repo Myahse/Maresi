@@ -72,6 +72,10 @@ public class AuthController {
       @RequestParam String password,
       @RequestParam(required = false) String fullName,
       @RequestParam(name = "full_name", required = false) String fullNameSnake,
+      @RequestParam(name = "first_name", required = false) String firstName,
+      @RequestParam(name = "last_name", required = false) String lastName,
+      @RequestParam(name = "birth_date", required = false) String birthDate,
+      @RequestParam(required = false) String gender,
       @RequestParam String phone,
       @RequestParam(required = false) String role,
       @RequestParam(name = "id_card", required = false) String idCard,
@@ -87,6 +91,10 @@ public class AuthController {
     data.put("password", password);
     data.put("fullName", fullName != null ? fullName : fullNameSnake);
     data.put("full_name", fullName != null ? fullName : fullNameSnake);
+    data.put("first_name", firstName);
+    data.put("last_name", lastName);
+    data.put("birth_date", birthDate);
+    data.put("gender", gender);
     data.put("phone", phone);
     data.put("role", role);
     data.put("id_card", idCard != null ? idCard : idCardCamel);

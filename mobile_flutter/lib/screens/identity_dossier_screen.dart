@@ -58,7 +58,10 @@ class _IdentityDossierScreenState extends State<IdentityDossierScreen> {
                 ],
                 if (profile != null) ...[
                   const SizedBox(height: 20),
-                  _row(locale.t('auth.nameLabel'), '${profile['full_name'] ?? ''}'),
+                  _row(locale.t('register.firstName'), _firstName(profile)),
+                  _row(locale.t('register.lastName'), _lastName(profile)),
+                  _row(locale.t('register.birthDate'), '${profile['birth_date'] ?? '—'}'),
+                  _row(locale.t('register.gender'), _genderLabel(locale, profile['gender']?.toString())),
                   _row(locale.t('auth.emailLabel'), '${profile['email'] ?? ''}'),
                   _row(locale.t('register.phone'), '${profile['phone'] ?? '—'}'),
                   _row(locale.t('register.idCardNumber'), '${profile['id_card'] ?? '—'}'),
@@ -66,6 +69,32 @@ class _IdentityDossierScreenState extends State<IdentityDossierScreen> {
               ],
             ),
     );
+  }
+
+  String _firstName(Map<String, dynamic> profile) {
+    final value = profile['first_name']?.toString().trim();
+    if (value != null && value.isNotEmpty) return value;
+    final full = profile['full_name']?.toString().trim() ?? '';
+    if (full.isEmpty) return '—';
+    return full.split(RegExp(r'\s+')).first;
+  }
+
+  String _lastName(Map<String, dynamic> profile) {
+    final value = profile['last_name']?.toString().trim();
+    if (value != null && value.isNotEmpty) return value;
+    final full = profile['full_name']?.toString().trim() ?? '';
+    final parts = full.split(RegExp(r'\s+'));
+    if (parts.length < 2) return '—';
+    return parts.skip(1).join(' ');
+  }
+
+  String _genderLabel(LocaleProvider locale, String? gender) {
+    return switch (gender) {
+      'male' => locale.t('register.genderMale'),
+      'female' => locale.t('register.genderFemale'),
+      'other' => locale.t('register.genderOther'),
+      _ => '—',
+    };
   }
 
   Widget _row(String label, String value) {

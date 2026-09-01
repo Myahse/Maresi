@@ -28,7 +28,21 @@ export function AccountIdentityPage() {
       ) : (
         <div className="space-y-6">
           <dl className="rounded-2xl border bg-card divide-y text-sm">
-            <Row label={t("register.fullName")} value={profile.full_name} />
+            <Row label={t("register.firstName")} value={profile.first_name || profile.full_name.split(" ")[0] || "—"} />
+            <Row label={t("register.lastName")} value={profile.last_name || profile.full_name.split(" ").slice(1).join(" ") || "—"} />
+            <Row label={t("register.birthDate")} value={profile.birth_date || "—"} />
+            <Row
+              label={t("register.gender")}
+              value={
+                profile.gender === "male"
+                  ? t("register.genderMale")
+                  : profile.gender === "female"
+                    ? t("register.genderFemale")
+                    : profile.gender === "other"
+                      ? t("register.genderOther")
+                      : "—"
+              }
+            />
             <Row label={t("common.email")} value={profile.email} />
             <Row label={t("register.phone")} value={profile.phone || "—"} />
             <Row label={t("account.role")} value={profile.role} />

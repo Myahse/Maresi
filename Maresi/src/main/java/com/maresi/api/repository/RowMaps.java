@@ -18,6 +18,10 @@ public final class RowMaps {
     m.put("id", rs.getObject("id"));
     m.put("email", rs.getString("email"));
     m.put("full_name", rs.getString("full_name"));
+    putIfPresent(rs, m, "first_name");
+    putIfPresent(rs, m, "last_name");
+    putDate(rs, m, "birth_date");
+    putIfPresent(rs, m, "gender");
     m.put("role", rs.getString("role"));
     m.put("phone", rs.getString("phone"));
     putIfPresent(rs, m, "created_at");
@@ -236,6 +240,15 @@ public final class RowMaps {
     m.put("updated_at", toIso(rs.getTimestamp("updated_at")));
     putIfPresent(rs, m, "user_email");
     return m;
+  }
+
+  private static void putDate(ResultSet rs, Map<String, Object> m, String col) {
+    try {
+      java.sql.Date date = rs.getDate(col);
+      if (date != null) m.put(col, date.toLocalDate().toString());
+    } catch (SQLException ignored) {
+      // column not in result set
+    }
   }
 
   private static void putTime(ResultSet rs, Map<String, Object> m, String col) {

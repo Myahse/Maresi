@@ -27,15 +27,17 @@ class RegistrationFlowScreen extends StatefulWidget {
 
 class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   static const _stepIntent = 0;
-  static const _stepIdentity = 1;
-  static const _stepPropertyType = 2;
-  static const _stepPropertyDetails = 3;
-  static const _stepPropertyPhotos = 4;
-  static const _stepAccount = 5;
+  static const _stepPersonal = 1;
+  static const _stepIdentity = 2;
+  static const _stepPropertyType = 3;
+  static const _stepPropertyDetails = 4;
+  static const _stepPropertyPhotos = 5;
+  static const _stepAccount = 6;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _idCardController = TextEditingController();
   final _phoneController = TextEditingController();
   final _locationController = TextEditingController();
@@ -59,6 +61,8 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   String _phoneDial = '+225';
   String _checkInTime = '14:00';
   String _checkOutTime = '12:00';
+  DateTime? _birthDate;
+  String? _gender;
 
   bool get _isOwner => _role == UserRole.owner;
 
@@ -66,7 +70,8 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _idCardController.dispose();
     _phoneController.dispose();
     _locationController.dispose();
@@ -84,12 +89,14 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     if (!_isOwner) {
       return [
         locale.t('register.stepProfile'),
+        locale.t('register.stepPersonal'),
         locale.t('register.stepIdentity'),
         locale.t('register.stepAccount'),
       ];
     }
     return [
       locale.t('register.stepProfile'),
+      locale.t('register.stepPersonal'),
       locale.t('register.stepIdentity'),
       locale.t('register.stepType'),
       locale.t('register.stepListing'),
@@ -101,16 +108,18 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   int _stepperIndex() {
     if (!_isOwner) {
       if (_step == _stepIntent) return 0;
-      if (_step == _stepIdentity) return 1;
-      return 2;
+      if (_step == _stepPersonal) return 1;
+      if (_step == _stepIdentity) return 2;
+      return 3;
     }
     return switch (_step) {
       _stepIntent => 0,
-      _stepIdentity => 1,
-      _stepPropertyType => 2,
-      _stepPropertyDetails => 3,
-      _stepPropertyPhotos => 4,
-      _ => 5,
+      _stepPersonal => 1,
+      _stepIdentity => 2,
+      _stepPropertyType => 3,
+      _stepPropertyDetails => 4,
+      _stepPropertyPhotos => 5,
+      _ => 6,
     };
   }
 
@@ -141,6 +150,50 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     final locale = context.read<LocaleProvider>();
     if (_intentIndex == null || _role == null) {
       _showMessage(locale.t('register.intentRequired'));
+      return;
+    }
+    setState(() => _step = _stepPersonal);
+  }
+
+  bool _isAdult(DateTime date) {
+    final now = DateTime.now();
+    var age = now.year - date.year;
+    if (now.month < date.month || (now.month == date.month && now.day < date.day)) {
+      age--;
+    }
+    return age >= 18;
+  }
+
+  String _formatIsoDate(DateTime date) {
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
+  }
+
+  Future<void> _pickBirthDate() async {
+    if (_loading) return;
+    final now = DateTime.now();
+    final lastDate = DateTime(now.year - 18, now.month, now.day);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _birthDate ?? lastDate,
+      firstDate: DateTime(1900),
+      lastDate: lastDate,
+    );
+    if (picked == null) return;
+    setState(() => _birthDate = picked);
+  }
+
+  void _continueFromPersonal() {
+    final locale = context.read<LocaleProvider>();
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    if (firstName.isEmpty || lastName.isEmpty || _birthDate == null || _gender == null) {
+      _showMessage(locale.t('register.personalRequired'));
+      return;
+    }
+    if (!_isAdult(_birthDate!)) {
+      _showMessage(locale.t('register.ageRequired'));
       return;
     }
     setState(() => _step = _stepIdentity);
@@ -242,7 +295,8 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     final locale = context.read<LocaleProvider>();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    final name = _nameController.text.trim();
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
     final role = _role ?? UserRole.client;
 
     if (email.isEmpty || !email.contains('@')) {
@@ -253,8 +307,8 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
       _showMessage(locale.t('auth.errorPassword'));
       return;
     }
-    if (name.isEmpty) {
-      _showMessage(locale.t('auth.errorName'));
+    if (firstName.isEmpty || lastName.isEmpty || _birthDate == null || _gender == null) {
+      _showMessage(locale.t('register.personalRequired'));
       return;
     }
 
@@ -269,7 +323,11 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
       await context.read<AuthProvider>().register(
             email: email,
             password: password,
-            fullName: name,
+            fullName: '$firstName $lastName',
+            firstName: firstName,
+            lastName: lastName,
+            birthDate: _formatIsoDate(_birthDate!),
+            gender: _gender!,
             role: role,
             idCard: _idCardController.text.trim(),
             phone: '$_phoneDial$phoneDigits',
@@ -321,6 +379,10 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
       return;
     }
     if (_step == _stepIdentity) {
+      setState(() => _step = _stepPersonal);
+      return;
+    }
+    if (_step == _stepPersonal) {
       setState(() => _step = _stepIntent);
       return;
     }
@@ -331,6 +393,8 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     switch (_step) {
       case _stepIntent:
         _continueFromIntent();
+      case _stepPersonal:
+        _continueFromPersonal();
       case _stepIdentity:
         _continueFromIdentity();
       case _stepPropertyType:
@@ -383,6 +447,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
                   switchOutCurve: Curves.easeInCubic,
                   child: switch (_step) {
                     _stepIntent => _buildIntentStep(locale),
+                    _stepPersonal => _buildPersonalStep(locale),
                     _stepIdentity => _buildIdentityStep(locale),
                     _stepPropertyType => _buildPropertyTypeStep(locale),
                     _stepPropertyDetails => _buildPropertyDetailsStep(locale),
@@ -419,6 +484,79 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
           options: [locale.t('register.intentRent'), locale.t('register.intentList')],
           selectedIndex: _intentIndex,
           onSelected: _selectIntent,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPersonalStep(LocaleProvider locale) {
+    final genders = [
+      ('male', locale.t('register.genderMale')),
+      ('female', locale.t('register.genderFemale')),
+      ('other', locale.t('register.genderOther')),
+    ];
+    return Column(
+      key: const ValueKey('personal'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MaresiSectionHeader(
+          title: locale.t('register.personalTitle'),
+          subtitle: locale.t('register.personalHint'),
+        ),
+        const SizedBox(height: 20),
+        _LabeledField(
+          label: locale.t('register.firstName'),
+          child: TextField(
+            controller: _firstNameController,
+            enabled: !_loading,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(hintText: locale.t('register.firstName')),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _LabeledField(
+          label: locale.t('register.lastName'),
+          child: TextField(
+            controller: _lastNameController,
+            enabled: !_loading,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(hintText: locale.t('register.lastName')),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _LabeledField(
+          label: locale.t('register.birthDate'),
+          child: InkWell(
+            onTap: _loading ? null : _pickBirthDate,
+            child: InputDecorator(
+              decoration: const InputDecoration(),
+              child: Text(
+                _birthDate == null ? '—' : _formatIsoDate(_birthDate!),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: _birthDate == null ? context.palette.textLight : context.palette.text,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _LabeledField(
+          label: locale.t('register.gender'),
+          child: Column(
+            children: genders
+                .map(
+                  (entry) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _WebSelectTile(
+                      label: entry.$2,
+                      selected: _gender == entry.$1,
+                      onTap: () => setState(() => _gender = entry.$1),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
         ),
       ],
     );
@@ -658,16 +796,6 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
         const SizedBox(height: 12),
         _SummaryChip(label: roleLabel),
         const SizedBox(height: 20),
-        _LabeledField(
-          label: locale.t('auth.nameLabel'),
-          child: TextField(
-            controller: _nameController,
-            enabled: !_loading,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(hintText: locale.t('auth.nameHint')),
-          ),
-        ),
-        const SizedBox(height: 16),
         _LabeledField(
           label: locale.t('auth.emailLabel'),
           child: TextField(

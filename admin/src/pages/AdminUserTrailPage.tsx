@@ -63,7 +63,16 @@ export function AdminUserTrailPage() {
           {account && (
             <div className="rounded-2xl border bg-card p-4 text-sm space-y-4">
               <div>
-                <p className="font-semibold">{account.full_name}</p>
+                <p className="font-semibold">
+                  {account.first_name && account.last_name
+                    ? `${account.first_name} ${account.last_name}`
+                    : account.full_name}
+                </p>
+                {(account.birth_date || account.gender) && (
+                  <p className="text-muted-foreground">
+                    {[account.birth_date, account.gender === "male" ? t("register.genderMale") : account.gender === "female" ? t("register.genderFemale") : account.gender === "other" ? t("register.genderOther") : ""].filter(Boolean).join(" · ")}
+                  </p>
+                )}
                 <p>{account.email}</p>
                 <p>
                   {account.role} · {account.phone || "—"}
