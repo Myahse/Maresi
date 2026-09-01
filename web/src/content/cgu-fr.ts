@@ -35,8 +35,6 @@ La plateforme Maresi est exploitée sous le nom **Maresi**.
 **Adresse e-mail :** contact@maresi.com
 **Site internet :** https://ma-resi.com
 
-Les mentions juridiques complémentaires (forme juridique, capital, RCCM, NCC) sont communiquées dès qu’elles sont disponibles.
-
 Maresi peut être contactée à :
 
 **E-mail :** contact@maresi.com
