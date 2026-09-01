@@ -139,6 +139,18 @@ public class UserRepository {
         id);
   }
 
+  public void setHostIntent(UUID id, boolean intent) {
+    jdbc.update("UPDATE users SET host_intent = ? WHERE id = ?", intent, id);
+  }
+
+  public boolean consumeHostIntent(UUID id) {
+    int updated =
+        jdbc.update(
+            "UPDATE users SET host_intent = FALSE WHERE id = ? AND host_intent = TRUE",
+            id);
+    return updated > 0;
+  }
+
   public void requestCorrection(UUID id, String message, boolean suspend) {
     jdbc.update(
         """

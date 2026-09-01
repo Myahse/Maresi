@@ -322,3 +322,7 @@ ALTER TABLE users
 
 CREATE INDEX IF NOT EXISTS idx_users_account_status ON users(account_status);
 
+-- ========== 026_host_intent.sql ==========
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS host_intent BOOLEAN NOT NULL DEFAULT FALSE;
+

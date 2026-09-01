@@ -92,8 +92,39 @@ public class HostApplicationBusiness {
 
     Map<String, Object> created =
         applications.create(user.id(), fullName.trim(), phone.trim(), city, message, idCard);
+    notifyHostApplication(user.id(), fullName.trim(), phone.trim(), created);
+
+    response.setItem(created);
+    response.setStatus(functionalError.success("Demande hote", locale));
+    return response;
+  }
+
+  public void submitFromVerifiedSignup(Map<String, Object> user) {
+    UUID userId = user.get("id") instanceof UUID u ? u : UUID.fromString(user.get("id").toString());
+    if ("owner".equals(str(user.get("role"))) || "admin".equals(str(user.get("role")))) {
+      return;
+    }
+    if (applications.hasPending(userId)) {
+      return;
+    }
+    String fullName = str(user.get("full_name"));
+    String phone = str(user.get("phone"));
+    String idCard = str(user.get("id_card"));
+    if (idCard == null) {
+      Map<String, Object> identity = users.findIdentity(userId).orElse(null);
+      if (identity != null) idCard = str(identity.get("id_card"));
+    }
+    if (fullName == null || phone == null) {
+      return;
+    }
+    Map<String, Object> created =
+        applications.create(userId, fullName.trim(), phone.trim(), null, null, idCard);
+    notifyHostApplication(userId, fullName.trim(), phone.trim(), created);
+  }
+
+  private void notifyHostApplication(UUID userId, String fullName, String phone, Map<String, Object> created) {
     notifications.create(
-        user.id(),
+        userId,
         "host_application",
         "Demande hote envoyee",
         "Votre demande pour devenir hote est en attente de validation.",
@@ -103,18 +134,14 @@ public class HostApplicationBusiness {
           adminId,
           "host_application",
           "Nouvelle demande hote",
-          fullName.trim() + " souhaite devenir hote.",
+          fullName + " souhaite devenir hote.",
           null);
     }
-    realtime.publish("host.application.submitted", created, user.id(), null, true);
-    email.sendToUser(user.id(), EmailTemplates.hostApplySent());
+    realtime.publish("host.application.submitted", created, userId, null, true);
+    email.sendToUser(userId, EmailTemplates.hostApplySent());
     for (UUID adminId : users.findIdsByRole("admin")) {
-      email.sendToUser(adminId, EmailTemplates.hostApplyAdmin(fullName.trim(), phone.trim()));
+      email.sendToUser(adminId, EmailTemplates.hostApplyAdmin(fullName, phone));
     }
-
-    response.setItem(created);
-    response.setStatus(functionalError.success("Demande hote", locale));
-    return response;
   }
 
   public Response<Map<String, Object>> mine(Locale locale) {

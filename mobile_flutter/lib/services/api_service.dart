@@ -339,6 +339,9 @@ class ApiService implements MaresiApi {
     final data = _parseBody(res);
     if (res.statusCode >= 400) _throwFromResponse(res, data);
     final map = _unwrapEnvelope(data) as Map<String, dynamic>;
+    if (map['needs_email_verification'] == true) {
+      throw NeedsEmailVerificationException(map['email'] as String? ?? email.trim());
+    }
     return AuthResponse(
       user: User.fromJson(map['user'] as Map<String, dynamic>),
       token: map['token'] as String,

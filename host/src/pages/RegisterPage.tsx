@@ -100,12 +100,19 @@ export function RegisterPage() {
         birth_date: birthDate,
         gender,
         phone: phone.trim(),
-        role: "client",
+        role,
         id_card: idCard.trim(),
         selfie,
         id_card_photo: idCardPhoto,
         id_card_back: idCardBack ?? undefined,
       });
+      if ("needsEmailVerification" in res && res.needsEmailVerification) {
+        const intent = role === "owner" ? "&intent=host" : "";
+        window.location.assign(
+          `${CLIENT_APP_URL.replace(/\/$/, "")}/verify-email?sent=1&email=${encodeURIComponent(res.email)}${intent}`
+        );
+        return;
+      }
       if (role === "owner" && "token" in res) {
         window.location.assign(guestHandoffUrl(res, "/become-host?apply=1"));
         return;

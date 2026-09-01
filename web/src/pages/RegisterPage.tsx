@@ -107,7 +107,7 @@ export function RegisterPage() {
         birth_date: birthDate,
         gender,
         phone: phone.trim(),
-        role: "client",
+        role,
         id_card: idCard.trim(),
         selfie,
         id_card_photo: idCardPhoto,

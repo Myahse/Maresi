@@ -95,7 +95,12 @@ export async function resetPassword(token: string, password: string): Promise<vo
   await api.post("/auth/reset-password", { token, password });
 }
 
-export async function verifyEmail(token: string): Promise<{ verified?: boolean; role?: string; email?: string }> {
+export async function verifyEmail(token: string): Promise<{
+  verified?: boolean;
+  role?: string;
+  email?: string;
+  host_application?: boolean;
+}> {
   return api.post("/auth/verify-email", { token });
 }
 

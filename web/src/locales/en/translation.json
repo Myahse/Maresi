@@ -187,7 +187,8 @@
     "sent": "A confirmation email has been sent. Open the link in the message.",
     "resend": "Resend email",
     "failed": "Could not confirm this email",
-    "openHost": "Open Maresi Host"
+    "openHost": "Open Maresi Host",
+    "hostPending": "Your host request was sent to an admin. Sign in, then wait for approval."
   },
   "theme": {
     "toDark": "Switch to dark mode",

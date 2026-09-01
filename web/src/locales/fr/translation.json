@@ -187,7 +187,8 @@
     "sent": "Un e-mail de confirmation a été envoyé. Ouvrez le lien dans le message.",
     "resend": "Renvoyer l’e-mail",
     "failed": "Impossible de confirmer cet e-mail",
-    "openHost": "Ouvrir Maresi Hôte"
+    "openHost": "Ouvrir Maresi Hôte",
+    "hostPending": "Votre demande hôte a été envoyée à un admin. Connectez-vous, puis attendez la validation."
   },
   "theme": {
     "toDark": "Passer en mode sombre",

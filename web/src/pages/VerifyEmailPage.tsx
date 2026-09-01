@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HOST_APP_URL } from "@/lib/hostApp";
-import { markHostIntent, peekHostIntent } from "@/lib/hostIntent";
+import { markHostIntent } from "@/lib/hostIntent";
 import { resendVerification, verifyEmail } from "@/services/auth";
 
 export function VerifyEmailPage() {
@@ -17,6 +17,7 @@ export function VerifyEmailPage() {
   const [email, setEmail] = useState(params.get("email") || "");
   const [status, setStatus] = useState<"idle" | "working" | "ok" | "error">(token ? "working" : "idle");
   const [role, setRole] = useState("");
+  const [hostPending, setHostPending] = useState(false);
   const [error, setError] = useState("");
   const [resent, setResent] = useState(sent);
   const [loading, setLoading] = useState(false);
@@ -32,6 +33,7 @@ export function VerifyEmailPage() {
       .then((res) => {
         if (cancelled) return;
         setRole(typeof res.role === "string" ? res.role : "");
+        setHostPending(res.host_application === true);
         setStatus("ok");
       })
       .catch((err) => {
@@ -68,14 +70,14 @@ export function VerifyEmailPage() {
         {status === "working" && <p className="text-sm text-muted-foreground">{t("verify.checking")}</p>}
         {status === "ok" && (
           <>
-            <p className="text-sm">{t("verify.success")}</p>
+            <p className="text-sm">{hostPending ? t("verify.hostPending") : t("verify.success")}</p>
             {role === "owner" ? (
               <a href={`${HOST_APP_URL.replace(/\/$/, "")}/login`} className="text-sm font-medium text-primary hover:underline">
                 {t("verify.openHost")}
               </a>
             ) : (
               <Link
-                to={peekHostIntent() ? "/login?intent=host" : "/login"}
+                to="/login"
                 className="text-sm font-medium text-primary hover:underline"
               >
                 {t("forgot.backToLogin")}

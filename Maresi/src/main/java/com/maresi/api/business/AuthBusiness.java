@@ -49,6 +49,7 @@ public class AuthBusiness {
   private final FunctionalError functionalError;
   private final EmailService email;
   private final NotificationRepository notifications;
+  private final HostApplicationBusiness hostApplications;
 
   public AuthBusiness(
       AppProperties props,
@@ -62,7 +63,8 @@ public class AuthBusiness {
       Environment env,
       FunctionalError functionalError,
       EmailService email,
-      NotificationRepository notifications) {
+      NotificationRepository notifications,
+      HostApplicationBusiness hostApplications) {
     this.props = props;
     this.users = users;
     this.authTokens = authTokens;
@@ -75,6 +77,7 @@ public class AuthBusiness {
     this.functionalError = functionalError;
     this.email = email;
     this.notifications = notifications;
+    this.hostApplications = hostApplications;
   }
 
   public Response<Map<String, Object>> register(Request<Map<String, Object>> request, Locale locale) {
@@ -128,6 +131,7 @@ public class AuthBusiness {
     String idCard = str(body.get("id_card"));
     if (idCard == null) idCard = str(body.get("idCard"));
     String role = "client";
+    boolean hostIntent = wantsHost(str(body.get("role")));
 
     if (email == null
         || password == null
@@ -219,6 +223,10 @@ public class AuthBusiness {
         response.setStatus(functionalError.dataExist("Cet e-mail est déjà enregistré. Connectez-vous ou réinitialisez votre mot de passe.", locale));
       }
       return response;
+    }
+    UUID userId = user.get("id") instanceof UUID u ? u : UUID.fromString(user.get("id").toString());
+    if (hostIntent) {
+      users.setHostIntent(userId, true);
     }
     sendVerificationEmail(user);
     Map<String, Object> item = new HashMap<>();
@@ -369,14 +377,20 @@ public class AuthBusiness {
     UUID userId = (UUID) row.get("user_id");
     users.markEmailVerified(userId);
     authTokens.markUsed((UUID) row.get("id"));
+    boolean hostSignup = users.consumeHostIntent(userId);
     Map<String, Object> user = users.findById(userId).orElse(null);
     if (user != null) {
-      welcomeNewAccount(user);
+      if (hostSignup) {
+        hostApplications.submitFromVerifiedSignup(user);
+      } else {
+        welcomeNewAccount(user);
+      }
     }
     Map<String, Object> item = new HashMap<>();
     item.put("verified", true);
     item.put("email", user != null ? user.get("email") : null);
     item.put("role", user != null ? user.get("role") : null);
+    item.put("host_application", hostSignup);
     response.setItem(item);
     response.setStatus(functionalError.success("E-mail confirmé", locale));
     return response;
@@ -526,6 +540,12 @@ public class AuthBusiness {
   private boolean exposeDevCode() {
     return props.isDevAuthBypass()
         || !"production".equalsIgnoreCase(env.getProperty("spring.profiles.active", ""));
+  }
+
+  private static boolean wantsHost(String raw) {
+    if (raw == null) return false;
+    String value = raw.trim().toLowerCase(Locale.ROOT);
+    return "owner".equals(value) || "host".equals(value);
   }
 
   private static boolean validIdCard(String idCard) {

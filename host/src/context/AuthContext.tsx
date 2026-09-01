@@ -7,7 +7,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ user: User; token: string }>;
-  register: (data: Parameters<typeof authService.register>[0]) => Promise<{ user: User; token: string }>;
+  register: (data: Parameters<typeof authService.register>[0]) => Promise<authService.RegisterResult>;
   applySession: (res: { user: User; token: string }) => void;
   patchUser: (partial: Partial<User>) => void;
   logout: () => void;
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = useCallback(async (data: Parameters<typeof authService.register>[0]) => {
     const res = await authService.register(data);
-    setUser(res.user);
+    if ("token" in res) setUser(res.user);
     return res;
   }, []);
 

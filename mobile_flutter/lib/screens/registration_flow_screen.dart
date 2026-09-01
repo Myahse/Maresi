@@ -308,7 +308,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
             lastName: lastName,
             birthDate: _formatIsoDate(_birthDate!),
             gender: _gender!,
-            role: UserRole.client,
+            role: _isOwner ? UserRole.owner : UserRole.client,
             idCard: _idCardController.text.trim(),
             phone: '$_phoneDial$phoneDigits',
             selfiePath: _selfie?.path,
@@ -316,20 +316,12 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
             idCardBackPath: _idCardBack?.path,
           );
 
-      if (_isOwner) {
-        try {
-          await maresiApi.submitHostApplication(
-            fullName: '$firstName $lastName',
-            phone: '$_phoneDial$phoneDigits',
-            idCard: _idCardController.text.trim(),
-          );
-          if (mounted) _showMessage(locale.t('register.hostApplySent'));
-        } catch (e) {
-          if (mounted) _showMessage(_cleanError(e));
-        }
-      }
-
       if (mounted) goHomeAfterAuth(context);
+    } on NeedsEmailVerificationException {
+      if (mounted) {
+        _showMessage(locale.t(_isOwner ? 'register.hostApplyAfterEmail' : 'register.checkEmail'));
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       if (mounted) _showMessage(_cleanError(e));
     } finally {

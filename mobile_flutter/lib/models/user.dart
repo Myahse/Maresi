@@ -53,3 +53,12 @@ class AuthResponse {
   final User user;
   final String token;
 }
+
+class NeedsEmailVerificationException implements Exception {
+  const NeedsEmailVerificationException(this.email);
+
+  final String email;
+
+  @override
+  String toString() => 'NeedsEmailVerificationException($email)';
+}
