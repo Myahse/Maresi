@@ -129,7 +129,7 @@ export function AllPropertiesPage() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:gap-4 md:gap-6">
           {[1, 2, 3, 4].map((i) => (
             <PropertyCardSkeleton key={i} />
           ))}
@@ -139,7 +139,7 @@ export function AllPropertiesPage() {
           <p className="text-lg font-medium">{t("dashboard.noneFound")}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 pb-8">
+        <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:gap-4 md:gap-6 pb-8">
           {sortedProperties.map((p) => (
             <div
               key={p.id}
@@ -148,7 +148,7 @@ export function AllPropertiesPage() {
             >
               <PropertyCard
                 property={p}
-                rental={false}
+                rental
                 onToggleFavorite={toggleFavorite}
                 isFavorite={favorites.some((f) => f.property_id === p.id)}
               />

@@ -186,7 +186,7 @@ export function PropertyCard({
   const cardClass = cn(
     "bg-card rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-border",
     "cursor-pointer hover:shadow-xl hover:border-brand transition-all duration-300 hover:-translate-y-1",
-    rental && "sm:shrink-0 w-full sm:w-72 md:w-80 lg:w-[340px]",
+    "w-full sm:shrink-0 sm:w-72 md:w-80 lg:w-[340px]",
     className
   );
 

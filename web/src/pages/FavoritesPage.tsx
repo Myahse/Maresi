@@ -53,11 +53,12 @@ export function FavoritesPage() {
           <Link to="/properties" className="text-primary hover:underline">{t("favorites.browseLink")}</Link>.
         </p>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:gap-4 md:gap-6">
           {items.map((item) => (
             <div key={item.id} className="relative">
               <PropertyCard
                 property={item}
+                rental
                 onToggleFavorite={remove}
                 isFavorite
               />
