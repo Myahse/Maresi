@@ -1,0 +1,8 @@
+ALTER TABLE users ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 7);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS longitude DECIMAL(10, 7);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS location_label VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS location_updated_at TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS idx_users_location
+  ON users (latitude, longitude)
+  WHERE latitude IS NOT NULL AND longitude IS NOT NULL;

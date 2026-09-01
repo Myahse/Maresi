@@ -29,6 +29,10 @@ public class SchemaPatches {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS id_card_back_url VARCHAR(500)",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS guest_rating_avg DECIMAL(3, 2) DEFAULT 0",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS guest_rating_count INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 7)",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS longitude DECIMAL(10, 7)",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS location_label VARCHAR(255)",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS location_updated_at TIMESTAMPTZ",
     """
     ALTER TABLE owner_subscriptions
       ADD COLUMN IF NOT EXISTS premium_positioning BOOLEAN NOT NULL DEFAULT FALSE

@@ -50,6 +50,12 @@ abstract class MaresiApi {
 
   Future<Map<String, dynamic>> getMyProfile();
 
+  Future<void> updateMyLocation({
+    required double latitude,
+    required double longitude,
+    String? locationLabel,
+  });
+
   Future<void> submitHostApplication({
     required String fullName,
     required String phone,

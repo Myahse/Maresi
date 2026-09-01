@@ -395,6 +395,23 @@ class ApiService implements MaresiApi {
   }
 
   @override
+  Future<void> updateMyLocation({
+    required double latitude,
+    required double longitude,
+    String? locationLabel,
+  }) async {
+    await _jsonRequest(
+      'PATCH',
+      '/users/me/location',
+      body: _wrapBody({
+        'latitude': latitude,
+        'longitude': longitude,
+        if (locationLabel != null && locationLabel.isNotEmpty) 'location_label': locationLabel,
+      }),
+    );
+  }
+
+  @override
   Future<Property> createProperty({
     required String title,
     required String description,

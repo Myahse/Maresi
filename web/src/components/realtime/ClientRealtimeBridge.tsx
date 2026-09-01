@@ -28,7 +28,7 @@ export function ClientRealtimeBridge() {
         }
         setToast(String(event.data.status === "rejected" ? "host-rejected" : "host-approved"));
       }
-      if (event.type === "visit.status_changed" || event.type === "payment.completed") {
+      if (event.type === "visit.status_changed" || event.type === "payment.completed" || event.type === "listing.published") {
         setToast(event.type);
       }
       window.setTimeout(() => setToast(null), 4000);
@@ -45,7 +45,8 @@ export function ClientRealtimeBridge() {
       {toast === "host-rejected" && "Host application updated"}
       {toast === "visit.status_changed" && "Visit request updated"}
       {toast === "payment.completed" && "Payment confirmed"}
-      {!["host-approved", "host-rejected", "visit.status_changed", "payment.completed"].includes(toast) &&
+      {toast === "listing.published" && "New residence near you"}
+      {!["host-approved", "host-rejected", "visit.status_changed", "payment.completed", "listing.published"].includes(toast) &&
         toast}
     </div>
   );

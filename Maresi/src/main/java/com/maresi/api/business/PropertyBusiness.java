@@ -8,6 +8,7 @@ import com.maresi.api.repository.PropertyRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
 import com.maresi.api.service.FileStorageService;
+import com.maresi.api.service.NearbyListingNotifier;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ public class PropertyBusiness {
   private final OwnerSubscriptionRepository subscriptions;
   private final UserBusiness userBusiness;
   private final HostStatus hostStatus;
+  private final NearbyListingNotifier nearbyListingNotifier;
 
   public PropertyBusiness(
       PropertyRepository properties,
@@ -36,13 +38,15 @@ public class PropertyBusiness {
       FunctionalError functionalError,
       OwnerSubscriptionRepository subscriptions,
       UserBusiness userBusiness,
-      HostStatus hostStatus) {
+      HostStatus hostStatus,
+      NearbyListingNotifier nearbyListingNotifier) {
     this.properties = properties;
     this.fileStorage = fileStorage;
     this.functionalError = functionalError;
     this.subscriptions = subscriptions;
     this.userBusiness = userBusiness;
     this.hostStatus = hostStatus;
+    this.nearbyListingNotifier = nearbyListingNotifier;
   }
 
   public Response<Map<String, Object>> list(
@@ -150,6 +154,9 @@ public class PropertyBusiness {
             imageUrls,
             extra);
     fileStorage.rewriteImageFields(created);
+    if (!draft) {
+      nearbyListingNotifier.notifyNearbyClients(created);
+    }
     response.setItem(created);
     response.setStatus(functionalError.success("Creation", locale));
     return response;
@@ -212,6 +219,9 @@ public class PropertyBusiness {
     }
     Map<String, Object> updated = properties.update(id, data);
     fileStorage.rewriteImageFields(updated);
+    if (!wasActive(existing) && wasActive(updated)) {
+      nearbyListingNotifier.notifyNearbyClients(updated);
+    }
     response.setItem(updated);
     response.setStatus(functionalError.success("Mise a jour", locale));
     return response;
@@ -236,6 +246,12 @@ public class PropertyBusiness {
     fileStorage.deleteUnreferencedPropertyImages(properties.allImageUrls());
     response.setStatus(functionalError.success("Suppression", locale));
     return response;
+  }
+
+  private static boolean wasActive(Map<String, Object> property) {
+    if (property == null || property.get("is_active") == null) return false;
+    Object raw = property.get("is_active");
+    return Boolean.TRUE.equals(raw) || "true".equalsIgnoreCase(String.valueOf(raw));
   }
 
   private static boolean canViewProperty(Map<String, Object> property) {

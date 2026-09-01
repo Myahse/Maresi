@@ -20,6 +20,10 @@ public class UserService {
     return userBusiness.me(locale);
   }
 
+  public Response<Map<String, Object>> updateLocation(Map<String, Object> body, Locale locale) {
+    return userBusiness.updateLocation(body, locale);
+  }
+
   public Response<Map<String, Object>> updateIdentity(
       String idCard,
       MultipartFile selfie,

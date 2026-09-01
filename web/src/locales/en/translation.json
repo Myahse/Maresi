@@ -51,7 +51,7 @@
   },
   "location": {
     "title": "Show listings near you",
-    "body": "Maresi uses GPS and the mobile network to place you on the map and keep that position updated while the app is open.",
+    "body": "Maresi uses GPS to show listings near you and to email you when a new residence is published in your area.",
     "enable": "Use my location",
     "later": "Later",
     "nearMe": "Near me",

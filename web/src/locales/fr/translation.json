@@ -51,7 +51,7 @@
   },
   "location": {
     "title": "Voir les logements près de vous",
-    "body": "Maresi utilise le GPS et le réseau mobile pour vous placer sur la carte et mettre à jour cette position tant que l’app est ouverte.",
+    "body": "Maresi utilise le GPS pour afficher les logements près de vous et vous écrire quand une nouvelle résidence est publiée dans votre secteur.",
     "enable": "Utiliser ma position",
     "later": "Plus tard",
     "nearMe": "Près de moi",

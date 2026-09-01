@@ -202,6 +202,16 @@ class MockApiService implements MaresiApi {
   }
 
   @override
+  @override
+  Future<void> updateMyLocation({
+    required double latitude,
+    required double longitude,
+    String? locationLabel,
+  }) async {
+    await _delay();
+  }
+
+  @override
   Future<Map<String, dynamic>> getMyProfile() async {
     await _delay();
     final user = _sessionUser;

@@ -235,6 +235,80 @@ public class UserRepository {
         role);
   }
 
+  public void updateLocation(UUID id, Double latitude, Double longitude, String locationLabel) {
+    jdbc.update(
+        """
+        UPDATE users
+        SET latitude = ?,
+            longitude = ?,
+            location_label = COALESCE(?, location_label),
+            location_updated_at = NOW(),
+            updated_at = NOW()
+        WHERE id = ?
+        """,
+        latitude,
+        longitude,
+        locationLabel,
+        id);
+  }
+
+  public List<UUID> findNearbyClients(
+      UUID excludeUserId,
+      UUID propertyId,
+      Double latitude,
+      Double longitude,
+      double radiusKm,
+      String area,
+      int limit) {
+    boolean hasGeo = latitude != null && longitude != null;
+    boolean hasArea = area != null && !area.isBlank();
+    if (!hasGeo && !hasArea) return List.of();
+    return jdbc.query(
+        """
+        SELECT u.id
+        FROM users u
+        WHERE u.role = 'client'
+          AND u.id <> ?
+          AND COALESCE(u.account_status, 'ok') <> 'suspended'
+          AND NOT EXISTS (
+            SELECT 1 FROM notifications n
+            WHERE n.user_id = u.id AND n.property_id = ? AND n.type = 'listing'
+          )
+          AND (
+            (
+              ? AND u.latitude IS NOT NULL AND u.longitude IS NOT NULL
+              AND (
+                6371 * acos(LEAST(1.0, GREATEST(-1.0,
+                  cos(radians(?)) * cos(radians(u.latitude))
+                  * cos(radians(u.longitude) - radians(?))
+                  + sin(radians(?)) * sin(radians(u.latitude))
+                )))
+              ) <= ?
+            )
+            OR (
+              ? AND u.location_label IS NOT NULL
+              AND (
+                u.location_label ILIKE '%' || ? || '%'
+                OR ? ILIKE '%' || u.location_label || '%'
+              )
+            )
+          )
+        LIMIT ?
+        """,
+        (rs, rowNum) -> (UUID) rs.getObject("id"),
+        excludeUserId,
+        propertyId,
+        hasGeo,
+        hasGeo ? latitude : 0d,
+        hasGeo ? longitude : 0d,
+        hasGeo ? latitude : 0d,
+        radiusKm,
+        hasArea,
+        hasArea ? area : "",
+        hasArea ? area : "",
+        limit);
+  }
+
   public Optional<Map<String, Object>> updateRole(UUID id, String role) {
     return jdbc.query(
             """

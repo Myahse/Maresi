@@ -140,6 +140,35 @@ public class UserBusiness {
     return response;
   }
 
+  public Response<Map<String, Object>> updateLocation(Map<String, Object> body, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Double latitude = asCoordinate(body == null ? null : body.get("latitude"), -90, 90);
+    Double longitude = asCoordinate(body == null ? null : body.get("longitude"), -180, 180);
+    if (latitude == null || longitude == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("latitude, longitude", locale));
+      return response;
+    }
+    String label = str(body == null ? null : body.get("location_label"));
+    if (label != null && label.isBlank()) label = null;
+    users.updateLocation(user.id(), latitude, longitude, label);
+    response.setItem(Map.of("latitude", latitude, "longitude", longitude));
+    response.setStatus(functionalError.success("Position", locale));
+    return response;
+  }
+
+  private static Double asCoordinate(Object raw, double min, double max) {
+    if (raw == null) return null;
+    try {
+      double value = raw instanceof Number n ? n.doubleValue() : Double.parseDouble(raw.toString().trim());
+      if (Double.isNaN(value) || value < min || value > max) return null;
+      return value;
+    } catch (NumberFormatException e) {
+      return null;
+    }
+  }
+
   public FileStorageService.StoredMedia loadIdentity(UUID userId, String kind) {
     AuthUser viewer = SecurityUtils.requireUser();
     boolean self = viewer.id().equals(userId);

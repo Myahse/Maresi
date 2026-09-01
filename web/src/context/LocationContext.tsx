@@ -1,6 +1,9 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { updateMyLocation } from "@/services/api";
 import {
   dismissLocationPrompt,
+  distanceKm,
   geolocationSupported,
   isLocationPromptDismissed,
   queryGeoPermission,
@@ -8,6 +11,8 @@ import {
   watchUserPosition,
   type GeoCoords,
 } from "@/lib/geolocation";
+
+const LAST_SYNC_KEY = "maresi-last-geo-sync";
 
 export type LocationStatus = "idle" | "requesting" | "granted" | "denied" | "unavailable";
 
@@ -22,7 +27,26 @@ interface LocationContextValue {
 
 const LocationContext = createContext<LocationContextValue | null>(null);
 
+function readLastSync(): GeoCoords | null {
+  try {
+    const raw = localStorage.getItem(LAST_SYNC_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as GeoCoords;
+  } catch {
+    return null;
+  }
+}
+
+function writeLastSync(coords: GeoCoords) {
+  try {
+    localStorage.setItem(LAST_SYNC_KEY, JSON.stringify(coords));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function LocationProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const supported = geolocationSupported();
   const [status, setStatus] = useState<LocationStatus>(supported ? "idle" : "unavailable");
   const [coords, setCoords] = useState<GeoCoords | null>(() =>
@@ -82,6 +106,17 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     document.addEventListener("visibilitychange", resume);
     return () => document.removeEventListener("visibilitychange", resume);
   }, [supported, status, startWatch]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !coords) return;
+    const last = readLastSync();
+    if (last && Date.now() - last.updatedAt < 30 * 60 * 1000 && distanceKm(last, coords.latitude, coords.longitude) < 0.4) {
+      return;
+    }
+    void updateMyLocation(coords.latitude, coords.longitude)
+      .then(() => writeLastSync(coords))
+      .catch(() => undefined);
+  }, [isAuthenticated, coords]);
 
   const requestAccess = useCallback(() => {
     startWatch();

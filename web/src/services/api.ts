@@ -199,6 +199,14 @@ export function getMyProfile() {
   return api.get<import("@/types").UserProfile>("/users/me");
 }
 
+export function updateMyLocation(latitude: number, longitude: number, locationLabel?: string) {
+  return api.patch("/users/me/location", {
+    latitude,
+    longitude,
+    ...(locationLabel ? { location_label: locationLabel } : {}),
+  });
+}
+
 export function updateMyIdentity(formData: FormData) {
   const token = getToken();
   return fetch(`${API_BASE}/users/me/identity`, {

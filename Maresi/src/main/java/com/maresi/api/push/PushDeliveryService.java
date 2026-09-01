@@ -99,7 +99,9 @@ public class PushDeliveryService {
     }
     if ("reservation".equals(type)) return "/visits";
     if ("host_application".equals(type)) return "/become-host";
-    if ("review".equals(type) && propertyId != null) return "/properties/" + propertyId;
+    if (("review".equals(type) || "listing".equals(type)) && propertyId != null) {
+      return "/properties/" + propertyId;
+    }
     if ("account".equals(type)) return "/account";
     if (propertyId != null) return "/properties/" + propertyId;
     return "/";

@@ -389,6 +389,20 @@ public final class EmailTemplates {
         null);
   }
 
+  public static Mail nearbyListing(String name, String title, String location, String ctaUrl) {
+    return build(
+        "Nouvelle résidence près de vous",
+        "Annonce",
+        "Une résidence vient d’être publiée près de chez vous",
+        greet(
+            name,
+            "Une nouvelle résidence est disponible dans votre secteur. Consultez-la maintenant si elle vous convient."),
+        details("Résidence", title, "Quartier", location),
+        null,
+        "Voir l’annonce",
+        ctaUrl);
+  }
+
   public static Mail newReview(String name, int score, String listing, String comment) {
     List<Detail> rows = new ArrayList<>(details("Résidence", listing, "Note", score + " / 5", "Voyageur", name));
     if (comment != null && !comment.isBlank()) {
