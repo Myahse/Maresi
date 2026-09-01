@@ -141,7 +141,6 @@ export function OwnerDashboardPage() {
         </Card>
       )}
       {approved && (
-      {approved && (
         <Card className="border-2 border-brand/20">
           <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
             <CardTitle className="text-base">{t("payments.walletTitle")}</CardTitle>

@@ -2,6 +2,7 @@ import type { User } from "@/types";
 
 export function isApprovedHost(user: Pick<User, "role" | "host_status"> | null | undefined): boolean {
   if (!user) return false;
+  if (user.host_status === "pending" || user.host_status === "rejected") return false;
   return user.role === "owner" || user.host_status === "approved";
 }
 

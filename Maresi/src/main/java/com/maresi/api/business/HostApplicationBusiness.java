@@ -31,6 +31,7 @@ public class HostApplicationBusiness {
   private final EmailService email;
   private final UserBusiness userBusiness;
   private final AppProperties props;
+  private final HostStatus hostStatus;
 
   public HostApplicationBusiness(
       HostApplicationRepository applications,
@@ -41,7 +42,8 @@ public class HostApplicationBusiness {
       FunctionalError functionalError,
       EmailService email,
       UserBusiness userBusiness,
-      AppProperties props) {
+      AppProperties props,
+      HostStatus hostStatus) {
     this.applications = applications;
     this.users = users;
     this.notifications = notifications;
@@ -51,6 +53,7 @@ public class HostApplicationBusiness {
     this.email = email;
     this.userBusiness = userBusiness;
     this.props = props;
+    this.hostStatus = hostStatus;
   }
 
   public Response<Map<String, Object>> submit(Request<Map<String, Object>> request, Locale locale) {
@@ -59,7 +62,7 @@ public class HostApplicationBusiness {
     if (userBusiness.rejectIfSuspended(response, user.id(), locale)) {
       return response;
     }
-    if ("owner".equals(user.role()) || "admin".equals(user.role())) {
+    if ("admin".equals(user.role()) || hostStatus.canPublish(user.id(), user.role())) {
       response.setHasError(true);
       response.setStatus(functionalError.disallowed("Compte deja hote ou admin", locale));
       return response;
@@ -97,6 +100,15 @@ public class HostApplicationBusiness {
     Map<String, Object> created =
         applications.create(user.id(), fullName.trim(), phone.trim(), city, message, idCard);
     notifyHostApplication(user.id(), fullName.trim(), phone.trim(), created);
+    if (!"owner".equals(user.role())) {
+      Map<String, Object> owner = users.updateRole(user.id(), "owner").orElse(null);
+      if (owner != null) {
+        created.put("user", owner);
+        created.put(
+            "token",
+            jwtService.sign(user.id(), str(owner.get("email")), "owner", str(owner.get("phone"))));
+      }
+    }
 
     response.setItem(created);
     response.setStatus(functionalError.success("Demande hote", locale));
@@ -105,7 +117,7 @@ public class HostApplicationBusiness {
 
   public void submitFromVerifiedSignup(Map<String, Object> user) {
     UUID userId = user.get("id") instanceof UUID u ? u : UUID.fromString(user.get("id").toString());
-    if ("owner".equals(str(user.get("role"))) || "admin".equals(str(user.get("role")))) {
+    if ("admin".equals(str(user.get("role"))) || hostStatus.canPublish(userId, str(user.get("role")))) {
       return;
     }
     if (applications.hasPending(userId)) {

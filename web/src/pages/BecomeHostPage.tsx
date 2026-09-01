@@ -29,7 +29,15 @@ export function BecomeHostPage() {
       return;
     }
     submitHostApplication({ full_name: name, phone: phone })
-      .then(goHost)
+      .then((created) => {
+        const token =
+          typeof created.token === "string" && created.token
+            ? created.token
+            : localStorage.getItem("token");
+        const next = { ...user, role: "owner" as const, host_status: "pending" as const };
+        patchUser({ role: "owner", host_status: "pending" });
+        window.location.assign(token ? hostHandoffUrl({ token, user: next }) : HOST_APP_URL);
+      })
       .catch(goHost);
   }, [isAuthenticated, user, patchUser]);
 

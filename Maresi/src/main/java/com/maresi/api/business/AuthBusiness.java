@@ -133,8 +133,8 @@ public class AuthBusiness {
     String phone = PhoneNormalizer.normalize(str(body.get("phone")));
     String idCard = str(body.get("id_card"));
     if (idCard == null) idCard = str(body.get("idCard"));
-    String role = "client";
     boolean hostIntent = wantsHost(str(body.get("role")));
+    String role = hostIntent ? "owner" : "client";
 
     if (email == null
         || password == null
@@ -569,7 +569,16 @@ public class AuthBusiness {
     return authPayload(user);
   }
 
+  private void ensureHostRole(Map<String, Object> user) {
+    if (user == null || user.get("id") == null) return;
+    hostStatus.attach(user);
+    if (!"client".equals(str(user.get("role"))) || !hostStatus.isHostTrack(user)) return;
+    UUID id = user.get("id") instanceof UUID u ? u : UUID.fromString(user.get("id").toString());
+    users.updateRole(id, "owner").ifPresent(updated -> user.put("role", "owner"));
+  }
+
   private Map<String, Object> authPayload(Map<String, Object> user) {
+    ensureHostRole(user);
     UUID id = user.get("id") instanceof UUID u ? u : UUID.fromString(user.get("id").toString());
     String email = str(user.get("email"));
     String role = str(user.get("role"));

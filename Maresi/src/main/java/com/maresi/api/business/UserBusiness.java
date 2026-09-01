@@ -55,6 +55,9 @@ public class UserBusiness {
     }
     exposeIdentityLinks(profile, user.id());
     hostStatus.attach(profile);
+    if ("client".equals(String.valueOf(profile.get("role"))) && hostStatus.isHostTrack(profile)) {
+      users.updateRole(user.id(), "owner").ifPresent(updated -> profile.put("role", "owner"));
+    }
     response.setItem(profile);
     response.setStatus(functionalError.success("Profil", locale));
     return response;

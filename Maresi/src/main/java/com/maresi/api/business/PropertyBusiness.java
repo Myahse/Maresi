@@ -28,18 +28,21 @@ public class PropertyBusiness {
   private final FunctionalError functionalError;
   private final OwnerSubscriptionRepository subscriptions;
   private final UserBusiness userBusiness;
+  private final HostStatus hostStatus;
 
   public PropertyBusiness(
       PropertyRepository properties,
       FileStorageService fileStorage,
       FunctionalError functionalError,
       OwnerSubscriptionRepository subscriptions,
-      UserBusiness userBusiness) {
+      UserBusiness userBusiness,
+      HostStatus hostStatus) {
     this.properties = properties;
     this.fileStorage = fileStorage;
     this.functionalError = functionalError;
     this.subscriptions = subscriptions;
     this.userBusiness = userBusiness;
+    this.hostStatus = hostStatus;
   }
 
   public Response<Map<String, Object>> list(
@@ -110,7 +113,7 @@ public class PropertyBusiness {
     if (userBusiness.rejectIfSuspended(response, user.id(), locale)) {
       return response;
     }
-    if (!"owner".equals(user.role())) {
+    if (!hostStatus.canPublish(user.id(), user.role())) {
       response.setHasError(true);
       response.setStatus(
           functionalError.disallowed(
@@ -182,6 +185,14 @@ public class PropertyBusiness {
       List<String> next = new ArrayList<>(ownedUrls);
       next.addAll(storedUrls);
       data.put("images", next);
+    }
+    if (Boolean.TRUE.equals(data.get("is_active")) && !hostStatus.canPublish(user.id(), user.role())) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.disallowed(
+              "Votre compte hôte n'est pas encore validé. Vous ne pouvez pas publier d'annonce.",
+              locale));
+      return response;
     }
     if (Boolean.TRUE.equals(data.get("is_active"))) {
       List<String> photos =

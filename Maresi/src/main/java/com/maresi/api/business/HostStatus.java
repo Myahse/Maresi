@@ -23,12 +23,21 @@ public class HostStatus {
 
   public String resolve(UUID userId, String role) {
     if (userId == null) return NONE;
-    if ("owner".equals(role) || "admin".equals(role)) return APPROVED;
-    return applications
-        .findLatestByUser(userId)
-        .map(row -> str(row.get("status")))
-        .filter(status -> status != null && !status.isBlank())
-        .orElseGet(() -> users.hasHostIntent(userId) ? PENDING : NONE);
+    if ("admin".equals(role)) return APPROVED;
+    String latest =
+        applications
+            .findLatestByUser(userId)
+            .map(row -> str(row.get("status")))
+            .filter(status -> status != null && !status.isBlank())
+            .orElse(null);
+    if (latest != null) return latest;
+    if (users.hasHostIntent(userId)) return PENDING;
+    if ("owner".equals(role)) return APPROVED;
+    return NONE;
+  }
+
+  public boolean canPublish(UUID userId, String role) {
+    return APPROVED.equals(resolve(userId, role));
   }
 
   public void attach(Map<String, Object> user) {
