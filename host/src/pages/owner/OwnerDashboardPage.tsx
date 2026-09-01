@@ -154,11 +154,21 @@ export function OwnerDashboardPage() {
               {t("payments.walletManage")}
             </Button>
           </CardHeader>
-          <CardContent className="flex items-end justify-between gap-4">
-            <span className="text-sm text-muted-foreground">{t("payments.walletBalance")}</span>
-            <span className="text-2xl font-bold text-brand">
-              {formatPrice(Number(wallet?.wallet_balance ?? 0))}
-            </span>
+          <CardContent className="space-y-2">
+            <div className="flex items-end justify-between gap-4">
+              <span className="text-sm text-muted-foreground">{t("payments.walletBalance")}</span>
+              <span className="text-2xl font-bold text-brand">
+                {formatPrice(Number(wallet?.wallet_balance ?? 0))}
+              </span>
+            </div>
+            <div className="flex justify-between gap-4 text-sm">
+              <span className="text-muted-foreground">{t("payments.walletHeld")}</span>
+              <span className="font-semibold">{formatPrice(Number(wallet?.wallet_held ?? 0))}</span>
+            </div>
+            <div className="flex justify-between gap-4 text-sm">
+              <span className="text-muted-foreground">{t("payments.walletAvailable")}</span>
+              <span className="font-semibold">{formatPrice(Number(wallet?.wallet_available ?? 0))}</span>
+            </div>
           </CardContent>
         </Card>
       )}

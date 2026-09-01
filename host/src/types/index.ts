@@ -179,6 +179,8 @@ export interface OwnerSubscription {
   free_listings_limit?: number;
   commission_due?: number;
   wallet_balance?: number;
+  wallet_held?: number;
+  wallet_available?: number;
   wallet_ledger?: WalletLedgerEntry[];
   premium_positioning?: boolean;
 }

@@ -88,6 +88,10 @@ export function OwnerSubscriptionPage() {
       setError(t("payments.payoutPhoneRequired"));
       return;
     }
+    if (amount > available) {
+      setError(t("payments.payoutFrozen"));
+      return;
+    }
     setPayoutBusy(true);
     setError("");
     setNotice("");
@@ -126,8 +130,10 @@ export function OwnerSubscriptionPage() {
 
   const due = Number(sub?.commission_due ?? 0);
   const balance = Number(sub?.wallet_balance ?? 0);
+  const held = Number(sub?.wallet_held ?? 0);
+  const available = Number(sub?.wallet_available ?? Math.max(0, balance - held));
   const price = Number(sub?.price_fcfa ?? 10000);
-  const canPayFromWallet = !sub?.active && balance >= price;
+  const canPayFromWallet = !sub?.active && available >= price;
   const ledger = Array.isArray(sub?.wallet_ledger) ? sub.wallet_ledger : [];
 
   return (
@@ -146,9 +152,19 @@ export function OwnerSubscriptionPage() {
               <h2 className="text-lg font-semibold text-foreground">{t("payments.walletTitle")}</h2>
               <p className="text-sm text-muted-foreground mt-1">{t("payments.walletHint")}</p>
             </div>
-            <div className="flex justify-between gap-4 items-end">
-              <span className="text-sm text-muted-foreground">{t("payments.walletBalance")}</span>
-              <span className="text-2xl font-bold text-brand">{formatPrice(balance)}</span>
+            <div className="space-y-2">
+              <div className="flex justify-between gap-4 items-end">
+                <span className="text-sm text-muted-foreground">{t("payments.walletBalance")}</span>
+                <span className="text-2xl font-bold text-brand">{formatPrice(balance)}</span>
+              </div>
+              <div className="flex justify-between gap-4 text-sm">
+                <span className="text-muted-foreground">{t("payments.walletHeld")}</span>
+                <span className="font-semibold text-foreground">{formatPrice(held)}</span>
+              </div>
+              <div className="flex justify-between gap-4 text-sm">
+                <span className="text-muted-foreground">{t("payments.walletAvailable")}</span>
+                <span className="font-semibold text-foreground">{formatPrice(available)}</span>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               {TOPUP_AMOUNTS.map((amount) => (
@@ -201,7 +217,7 @@ export function OwnerSubscriptionPage() {
               </div>
               <Button
                 className="w-full rounded-full bg-brand hover:bg-brand-dark"
-                disabled={payoutBusy || balance < 200}
+                disabled={payoutBusy || available < 200}
                 onClick={() => void handlePayout()}
               >
                 {payoutBusy ? t("common.saving") : t("payments.payoutCta")}

@@ -200,6 +200,34 @@ public class PaymentRepository {
     return n != null && n > 0;
   }
 
+  public BigDecimal sumHeldStayForOwner(UUID ownerId) {
+    BigDecimal n =
+        jdbc.queryForObject(
+            """
+            SELECT COALESCE(SUM(
+              CASE
+                WHEN p.owner_amount > 0 THEN p.owner_amount
+                ELSE GREATEST(p.amount - COALESCE(p.commission_amount, 0), 0)
+              END
+            ), 0)
+            FROM payments p
+            JOIN visit_requests vr ON vr.id = p.visit_request_id
+            JOIN properties prop ON prop.id = vr.property_id
+            WHERE prop.owner_id = ?
+              AND p.type = 'reservation'
+              AND p.status = 'completed'
+              AND vr.status IN ('confirmed', 'payment_sent')
+              AND (
+                vr.check_out IS NULL
+                OR (vr.check_out + COALESCE(vr.departure_time, prop.check_out_time, TIME '12:00'))
+                      AT TIME ZONE 'Africa/Abidjan' > NOW()
+              )
+            """,
+            BigDecimal.class,
+            ownerId);
+    return n == null ? BigDecimal.ZERO : n;
+  }
+
   public BigDecimal sumPendingAccruedCommission(UUID userId) {
     BigDecimal n =
         jdbc.queryForObject(

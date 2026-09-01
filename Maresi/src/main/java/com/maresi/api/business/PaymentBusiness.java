@@ -105,10 +105,12 @@ public class PaymentBusiness {
     item.put("free_listings_limit", PropertyBusiness.FREE_LISTINGS);
     item.put("commission_due", payments.sumPendingAccruedCommission(user.id()));
     try {
-      item.put("wallet_balance", wallets.balance(user.id()));
+      putWalletSnapshot(item, user.id());
       item.put("wallet_ledger", wallets.ledger(user.id(), 12));
     } catch (Exception e) {
       item.put("wallet_balance", BigDecimal.ZERO);
+      item.put("wallet_held", BigDecimal.ZERO);
+      item.put("wallet_available", BigDecimal.ZERO);
       item.put("wallet_ledger", List.of());
     }
     response.setItem(item);
@@ -427,11 +429,18 @@ public class PaymentBusiness {
       response.setStatus(functionalError.fieldEmpty("phone", locale));
       return response;
     }
+    BigDecimal held = payments.sumHeldStayForOwner(user.id());
     Optional<Map<String, Object>> debit =
-        wallets.tryDebit(user.id(), amount, "payout", null, null, "Retrait " + provider);
+        wallets.tryDebitLeavingHeld(
+            user.id(), amount, held, "payout", null, null, "Retrait " + provider);
     if (debit.isEmpty()) {
       response.setHasError(true);
-      response.setStatus(functionalError.invalidData("Solde portefeuille insuffisant", locale));
+      response.setStatus(
+          functionalError.invalidData(
+              held.compareTo(BigDecimal.ZERO) > 0
+                  ? "Ce montant est gele jusqu'au depart du client. Seul le solde disponible peut etre retire."
+                  : "Solde portefeuille insuffisant",
+              locale));
       return response;
     }
     Map<String, Object> metadata = new HashMap<>();
@@ -829,7 +838,7 @@ public class PaymentBusiness {
             "Paiement recu",
             "Le client a paye. "
                 + (stayAmount == null ? "" : stayAmount + " XOF")
-                + " (90%) ont ete ajoutes a votre portefeuille.",
+                + " (90%) sont dans votre portefeuille, geles jusqu'au depart du client.",
             propertyId);
         String listingTitle =
             visit.get("property_title") == null ? "la residence" : String.valueOf(visit.get("property_title"));
@@ -961,10 +970,22 @@ public class PaymentBusiness {
     return unit.setScale(2, RoundingMode.HALF_UP);
   }
 
+  private void putWalletSnapshot(Map<String, Object> item, UUID userId) {
+    BigDecimal balance = wallets.balance(userId);
+    BigDecimal held = payments.sumHeldStayForOwner(userId);
+    if (held.compareTo(balance) > 0) held = balance;
+    BigDecimal available = balance.subtract(held).max(BigDecimal.ZERO);
+    item.put("wallet_balance", balance);
+    item.put("wallet_held", held);
+    item.put("wallet_available", available);
+  }
+
   private Map<String, Object> paySubscriptionFromWallet(UUID userId, BigDecimal amount) {
     if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) return null;
+    BigDecimal held = payments.sumHeldStayForOwner(userId);
     Optional<Map<String, Object>> debit =
-        wallets.tryDebit(userId, amount, "subscription", null, null, "Abonnement proprietaire");
+        wallets.tryDebitLeavingHeld(
+            userId, amount, held, "subscription", null, null, "Abonnement proprietaire");
     if (debit.isEmpty()) return null;
     Map<String, Object> metadata = new HashMap<>();
     metadata.put("type", "subscription");
@@ -990,8 +1011,9 @@ public class PaymentBusiness {
 
   private Map<String, Object> settleCommissionFromWallet(UUID userId, BigDecimal due) {
     if (due == null || due.compareTo(BigDecimal.ZERO) <= 0) return null;
+    BigDecimal held = payments.sumHeldStayForOwner(userId);
     Optional<Map<String, Object>> debit =
-        wallets.tryDebit(userId, due, "commission", null, null, "Reglement commission");
+        wallets.tryDebitLeavingHeld(userId, due, held, "commission", null, null, "Reglement commission");
     if (debit.isEmpty()) return null;
     Map<String, Object> metadata = new HashMap<>();
     metadata.put("type", "commission");

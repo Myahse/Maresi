@@ -260,7 +260,7 @@ public final class EmailTemplates {
         "Paiement reçu — portefeuille",
         "Paiement",
         "90 % ont été ajoutés à votre portefeuille",
-        "Bonjour,\n\nLe client a payé. Voici le reçu : 90 % du séjour sont maintenant dans votre portefeuille. Vous pouvez retirer vers Wave ou Orange Money.",
+        "Bonjour,\n\nLe client a payé. 90 % du séjour sont maintenant dans votre portefeuille, gelés jusqu’à l’heure de départ du client. Vous pourrez retirer ensuite vers Wave ou Orange Money.",
         details("Résidence", title, "Crédit portefeuille", hostShare + " XOF"),
         null,
         "Ouvrir le portefeuille",

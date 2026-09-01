@@ -68,19 +68,33 @@ public class WalletRepository {
 
   public Optional<Map<String, Object>> tryDebit(
       UUID userId, BigDecimal amount, String entryType, UUID paymentId, UUID visitId, String note) {
+    return tryDebitLeavingHeld(userId, amount, BigDecimal.ZERO, entryType, paymentId, visitId, note);
+  }
+
+  public Optional<Map<String, Object>> tryDebitLeavingHeld(
+      UUID userId,
+      BigDecimal amount,
+      BigDecimal held,
+      String entryType,
+      UUID paymentId,
+      UUID visitId,
+      String note) {
     ensure(userId);
+    BigDecimal reserved = held == null ? BigDecimal.ZERO : held.max(BigDecimal.ZERO);
     List<Map<String, Object>> updated =
         jdbc.query(
             """
             UPDATE wallets
             SET balance = balance - ?, updated_at = NOW()
-            WHERE user_id = ? AND balance >= ?
+            WHERE user_id = ? AND balance >= ? AND balance - ? >= ?
             RETURNING *
             """,
             (rs, rowNum) -> RowMaps.wallet(rs),
             amount,
             userId,
-            amount);
+            amount,
+            amount,
+            reserved);
     if (updated.isEmpty()) return Optional.empty();
     Map<String, Object> wallet = updated.get(0);
     appendLedger(userId, entryType, "debit", amount, toMoney(wallet.get("balance")), paymentId, visitId, note);
