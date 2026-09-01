@@ -22,7 +22,7 @@ public final class EmailTemplates {
 
   public static String hostApp(AppProperties props) {
     String origin = origin(props.getPayments().getHostSuccessUrl());
-    return origin.isBlank() ? "https://maresi-host.vercel.app" : origin;
+    return origin.isBlank() ? "https://host.ma-resi.com" : origin;
   }
 
   public static String origin(String url) {

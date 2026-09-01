@@ -69,7 +69,7 @@ Same build for each: `npm run build`, output `dist`. Redeploy after changing `VI
 | Root Directory | `web` |
 | Env | `VITE_API_URL=https://maresi.onrender.com/api` |
 | Env | `VITE_WS_URL=https://maresi.onrender.com/ws` |
-| Env | `VITE_HOST_APP_URL=https://maresi-host.vercel.app` |
+| Env | `VITE_HOST_APP_URL=https://host.ma-resi.com` |
 | Env | `VITE_MAPBOX_TOKEN=pk.your_mapbox_public_token` |
 
 ### Host (`host/`)

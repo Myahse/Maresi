@@ -176,7 +176,7 @@ public class HostApplicationBusiness {
           "Compte hote active",
           "Votre demande a ete acceptee. Connectez-vous a l'application hote.",
           null);
-      email.sendToUser(applicantId, EmailTemplates.hostActivated("https://maresi-host.vercel.app"));
+      email.sendToUser(applicantId, EmailTemplates.hostActivated("https://host.ma-resi.com"));
     } else {
       notifications.create(
           applicantId,
