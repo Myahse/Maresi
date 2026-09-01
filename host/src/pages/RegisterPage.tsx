@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Building2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { WizardPane } from "@/components/ui/WizardPane";
 import { useAuth } from "@/hooks/useAuth";
 import { isAdultBirthDate, isValidIdCard, maxAdultBirthDate } from "@/lib/validation";
 import { isCompletePhone } from "@/lib/phoneCountries";
-import { CLIENT_APP_URL } from "@/lib/clientApp";
+import { CLIENT_APP_URL, guestHandoffUrl } from "@/lib/clientApp";
 import { cn } from "@/lib/utils";
 
 type RoleIntent = "client" | "owner";
@@ -21,7 +21,6 @@ type RoleIntent = "client" | "owner";
 export function RegisterPage() {
   const { t } = useTranslation();
   const { register, logout } = useAuth();
-  const navigate = useNavigate();
 
   const [step, setStep] = useState(0);
   const [role, setRole] = useState<RoleIntent | null>(null);
@@ -101,14 +100,14 @@ export function RegisterPage() {
         birth_date: birthDate,
         gender,
         phone: phone.trim(),
-        role,
+        role: "client",
         id_card: idCard.trim(),
         selfie,
         id_card_photo: idCardPhoto,
         id_card_back: idCardBack ?? undefined,
       });
-      if (res.user.role === "owner") {
-        navigate("/", { replace: true });
+      if (role === "owner" && "token" in res) {
+        window.location.assign(guestHandoffUrl(res, "/become-host?apply=1"));
         return;
       }
       logout();

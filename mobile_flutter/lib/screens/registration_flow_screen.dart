@@ -60,8 +60,6 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   XFile? _idCardPhoto;
   XFile? _idCardBack;
   String _phoneDial = '+225';
-  String _checkInTime = '14:00';
-  String _checkOutTime = '12:00';
   DateTime? _birthDate;
   String? _gender;
 
@@ -88,41 +86,19 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   UserRole _roleForIndex(int index) => index == 0 ? UserRole.client : UserRole.owner;
 
   List<String> _stepLabels(LocaleProvider locale) {
-    if (!_isOwner) {
-      return [
-        locale.t('register.stepProfile'),
-        locale.t('register.stepPersonal'),
-        locale.t('register.stepIdentity'),
-        locale.t('register.stepAccount'),
-      ];
-    }
     return [
       locale.t('register.stepProfile'),
       locale.t('register.stepPersonal'),
       locale.t('register.stepIdentity'),
-      locale.t('register.stepType'),
-      locale.t('register.stepListing'),
-      locale.t('register.stepPhotos'),
       locale.t('register.stepAccount'),
     ];
   }
 
   int _stepperIndex() {
-    if (!_isOwner) {
-      if (_step == _stepIntent) return 0;
-      if (_step == _stepPersonal) return 1;
-      if (_step == _stepIdentity) return 2;
-      return 3;
-    }
-    return switch (_step) {
-      _stepIntent => 0,
-      _stepPersonal => 1,
-      _stepIdentity => 2,
-      _stepPropertyType => 3,
-      _stepPropertyDetails => 4,
-      _stepPropertyPhotos => 5,
-      _ => 6,
-    };
+    if (_step == _stepIntent) return 0;
+    if (_step == _stepPersonal) return 1;
+    if (_step == _stepIdentity) return 2;
+    return 3;
   }
 
   void _showMessage(String message) {
@@ -236,7 +212,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
       _showMessage(locale.t('register.idCardInvalid'));
       return;
     }
-    setState(() => _step = _isOwner ? _stepPropertyType : _stepAccount);
+    setState(() => _step = _stepAccount);
   }
 
   void _continueFromPropertyType() {
@@ -302,7 +278,6 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     final password = _passwordController.text;
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
-    final role = _role ?? UserRole.client;
 
     if (email.isEmpty || !email.contains('@')) {
       _showMessage(locale.t('auth.errorEmail'));
@@ -333,7 +308,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
             lastName: lastName,
             birthDate: _formatIsoDate(_birthDate!),
             gender: _gender!,
-            role: role,
+            role: UserRole.client,
             idCard: _idCardController.text.trim(),
             phone: '$_phoneDial$phoneDigits',
             selfiePath: _selfie?.path,
@@ -341,20 +316,17 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
             idCardBackPath: _idCardBack?.path,
           );
 
-      if (_isOwner && _propertyType != null) {
-        final surface = _surfaceController.text.trim();
-        await maresiApi.createProperty(
-          title: _buildPropertyTitle(locale),
-          description: 'Superficie : $surface m²',
-          price: int.parse(_priceController.text.trim()),
-          location: _locationController.text.trim(),
-          propertyType: _propertyType!,
-          imagePaths: _photos.map((p) => p.path).toList(),
-          checkInTime: _checkInTime,
-          checkOutTime: _checkOutTime,
-          priceMidday: int.tryParse(_priceMiddayController.text.trim()),
-          priceFullDay: int.tryParse(_priceFullDayController.text.trim()),
-        );
+      if (_isOwner) {
+        try {
+          await maresiApi.submitHostApplication(
+            fullName: '$firstName $lastName',
+            phone: '$_phoneDial$phoneDigits',
+            idCard: _idCardController.text.trim(),
+          );
+          if (mounted) _showMessage(locale.t('register.hostApplySent'));
+        } catch (e) {
+          if (mounted) _showMessage(_cleanError(e));
+        }
       }
 
       if (mounted) goHomeAfterAuth(context);
@@ -368,7 +340,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   void _goBack() {
     if (_loading) return;
     if (_step == _stepAccount) {
-      setState(() => _step = _isOwner ? _stepPropertyPhotos : _stepIdentity);
+      setState(() => _step = _stepIdentity);
       return;
     }
     if (_step == _stepPropertyPhotos) {
@@ -701,41 +673,6 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(hintText: locale.t('register.titleHint')),
           ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _LabeledField(
-                label: locale.t('register.checkInTime'),
-                child: DropdownButtonFormField<String>(
-                  value: _checkInTime,
-                  items: const [
-                    DropdownMenuItem(value: '10:00', child: Text('10:00')),
-                    DropdownMenuItem(value: '12:00', child: Text('12:00')),
-                    DropdownMenuItem(value: '14:00', child: Text('14:00')),
-                    DropdownMenuItem(value: '16:00', child: Text('16:00')),
-                  ],
-                  onChanged: _loading ? null : (value) => setState(() => _checkInTime = value ?? '14:00'),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _LabeledField(
-                label: locale.t('register.checkOutTime'),
-                child: DropdownButtonFormField<String>(
-                  value: _checkOutTime,
-                  items: const [
-                    DropdownMenuItem(value: '10:00', child: Text('10:00')),
-                    DropdownMenuItem(value: '12:00', child: Text('12:00')),
-                    DropdownMenuItem(value: '14:00', child: Text('14:00')),
-                  ],
-                  onChanged: _loading ? null : (value) => setState(() => _checkOutTime = value ?? '12:00'),
-                ),
-              ),
-            ),
-          ],
         ),
         const SizedBox(height: 16),
         _LabeledField(

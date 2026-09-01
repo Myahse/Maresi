@@ -346,6 +346,29 @@ class ApiService implements MaresiApi {
   }
 
   @override
+  Future<void> submitHostApplication({
+    required String fullName,
+    required String phone,
+    String? city,
+    String? message,
+    String? idCard,
+  }) async {
+    await _jsonRequest(
+      'POST',
+      '/host-applications',
+      body: _wrapBody({
+        'full_name': fullName.trim(),
+        'fullName': fullName.trim(),
+        'phone': phone.trim(),
+        if (city != null && city.trim().isNotEmpty) 'city': city.trim(),
+        if (message != null && message.trim().isNotEmpty) 'message': message.trim(),
+        if (idCard != null && idCard.trim().isNotEmpty) 'id_card': idCard.trim(),
+      }),
+      queue: true,
+    );
+  }
+
+  @override
   Future<Map<String, dynamic>> getMyProfile() async {
     final res = await http.get(
       Uri.parse('${AppConfig.apiPrefix}/users/me'),

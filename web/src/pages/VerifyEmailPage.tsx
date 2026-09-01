@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HOST_APP_URL } from "@/lib/hostApp";
+import { markHostIntent, peekHostIntent } from "@/lib/hostIntent";
 import { resendVerification, verifyEmail } from "@/services/auth";
 
 export function VerifyEmailPage() {
@@ -19,6 +20,10 @@ export function VerifyEmailPage() {
   const [error, setError] = useState("");
   const [resent, setResent] = useState(sent);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (params.get("intent") === "host") markHostIntent();
+  }, [params]);
 
   useEffect(() => {
     if (!token) return;
@@ -69,7 +74,10 @@ export function VerifyEmailPage() {
                 {t("verify.openHost")}
               </a>
             ) : (
-              <Link to="/login" className="text-sm font-medium text-primary hover:underline">
+              <Link
+                to={peekHostIntent() ? "/login?intent=host" : "/login"}
+                className="text-sm font-medium text-primary hover:underline"
+              >
                 {t("forgot.backToLogin")}
               </Link>
             )}

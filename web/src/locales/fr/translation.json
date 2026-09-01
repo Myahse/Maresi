@@ -210,7 +210,7 @@
     "clientTitle": "Je cherche un logement",
     "clientHint": "Parcourir chambres et appartements et réserver un séjour.",
     "hostTitle": "Je suis propriétaire",
-    "hostHint": "Mettre en location votre appartement, chambre ou autre résidence.",
+    "hostHint": "Mettre en location votre résidence. Un admin validera votre demande avant publication.",
     "roleRequired": "Choisissez si vous êtes client ou hôte.",
     "personalRequired": "Saisissez votre prénom, nom, date de naissance et genre.",
     "ageRequired": "Vous devez avoir au moins 18 ans.",

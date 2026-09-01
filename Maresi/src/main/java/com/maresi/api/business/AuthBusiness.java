@@ -127,7 +127,7 @@ public class AuthBusiness {
     String phone = PhoneNormalizer.normalize(str(body.get("phone")));
     String idCard = str(body.get("id_card"));
     if (idCard == null) idCard = str(body.get("idCard"));
-    String role = resolveRole(str(body.get("role")));
+    String role = "client";
 
     if (email == null
         || password == null
@@ -500,7 +500,7 @@ public class AuthBusiness {
     String fullName = str(body.get("fullName"));
     if (fullName == null) fullName = str(body.get("full_name"));
     if (fullName == null) fullName = "Dev User";
-    String role = resolveRole(str(body.get("role")));
+    String role = "client";
     String phone = str(body.get("phone"));
     Map<String, Object> user = new HashMap<>();
     user.put("id", DEV_USER_ID);
@@ -526,13 +526,6 @@ public class AuthBusiness {
   private boolean exposeDevCode() {
     return props.isDevAuthBypass()
         || !"production".equalsIgnoreCase(env.getProperty("spring.profiles.active", ""));
-  }
-
-  private static String resolveRole(String raw) {
-    if (raw == null) return "client";
-    String role = raw.trim().toLowerCase(Locale.ROOT);
-    if ("owner".equals(role) || "host".equals(role)) return "owner";
-    return "client";
   }
 
   private static boolean validIdCard(String idCard) {

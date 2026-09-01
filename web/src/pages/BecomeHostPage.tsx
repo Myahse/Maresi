@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -7,10 +8,12 @@ import { Label } from "@/components/ui/label";
 import { getMyHostApplication, submitHostApplication } from "@/services/api";
 import type { HostApplication } from "@/types";
 import { HOST_APP_URL, openHostApp } from "@/lib/hostApp";
+import { consumeHostIntent, peekHostIntent } from "@/lib/hostIntent";
 
 export function BecomeHostPage() {
   const { t } = useTranslation();
   const { user, applySession } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [fullName, setFullName] = useState(user?.full_name ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [city, setCity] = useState("");
@@ -20,6 +23,7 @@ export function BecomeHostPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const autoApply = useRef(false);
 
   useEffect(() => {
     if (user?.role === "owner") {
@@ -42,6 +46,43 @@ export function BecomeHostPage() {
       });
     }
   }, [current, user, applySession]);
+
+  useEffect(() => {
+    if (autoApply.current || loading || !user || current) return;
+    const fromQuery = searchParams.get("apply") === "1";
+    const fromSignup = peekHostIntent();
+    if (!fromQuery && !fromSignup) return;
+    autoApply.current = true;
+    consumeHostIntent();
+    if (fromQuery) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("apply");
+      setSearchParams(next, { replace: true });
+    }
+    const name = (user.full_name || "").trim();
+    const tel = (user.phone || "").trim();
+    if (!name || !tel) return;
+    setSaving(true);
+    setError("");
+    submitHostApplication({
+      full_name: name,
+      phone: tel,
+    })
+      .then(setCurrent)
+      .catch(async (err) => {
+        try {
+          const existing = await getMyHostApplication();
+          if (existing) {
+            setCurrent(existing);
+            return;
+          }
+        } catch {
+          /* keep original error */
+        }
+        setError(err instanceof Error ? err.message : t("hostApply.failed"));
+      })
+      .finally(() => setSaving(false));
+  }, [user, loading, current, searchParams, setSearchParams, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

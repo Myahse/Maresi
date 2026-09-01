@@ -187,10 +187,10 @@ class MockApiService implements MaresiApi {
       throw Exception('Données invalides');
     }
     final user = User(
-      id: role == UserRole.owner ? MockUsers.demoOwner.id : MockUsers.demoClient.id,
+      id: MockUsers.demoClient.id,
       email: email.trim(),
       fullName: fullName.trim(),
-      role: role,
+      role: UserRole.client,
     );
     _sessionUser = user;
     return AuthResponse(user: user, token: _mockToken);
@@ -208,6 +208,20 @@ class MockApiService implements MaresiApi {
       'role': user.role.name,
       'phone': '',
     };
+  }
+
+  @override
+  Future<void> submitHostApplication({
+    required String fullName,
+    required String phone,
+    String? city,
+    String? message,
+    String? idCard,
+  }) async {
+    await _delay();
+    if (fullName.trim().isEmpty || phone.trim().isEmpty) {
+      throw Exception('Données invalides');
+    }
   }
 
   User _userForEmail(String email) {

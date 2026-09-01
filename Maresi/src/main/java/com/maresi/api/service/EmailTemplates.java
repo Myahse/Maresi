@@ -94,7 +94,7 @@ public final class EmailTemplates {
         "Votre espace hôte est ouvert",
         greet(
             name,
-            "Votre compte hôte Maresi est prêt. Publiez une résidence, recevez des demandes et suivez chaque séjour depuis Maresi Hôte.\n\nPensez à indiquer vos horaires d’arrivée et de départ, puis vos liens Wave ou Orange Money."),
+            "Votre compte hôte Maresi est prêt. Publiez une résidence, recevez des demandes et suivez chaque séjour depuis Maresi Hôte."),
         details("Hôte", personName(name), "Téléphone", phone),
         null,
         "Ouvrir Maresi Hôte",

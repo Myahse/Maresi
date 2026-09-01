@@ -16,7 +16,9 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => authService.getStoredUser());
+  const [user, setUser] = useState<User | null>(
+    () => authService.consumeHandoff()?.user ?? authService.getStoredUser()
+  );
   const [loading, setLoading] = useState(false);
 
   const login = useCallback(async (email: string, password: string) => {

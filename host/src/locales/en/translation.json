@@ -195,7 +195,7 @@
     "clientTitle": "I am looking for a place",
     "clientHint": "Browse rooms and apartments and book a stay.",
     "hostTitle": "I am an owner",
-    "hostHint": "List your apartment, room, or other residence for guests.",
+    "hostHint": "List your residence. An admin reviews your request before you can publish.",
     "roleRequired": "Choose whether you are a guest or a host.",
     "personalRequired": "Enter your first name, last name, birth date and gender.",
     "ageRequired": "You must be at least 18 years old.",

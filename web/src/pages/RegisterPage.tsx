@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Building2, Search } from "lucide-react";
@@ -13,7 +13,7 @@ import { WizardPane } from "@/components/ui/WizardPane";
 import { useAuth } from "@/hooks/useAuth";
 import { isAdultBirthDate, isValidIdCard, maxAdultBirthDate } from "@/lib/validation";
 import { isCompletePhone } from "@/lib/phoneCountries";
-import { hostHandoffUrl } from "@/lib/hostApp";
+import { consumeHostIntent, markHostIntent } from "@/lib/hostIntent";
 import { cn } from "@/lib/utils";
 
 type RoleIntent = "client" | "owner";
@@ -39,6 +39,10 @@ export function RegisterPage() {
   const [idCardBack, setIdCardBack] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (hostIntent) markHostIntent();
+  }, [hostIntent]);
 
   const lastStep = 3;
   const steps = [
@@ -94,6 +98,7 @@ export function RegisterPage() {
     }
     setLoading(true);
     try {
+      if (role === "owner") markHostIntent();
       const res = await register({
         email,
         password,
@@ -102,18 +107,19 @@ export function RegisterPage() {
         birth_date: birthDate,
         gender,
         phone: phone.trim(),
-        role,
+        role: "client",
         id_card: idCard.trim(),
         selfie,
         id_card_photo: idCardPhoto,
         id_card_back: idCardBack ?? undefined,
       });
       if ("needsEmailVerification" in res && res.needsEmailVerification) {
-        navigate(`/verify-email?sent=1&email=${encodeURIComponent(res.email)}`, { replace: true });
+        const intent = role === "owner" ? "&intent=host" : "";
+        navigate(`/verify-email?sent=1&email=${encodeURIComponent(res.email)}${intent}`, { replace: true });
         return;
       }
-      if ("user" in res && res.user.role === "owner") {
-        window.location.assign(hostHandoffUrl(res));
+      if (role === "owner") {
+        navigate("/become-host?apply=1", { replace: true });
         return;
       }
       navigate("/properties", { replace: true });
@@ -157,7 +163,10 @@ export function RegisterPage() {
             <div className="grid sm:grid-cols-2 gap-4">
               <button
                 type="button"
-                onClick={() => setRole("client")}
+                onClick={() => {
+                  consumeHostIntent();
+                  setRole("client");
+                }}
                 className={cn(
                   "text-left rounded-xl border-2 p-5 transition-colors",
                   role === "client" ? "border-brand bg-accent" : "border-border hover:border-brand"
@@ -169,7 +178,10 @@ export function RegisterPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setRole("owner")}
+                onClick={() => {
+                  markHostIntent();
+                  setRole("owner");
+                }}
                 className={cn(
                   "text-left rounded-xl border-2 p-5 transition-colors",
                   role === "owner" ? "border-brand bg-accent" : "border-border hover:border-brand"

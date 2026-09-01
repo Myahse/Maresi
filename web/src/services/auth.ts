@@ -66,6 +66,21 @@ export function applySession(res: AuthResponse): AuthResponse {
   return persistAuth(res);
 }
 
+export function consumeHandoff(): AuthResponse | null {
+  if (typeof window === "undefined") return null;
+  const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+  if (!hash.startsWith("handoff=")) return null;
+  try {
+    const raw = decodeURIComponent(hash.slice("handoff=".length));
+    const parsed = normalizeAuthResponse(JSON.parse(raw));
+    history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    return persistAuth(parsed);
+  } catch {
+    history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    return null;
+  }
+}
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }

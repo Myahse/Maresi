@@ -48,6 +48,14 @@ abstract class MaresiApi {
 
   Future<Map<String, dynamic>> getMyProfile();
 
+  Future<void> submitHostApplication({
+    required String fullName,
+    required String phone,
+    String? city,
+    String? message,
+    String? idCard,
+  });
+
   Future<Property> createProperty({
     required String title,
     required String description,

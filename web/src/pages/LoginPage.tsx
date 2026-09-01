@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { consumeHostIntent, peekHostIntent } from "@/lib/hostIntent";
 import { isWakingError } from "@/services/api";
 
 export function LoginPage() {
@@ -29,13 +30,21 @@ export function LoginPage() {
   const from = fromLocation?.pathname
     ? `${fromLocation.pathname}${fromLocation.search ?? ""}`
     : "/properties";
+  const hostIntent =
+    new URLSearchParams(location.search).get("intent") === "host" || peekHostIntent();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
+      const res = await login(email, password);
+      if (hostIntent && res.user.role === "client") {
+        consumeHostIntent();
+        navigate("/become-host?apply=1", { replace: true });
+        return;
+      }
+      consumeHostIntent();
       navigate(from, { replace: true });
     } catch (err) {
       setError(
