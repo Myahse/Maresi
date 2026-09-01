@@ -52,8 +52,8 @@ export function PropertyCreationWizard({
   const [virtual_tour_url, setVirtualTourUrl] = useState(initial?.virtual_tour_url ?? "");
   const [wave_payment_url] = useState(initial?.wave_payment_url ?? "");
   const [orange_money_url] = useState(initial?.orange_money_url ?? "");
-  const [checkInTime] = useState(initial?.check_in_time?.slice(0, 5) ?? "14:00");
-  const [checkOutTime] = useState(initial?.check_out_time?.slice(0, 5) ?? "12:00");
+  const [checkInTime, setCheckInTime] = useState(initial?.check_in_time?.slice(0, 5) ?? "14:00");
+  const [checkOutTime, setCheckOutTime] = useState(initial?.check_out_time?.slice(0, 5) ?? "12:00");
   const [priceMidday, setPriceMidday] = useState(initial?.price_midday?.toString() ?? "");
   const [priceFullDay, setPriceFullDay] = useState(initial?.price_full_day?.toString() ?? "");
   const [existingUrls, setExistingUrls] = useState<string[]>(
@@ -62,13 +62,15 @@ export function PropertyCreationWizard({
   const [images, setImages] = useState<File[]>([]);
   const [coverIndex, setCoverIndex] = useState(0);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [pendingSlots, setPendingSlots] = useState(0);
   const [preparingPhotos, setPreparingPhotos] = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [waitingUpload, setWaitingUpload] = useState(false);
   const uploadGen = useRef(0);
-  const pendingUpload = useRef<Promise<string[] | null> | null>(null);
+  const remoteByFile = useRef(new WeakMap<File, string>());
+  const inflight = useRef(0);
+  const waiters = useRef<Array<() => void>>([]);
   const imagesRef = useRef<File[]>([]);
-  const preparingCount = useRef(0);
   imagesRef.current = images;
 
   useEffect(() => {
@@ -101,6 +103,7 @@ export function PropertyCreationWizard({
       case 2:
         if (!isValidPrice(price)) return t("wizard.property.errors.price");
         if (!max_guests || Number(max_guests) < 1) return t("wizard.property.errors.guests");
+        if (!checkInTime || !checkOutTime) return t("wizard.property.errors.times");
         return null;
       case 3:
         if (priceMidday && !isValidPrice(priceMidday)) return t("wizard.property.errors.price");
@@ -132,60 +135,78 @@ export function PropertyCreationWizard({
     setStep((s) => Math.max(s - 1, 0));
   };
 
-  const startBackgroundUpload = (files: File[]) => {
-    if (files.length === 0) {
-      pendingUpload.current = null;
+  const beginWork = () => {
+    inflight.current += 1;
+  };
+
+  const endWork = () => {
+    inflight.current = Math.max(0, inflight.current - 1);
+    if (inflight.current === 0) {
+      setPreparingPhotos(false);
       setUploadingPhotos(false);
-      return;
+      waiters.current.splice(0).forEach((resolve) => resolve());
     }
-    const gen = ++uploadGen.current;
-    pendingUpload.current = (async () => {
-      setUploadingPhotos(true);
-      try {
-        const result = await uploadPropertyImages(files);
-        if (gen !== uploadGen.current) return null;
-        return Array.isArray(result.urls) && result.urls.length === files.length ? result.urls : null;
-      } catch {
-        if (gen !== uploadGen.current) return null;
-        return null;
-      } finally {
-        if (gen === uploadGen.current) setUploadingPhotos(false);
-      }
-    })();
+  };
+
+  const waitForWork = () => {
+    if (inflight.current === 0) return Promise.resolve();
+    return new Promise<void>((resolve) => waiters.current.push(resolve));
+  };
+
+  const uploadOne = async (file: File, gen: number) => {
+    if (remoteByFile.current.get(file)) return;
+    setUploadingPhotos(true);
+    try {
+      const result = await uploadPropertyImages([file]);
+      if (gen !== uploadGen.current) return;
+      const url = Array.isArray(result.urls) ? result.urls[0] : undefined;
+      if (url) remoteByFile.current.set(file, url);
+    } catch {
+      /* publish can still attach the local file */
+    }
   };
 
   const handlePhotosSelected = (list: FileList | null) => {
     const incoming = Array.from(list || []);
     if (incoming.length === 0) return;
-    setImages((prev) => [...prev, ...incoming]);
-    preparingCount.current += 1;
+    const gen = uploadGen.current;
+    setPendingSlots((count) => count + incoming.length);
     setPreparingPhotos(true);
+    beginWork();
     void (async () => {
+      let leftover = incoming.length;
       try {
-        const compressed: File[] = [];
-        const concurrency = 4;
-        for (let i = 0; i < incoming.length; i += concurrency) {
-          const batch = incoming.slice(i, i + concurrency);
-          compressed.push(...(await Promise.all(batch.map((file) => compressImageFile(file)))));
-        }
-        setImages((prev) => {
-          const next = [...prev];
-          incoming.forEach((orig, i) => {
-            const idx = next.indexOf(orig);
-            if (idx >= 0) next[idx] = compressed[i];
-          });
-          imagesRef.current = next;
-          return next;
-        });
-        startBackgroundUpload(imagesRef.current);
+        const concurrency = 2;
+        let cursor = 0;
+        const uploads: Promise<void>[] = [];
+        const run = async () => {
+          while (cursor < incoming.length && gen === uploadGen.current) {
+            const file = incoming[cursor];
+            cursor += 1;
+            const compressed = await compressImageFile(file);
+            leftover -= 1;
+            if (gen !== uploadGen.current) return;
+            setPendingSlots((count) => Math.max(0, count - 1));
+            setImages((prev) => {
+              const next = [...prev, compressed];
+              imagesRef.current = next;
+              return next;
+            });
+            uploads.push(uploadOne(compressed, gen));
+          }
+        };
+        await Promise.all(Array.from({ length: Math.min(concurrency, incoming.length) }, () => run()));
+        await Promise.all(uploads);
       } finally {
-        preparingCount.current = Math.max(0, preparingCount.current - 1);
-        if (preparingCount.current === 0) setPreparingPhotos(false);
+        if (leftover > 0) {
+          setPendingSlots((count) => Math.max(0, count - leftover));
+        }
+        endWork();
       }
     })();
   };
 
-  const photoCount = existingUrls.length + images.length;
+  const photoCount = existingUrls.length + images.length + pendingSlots;
 
   const removePhoto = (idx: number) => {
     if (idx < existingUrls.length) {
@@ -195,10 +216,6 @@ export function PropertyCreationWizard({
       const next = images.filter((_, i) => i !== fileIdx);
       imagesRef.current = next;
       setImages(next);
-      uploadGen.current += 1;
-      pendingUpload.current = null;
-      if (next.length > 0) startBackgroundUpload(next);
-      else setUploadingPhotos(false);
     }
     setCoverIndex((current) => {
       if (photoCount <= 1) return 0;
@@ -243,10 +260,11 @@ export function PropertyCreationWizard({
     formData.set("draft", asDraft ? "true" : "false");
     setWaitingUpload(true);
     try {
-      const uploaded = pendingUpload.current ? await pendingUpload.current : null;
-      const newUrls = uploaded && uploaded.length === images.length ? uploaded : null;
-      if (newUrls || images.length === 0) {
-        const orderedUrls = [...existingUrls, ...(newUrls ?? [])];
+      await waitForWork();
+      const readyUrls = images.map((file) => remoteByFile.current.get(file));
+      const allUploaded = readyUrls.every((url): url is string => Boolean(url));
+      if (allUploaded || images.length === 0) {
+        const orderedUrls = [...existingUrls, ...(allUploaded ? readyUrls : [])];
         if (coverIndex > 0 && coverIndex < orderedUrls.length) {
           const [cover] = orderedUrls.splice(coverIndex, 1);
           orderedUrls.unshift(cover);
@@ -254,13 +272,11 @@ export function PropertyCreationWizard({
         orderedUrls.forEach((url) => formData.append("image_urls", url));
       } else {
         existingUrls.forEach((url) => formData.append("image_urls", url));
-        const ordered = [...images];
-        const fileCover = coverIndex - existingUrls.length;
-        if (fileCover > 0 && fileCover < ordered.length) {
-          const [cover] = ordered.splice(fileCover, 1);
-          ordered.unshift(cover);
-        }
-        ordered.forEach((file) => formData.append("images", file));
+        readyUrls.forEach((url) => {
+          if (url) formData.append("image_urls", url);
+        });
+        const leftover = images.filter((_, i) => !readyUrls[i]);
+        leftover.forEach((file) => formData.append("images", file));
       }
       await onSubmit(formData);
     } catch (e) {
@@ -387,6 +403,31 @@ export function PropertyCreationWizard({
               onChange={(e) => setMaxGuests(e.target.value)}
             />
           </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="check-in-time">{t("wizard.property.checkInTime")} *</Label>
+              <Input
+                id="check-in-time"
+                type="time"
+                step={900}
+                value={checkInTime}
+                onChange={(e) => setCheckInTime(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="check-out-time">{t("wizard.property.checkOutTime")} *</Label>
+              <Input
+                id="check-out-time"
+                type="time"
+                step={900}
+                value={checkOutTime}
+                onChange={(e) => setCheckOutTime(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">{t("wizard.property.timesHint")}</p>
         </WizardPane>
       )}
 
@@ -494,7 +535,7 @@ export function PropertyCreationWizard({
                         className="block w-full"
                         onClick={() => setCoverIndex(idx)}
                       >
-                        <img src={src} alt="" className="h-24 w-full object-cover" />
+                        <img src={src} alt="" className="h-24 w-full object-cover" decoding="async" />
                         {idx === coverIndex && (
                           <span className="absolute bottom-1 left-1 right-1 rounded-full bg-brand px-2 py-0.5 text-[10px] font-semibold text-white">
                             {t("wizard.property.coverBadge")}
@@ -514,6 +555,12 @@ export function PropertyCreationWizard({
                         <X className="h-4 w-4" />
                       </button>
                     </div>
+                  ))}
+                  {Array.from({ length: pendingSlots }, (_, i) => (
+                    <div
+                      key={`pending-${i}`}
+                      className="h-24 rounded-xl border-2 border-dashed border-brand/40 bg-muted animate-pulse"
+                    />
                   ))}
                 </div>
               </div>
@@ -574,6 +621,14 @@ export function PropertyCreationWizard({
             <div className="flex justify-between gap-4 p-4">
               <dt className="text-muted-foreground">{t("wizard.property.maxGuests")}</dt>
               <dd className="font-semibold">{max_guests}</dd>
+            </div>
+            <div className="flex justify-between gap-4 p-4">
+              <dt className="text-muted-foreground">{t("wizard.property.checkInTime")}</dt>
+              <dd className="font-semibold">{checkInTime}</dd>
+            </div>
+            <div className="flex justify-between gap-4 p-4">
+              <dt className="text-muted-foreground">{t("wizard.property.checkOutTime")}</dt>
+              <dd className="font-semibold">{checkOutTime}</dd>
             </div>
             <div className="flex justify-between gap-4 p-4">
               <dt className="text-muted-foreground">{t("wizard.property.amenitiesTitle")}</dt>

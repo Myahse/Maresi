@@ -222,6 +222,8 @@
     "idCardNumber": "ID card number",
     "idCardPlaceholder": "e.g. CI123456789",
     "choosePhoto": "Choose photo",
+    "replacePhoto": "Replace photo",
+    "previewPhoto": "View photo",
     "preparingPhoto": "Preparing photo…",
     "fullName": "Full name",
     "firstName": "First name",

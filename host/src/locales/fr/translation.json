@@ -222,6 +222,8 @@
     "idCardNumber": "Numéro de pièce d'identité",
     "idCardPlaceholder": "ex. CI123456789",
     "choosePhoto": "Choisir une photo",
+    "replacePhoto": "Remplacer la photo",
+    "previewPhoto": "Voir la photo",
     "preparingPhoto": "Préparation de la photo…",
     "fullName": "Nom complet",
     "firstName": "Prénom",

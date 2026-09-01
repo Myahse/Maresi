@@ -25,9 +25,9 @@ class PropertyPhotosPicker extends StatelessWidget {
     if (!enabled) return;
     final picker = ImagePicker();
     final picked = await picker.pickMultiImage(
-      imageQuality: 70,
-      maxWidth: 1600,
-      maxHeight: 1600,
+      imageQuality: 60,
+      maxWidth: 1080,
+      maxHeight: 1080,
     );
     if (picked.isEmpty) return;
     onChanged([...photos, ...picked]);

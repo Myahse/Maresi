@@ -32,6 +32,8 @@ class _PropertyCreateScreenState extends State<PropertyCreateScreen> {
   String? _propertyType;
   bool _loading = false;
   List<XFile> _photos = [];
+  TimeOfDay _checkIn = const TimeOfDay(hour: 14, minute: 0);
+  TimeOfDay _checkOut = const TimeOfDay(hour: 12, minute: 0);
 
   @override
   void dispose() {
@@ -66,6 +68,25 @@ class _PropertyCreateScreenState extends State<PropertyCreateScreen> {
     final typeLabel = _propertyType != null ? _propertyTypeLabel(locale, _propertyType!) : locale.t('register.typeApartment');
     final location = _locationController.text.trim();
     return location.isEmpty ? 'Résidence $typeLabel' : 'Résidence $typeLabel — $location';
+  }
+
+  String _formatClock(TimeOfDay time) =>
+      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
+  Future<void> _pickStayTime({required bool arrival}) async {
+    if (_loading) return;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: arrival ? _checkIn : _checkOut,
+    );
+    if (picked == null) return;
+    setState(() {
+      if (arrival) {
+        _checkIn = picked;
+      } else {
+        _checkOut = picked;
+      }
+    });
   }
 
   void _continueFromType() {
@@ -119,6 +140,8 @@ class _PropertyCreateScreenState extends State<PropertyCreateScreen> {
         location: _locationController.text.trim(),
         propertyType: _propertyType!,
         imagePaths: _photos.map((p) => p.path).toList(),
+        checkInTime: _formatClock(_checkIn),
+        checkOutTime: _formatClock(_checkOut),
       );
       if (!mounted) return;
       _showMessage(locale.t('propertyCreate.success'));
@@ -303,6 +326,30 @@ class _PropertyCreateScreenState extends State<PropertyCreateScreen> {
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(hintText: locale.t('register.titleHint')),
           ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: PropertyLabeledField(
+                label: locale.t('register.checkInTime'),
+                child: OutlinedButton(
+                  onPressed: _loading ? null : () => _pickStayTime(arrival: true),
+                  child: Text(_formatClock(_checkIn)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: PropertyLabeledField(
+                label: locale.t('register.checkOutTime'),
+                child: OutlinedButton(
+                  onPressed: _loading ? null : () => _pickStayTime(arrival: false),
+                  child: Text(_formatClock(_checkOut)),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

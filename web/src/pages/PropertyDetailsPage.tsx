@@ -174,6 +174,17 @@ export function PropertyDetailsPage() {
                 </span>
               )}
             </p>
+            {(property.check_in_time || property.check_out_time) && (
+              <p className="text-sm text-muted-foreground mt-2">
+                {property.check_in_time
+                  ? `${t("wizard.reserve.checkIn")} ${String(property.check_in_time).slice(0, 5)}`
+                  : ""}
+                {property.check_in_time && property.check_out_time ? " · " : ""}
+                {property.check_out_time
+                  ? `${t("wizard.reserve.checkOut")} ${String(property.check_out_time).slice(0, 5)}`
+                  : ""}
+              </p>
+            )}
           </div>
 
           {normalizeAmenities(property.amenities).length > 0 && (

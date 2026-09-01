@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ImageLightbox } from "@/components/media/ImageLightbox";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -12,6 +13,7 @@ export function AuthImage({
   className?: string;
 }) {
   const [blobUrl, setBlobUrl] = useState("");
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!src) return;
@@ -37,5 +39,17 @@ export function AuthImage({
   }, [src]);
 
   if (!src || !blobUrl) return null;
-  return <img src={blobUrl} alt={alt} className={className} />;
+  return (
+    <>
+      <button
+        type="button"
+        className="block w-full cursor-zoom-in border-0 bg-transparent p-0"
+        onClick={() => setOpen(true)}
+        title={alt}
+      >
+        <img src={blobUrl} alt={alt} className={className} />
+      </button>
+      <ImageLightbox src={blobUrl} alt={alt} open={open} onClose={() => setOpen(false)} />
+    </>
+  );
 }
