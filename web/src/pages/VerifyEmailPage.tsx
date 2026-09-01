@@ -21,10 +21,17 @@ export function VerifyEmailPage() {
   const [error, setError] = useState("");
   const [resent, setResent] = useState(sent);
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(sent ? 20 : 0);
 
   useEffect(() => {
     if (params.get("intent") === "host") markHostIntent();
   }, [params]);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = window.setTimeout(() => setCooldown((value) => value - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [cooldown]);
 
   useEffect(() => {
     if (!token) return;
@@ -48,11 +55,18 @@ export function VerifyEmailPage() {
 
   const handleResend = async (e: React.FormEvent) => {
     e.preventDefault();
+    const address = email.trim();
     setError("");
+    if (!address) {
+      setError(t("verify.failed"));
+      return;
+    }
     setLoading(true);
     try {
-      await resendVerification(email);
+      await resendVerification(address);
+      setEmail(address);
       setResent(true);
+      setCooldown(20);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("verify.failed"));
     } finally {
@@ -95,8 +109,8 @@ export function VerifyEmailPage() {
                 <Label htmlFor="email">{t("common.email")}</Label>
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? t("common.saving") : t("verify.resend")}
+              <Button type="submit" className="w-full" disabled={loading || cooldown > 0}>
+                {loading ? t("common.saving") : cooldown > 0 ? t("verify.resendWait", { seconds: cooldown }) : t("verify.resend")}
               </Button>
             </form>
             <Link to="/login" className="text-sm font-medium text-primary hover:underline">

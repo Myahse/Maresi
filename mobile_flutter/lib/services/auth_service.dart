@@ -68,6 +68,10 @@ class AuthService {
     await _persistSession(result);
   }
 
+  Future<void> resendVerification(String email) {
+    return _api.resendVerification(email);
+  }
+
   Future<void> logout() async {
     _user = null;
     final prefs = await SharedPreferences.getInstance();

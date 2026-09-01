@@ -30,6 +30,8 @@ abstract class MaresiApi {
     required String password,
   });
 
+  Future<void> resendVerification(String email);
+
   Future<AuthResponse> register({
     required String email,
     required String password,

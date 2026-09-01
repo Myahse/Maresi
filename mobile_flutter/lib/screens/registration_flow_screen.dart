@@ -105,6 +105,36 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _showVerifyEmailDialog(LocaleProvider locale, String email) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(locale.t('register.checkEmail')),
+        content: Text(
+          locale.t(_isOwner ? 'register.hostApplyAfterEmail' : 'register.checkEmail'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(locale.t('common.cancel')),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                await context.read<AuthProvider>().resendVerification(email);
+                if (ctx.mounted) Navigator.pop(ctx);
+                if (mounted) _showMessage(locale.t('register.checkEmail'));
+              } catch (e) {
+                if (mounted) _showMessage(_cleanError(e));
+              }
+            },
+            child: Text(locale.t('register.resendEmail')),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _cleanError(Object error) {
     final text = error.toString();
     if (text.startsWith('Exception: ')) return text.substring(11);
@@ -317,10 +347,10 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
           );
 
       if (mounted) goHomeAfterAuth(context);
-    } on NeedsEmailVerificationException {
+    } on NeedsEmailVerificationException catch (e) {
       if (mounted) {
-        _showMessage(locale.t(_isOwner ? 'register.hostApplyAfterEmail' : 'register.checkEmail'));
-        Navigator.of(context).pop();
+        await _showVerifyEmailDialog(locale, e.email);
+        if (mounted) Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) _showMessage(_cleanError(e));

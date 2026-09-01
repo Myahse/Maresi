@@ -298,6 +298,18 @@ class ApiService implements MaresiApi {
     );
   }
 
+  @override
+  Future<void> resendVerification(String email) async {
+    final res = await http.post(
+      Uri.parse('${AppConfig.apiPrefix}/auth/resend-verification'),
+      headers: {'Content-Type': 'application/json'},
+      body: _wrapBody({'email': email.trim()}),
+    );
+    final data = _parseBody(res);
+    if (res.statusCode >= 400) _throwFromResponse(res, data);
+  }
+
+  @override
   Future<AuthResponse> register({
     required String email,
     required String password,

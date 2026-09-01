@@ -61,6 +61,10 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> resendVerification(String email) {
+    return _authService.resendVerification(email);
+  }
+
   Future<void> logout() async {
     await _authService.logout();
     notifyListeners();

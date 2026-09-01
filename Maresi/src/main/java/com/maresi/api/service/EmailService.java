@@ -72,21 +72,30 @@ public class EmailService {
 
   @Async
   public void sendToUser(UUID userId, String subject, String body) {
-    sendToUser(userId, EmailTemplates.simple(subject.replaceFirst("^Maresi — ", ""), body));
+    deliverToUser(userId, EmailTemplates.simple(subject.replaceFirst("^Maresi — ", ""), body), null);
   }
 
   @Async
   public void sendToUser(UUID userId, EmailTemplates.Mail message) {
-    sendToUser(userId, message, null);
+    deliverToUser(userId, message, null);
   }
 
   @Async
   public void sendToUser(UUID userId, String subject, String body, Attachment attachment) {
-    sendToUser(userId, EmailTemplates.simple(subject.replaceFirst("^Maresi — ", ""), body), attachment);
+    deliverToUser(userId, EmailTemplates.simple(subject.replaceFirst("^Maresi — ", ""), body), attachment);
   }
 
   @Async
   public void sendToUser(UUID userId, EmailTemplates.Mail message, Attachment attachment) {
+    deliverToUser(userId, message, attachment);
+  }
+
+  /** Sends on the caller thread so signup/resend can wait until Brevo accepts the message. */
+  public void sendToUserNow(UUID userId, EmailTemplates.Mail message) {
+    deliverToUser(userId, message, null);
+  }
+
+  private void deliverToUser(UUID userId, EmailTemplates.Mail message, Attachment attachment) {
     if (userId == null || message == null) return;
     String to =
         users

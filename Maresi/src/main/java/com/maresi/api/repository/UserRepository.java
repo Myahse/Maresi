@@ -47,14 +47,15 @@ public class UserRepository {
   }
 
   public Optional<Map<String, Object>> findByEmail(String email) {
+    if (email == null || email.isBlank()) return Optional.empty();
     return jdbc.query(
-            "SELECT " + PUBLIC_COLS + ", password_hash FROM users WHERE email = ?",
+            "SELECT " + PUBLIC_COLS + ", password_hash FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1",
             (rs, rowNum) -> {
               Map<String, Object> m = RowMaps.userPublic(rs);
               m.put("password_hash", rs.getString("password_hash"));
               return m;
             },
-            email)
+            email.trim())
         .stream()
         .findFirst();
   }

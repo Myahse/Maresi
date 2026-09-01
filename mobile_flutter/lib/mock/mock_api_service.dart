@@ -197,6 +197,11 @@ class MockApiService implements MaresiApi {
   }
 
   @override
+  Future<void> resendVerification(String email) async {
+    await _delay();
+  }
+
+  @override
   Future<Map<String, dynamic>> getMyProfile() async {
     await _delay();
     final user = _sessionUser;

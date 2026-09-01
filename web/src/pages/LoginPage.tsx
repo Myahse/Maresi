@@ -103,6 +103,12 @@ export function LoginPage() {
               {t("login.registerLink")}
             </Link>
           </p>
+          <Link
+            to={email.trim() ? `/verify-email?email=${encodeURIComponent(email.trim())}` : "/verify-email"}
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            {t("verify.resend")}
+          </Link>
         </CardFooter>
       </form>
     </Card>

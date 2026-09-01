@@ -186,6 +186,7 @@
     "success": "Your email is confirmed. You can sign in.",
     "sent": "A confirmation email has been sent. Open the link in the message.",
     "resend": "Resend email",
+    "resendWait": "Resend in {{seconds}}s",
     "failed": "Could not confirm this email",
     "openHost": "Open Maresi Host",
     "hostPending": "Your host request was sent to an admin. Sign in, then wait for approval."

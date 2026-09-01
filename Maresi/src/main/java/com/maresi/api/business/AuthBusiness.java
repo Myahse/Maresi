@@ -228,7 +228,7 @@ public class AuthBusiness {
     if (hostIntent) {
       users.setHostIntent(userId, true);
     }
-    sendVerificationEmail(user);
+    sendVerificationEmail(user, true);
     Map<String, Object> item = new HashMap<>();
     item.put("needs_email_verification", true);
     item.put("email", email);
@@ -399,14 +399,14 @@ public class AuthBusiness {
   public Response<Map<String, Object>> resendVerification(Request<Map<String, Object>> request, Locale locale) {
     Response<Map<String, Object>> response = new Response<>();
     String emailAddr = str(request.getData() != null ? request.getData().get("email") : null);
-    if (emailAddr == null) {
+    if (emailAddr == null || emailAddr.isBlank()) {
       response.setHasError(true);
       response.setStatus(functionalError.fieldEmpty("email", locale));
       return response;
     }
-    users.findByEmail(emailAddr).ifPresent(user -> {
+    users.findByEmail(emailAddr.trim()).ifPresent(user -> {
       if (!isEmailVerified(user)) {
-        sendVerificationEmail(user);
+        sendVerificationEmail(user, false);
       }
     });
     Map<String, Object> item = new HashMap<>();
@@ -466,13 +466,15 @@ public class AuthBusiness {
     return response;
   }
 
-  private void sendVerificationEmail(Map<String, Object> user) {
+  private void sendVerificationEmail(Map<String, Object> user, boolean replaceExisting) {
     UUID id = user.get("id") instanceof UUID u ? u : UUID.fromString(user.get("id").toString());
     String token = newToken();
-    authTokens.invalidateOpen(id, "email_verify");
+    if (replaceExisting) {
+      authTokens.invalidateOpen(id, "email_verify");
+    }
     authTokens.create(id, "email_verify", hashToken(token), Instant.now().plus(Duration.ofHours(24)));
     String url = EmailTemplates.guestApp(props) + "/verify-email?token=" + token;
-    email.sendToUser(id, EmailTemplates.verifyEmail(EmailTemplates.personName(user), url));
+    email.sendToUserNow(id, EmailTemplates.verifyEmail(EmailTemplates.personName(user), url));
   }
 
   private void sendResetEmail(Map<String, Object> user, String app) {
@@ -483,14 +485,18 @@ public class AuthBusiness {
     boolean host = app != null && app.trim().equalsIgnoreCase("host");
     String origin = host ? EmailTemplates.hostApp(props) : EmailTemplates.guestApp(props);
     String url = origin + "/reset-password?token=" + token;
-    email.sendToUser(id, EmailTemplates.passwordReset(EmailTemplates.personName(user), url));
+    email.sendToUserNow(id, EmailTemplates.passwordReset(EmailTemplates.personName(user), url));
   }
 
   private static boolean isEmailVerified(Map<String, Object> user) {
     Object raw = user.get("email_verified");
+    if (raw == null) return false;
     if (raw instanceof Boolean b) return b;
     if (raw instanceof Number n) return n.intValue() != 0;
-    return raw == null || Boolean.parseBoolean(String.valueOf(raw));
+    String value = String.valueOf(raw).trim();
+    if (value.equalsIgnoreCase("t") || value.equalsIgnoreCase("true") || value.equals("1")) return true;
+    if (value.equalsIgnoreCase("f") || value.equalsIgnoreCase("false") || value.equals("0")) return false;
+    return Boolean.parseBoolean(value);
   }
 
   private static String newToken() {
