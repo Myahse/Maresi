@@ -1,11 +1,13 @@
 package com.maresi.api.repository;
 
+import com.maresi.api.exception.ApiException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -44,6 +46,7 @@ public class OwnerSubscriptionRepository {
   }
 
   public Map<String, Object> upsertActive(UUID userId, Instant startsAt, Instant expiresAt, UUID lastPaymentId) {
+    requireExistingUser(userId);
     Timestamp start = Timestamp.from(startsAt);
     Timestamp expires = Timestamp.from(expiresAt);
     try {
@@ -122,14 +125,27 @@ public class OwnerSubscriptionRepository {
   public Map<String, Object> ensureRow(UUID userId) {
     Optional<Map<String, Object>> existing = findByUser(userId);
     if (existing.isPresent()) return existing.get();
-    return jdbc.queryForObject(
-        """
-        INSERT INTO owner_subscriptions (user_id, status)
-        VALUES (?, 'inactive')
-        ON CONFLICT (user_id) DO UPDATE SET updated_at = NOW()
-        RETURNING *
-        """,
-        (rs, rowNum) -> RowMaps.ownerSubscription(rs),
-        userId);
+    requireExistingUser(userId);
+    try {
+      return jdbc.queryForObject(
+          """
+          INSERT INTO owner_subscriptions (user_id, status)
+          VALUES (?, 'inactive')
+          ON CONFLICT (user_id) DO UPDATE SET updated_at = NOW()
+          RETURNING *
+          """,
+          (rs, rowNum) -> RowMaps.ownerSubscription(rs),
+          userId);
+    } catch (DataIntegrityViolationException e) {
+      throw ApiException.of(401, "Compte introuvable. Reconnectez-vous.");
+    }
+  }
+
+  private void requireExistingUser(UUID userId) {
+    Boolean exists =
+        jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM users WHERE id = ?)", Boolean.class, userId);
+    if (!Boolean.TRUE.equals(exists)) {
+      throw ApiException.of(401, "Compte introuvable. Reconnectez-vous.");
+    }
   }
 }

@@ -1,5 +1,6 @@
 package com.maresi.api.realtime;
 
+import com.maresi.api.repository.UserRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.JwtService;
 import java.util.List;
@@ -17,9 +18,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtStompChannelInterceptor implements ChannelInterceptor {
   private final JwtService jwtService;
+  private final UserRepository users;
 
-  public JwtStompChannelInterceptor(JwtService jwtService) {
+  public JwtStompChannelInterceptor(JwtService jwtService, UserRepository users) {
     this.jwtService = jwtService;
+    this.users = users;
   }
 
   @Override
@@ -34,8 +37,16 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
     }
     String token = raw.startsWith("Bearer ") ? raw.substring(7).trim() : raw.trim();
     try {
-      AuthUser user = jwtService.parse(token);
-      String role = user.role() == null || user.role().isBlank() ? "client" : user.role();
+      AuthUser parsed = jwtService.parse(token);
+      var db = users.findById(parsed.id());
+      if (db.isEmpty()) {
+        return message;
+      }
+      String role = String.valueOf(db.get().getOrDefault("role", parsed.role()));
+      if (role.isBlank() || "null".equals(role)) role = "client";
+      String email =
+          db.get().get("email") == null ? parsed.email() : String.valueOf(db.get().get("email"));
+      AuthUser user = new AuthUser(parsed.id(), email, role);
       var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
       var auth = new UsernamePasswordAuthenticationToken(user, null, authorities);
       accessor.setUser(new StompUserPrincipal(user.id().toString(), auth));

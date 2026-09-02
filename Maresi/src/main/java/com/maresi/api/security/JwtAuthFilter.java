@@ -1,5 +1,6 @@
 package com.maresi.api.security;
 
+import com.maresi.api.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,9 +17,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
+  private final UserRepository users;
 
-  public JwtAuthFilter(JwtService jwtService) {
+  public JwtAuthFilter(JwtService jwtService, UserRepository users) {
     this.jwtService = jwtService;
+    this.users = users;
   }
 
   @Override
@@ -28,11 +31,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     if (header != null && header.startsWith("Bearer ")) {
       String token = header.substring(7);
       try {
-        AuthUser user = jwtService.parse(token);
-        String role = user.role() == null || user.role().isBlank() ? "client" : user.role();
-        var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
-        var auth = new UsernamePasswordAuthenticationToken(user, null, authorities);
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        AuthUser parsed = jwtService.parse(token);
+        var db = users.findById(parsed.id());
+        if (db.isEmpty()) {
+          SecurityContextHolder.clearContext();
+        } else {
+          String role = String.valueOf(db.get().getOrDefault("role", parsed.role()));
+          if (role.isBlank() || "null".equals(role)) role = "client";
+          String email =
+              db.get().get("email") == null ? parsed.email() : String.valueOf(db.get().get("email"));
+          AuthUser user = new AuthUser(parsed.id(), email, role);
+          var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+          var auth = new UsernamePasswordAuthenticationToken(user, null, authorities);
+          SecurityContextHolder.getContext().setAuthentication(auth);
+        }
       } catch (Exception ignored) {
         SecurityContextHolder.clearContext();
       }

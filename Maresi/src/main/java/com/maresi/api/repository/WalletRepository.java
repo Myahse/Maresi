@@ -1,5 +1,6 @@
 package com.maresi.api.repository;
 
+import com.maresi.api.exception.ApiException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,11 @@ public class WalletRepository {
   }
 
   public Map<String, Object> ensure(UUID userId) {
+    Boolean exists =
+        jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM users WHERE id = ?)", Boolean.class, userId);
+    if (!Boolean.TRUE.equals(exists)) {
+      throw ApiException.of(401, "Compte introuvable. Reconnectez-vous.");
+    }
     return jdbc.queryForObject(
         """
         INSERT INTO wallets (user_id, balance)
