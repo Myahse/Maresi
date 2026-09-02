@@ -51,7 +51,7 @@ export function LandingPage() {
   const renderRow = (list: Property[], emptyKey: string) => {
     if (loading) {
       return (
-        <div className="flex flex-col sm:flex-row sm:overflow-x-auto sm:hide-scrollbar gap-3 sm:gap-6 pb-4">
+        <div className="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-3 sm:gap-6 pb-4 -mx-1 px-1">
           {[1, 2, 3, 4].map((i) => (
             <PropertyCardSkeleton key={i} />
           ))}
@@ -67,7 +67,7 @@ export function LandingPage() {
       );
     }
     return (
-      <div className="grid grid-cols-1 gap-3 sm:gap-0 sm:grid-cols-none sm:flex sm:space-x-4 md:space-x-6 sm:overflow-x-auto sm:hide-scrollbar pb-4">
+      <div className="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-3 sm:gap-4 md:gap-6 pb-4 -mx-1 px-1">
         {list.slice(0, 8).map((p) => (
           <PropertyCard key={p.id} property={p} rental />
         ))}

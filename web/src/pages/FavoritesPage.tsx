@@ -59,6 +59,7 @@ export function FavoritesPage() {
               <PropertyCard
                 property={item}
                 rental
+                className="!w-full !max-w-none !min-w-0 sm:!w-72 md:!w-80 lg:!w-[340px]"
                 onToggleFavorite={remove}
                 isFavorite
               />

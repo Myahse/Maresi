@@ -336,3 +336,13 @@ CREATE INDEX IF NOT EXISTS idx_users_account_status ON users(account_status);
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS host_intent BOOLEAN NOT NULL DEFAULT FALSE;
 
+-- ========== 031_visit_status_width.sql ==========
+ALTER TABLE visit_requests ALTER COLUMN status TYPE VARCHAR(40);
+ALTER TABLE visit_requests DROP CONSTRAINT IF EXISTS visit_requests_status_check;
+ALTER TABLE visit_requests
+  ADD CONSTRAINT visit_requests_status_check
+  CHECK (status IN (
+    'pending', 'accepted', 'declined', 'awaiting_agreement', 'awaiting_host_agreement',
+    'awaiting_key', 'awaiting_payment', 'payment_sent', 'confirmed', 'cancelled'
+  ));
+

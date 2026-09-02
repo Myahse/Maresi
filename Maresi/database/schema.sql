@@ -63,7 +63,10 @@ CREATE TABLE IF NOT EXISTS visit_requests (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   property_id UUID NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
   message TEXT,
-  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'awaiting_payment', 'confirmed')),
+  status VARCHAR(40) DEFAULT 'pending' CHECK (status IN (
+    'pending', 'accepted', 'declined', 'awaiting_agreement', 'awaiting_host_agreement',
+    'awaiting_key', 'awaiting_payment', 'payment_sent', 'confirmed', 'cancelled'
+  )),
   requested_at TIMESTAMPTZ DEFAULT NOW(),
   responded_at TIMESTAMPTZ
 );

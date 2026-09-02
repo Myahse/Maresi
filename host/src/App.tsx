@@ -86,8 +86,8 @@ function App() {
             <Route path="owner" element={<ProtectedRoute><OwnerDashboardPage /></ProtectedRoute>} />
             <Route path="owner/application" element={<ProtectedRoute><HostApplicationPage /></ProtectedRoute>} />
             <Route path="owner/subscription" element={<ProtectedRoute approvedOnly><OwnerSubscriptionPage /></ProtectedRoute>} />
-            <Route path="owner/new" element={<ProtectedRoute approvedOnly><PropertyEditPage /></ProtectedRoute>} />
-            <Route path="owner/edit/:id" element={<ProtectedRoute approvedOnly><PropertyEditPage /></ProtectedRoute>} />
+            <Route path="owner/new" element={<ProtectedRoute><PropertyEditPage /></ProtectedRoute>} />
+            <Route path="owner/edit/:id" element={<ProtectedRoute><PropertyEditPage /></ProtectedRoute>} />
             <Route path="owner/visits" element={<ProtectedRoute approvedOnly><OwnerVisitsPage /></ProtectedRoute>} />
             <Route path="owner/visits/:id/agreement" element={<ProtectedRoute approvedOnly><HostStayAgreementPage /></ProtectedRoute>} />
             <Route path="visits/:id/agreement" element={<GuestAgreementRedirect />} />

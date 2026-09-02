@@ -41,10 +41,11 @@ export function OwnerDashboardPage() {
       setLoading(true);
       setError("");
       try {
+        const hostApproved = isApprovedHost(user);
         const [allProps, myVisits, sub] = await Promise.all([
           getProperties({ mine: true }),
-          getOwnerVisitRequests(),
-          getMySubscription().catch(() => null),
+          hostApproved ? getOwnerVisitRequests() : Promise.resolve([] as VisitRequest[]),
+          hostApproved ? getMySubscription().catch(() => null) : Promise.resolve(null),
         ]);
         setProperties(allProps);
         setVisits(myVisits);
@@ -62,7 +63,7 @@ export function OwnerDashboardPage() {
   const approved = isApprovedHost(user);
 
   const handleAdd = () => {
-    navigate(approved ? "/owner/new" : "/owner/application");
+    navigate("/owner/new");
   };
 
   const handleEdit = (id: string) => {
@@ -125,9 +126,14 @@ export function OwnerDashboardPage() {
               </Button>
             </>
           ) : (
-            <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => navigate("/owner/application")}>
-              {t("hostApply.title")}
-            </Button>
+            <>
+              <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => navigate("/owner/application")}>
+                {t("hostApply.title")}
+              </Button>
+              <Button className="flex-1 sm:flex-none" onClick={handleAdd}>
+                {t("owner.addDraft")}
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -140,9 +146,14 @@ export function OwnerDashboardPage() {
             <p className="text-sm text-muted-foreground">
               {user?.host_status === "rejected" ? t("hostApply.fixHint") : t("hostApply.pendingHint")}
             </p>
-            <Button variant="outline" onClick={() => navigate("/owner/application")}>
-              {t("hostApply.openRequest")}
-            </Button>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button variant="outline" onClick={() => navigate("/owner/application")}>
+                {t("hostApply.openRequest")}
+              </Button>
+              <Button className="bg-brand hover:bg-brand-dark" onClick={handleAdd}>
+                {t("hostApply.prepareDraft")}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -176,11 +187,11 @@ export function OwnerDashboardPage() {
       {shareNote && <p className="text-sm text-brand">{shareNote}</p>}
       {loading ? (
         <p className="text-muted-foreground">{t("common.loading")}</p>
-      ) : !approved ? null : properties.length === 0 ? (
+      ) : properties.length === 0 ? (
         <p className="text-muted-foreground">
-          {t("owner.empty")}{" "}
+          {t(approved ? "owner.empty" : "owner.emptyUnverified")}{" "}
           <button type="button" className="text-primary hover:underline" onClick={handleAdd}>
-            {t("owner.addFirst")}
+            {t(approved ? "owner.addFirst" : "owner.addDraft")}
           </button>
           .
         </p>
@@ -239,23 +250,25 @@ export function OwnerDashboardPage() {
         </div>
       )}
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold">{t("owner.visitRequests")}</h2>
-          <Button variant="outline" size="sm" onClick={() => navigate("/owner/visits")}>
-            {t("owner.manageVisits")}
-          </Button>
-        </div>
-        {visits.length === 0 ? (
-          <p className="text-muted-foreground">{t("owner.noVisits")}</p>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {t("owner.pendingCount", {
-              count: visits.filter((v) => v.status === "pending").length,
-            })}
-          </p>
-        )}
-      </section>
+      {approved && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-xl font-semibold">{t("owner.visitRequests")}</h2>
+            <Button variant="outline" size="sm" onClick={() => navigate("/owner/visits")}>
+              {t("owner.manageVisits")}
+            </Button>
+          </div>
+          {visits.length === 0 ? (
+            <p className="text-muted-foreground">{t("owner.noVisits")}</p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {t("owner.pendingCount", {
+                count: visits.filter((v) => v.status === "pending").length,
+              })}
+            </p>
+          )}
+        </section>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 package com.maresi.api.service;
 
+import com.maresi.api.business.HostStatus;
 import com.maresi.api.contracts.FunctionalError;
 import com.maresi.api.contracts.Response;
 import com.maresi.api.exception.ApiException;
@@ -15,16 +16,19 @@ import org.springframework.web.multipart.MultipartFile;
 public class UploadService {
   private final FileStorageService fileStorage;
   private final FunctionalError functionalError;
+  private final HostStatus hostStatus;
 
-  public UploadService(FileStorageService fileStorage, FunctionalError functionalError) {
+  public UploadService(
+      FileStorageService fileStorage, FunctionalError functionalError, HostStatus hostStatus) {
     this.fileStorage = fileStorage;
     this.functionalError = functionalError;
+    this.hostStatus = hostStatus;
   }
 
   public Response<Map<String, Object>> storePropertyImages(
       List<MultipartFile> images, String baseUrl, Locale locale) {
     AuthUser user = SecurityUtils.requireUser();
-    if (!"owner".equals(user.role()) && !"admin".equals(user.role())) {
+    if (!hostStatus.canManageListings(user.id(), user.role())) {
       throw ApiException.of(403, "Only hosts can upload listing photos");
     }
     if (images == null || images.stream().noneMatch(f -> f != null && !f.isEmpty())) {

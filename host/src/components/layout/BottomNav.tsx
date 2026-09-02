@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Building2, CalendarDays, Plus, User, Wallet } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { isApprovedHost } from "@/lib/hostAccess";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -14,8 +13,7 @@ export function BottomNav() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, logout, user } = useAuth();
-  const approved = isApprovedHost(user);
+  const { isAuthenticated, logout } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
 
   const listingsActive = pathname === "/" || pathname === "/owner";
@@ -111,7 +109,7 @@ export function BottomNav() {
           </li>
           <li>
             <Link
-              to={approved ? "/owner/new" : "/owner/application"}
+              to="/owner/new"
               className="flex h-16 w-full flex-col items-center justify-center gap-0.5 text-[10px] font-semibold text-brand"
               onClick={() => setMoreOpen(false)}
             >

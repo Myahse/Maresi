@@ -1,16 +1,20 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/useAuth";
 import { getProperty, createProperty, updateProperty } from "@/services/api";
 import { PropertyCreationWizard } from "@/components/property/PropertyCreationWizard";
+import { isApprovedHost } from "@/lib/hostAccess";
 import type { Property } from "@/types";
 
 export function PropertyEditPage() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const isNew = pathname.endsWith("/owner/new");
+  const canPublish = isApprovedHost(user);
   const [initial, setInitial] = useState<Partial<Property> | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -58,12 +62,15 @@ export function PropertyEditPage() {
       <h1 className="text-2xl font-bold mt-4 mb-2">
         {isNew ? t("propertyEdit.add") : t("propertyEdit.edit")}
       </h1>
-      <p className="text-muted-foreground text-sm mb-8">{t("wizard.property.pageHint")}</p>
+      <p className="text-muted-foreground text-sm mb-8">
+        {t(canPublish ? "wizard.property.pageHint" : "wizard.property.pageHintUnverified")}
+      </p>
       <PropertyCreationWizard
         initial={initial ?? undefined}
         onSubmit={handleSubmit}
         onCancel={() => navigate("/owner")}
         loading={loading}
+        canPublish={canPublish}
       />
     </div>
   );

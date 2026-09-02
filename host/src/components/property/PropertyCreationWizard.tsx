@@ -27,6 +27,8 @@ interface PropertyCreationWizardProps {
   onSubmit: (data: FormData) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
+  /** Unvalidated hosts can only save drafts */
+  canPublish?: boolean;
 }
 
 export function PropertyCreationWizard({
@@ -34,6 +36,7 @@ export function PropertyCreationWizard({
   onSubmit,
   onCancel,
   loading,
+  canPublish = true,
 }: PropertyCreationWizardProps) {
   const { t } = useTranslation();
   const { formatPrice } = usePriceFormatter();
@@ -253,11 +256,12 @@ export function PropertyCreationWizard({
   };
 
   const handleSubmit = async (asDraft = false) => {
-    if (!asDraft && photoCount < MIN_PROPERTY_PHOTOS) {
+    const saveDraft = asDraft || !canPublish;
+    if (!saveDraft && photoCount < MIN_PROPERTY_PHOTOS) {
       setError(t("wizard.property.errors.photosMin", { count: MIN_PROPERTY_PHOTOS }));
       return;
     }
-    if (!asDraft) {
+    if (!saveDraft) {
       const err = validateStep(step);
       if (err) {
         setError(err);
@@ -288,7 +292,7 @@ export function PropertyCreationWizard({
     formData.set("manager_phone", hasDelegate ? managerPhone.trim() : "");
     formData.set("manager_email", hasDelegate ? managerEmail.trim() : "");
     formData.set("manager_role", hasDelegate ? managerRole.trim() : "");
-    formData.set("draft", asDraft ? "true" : "false");
+    formData.set("draft", saveDraft ? "true" : "false");
     setWaitingUpload(true);
     try {
       await waitForWork();
@@ -335,6 +339,12 @@ export function PropertyCreationWizard({
   return (
     <div className="w-full space-y-8 font-jakarta">
       <Stepper steps={steps} currentStep={step} />
+
+      {!canPublish && (
+        <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 p-3 rounded-xl">
+          {t("wizard.property.unverifiedBanner")}
+        </p>
+      )}
 
       {error && (
         <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-xl">{error}</p>
@@ -696,8 +706,12 @@ export function PropertyCreationWizard({
 
       {step === 10 && (
         <WizardPane step={10}>
-          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.reviewTitle")}</h2>
-          <p className="text-sm text-muted-foreground">{t("wizard.property.reviewHint")}</p>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">
+            {t(canPublish ? "wizard.property.reviewTitle" : "wizard.property.reviewTitleUnverified")}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t(canPublish ? "wizard.property.reviewHint" : "wizard.property.reviewHintUnverified")}
+          </p>
           <dl className="rounded-2xl border-2 border-border divide-y text-sm">
             <ReviewRow label={t("propertyForm.propertyType")} value={t(`propertyTypes.${property_type}`)} />
             <ReviewRow label={t("propertyForm.title")} value={title} />
@@ -753,18 +767,25 @@ export function PropertyCreationWizard({
         </Button>
         <Button
           type="button"
-          variant="outline"
-          className="rounded-full"
+          variant={canPublish || step < steps.length - 1 ? "outline" : "default"}
+          className={cn(
+            "rounded-full",
+            !canPublish && step === steps.length - 1 && "bg-brand hover:bg-brand-dark text-white ml-auto"
+          )}
           disabled={loading || waitingUpload}
           onClick={() => void handleSubmit(true)}
         >
-          {t("wizard.property.saveDraft")}
+          {loading || waitingUpload
+            ? uploadingPhotos
+              ? t("wizard.property.uploadingPhotos")
+              : t("common.saving")
+            : t("wizard.property.saveDraft")}
         </Button>
         {step < steps.length - 1 ? (
           <Button type="button" className="rounded-full bg-brand hover:bg-brand-dark ml-auto" onClick={next}>
             {t("wizard.next")}
           </Button>
-        ) : (
+        ) : canPublish ? (
           <Button
             type="button"
             className="rounded-full bg-brand hover:bg-brand-dark ml-auto"
@@ -777,7 +798,7 @@ export function PropertyCreationWizard({
                 : t("common.saving")
               : t("wizard.property.publish")}
           </Button>
-        )}
+        ) : null}
       </div>
     </div>
   );

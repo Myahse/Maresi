@@ -76,7 +76,11 @@ export function AllPropertiesPage() {
 
   useEffect(() => {
     if (!selectedId) return;
-    sheetItemRefs.current[selectedId]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    sheetItemRefs.current[selectedId]?.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
   }, [selectedId]);
 
   const toggleFavorite = (propertyId: string) => {
@@ -149,6 +153,7 @@ export function AllPropertiesPage() {
               <PropertyCard
                 property={p}
                 rental
+                className="!w-full !max-w-none !min-w-0 sm:!w-72 md:!w-80 lg:!w-[340px]"
                 onToggleFavorite={toggleFavorite}
                 isFavorite={favorites.some((f) => f.property_id === p.id)}
               />
@@ -181,7 +186,7 @@ export function AllPropertiesPage() {
             />
           </div>
         </div>
-        <div className="absolute inset-x-0 bottom-0 z-20 flex max-h-[48vh] min-h-[220px] flex-col rounded-t-3xl border-t border-border bg-card shadow-[0_-10px_30px_rgba(0,0,0,0.14)]">
+        <div className="absolute inset-x-0 bottom-0 z-20 rounded-t-3xl border-t border-border bg-card shadow-[0_-10px_30px_rgba(0,0,0,0.14)]">
           <div className="flex justify-center pt-2">
             <span className="h-1.5 w-10 rounded-full bg-border" />
           </div>
@@ -195,18 +200,18 @@ export function AllPropertiesPage() {
               )}
             </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+          <div className="overflow-x-auto hide-scrollbar snap-x snap-mandatory px-3 pb-3">
             {error && <p className="text-destructive text-sm px-1 mb-2">{error}</p>}
             {loading ? (
-              <div className="space-y-3">
-                {[1, 2].map((i) => (
-                  <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse" />
+              <div className="flex gap-3">
+                {[1, 2, 3].map((i) => (
+                  <PropertyCardSkeleton key={i} />
                 ))}
               </div>
             ) : sortedProperties.length === 0 ? (
               <p className="text-sm text-muted-foreground px-1 py-6 text-center">{t("dashboard.noneFound")}</p>
             ) : (
-              <div className="space-y-3">
+              <div className="flex gap-3">
                 {sortedProperties.map((p) => (
                   <div
                     key={p.id}
@@ -214,12 +219,11 @@ export function AllPropertiesPage() {
                       sheetItemRefs.current[p.id] = el;
                     }}
                     onClick={() => setSelectedId(p.id)}
-                    className={p.id === selectedId ? "ring-2 ring-brand rounded-3xl" : ""}
+                    className={p.id === selectedId ? "ring-2 ring-brand rounded-2xl shrink-0" : "shrink-0"}
                   >
                     <PropertyCard
                       property={p}
                       rental
-                      className="!w-full"
                       onToggleFavorite={toggleFavorite}
                       isFavorite={favorites.some((f) => f.property_id === p.id)}
                     />

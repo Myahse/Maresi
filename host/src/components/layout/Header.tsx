@@ -43,9 +43,14 @@ export function Header() {
                       </Link>
                     </>
                   ) : (
-                    <Link to="/owner/application" className={navLinkClass}>
-                      {t("hostApply.title")}
-                    </Link>
+                    <>
+                      <Link to="/owner/new" className={navLinkClass}>
+                        {t("owner.addDraft")}
+                      </Link>
+                      <Link to="/owner/application" className={navLinkClass}>
+                        {t("hostApply.title")}
+                      </Link>
+                    </>
                   )}
                 </>
               )}

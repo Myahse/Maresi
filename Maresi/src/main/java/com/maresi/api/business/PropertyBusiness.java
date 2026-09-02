@@ -117,11 +117,17 @@ public class PropertyBusiness {
     if (userBusiness.rejectIfSuspended(response, user.id(), locale)) {
       return response;
     }
-    if (!hostStatus.canPublish(user.id(), user.role())) {
+    if (!hostStatus.canManageListings(user.id(), user.role())) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.disallowed("Vous devez d'abord demander a devenir hote.", locale));
+      return response;
+    }
+    if (!draft && !hostStatus.canPublish(user.id(), user.role())) {
       response.setHasError(true);
       response.setStatus(
           functionalError.disallowed(
-              "Votre compte hôte n'est pas encore validé. Vous ne pouvez pas publier d'annonce.",
+              "Votre compte hôte n'est pas encore validé. Enregistrez un brouillon en attendant la validation.",
               locale));
       return response;
     }
@@ -197,7 +203,7 @@ public class PropertyBusiness {
       response.setHasError(true);
       response.setStatus(
           functionalError.disallowed(
-              "Votre compte hôte n'est pas encore validé. Vous ne pouvez pas publier d'annonce.",
+              "Votre compte hôte n'est pas encore validé. Enregistrez un brouillon en attendant la validation.",
               locale));
       return response;
     }

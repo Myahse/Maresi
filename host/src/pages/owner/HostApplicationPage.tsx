@@ -72,7 +72,13 @@ export function HostApplicationPage() {
         <div className="rounded-2xl border bg-card p-6 space-y-3">
           <p className="font-semibold">{t("hostApply.pending")}</p>
           <p className="text-sm text-muted-foreground">{t("hostApply.pendingHint")}</p>
-          <Link to="/owner/account" className="text-sm font-medium text-primary hover:underline">
+          <Link
+            to="/owner/new"
+            className="inline-flex items-center justify-center rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+          >
+            {t("hostApply.prepareDraft")}
+          </Link>
+          <Link to="/owner/account" className="block text-sm font-medium text-primary hover:underline">
             {t("account.title")}
           </Link>
         </div>
@@ -113,6 +119,12 @@ export function HostApplicationPage() {
           <Button type="submit" className="w-full bg-brand hover:bg-brand-dark text-white" disabled={saving}>
             {saving ? t("common.saving") : t("hostApply.submit")}
           </Button>
+          <Link
+            to="/owner/new"
+            className="block text-center text-sm font-medium text-primary hover:underline"
+          >
+            {t("hostApply.prepareDraft")}
+          </Link>
           <Link to="/owner/account" className="block text-center text-sm font-medium text-primary hover:underline">
             {t("account.updateTitle")}
           </Link>

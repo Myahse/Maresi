@@ -361,6 +361,8 @@
     "next": "Suivant",
     "property": {
       "pageHint": "Complétez chaque étape pour publier, ou enregistrez un brouillon et terminez plus tard. Les champs * sont obligatoires pour publier.",
+      "pageHintUnverified": "Votre compte hôte n'est pas encore validé. Vous pouvez enregistrer un brouillon maintenant ; la publication sera possible après validation par un admin.",
+      "unverifiedBanner": "Votre compte est en attente de validation. Vous pouvez enregistrer cette annonce en brouillon, mais pas encore la publier.",
       "steps": {
         "type": "Type",
         "title": "Titre",
@@ -430,6 +432,8 @@
       "mediaHint": "Ajoutez au moins {{count}} photos du lieu et un lien 360° optionnel.",
       "reviewTitle": "Vérifier et publier",
       "reviewHint": "Relisez tout avant publication.",
+      "reviewTitleUnverified": "Vérifier et enregistrer le brouillon",
+      "reviewHintUnverified": "Enregistrez un brouillon maintenant. Vous pourrez publier une fois votre compte hôte validé.",
       "latitude": "Latitude",
       "longitude": "Longitude",
       "priceXof": "Prix par nuit (XOF)",
@@ -707,11 +711,13 @@
     "signIn": "Se connecter",
     "title": "Mes biens",
     "addProperty": "Ajouter un bien",
+    "addDraft": "Enregistrer un brouillon",
     "draftBadge": "Brouillon",
     "failedLoad": "Échec du chargement des données propriétaire",
     "deleteConfirm": "Supprimer ce bien ?",
     "deleteFailed": "Échec de la suppression",
     "empty": "Vous n'avez pas encore de biens.",
+    "emptyUnverified": "Pas encore d'annonces. Vous pouvez déjà préparer un brouillon pendant l'examen de votre compte.",
     "addFirst": "Ajouter votre premier bien",
     "visitRequests": "Demandes de visite",
     "noVisits": "Aucune demande de visite pour le moment.",
@@ -742,7 +748,7 @@
   },
   "hostApply": {
     "title": "Je suis propriétaire",
-    "hint": "Présentez-vous. Un admin validera votre demande avant de publier des résidences.",
+    "hint": "Présentez-vous. Un admin validera votre demande avant de publier des résidences. Vous pouvez déjà enregistrer des brouillons.",
     "phone": "Téléphone",
     "city": "Ville",
     "idCard": "N° pièce d'identité",
@@ -750,12 +756,13 @@
     "submit": "Envoyer la demande",
     "failed": "Impossible d'envoyer la demande",
     "pending": "Demande en attente",
-    "pendingHint": "Nous vous préviendrons après examen par un admin.",
+    "pendingHint": "Nous vous préviendrons après examen par un admin. En attendant, vous pouvez préparer des annonces en brouillon.",
     "approved": "Vous êtes validé comme hôte.",
     "openHostApp": "Ouvrir l'app hôte",
     "rejected": "Votre demande a été refusée. Vous pouvez réessayer.",
     "fixHint": "Corrigez les points indiqués, mettez à jour vos pièces si besoin, puis renvoyez la demande.",
-    "openRequest": "Voir ma demande"
+    "openRequest": "Voir ma demande",
+    "prepareDraft": "Préparer une annonce en brouillon"
   },
   "admin": {
     "title": "Demandes hôte",

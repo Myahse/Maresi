@@ -39,6 +39,12 @@ public class HostStatus {
     return APPROVED.equals(resolve(userId, role));
   }
 
+  /** Pending, rejected, or approved hosts may save listing drafts. */
+  public boolean canManageListings(UUID userId, String role) {
+    String status = resolve(userId, role);
+    return PENDING.equals(status) || REJECTED.equals(status) || APPROVED.equals(status);
+  }
+
   public void attach(Map<String, Object> user) {
     if (user == null || user.get("id") == null) return;
     UUID id =

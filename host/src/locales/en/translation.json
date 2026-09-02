@@ -361,6 +361,8 @@
     "next": "Next",
     "property": {
       "pageHint": "Complete each step to publish, or save a draft and finish later. Fields marked * are required to publish.",
+      "pageHintUnverified": "Your host account is not validated yet. You can save a draft now; publishing will be available after an admin approves you.",
+      "unverifiedBanner": "Your account is awaiting validation. You can save this listing as a draft, but you cannot publish it yet.",
       "steps": {
         "type": "Type",
         "title": "Title",
@@ -430,6 +432,8 @@
       "mediaHint": "Add at least {{count}} photos of the place and an optional 360° tour link.",
       "reviewTitle": "Review & publish",
       "reviewHint": "Check everything before publishing.",
+      "reviewTitleUnverified": "Review & save draft",
+      "reviewHintUnverified": "Save a draft now. You can publish once an admin validates your host account.",
       "latitude": "Latitude",
       "longitude": "Longitude",
       "priceXof": "Price per night (XOF)",
@@ -707,11 +711,13 @@
     "signIn": "Sign in",
     "title": "My properties",
     "addProperty": "Add property",
+    "addDraft": "Save a draft listing",
     "draftBadge": "Draft",
     "failedLoad": "Failed to load owner data",
     "deleteConfirm": "Delete this property?",
     "deleteFailed": "Failed to delete property",
     "empty": "You have no properties yet.",
+    "emptyUnverified": "No listings yet. You can already prepare a draft while your account is reviewed.",
     "addFirst": "Add your first property",
     "visitRequests": "Visit requests",
     "noVisits": "No visit requests yet.",
@@ -742,7 +748,7 @@
   },
   "hostApply": {
     "title": "I am an owner",
-    "hint": "Tell us about yourself. An admin will review your request before you can list residences.",
+    "hint": "Tell us about yourself. An admin will review your request before you can publish residences. You can already save listings as drafts.",
     "phone": "Phone",
     "city": "City",
     "idCard": "ID card number",
@@ -750,12 +756,13 @@
     "submit": "Send application",
     "failed": "Could not send the application",
     "pending": "Application pending",
-    "pendingHint": "We will notify you when an admin reviews it.",
+    "pendingHint": "We will notify you when an admin reviews it. Meanwhile you can prepare listings as drafts.",
     "approved": "You are approved as a host.",
     "openHostApp": "Open host app",
     "rejected": "Your application was declined. You can apply again.",
     "fixHint": "Fix the points in the note, update your ID photos if needed, then send a new request.",
-    "openRequest": "View my request"
+    "openRequest": "View my request",
+    "prepareDraft": "Prepare a listing as draft"
   },
   "admin": {
     "title": "Host applications",
