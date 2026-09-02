@@ -10,6 +10,7 @@ import { usePriceFormatter } from "@/context/CurrencyContext";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { PropertyLocationMap } from "@/components/map/PropertyLocationMap";
 import { VirtualTourViewer } from "@/components/property/VirtualTourViewer";
+import { ListingPhotoGallery } from "@/components/property/ListingPhotoGallery";
 import { RatingsSection } from "@/components/rating/RatingsSection";
 import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,6 @@ export function PropertyDetailsPage() {
   const [property, setProperty] = useState<Property | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeImage, setActiveImage] = useState(0);
   const [ratingAvg, setRatingAvg] = useState(0);
   const [ratingCount, setRatingCount] = useState(0);
   const [shareNote, setShareNote] = useState("");
@@ -104,34 +104,7 @@ export function PropertyDetailsPage() {
 
   return (
     <div className="font-jakarta container mx-auto px-4 py-6 sm:py-8 max-w-5xl">
-      <div className="rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-border aspect-video mb-3 bg-muted shadow-sm">
-        <img
-          src={images[activeImage]}
-          alt={property.title}
-          className="h-full w-full object-cover"
-          onError={(event) => {
-            event.currentTarget.onerror = null;
-            event.currentTarget.src = placeholderImage;
-          }}
-        />
-      </div>
-      {images.length > 1 && (
-        <div className="flex gap-2 mb-6 overflow-x-auto hide-scrollbar pb-1">
-          {images.map((img, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => setActiveImage(idx)}
-              className={cn(
-                "shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-colors bg-muted",
-                idx === activeImage ? "border-brand ring-2 ring-brand/30" : "border-border"
-              )}
-            >
-              <img src={img} alt="" className="h-full w-full object-cover" />
-            </button>
-          ))}
-        </div>
-      )}
+      <ListingPhotoGallery images={images} title={property.title} placeholder={placeholderImage} />
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">

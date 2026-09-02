@@ -459,7 +459,11 @@
     "reserveHint": "Réservation en plusieurs étapes avec validation propriétaire.",
     "startReservation": "Commencer la réservation",
     "share": "Partager l'annonce",
-    "linkCopied": "Lien copié. Envoyez-le pour ouvrir cette page."
+    "linkCopied": "Lien copié. Envoyez-le pour ouvrir cette page.",
+    "enlargePhoto": "Agrandir",
+    "prevPhoto": "Photo précédente",
+    "nextPhoto": "Photo suivante",
+    "photoN": "Photo {{n}}"
   },
   "account": {
     "kicker": "Votre dossier",
