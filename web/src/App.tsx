@@ -17,7 +17,18 @@ import { StayAgreementPage } from "@/pages/StayAgreementPage";
 import { ReservationPage } from "@/pages/ReservationPage";
 import { PaymentSuccessPage, PaymentErrorPage } from "@/pages/PaymentResultPages";
 import { BecomeHostPage } from "@/pages/BecomeHostPage";
-import { AccountIdentityPage } from "@/pages/AccountIdentityPage";
+import {
+  AccountHubPage,
+  AccountPersonalPage,
+  AccountDocumentsPage,
+  AccountAlertsPage,
+  AccountNotificationsPage,
+  AccountSecurityPage,
+  AccountLanguagePage,
+  AccountSystemPage,
+  AccountLegalPage,
+  AccountSupportPage,
+} from "@/pages/account/AccountPages";
 import { TermsPage } from "@/pages/TermsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { AppSplash } from "@/components/layout/AppSplash";
@@ -104,7 +115,79 @@ function App() {
                 path="account"
                 element={
                   <ProtectedRoute>
-                    <AccountIdentityPage />
+                    <AccountHubPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="account/personal"
+                element={
+                  <ProtectedRoute>
+                    <AccountPersonalPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="account/documents"
+                element={
+                  <ProtectedRoute>
+                    <AccountDocumentsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="account/alerts"
+                element={
+                  <ProtectedRoute>
+                    <AccountAlertsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="account/notifications"
+                element={
+                  <ProtectedRoute>
+                    <AccountNotificationsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="account/security"
+                element={
+                  <ProtectedRoute>
+                    <AccountSecurityPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="account/language"
+                element={
+                  <ProtectedRoute>
+                    <AccountLanguagePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="account/system"
+                element={
+                  <ProtectedRoute>
+                    <AccountSystemPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="account/legal"
+                element={
+                  <ProtectedRoute>
+                    <AccountLegalPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="account/support"
+                element={
+                  <ProtectedRoute>
+                    <AccountSupportPage />
                   </ProtectedRoute>
                 }
               />

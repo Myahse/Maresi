@@ -25,7 +25,7 @@ export function ProtectedRoute({ children, approvedOnly }: ProtectedRouteProps) 
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user?.account_status === "suspended" && location.pathname !== "/owner/account") {
+  if (user?.account_status === "suspended" && !location.pathname.startsWith("/owner/account")) {
     return <Navigate to="/owner/account" replace />;
   }
 

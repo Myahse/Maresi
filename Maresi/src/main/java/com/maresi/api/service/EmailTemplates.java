@@ -180,8 +180,8 @@ public final class EmailTemplates {
         "Demande acceptée",
         "Réservation",
         "Bonne nouvelle : l’hôte a accepté",
-        "Bonjour,\n\nVotre demande a été acceptée. Signez maintenant l’engagement de soin du logement.\n\nEnsuite, vous recevrez un code à 6 chiffres à donner à l’hôte pour récupérer la clé. Le paiement se fait ensuite dans Maresi.",
-        details("Résidence", title, "Prochaine étape", "Signer l’engagement"),
+        "Bonjour,\n\nVotre demande a été acceptée. Signez maintenant le contrat de séjour.\n\nL’hôte signera ensuite le même contrat. Vous recevrez alors une copie par e-mail, puis un code à 6 chiffres pour récupérer la clé. Le paiement se fait ensuite dans Maresi.",
+        details("Résidence", title, "Prochaine étape", "Signer le contrat"),
         null,
         "Signer l’engagement",
         agreementUrl);
@@ -199,6 +199,69 @@ public final class EmailTemplates {
         null);
   }
 
+  public static Mail hostPleaseSign(String title, String requesterName, String ctaUrl) {
+    String who = personName(requesterName);
+    return build(
+        who.isBlank() ? "Le client a signé — signez le contrat" : who + " a signé — signez le contrat",
+        "Contrat",
+        "Signez le contrat de séjour",
+        greet(
+            null,
+            (who.isBlank() ? "Le client" : who)
+                + " a signé le contrat. Signez-le maintenant. Ensuite le client recevra le code clé et vous recevrez chacun une copie par e-mail."),
+        details("Voyageur", who, "Résidence", title, "À faire", "Signer le contrat"),
+        null,
+        "Signer le contrat",
+        ctaUrl);
+  }
+
+  public static Mail guestWaitingHostSign(String title, String ctaUrl) {
+    return build(
+        "Contrat envoyé à l’hôte",
+        "Contrat",
+        "L’hôte doit encore signer",
+        "Bonjour,\n\nVotre signature est enregistrée. L’hôte va signer le même contrat.\n\nVous recevrez ensuite une copie complète par e-mail, puis le code clé pour récupérer le logement.",
+        details("Résidence", title, "Prochaine étape", "Attendre la signature de l’hôte"),
+        null,
+        "Voir le contrat",
+        ctaUrl);
+  }
+
+  public static Mail stayContractCopy(
+      String title,
+      String location,
+      String checkIn,
+      String checkOut,
+      String guestName,
+      String guestSignedAt,
+      String hostName,
+      String hostSignedAt,
+      String ctaUrl) {
+    return build(
+        "Copie du contrat de séjour",
+        "Contrat",
+        "Votre contrat signé",
+        "Bonjour,\n\nLe contrat de séjour est signé par le client et l’hôte. Conservez cet e-mail : il constitue votre copie.\n\n"
+            + StayAgreementText.plainArticles(),
+        details(
+            "Résidence", title,
+            "Adresse", location,
+            "Arrivée", checkIn,
+            "Départ", checkOut,
+            "Signature client", namedStamp(guestName, guestSignedAt),
+            "Signature hôte", namedStamp(hostName, hostSignedAt)),
+        new Highlight("Contrat", "Signé par les deux parties"),
+        "Ouvrir le contrat",
+        ctaUrl);
+  }
+
+  private static String namedStamp(String name, String signedAt) {
+    String who = personName(name);
+    if (who.isBlank()) return signedAt == null ? "" : signedAt;
+    if (signedAt == null || signedAt.isBlank()) return who;
+    return who + " — " + signedAt;
+  }
+
   public static Mail keyCodeHost(String title, String ctaUrl) {
     return keyCodeHost(title, null, ctaUrl);
   }
@@ -212,7 +275,7 @@ public final class EmailTemplates {
         greet(
             null,
             (who.isBlank() ? "Le client" : who)
-                + " a signé l’engagement. Demandez-lui son code à 6 chiffres, saisissez-le dans Maresi Hôte, puis il pourra vous payer.\n\nNe communiquez jamais ce code à une autre personne."),
+                + " a signé. Demandez-lui son code à 6 chiffres, saisissez-le dans Maresi Hôte, puis il pourra vous payer.\n\nNe communiquez jamais ce code à une autre personne."),
         details("Voyageur", who, "Résidence", title, "À faire", "Saisir le code à 6 chiffres"),
         null,
         "Saisir le code",

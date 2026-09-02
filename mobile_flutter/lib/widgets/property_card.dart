@@ -54,11 +54,11 @@ class PropertyCard extends StatelessWidget {
 
   String _typeLabel(BuildContext context) {
     final locale = context.watch<LocaleProvider>();
-    return switch (property.propertyType) {
-      PropertyTypes.house => locale.t('register.typeHouse'),
+    return switch (PropertyTypes.canonical(property.propertyType)) {
+      PropertyTypes.villa => locale.t('register.typeVilla'),
       PropertyTypes.apartment => locale.t('register.typeApartment'),
       PropertyTypes.studio => locale.t('register.typeStudio'),
-      PropertyTypes.residence => locale.t('register.typeResidence'),
+      PropertyTypes.hotel => locale.t('register.typeHotel'),
       _ => property.propertyType,
     };
   }

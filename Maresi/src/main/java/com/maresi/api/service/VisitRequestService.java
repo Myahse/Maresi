@@ -43,6 +43,11 @@ public class VisitRequestService {
     return visitRequestBusiness.signAgreement(id, request, locale);
   }
 
+  public Response<Map<String, Object>> signHostAgreement(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    return visitRequestBusiness.signHostAgreement(id, request, locale);
+  }
+
   public Response<Map<String, Object>> confirmKey(
       UUID id, Request<Map<String, Object>> request, Locale locale) {
     return visitRequestBusiness.confirmKey(id, request, locale);

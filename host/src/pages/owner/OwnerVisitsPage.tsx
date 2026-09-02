@@ -117,6 +117,7 @@ export function OwnerVisitsPage() {
   };
 
   const pending = visits.filter((v) => v.status === "pending");
+  const awaitingHost = visits.filter((v) => v.status === "awaiting_host_agreement");
   const awaitingKey = visits.filter((v) => v.status === "awaiting_key");
   const toConfirm = visits.filter((v) => v.status === "payment_sent");
   const extensionPending = visits.filter((v) => v.extension_status === "pending");
@@ -128,6 +129,7 @@ export function OwnerVisitsPage() {
       v.status !== "pending" &&
       v.status !== "payment_sent" &&
       v.status !== "awaiting_key" &&
+      v.status !== "awaiting_host_agreement" &&
       v.extension_status !== "pending" &&
       v.extension_status !== "payment_sent" &&
       !v.can_close
@@ -211,6 +213,24 @@ export function OwnerVisitsPage() {
                       </Button>
                     </div>
                   )}
+                </VisitRequestCard>
+              ))}
+            </section>
+          )}
+
+          {awaitingHost.length > 0 && (
+            <section className="space-y-4">
+              <h2 className="font-semibold text-foreground">
+                {t("visits.hostSignTitle")} ({awaitingHost.length})
+              </h2>
+              <p className="text-sm text-muted-foreground">{t("visits.agreementHostSignHint")}</p>
+              {awaitingHost.map((v) => (
+                <VisitRequestCard key={v.id} visit={v} showRequester>
+                  <div className="pt-2 border-t border-gray-100">
+                    <Button asChild className="w-full rounded-full bg-brand hover:bg-brand-dark">
+                      <Link to={`/owner/visits/${v.id}/agreement`}>{t("visits.agreementHostOpen")}</Link>
+                    </Button>
+                  </div>
                 </VisitRequestCard>
               ))}
             </section>

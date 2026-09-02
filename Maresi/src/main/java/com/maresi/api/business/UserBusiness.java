@@ -14,6 +14,7 @@ import com.maresi.api.service.FileStorageService;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +27,7 @@ public class UserBusiness {
   private final NotificationRepository notifications;
   private final ActivityRepository activity;
   private final HostStatus hostStatus;
+  private final PasswordEncoder passwordEncoder;
 
   public UserBusiness(
       UserRepository users,
@@ -34,7 +36,8 @@ public class UserBusiness {
       EmailService email,
       NotificationRepository notifications,
       ActivityRepository activity,
-      HostStatus hostStatus) {
+      HostStatus hostStatus,
+      PasswordEncoder passwordEncoder) {
     this.users = users;
     this.fileStorage = fileStorage;
     this.functionalError = functionalError;
@@ -42,6 +45,7 @@ public class UserBusiness {
     this.notifications = notifications;
     this.activity = activity;
     this.hostStatus = hostStatus;
+    this.passwordEncoder = passwordEncoder;
   }
 
   public Response<Map<String, Object>> me(Locale locale) {
@@ -137,6 +141,38 @@ public class UserBusiness {
     exposeIdentityLinks(profile, user.id());
     response.setItem(profile);
     response.setStatus(functionalError.success("Dossier mis a jour", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> changePassword(Map<String, Object> body, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> data = body == null ? Map.of() : body;
+    String current = str(data.get("current_password"));
+    if (current == null || current.isBlank()) current = str(data.get("currentPassword"));
+    String next = str(data.get("new_password"));
+    if (next == null || next.isBlank()) next = str(data.get("newPassword"));
+    if (current == null || current.isBlank() || next == null || next.length() < 6) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.invalidData("Saisissez le mot de passe actuel et un nouveau mot de passe (6 caracteres min.)", locale));
+      return response;
+    }
+    String stored = users.findPasswordHash(user.id()).orElse(null);
+    if (stored == null || stored.isBlank()) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.invalidData("Ce compte n'a pas de mot de passe. Utilisez la reinitialisation par e-mail.", locale));
+      return response;
+    }
+    if (!passwordEncoder.matches(current, stored)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Mot de passe actuel incorrect", locale));
+      return response;
+    }
+    users.updatePassword(user.id(), passwordEncoder.encode(next));
+    response.setItem(Map.of("updated", true));
+    response.setStatus(functionalError.success("Mot de passe mis a jour", locale));
     return response;
   }
 

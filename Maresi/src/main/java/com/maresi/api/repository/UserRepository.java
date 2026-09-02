@@ -131,6 +131,15 @@ public class UserRepository {
         id);
   }
 
+  public Optional<String> findPasswordHash(UUID id) {
+    List<String> rows =
+        jdbc.query(
+            "SELECT password_hash FROM users WHERE id = ?",
+            (rs, rowNum) -> rs.getString("password_hash"),
+            id);
+    return rows.stream().findFirst();
+  }
+
   public void markEmailVerified(UUID id) {
     jdbc.update(
         """

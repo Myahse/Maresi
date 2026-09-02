@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getVisitRequest, signStayAgreement } from "@/services/api";
+import { getVisitRequest, signHostAgreement } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { VisitRequest } from "@/types";
@@ -13,7 +13,7 @@ function formatDate(value?: string) {
   return d.toLocaleDateString();
 }
 
-export function StayAgreementPage() {
+export function HostStayAgreementPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -33,10 +33,9 @@ export function StayAgreementPage() {
       .finally(() => setLoading(false));
   }, [id, t]);
 
-  const signed = Boolean(visit?.agreement_accepted || visit?.agreement_full_name);
+  const guestSigned = Boolean(visit?.agreement_full_name);
   const hostSigned = Boolean(visit?.host_agreement_full_name);
-  const canSign = visit?.status === "awaiting_agreement" && !signed;
-  const waitingHost = visit?.status === "awaiting_host_agreement";
+  const canSign = visit?.status === "awaiting_host_agreement" && !hostSigned;
   const ready = canSign && checks.every(Boolean) && name.trim().length >= 3;
 
   const toggle = (index: number) => {
@@ -48,9 +47,9 @@ export function StayAgreementPage() {
     setSaving(true);
     setError("");
     try {
-      const updated = await signStayAgreement(id, name.trim());
+      const updated = await signHostAgreement(id, name.trim());
       setVisit(updated);
-      navigate("/visits", { replace: true });
+      navigate("/owner/visits", { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : t("visits.agreementFailed"));
     } finally {
@@ -66,8 +65,8 @@ export function StayAgreementPage() {
     return (
       <div className="font-jakarta max-w-3xl mx-auto px-4 py-12">
         <p className="text-destructive">{error || t("visits.agreementFailed")}</p>
-        <Link to="/visits" className="text-brand text-sm mt-4 inline-block">
-          ← {t("visits.title")}
+        <Link to="/owner/visits" className="text-brand text-sm mt-4 inline-block">
+          ← {t("owner.visitValidation")}
         </Link>
       </div>
     );
@@ -90,7 +89,7 @@ export function StayAgreementPage() {
           <p className="text-sm text-muted-foreground mt-2">{t("visits.agreementDocRef", { id: visit.id.slice(0, 8) })}</p>
         </header>
 
-        {signed && (
+        {guestSigned && (
           <p className="mb-6 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-foreground text-sm px-4 py-3">
             {t("visits.agreementAlreadySigned", {
               name: visit.agreement_full_name,
@@ -98,9 +97,9 @@ export function StayAgreementPage() {
             })}
           </p>
         )}
-        {waitingHost && (
+        {canSign && (
           <p className="mb-6 rounded-lg bg-brand/10 border border-brand/30 text-foreground text-sm px-4 py-3">
-            {t("visits.agreementWaitingHost")}
+            {t("visits.agreementHostSignHint")}
           </p>
         )}
         {hostSigned && (
@@ -113,7 +112,7 @@ export function StayAgreementPage() {
         )}
 
         <section className="space-y-2 text-sm leading-relaxed mb-8 text-foreground">
-          <p>{t("visits.agreementPreamble")}</p>
+          <p>{t("visits.agreementPreambleHost")}</p>
         </section>
 
         <section className="grid sm:grid-cols-2 gap-4 text-sm border border-border bg-muted/60 p-4 mb-8 rounded-xl">
@@ -126,19 +125,11 @@ export function StayAgreementPage() {
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("visits.stayDates")}</p>
             <p className="font-semibold text-foreground">
               {formatDate(visit.check_in)}
-              {(visit.arrival_time || visit.check_in_time)
-                ? ` · ${String(visit.arrival_time || visit.check_in_time).slice(0, 5)}`
-                : ""}
               {" → "}
               {formatDate(visit.check_out)}
-              {(visit.departure_time || visit.check_out_time)
-                ? ` · ${String(visit.departure_time || visit.check_out_time).slice(0, 5)}`
-                : ""}
             </p>
-            {visit.guests_count != null && (
-              <p className="text-muted-foreground">
-                {visit.guests_count} {t("visits.guests")}
-              </p>
+            {visit.requester_name && (
+              <p className="text-muted-foreground">{visit.requester_name}</p>
             )}
           </div>
         </section>
@@ -179,7 +170,7 @@ export function StayAgreementPage() {
               disabled={!ready || saving}
               onClick={() => void submit()}
             >
-              {saving ? t("common.saving") : t("visits.agreementSign")}
+              {saving ? t("common.saving") : t("visits.agreementHostSign")}
             </Button>
           </div>
         ) : (
@@ -190,13 +181,15 @@ export function StayAgreementPage() {
             </p>
             <p>
               <span className="text-muted-foreground">{t("visits.signedByHost")}: </span>
-              <span className="font-semibold text-foreground">{visit.host_agreement_full_name || t("visits.waitingHostSignature")}</span>
+              <span className="font-semibold text-foreground">
+                {visit.host_agreement_full_name || t("visits.waitingHostSignature")}
+              </span>
             </p>
           </div>
         )}
 
         <footer className="mt-10 pt-4 text-xs text-muted-foreground border-t border-border">
-          <Link to="/visits" className="text-brand hover:underline">
+          <Link to="/owner/visits" className="text-brand hover:underline">
             ← {t("visits.agreementBackToVisits")}
           </Link>
         </footer>

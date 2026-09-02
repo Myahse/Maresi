@@ -55,13 +55,18 @@ export function Header() {
               <CurrencyPicker inverted />
               <LanguageSwitcher inverted />
               {isAuthenticated && (
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="inline-flex px-3 py-2 rounded-full text-sm font-semibold border border-white/40 text-white"
-                >
-                  {t("header.logout")}
-                </button>
+                <>
+                  <Link to="/owner/account" className={navLinkClass}>
+                    {t("nav.account")}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="inline-flex px-3 py-2 rounded-full text-sm font-semibold border border-white/40 text-white"
+                  >
+                    {t("header.logout")}
+                  </button>
+                </>
               )}
             </div>
           </div>

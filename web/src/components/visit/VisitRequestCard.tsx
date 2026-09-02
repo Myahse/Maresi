@@ -8,6 +8,7 @@ const STATUS_STYLES: Record<VisitRequestStatus, string> = {
   accepted: "bg-emerald-100 text-emerald-800 border-emerald-200",
   declined: "bg-red-100 text-red-800 border-red-200",
   awaiting_agreement: "bg-orange-100 text-orange-800 border-orange-200",
+  awaiting_host_agreement: "bg-orange-100 text-orange-800 border-orange-200",
   awaiting_key: "bg-teal-100 text-teal-800 border-teal-200",
   awaiting_payment: "bg-sky-100 text-sky-800 border-sky-200",
   payment_sent: "bg-violet-100 text-violet-800 border-violet-200",

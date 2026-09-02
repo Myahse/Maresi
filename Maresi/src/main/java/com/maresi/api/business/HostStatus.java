@@ -31,8 +31,7 @@ public class HostStatus {
             .filter(status -> status != null && !status.isBlank())
             .orElse(null);
     if (latest != null) return latest;
-    if (users.hasHostIntent(userId)) return PENDING;
-    if ("owner".equals(role)) return APPROVED;
+    if (users.hasHostIntent(userId) || "owner".equals(role)) return PENDING;
     return NONE;
   }
 

@@ -43,11 +43,11 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     super.dispose();
   }
 
-  String _propertyTypeLabel(LocaleProvider locale, String type) => switch (type) {
-        PropertyTypes.house => locale.t('register.typeHouse'),
+  String _propertyTypeLabel(LocaleProvider locale, String type) => switch (PropertyTypes.canonical(type)) {
+        PropertyTypes.villa => locale.t('register.typeVilla'),
         PropertyTypes.apartment => locale.t('register.typeApartment'),
         PropertyTypes.studio => locale.t('register.typeStudio'),
-        PropertyTypes.residence => locale.t('register.typeResidence'),
+        PropertyTypes.hotel => locale.t('register.typeHotel'),
         _ => type,
       };
 

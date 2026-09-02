@@ -7,7 +7,7 @@ import { usePriceFormatter } from "@/context/CurrencyContext";
 import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
 import { cn } from "@/lib/utils";
 import { listingImageUrls } from "@/lib/media";
-import { isPropertyType, normalizeAmenities } from "@/lib/amenities";
+import { displayPropertyType, isPropertyType, normalizeAmenities } from "@/lib/amenities";
 
 interface PropertyCardProps {
   property: Property;
@@ -125,9 +125,9 @@ export function PropertyCard({
         )}
 
         <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-card/90 text-[10px] sm:text-xs font-semibold text-foreground capitalize">
-          {isPropertyType(property.property_type)
-            ? t(`propertyTypes.${property.property_type}`)
-            : property.property_type}
+            {isPropertyType(property.property_type) || property.property_type
+              ? t(`propertyTypes.${displayPropertyType(property.property_type)}`)
+              : property.property_type}
         </span>
         {property.premium_positioning && (
           <span className="absolute top-2 left-2 mt-6 px-2 py-0.5 rounded-full bg-amber-500 text-[10px] sm:text-xs font-bold text-white">

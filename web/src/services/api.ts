@@ -1,4 +1,4 @@
-import type { Property, PropertyRating, RatingStats } from "@/types";
+import type { Property, PropertyRating, RatingStats, AppNotification } from "@/types";
 import {
   enqueueRequest,
   flushQueue,
@@ -326,6 +326,21 @@ export function signStayAgreement(id: string, fullName: string) {
   return api.post<import("@/types").VisitRequest>(`/visit-requests/${id}/agreement`, {
     full_name: fullName,
     accepted: true,
+  });
+}
+
+export function getNotifications() {
+  return api.get<AppNotification[]>(`/notifications`);
+}
+
+export function markNotificationsRead() {
+  return api.patch(`/notifications/read-all`);
+}
+
+export function changeMyPassword(currentPassword: string, newPassword: string) {
+  return api.patch(`/users/me/password`, {
+    current_password: currentPassword,
+    new_password: newPassword,
   });
 }
 

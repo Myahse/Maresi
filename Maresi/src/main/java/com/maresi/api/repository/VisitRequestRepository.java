@@ -164,23 +164,46 @@ public class VisitRequestRepository {
         .findFirst();
   }
 
-  public Optional<Map<String, Object>> signAgreement(UUID id, UUID userId, String fullName, String keyCode) {
+  public Optional<Map<String, Object>> signAgreement(UUID id, UUID userId, String fullName) {
     return jdbc.query(
             """
             UPDATE visit_requests
-            SET status = 'awaiting_key',
+            SET status = 'awaiting_host_agreement',
                 agreement_full_name = ?,
                 agreement_accepted = TRUE,
-                agreement_signed_at = NOW(),
-                key_code = ?
+                agreement_signed_at = NOW()
             WHERE id = ? AND user_id = ? AND status = 'awaiting_agreement'
             RETURNING *
             """,
             (rs, rowNum) -> RowMaps.visitRequest(rs),
             fullName,
-            keyCode,
             id,
             userId)
+        .stream()
+        .findFirst();
+  }
+
+  public Optional<Map<String, Object>> signHostAgreement(UUID id, UUID ownerId, String fullName, String keyCode) {
+    return jdbc.query(
+            """
+            UPDATE visit_requests vr
+            SET status = 'awaiting_key',
+                host_agreement_full_name = ?,
+                host_agreement_accepted = TRUE,
+                host_agreement_signed_at = NOW(),
+                key_code = ?
+            FROM properties p
+            WHERE vr.property_id = p.id
+              AND p.owner_id = ?
+              AND vr.id = ?
+              AND vr.status = 'awaiting_host_agreement'
+            RETURNING vr.*
+            """,
+            (rs, rowNum) -> RowMaps.visitRequest(rs),
+            fullName,
+            keyCode,
+            ownerId,
+            id)
         .stream()
         .findFirst();
   }

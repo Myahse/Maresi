@@ -4,7 +4,6 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { Stepper } from "@/components/ui/stepper";
 import { WizardPane } from "@/components/ui/WizardPane";
 import { usePriceFormatter } from "@/context/CurrencyContext";
@@ -16,7 +15,12 @@ import { LocationMapPicker } from "@/components/map/LocationMapPicker";
 import { cn } from "@/lib/utils";
 import type { MapboxPlace } from "@/lib/mapbox";
 import type { Property } from "@/types";
-import { PROPERTY_AMENITY_IDS, PROPERTY_TYPES, normalizeAmenities } from "@/lib/amenities";
+import {
+  AMENITY_GROUPS,
+  PROPERTY_TYPES,
+  displayPropertyType,
+  normalizeAmenities,
+} from "@/lib/amenities";
 
 interface PropertyCreationWizardProps {
   initial?: Partial<Property>;
@@ -38,7 +42,9 @@ export function PropertyCreationWizard({
 
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
-  const [property_type, setPropertyType] = useState(initial?.property_type ?? "apartment");
+  const [property_type, setPropertyType] = useState(
+    displayPropertyType(initial?.property_type ?? "apartment")
+  );
   const [location, setLocation] = useState(initial?.location ?? "");
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
@@ -56,6 +62,11 @@ export function PropertyCreationWizard({
   const [checkOutTime, setCheckOutTime] = useState(initial?.check_out_time?.slice(0, 5) ?? "12:00");
   const [priceMidday, setPriceMidday] = useState(initial?.price_midday?.toString() ?? "");
   const [priceFullDay, setPriceFullDay] = useState(initial?.price_full_day?.toString() ?? "");
+  const [hasDelegate, setHasDelegate] = useState(Boolean(initial?.manager_name));
+  const [managerName, setManagerName] = useState(initial?.manager_name ?? "");
+  const [managerPhone, setManagerPhone] = useState(initial?.manager_phone ?? "");
+  const [managerEmail, setManagerEmail] = useState(initial?.manager_email ?? "");
+  const [managerRole, setManagerRole] = useState(initial?.manager_role ?? "");
   const [existingUrls, setExistingUrls] = useState<string[]>(
     () => (Array.isArray(initial?.images) ? initial.images.filter((url): url is string => Boolean(url)) : [])
   );
@@ -80,40 +91,56 @@ export function PropertyCreationWizard({
   }, [images]);
 
   const steps = [
-    { id: "basics", label: t("wizard.property.steps.basics") },
+    { id: "type", label: t("wizard.property.steps.type") },
+    { id: "title", label: t("wizard.property.steps.title") },
+    { id: "description", label: t("wizard.property.steps.description") },
+    { id: "bedrooms", label: t("wizard.property.steps.bedrooms") },
     { id: "location", label: t("wizard.property.steps.location") },
-    { id: "pricing", label: t("wizard.property.steps.pricing") },
-    { id: "rates", label: t("wizard.property.steps.rates") },
     { id: "amenities", label: t("wizard.property.steps.amenities") },
     { id: "media", label: t("wizard.property.steps.media") },
+    { id: "capacity", label: t("wizard.property.steps.capacity") },
+    { id: "price", label: t("wizard.property.steps.price") },
+    { id: "delegate", label: t("wizard.property.steps.delegate") },
     { id: "review", label: t("wizard.property.steps.review") },
   ];
 
   const validateStep = (s: number): string | null => {
     switch (s) {
       case 0:
-        if (!title.trim()) return t("wizard.property.errors.title");
-        if (title.trim().length < 5) return t("wizard.property.errors.titleShort");
-        if (!description.trim()) return t("wizard.property.errors.description");
-        if (!bedrooms || Number(bedrooms) < 1) return t("wizard.property.errors.bedrooms");
+        if (!PROPERTY_TYPES.includes(property_type as (typeof PROPERTY_TYPES)[number])) {
+          return t("wizard.property.errors.type");
+        }
         return null;
       case 1:
-        if (!latitude || !longitude || !location.trim()) return t("wizard.property.errors.mapPin");
+        if (!title.trim()) return t("wizard.property.errors.title");
+        if (title.trim().length < 5) return t("wizard.property.errors.titleShort");
         return null;
       case 2:
-        if (!isValidPrice(price)) return t("wizard.property.errors.price");
-        if (!max_guests || Number(max_guests) < 1) return t("wizard.property.errors.guests");
-        if (!checkInTime || !checkOutTime) return t("wizard.property.errors.times");
+        if (!description.trim()) return t("wizard.property.errors.description");
         return null;
       case 3:
-        if (priceMidday && !isValidPrice(priceMidday)) return t("wizard.property.errors.price");
-        if (priceFullDay && !isValidPrice(priceFullDay)) return t("wizard.property.errors.price");
+        if (bedrooms === "" || Number(bedrooms) < 0) return t("wizard.property.errors.bedrooms");
         return null;
-      case 5:
+      case 4:
+        if (!latitude || !longitude || !location.trim()) return t("wizard.property.errors.mapPin");
+        return null;
+      case 6:
         if (existingUrls.length + images.length < MIN_PROPERTY_PHOTOS) {
           return t("wizard.property.errors.photosMin", { count: MIN_PROPERTY_PHOTOS });
         }
         if (!isValidUrl(virtual_tour_url)) return t("wizard.property.errors.url");
+        return null;
+      case 7:
+        if (!max_guests || Number(max_guests) < 1) return t("wizard.property.errors.guests");
+        if (!checkInTime || !checkOutTime) return t("wizard.property.errors.times");
+        return null;
+      case 8:
+        if (!isValidPrice(price)) return t("wizard.property.errors.price");
+        if (priceMidday && !isValidPrice(priceMidday)) return t("wizard.property.errors.price");
+        if (priceFullDay && !isValidPrice(priceFullDay)) return t("wizard.property.errors.price");
+        return null;
+      case 9:
+        if (hasDelegate && managerName.trim().length < 2) return t("wizard.property.errors.delegateName");
         return null;
       default:
         return null;
@@ -188,9 +215,9 @@ export function PropertyCreationWizard({
             if (gen !== uploadGen.current) return;
             setPendingSlots((count) => Math.max(0, count - 1));
             setImages((prev) => {
-              const next = [...prev, compressed];
-              imagesRef.current = next;
-              return next;
+              const nextImages = [...prev, compressed];
+              imagesRef.current = nextImages;
+              return nextImages;
             });
             uploads.push(uploadOne(compressed, gen));
           }
@@ -213,9 +240,9 @@ export function PropertyCreationWizard({
       setExistingUrls((prev) => prev.filter((_, i) => i !== idx));
     } else {
       const fileIdx = idx - existingUrls.length;
-      const next = images.filter((_, i) => i !== fileIdx);
-      imagesRef.current = next;
-      setImages(next);
+      const nextImages = images.filter((_, i) => i !== fileIdx);
+      imagesRef.current = nextImages;
+      setImages(nextImages);
     }
     setCoverIndex((current) => {
       if (photoCount <= 1) return 0;
@@ -257,6 +284,10 @@ export function PropertyCreationWizard({
     if (checkOutTime) formData.set("check_out_time", checkOutTime);
     if (priceMidday) formData.set("price_midday", priceMidday);
     if (priceFullDay) formData.set("price_full_day", priceFullDay);
+    formData.set("manager_name", hasDelegate ? managerName.trim() : "");
+    formData.set("manager_phone", hasDelegate ? managerPhone.trim() : "");
+    formData.set("manager_email", hasDelegate ? managerEmail.trim() : "");
+    formData.set("manager_role", hasDelegate ? managerRole.trim() : "");
     formData.set("draft", asDraft ? "true" : "false");
     setWaitingUpload(true);
     try {
@@ -295,8 +326,14 @@ export function PropertyCreationWizard({
     setLongitude(String(place.longitude));
   };
 
+  const toggleAmenity = (id: string) => {
+    setAmenities((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+    );
+  };
+
   return (
-    <div className={cn("space-y-8 font-jakarta", step === 1 ? "max-w-6xl" : "max-w-2xl")}>
+    <div className="w-full space-y-8 font-jakarta">
       <Stepper steps={steps} currentStep={step} />
 
       {error && (
@@ -305,51 +342,71 @@ export function PropertyCreationWizard({
 
       {step === 0 && (
         <WizardPane step={0}>
-          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.basicsTitle")}</h2>
-          <p className="text-sm text-muted-foreground">{t("wizard.property.basicsHint")}</p>
-          <div className="space-y-2">
-            <Label htmlFor="title">{t("propertyForm.title")} *</Label>
-            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">{t("propertyForm.propertyType")} *</Label>
-              <Select id="type" value={property_type} onChange={(e) => setPropertyType(e.target.value)}>
-                {PROPERTY_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {t(`propertyTypes.${type}`)}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bedrooms">{t("wizard.property.bedrooms")} *</Label>
-              <Input
-                id="bedrooms"
-                type="number"
-                min={1}
-                value={bedrooms}
-                onChange={(e) => setBedrooms(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">{t("propertyForm.description")} *</Label>
-            <textarea
-              id="description"
-              className="flex min-h-[120px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.typeTitle")}</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">{t("wizard.property.typeHint")}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            {PROPERTY_TYPES.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setPropertyType(type)}
+                className={cn(
+                  "rounded-2xl border-2 px-4 py-6 text-left transition-colors",
+                  property_type === type ? "border-brand bg-brand/5" : "border-border bg-card"
+                )}
+              >
+                <p className="font-bold text-foreground">{t(`propertyTypes.${type}`)}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t(`wizard.property.typeHints.${type}`)}</p>
+              </button>
+            ))}
           </div>
         </WizardPane>
       )}
 
       {step === 1 && (
         <WizardPane step={1}>
-          <h2 className="text-lg sm:text-xl font-bold text-foreground">
-            {t("wizard.property.locationTitle")}
-          </h2>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.titleStepTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.titleStepHint")}</p>
+          <div className="space-y-2">
+            <Label htmlFor="title">{t("propertyForm.title")} *</Label>
+            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+        </WizardPane>
+      )}
+
+      {step === 2 && (
+        <WizardPane step={2}>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.descriptionTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.descriptionHint")}</p>
+          <textarea
+            id="description"
+            className="flex min-h-[220px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm sm:text-base"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </WizardPane>
+      )}
+
+      {step === 3 && (
+        <WizardPane step={3}>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.bedroomsTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.bedroomsHint")}</p>
+          <div className="space-y-2 max-w-sm">
+            <Label htmlFor="bedrooms">{t("wizard.property.bedrooms")} *</Label>
+            <Input
+              id="bedrooms"
+              type="number"
+              min={0}
+              value={bedrooms}
+              onChange={(e) => setBedrooms(e.target.value)}
+            />
+          </div>
+        </WizardPane>
+      )}
+
+      {step === 4 && (
+        <WizardPane step={4}>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.locationTitle")}</h2>
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
             {t("wizard.property.locationHint")}
           </p>
@@ -379,31 +436,146 @@ export function PropertyCreationWizard({
         </WizardPane>
       )}
 
-      {step === 2 && (
-        <WizardPane step={2}>
-          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.pricingTitle")}</h2>
-          <p className="text-sm text-muted-foreground">{t("wizard.property.pricingHint")}</p>
+      {step === 5 && (
+        <WizardPane step={5}>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.amenitiesTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.amenitiesHint")}</p>
+          <div className="space-y-6">
+            {AMENITY_GROUPS.map((group) => (
+              <section key={group.id} className="space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t(`amenities.groups.${group.id}`)}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                  {group.ids.map((id) => {
+                    const checked = amenities.includes(id);
+                    return (
+                      <label
+                        key={id}
+                        className={cn(
+                          "flex items-start gap-3 rounded-xl border-2 px-3 py-3 text-sm cursor-pointer transition-colors",
+                          checked ? "border-brand bg-brand/5" : "border-border bg-card"
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 h-4 w-4 accent-brand"
+                          checked={checked}
+                          onChange={() => toggleAmenity(id)}
+                        />
+                        <span>
+                          <span className="font-medium text-foreground">{t(`amenities.${id}`)}</span>
+                          <span className="block text-xs text-muted-foreground mt-0.5">
+                            {t(`amenities.hints.${id}`)}
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+        </WizardPane>
+      )}
+
+      {step === 6 && (
+        <WizardPane step={6}>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.mediaTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.mediaHint", { count: MIN_PROPERTY_PHOTOS })}</p>
           <div className="space-y-2">
-            <Label htmlFor="price">{t("wizard.property.priceXof")} *</Label>
+            <Label>{t("common.photos")}</Label>
             <Input
-              id="price"
-              type="number"
-              min={1}
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => {
+                void handlePhotosSelected(e.target.files);
+                e.target.value = "";
+              }}
             />
+            {preparingPhotos && (
+              <p className="text-xs text-brand">{t("wizard.property.preparingPhotos")}</p>
+            )}
+            {uploadingPhotos && !preparingPhotos && (
+              <p className="text-xs text-brand">{t("wizard.property.uploadingPhotos")}</p>
+            )}
+            {photoCount > 0 && (
+              <p className={`text-xs ${photoCount >= MIN_PROPERTY_PHOTOS ? "text-emerald-600" : "text-muted-foreground"}`}>
+                {t("wizard.property.photosSelected", { count: photoCount, min: MIN_PROPERTY_PHOTOS })}
+              </p>
+            )}
+            {photoCount > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">{t("wizard.property.coverHint")}</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-6 gap-2">
+                  {[...existingUrls.map((url) => listingImageUrl(url)), ...previews].map((src, idx) => (
+                    <div
+                      key={src}
+                      className={`relative overflow-hidden rounded-xl border-2 ${
+                        idx === coverIndex ? "border-brand" : "border-border"
+                      }`}
+                    >
+                      <button type="button" className="block w-full" onClick={() => setCoverIndex(idx)}>
+                        <img src={src} alt="" className="h-28 w-full object-cover" decoding="async" />
+                        {idx === coverIndex && (
+                          <span className="absolute bottom-1 left-1 right-1 rounded-full bg-brand px-2 py-0.5 text-[10px] font-semibold text-white">
+                            {t("wizard.property.coverBadge")}
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        className="absolute top-1 right-1 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white"
+                        aria-label={t("wizard.property.removePhoto")}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          removePhoto(idx);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {Array.from({ length: pendingSlots }, (_, i) => (
+                    <div
+                      key={`pending-${i}`}
+                      className="h-28 rounded-xl border-2 border-dashed border-brand/40 bg-muted animate-pulse"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="guests">{t("wizard.property.maxGuests")} *</Label>
+            <Label htmlFor="vr">{t("wizard.property.virtualTour")}</Label>
             <Input
-              id="guests"
-              type="number"
-              min={1}
-              value={max_guests}
-              onChange={(e) => setMaxGuests(e.target.value)}
+              id="vr"
+              type="url"
+              placeholder="https://kuula.co/share/..."
+              value={virtual_tour_url}
+              onChange={(e) => setVirtualTourUrl(e.target.value)}
             />
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
+        </WizardPane>
+      )}
+
+      {step === 7 && (
+        <WizardPane step={7}>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.capacityTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.capacityHint")}</p>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="guests">{t("wizard.property.maxGuests")} *</Label>
+              <Input
+                id="guests"
+                type="number"
+                min={1}
+                value={max_guests}
+                onChange={(e) => setMaxGuests(e.target.value)}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="check-in-time">{t("wizard.property.checkInTime")} *</Label>
               <Input
@@ -431,217 +603,131 @@ export function PropertyCreationWizard({
         </WizardPane>
       )}
 
-      {step === 3 && (
-        <WizardPane step={3}>
-          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.ratesTitle")}</h2>
-          <p className="text-sm text-muted-foreground">{t("wizard.property.ratesHint")}</p>
-          <div className="space-y-2">
-            <Label htmlFor="midday">{t("wizard.property.priceMidday")}</Label>
+      {step === 8 && (
+        <WizardPane step={8}>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.pricingTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.pricingHint")}</p>
+          <div className="space-y-2 max-w-md">
+            <Label htmlFor="price">{t("wizard.property.priceXof")} *</Label>
             <Input
-              id="midday"
+              id="price"
               type="number"
-              min={0}
-              value={priceMidday}
-              onChange={(e) => setPriceMidday(e.target.value)}
-              placeholder="15000"
+              min={1}
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="fullday">{t("wizard.property.priceFullDay")}</Label>
-            <Input
-              id="fullday"
-              type="number"
-              min={0}
-              value={priceFullDay}
-              onChange={(e) => setPriceFullDay(e.target.value)}
-              placeholder="20000"
-            />
-          </div>
-        </WizardPane>
-      )}
-
-      {step === 4 && (
-        <WizardPane step={4}>
-          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.amenitiesTitle")}</h2>
-          <p className="text-sm text-muted-foreground">{t("wizard.property.amenitiesHint")}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {PROPERTY_AMENITY_IDS.map((id) => {
-              const checked = amenities.includes(id);
-              return (
-                <label
-                  key={id}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl border-2 px-3 py-2.5 text-sm cursor-pointer transition-colors",
-                    checked ? "border-brand bg-brand/5" : "border-border bg-card"
-                  )}
-                >
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-brand"
-                    checked={checked}
-                    onChange={() =>
-                      setAmenities((current) =>
-                        current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
-                      )
-                    }
-                  />
-                  {t(`amenities.${id}`)}
-                </label>
-              );
-            })}
-          </div>
-        </WizardPane>
-      )}
-
-      {step === 5 && (
-        <WizardPane step={5}>
-          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.mediaTitle")}</h2>
-          <p className="text-sm text-muted-foreground">{t("wizard.property.mediaHint", { count: MIN_PROPERTY_PHOTOS })}</p>
-          <div className="space-y-2">
-            <Label>{t("common.photos")}</Label>
-            <Input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => {
-                void handlePhotosSelected(e.target.files);
-                e.target.value = "";
-              }}
-            />
-            {preparingPhotos && (
-              <p className="text-xs text-brand">{t("wizard.property.preparingPhotos")}</p>
-            )}
-            {uploadingPhotos && !preparingPhotos && (
-              <p className="text-xs text-brand">{t("wizard.property.uploadingPhotos")}</p>
-            )}
-            {photoCount > 0 && (
-              <p className={`text-xs ${photoCount >= MIN_PROPERTY_PHOTOS ? "text-emerald-600" : "text-muted-foreground"}`}>
-                {t("wizard.property.photosSelected", { count: photoCount, min: MIN_PROPERTY_PHOTOS })}
-              </p>
-            )}
-            {photoCount > 0 && (
+          <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
+            <div>
+              <p className="font-semibold text-foreground">{t("wizard.property.ratesTitle")}</p>
+              <p className="text-sm text-muted-foreground">{t("wizard.property.ratesHint")}</p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">{t("wizard.property.coverHint")}</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {[...existingUrls.map((url) => listingImageUrl(url)), ...previews].map((src, idx) => (
-                    <div
-                      key={src}
-                      className={`relative overflow-hidden rounded-xl border-2 ${
-                        idx === coverIndex ? "border-brand" : "border-border"
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        className="block w-full"
-                        onClick={() => setCoverIndex(idx)}
-                      >
-                        <img src={src} alt="" className="h-24 w-full object-cover" decoding="async" />
-                        {idx === coverIndex && (
-                          <span className="absolute bottom-1 left-1 right-1 rounded-full bg-brand px-2 py-0.5 text-[10px] font-semibold text-white">
-                            {t("wizard.property.coverBadge")}
-                          </span>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        className="absolute top-1 right-1 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white"
-                        aria-label={t("wizard.property.removePhoto")}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          removePhoto(idx);
-                        }}
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                  {Array.from({ length: pendingSlots }, (_, i) => (
-                    <div
-                      key={`pending-${i}`}
-                      className="h-24 rounded-xl border-2 border-dashed border-brand/40 bg-muted animate-pulse"
-                    />
-                  ))}
-                </div>
+                <Label htmlFor="midday">{t("wizard.property.priceMidday")}</Label>
+                <Input
+                  id="midday"
+                  type="number"
+                  min={0}
+                  value={priceMidday}
+                  onChange={(e) => setPriceMidday(e.target.value)}
+                  placeholder={t("common.optional")}
+                />
               </div>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="vr">{t("wizard.property.virtualTour")}</Label>
-            <Input
-              id="vr"
-              type="url"
-              placeholder="https://kuula.co/share/..."
-              value={virtual_tour_url}
-              onChange={(e) => setVirtualTourUrl(e.target.value)}
-            />
+              <div className="space-y-2">
+                <Label htmlFor="fullday">{t("wizard.property.priceFullDay")}</Label>
+                <Input
+                  id="fullday"
+                  type="number"
+                  min={0}
+                  value={priceFullDay}
+                  onChange={(e) => setPriceFullDay(e.target.value)}
+                  placeholder={t("common.optional")}
+                />
+              </div>
+            </div>
           </div>
         </WizardPane>
       )}
 
-      {step === 6 && (
-        <WizardPane step={6}>
-          <h2 className="text-lg font-bold text-foreground">{t("wizard.property.reviewTitle")}</h2>
+      {step === 9 && (
+        <WizardPane step={9}>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.delegateTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.property.delegateHint")}</p>
+          <label className="flex items-start gap-3 rounded-2xl border-2 border-border bg-card px-4 py-3 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-1 h-4 w-4 accent-brand"
+              checked={hasDelegate}
+              onChange={(e) => setHasDelegate(e.target.checked)}
+            />
+            <span>
+              <span className="font-semibold text-foreground">{t("wizard.property.delegateToggle")}</span>
+              <span className="block text-sm text-muted-foreground">{t("wizard.property.delegateToggleHint")}</span>
+            </span>
+          </label>
+          {hasDelegate && (
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="manager-name">{t("wizard.property.managerName")} *</Label>
+                <Input id="manager-name" value={managerName} onChange={(e) => setManagerName(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="manager-role">{t("wizard.property.managerRole")}</Label>
+                <Input id="manager-role" value={managerRole} onChange={(e) => setManagerRole(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="manager-phone">{t("wizard.property.managerPhone")}</Label>
+                <Input id="manager-phone" value={managerPhone} onChange={(e) => setManagerPhone(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="manager-email">{t("wizard.property.managerEmail")}</Label>
+                <Input
+                  id="manager-email"
+                  type="email"
+                  value={managerEmail}
+                  onChange={(e) => setManagerEmail(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+        </WizardPane>
+      )}
+
+      {step === 10 && (
+        <WizardPane step={10}>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.reviewTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("wizard.property.reviewHint")}</p>
           <dl className="rounded-2xl border-2 border-border divide-y text-sm">
-            <div className="flex justify-between gap-4 p-4">
-              <dt className="text-muted-foreground">{t("propertyForm.title")}</dt>
-              <dd className="font-semibold text-right">{title}</dd>
-            </div>
-            <div className="flex justify-between gap-4 p-4">
-              <dt className="text-muted-foreground">{t("propertyForm.propertyType")}</dt>
-              <dd className="font-semibold capitalize">
-                {t(`propertyTypes.${property_type as (typeof PROPERTY_TYPES)[number]}`)}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4 p-4">
-              <dt className="text-muted-foreground">{t("propertyForm.location")}</dt>
-              <dd className="font-semibold text-right">{location}</dd>
-            </div>
-            <div className="flex justify-between gap-4 p-4">
-              <dt className="text-muted-foreground">{t("common.perNight")}</dt>
-              <dd className="font-semibold text-brand">{formatPrice(Number(price))}</dd>
-            </div>
-            {priceMidday && (
-              <div className="flex justify-between gap-4 p-4">
-                <dt className="text-muted-foreground">{t("wizard.property.priceMidday")}</dt>
-                <dd className="font-semibold">{formatPrice(Number(priceMidday))}</dd>
-              </div>
-            )}
-            {priceFullDay && (
-              <div className="flex justify-between gap-4 p-4">
-                <dt className="text-muted-foreground">{t("wizard.property.priceFullDay")}</dt>
-                <dd className="font-semibold">{formatPrice(Number(priceFullDay))}</dd>
-              </div>
-            )}
-            <div className="flex justify-between gap-4 p-4">
-              <dt className="text-muted-foreground">{t("wizard.property.bedrooms")}</dt>
-              <dd className="font-semibold">{bedrooms}</dd>
-            </div>
-            <div className="flex justify-between gap-4 p-4">
-              <dt className="text-muted-foreground">{t("wizard.property.maxGuests")}</dt>
-              <dd className="font-semibold">{max_guests}</dd>
-            </div>
-            <div className="flex justify-between gap-4 p-4">
-              <dt className="text-muted-foreground">{t("wizard.property.checkInTime")}</dt>
-              <dd className="font-semibold">{checkInTime}</dd>
-            </div>
-            <div className="flex justify-between gap-4 p-4">
-              <dt className="text-muted-foreground">{t("wizard.property.checkOutTime")}</dt>
-              <dd className="font-semibold">{checkOutTime}</dd>
-            </div>
-            <div className="flex justify-between gap-4 p-4">
-              <dt className="text-muted-foreground">{t("wizard.property.amenitiesTitle")}</dt>
-              <dd className="font-semibold text-right">
-                {amenities.length > 0
+            <ReviewRow label={t("propertyForm.propertyType")} value={t(`propertyTypes.${property_type}`)} />
+            <ReviewRow label={t("propertyForm.title")} value={title} />
+            <ReviewRow label={t("propertyForm.location")} value={location} />
+            <ReviewRow label={t("wizard.property.bedrooms")} value={bedrooms} />
+            <ReviewRow label={t("wizard.property.maxGuests")} value={max_guests} />
+            <ReviewRow label={t("common.perNight")} value={formatPrice(Number(price) || 0)} />
+            {priceMidday ? (
+              <ReviewRow label={t("wizard.property.priceMidday")} value={formatPrice(Number(priceMidday))} />
+            ) : null}
+            {priceFullDay ? (
+              <ReviewRow label={t("wizard.property.priceFullDay")} value={formatPrice(Number(priceFullDay))} />
+            ) : null}
+            <ReviewRow
+              label={t("wizard.property.amenitiesTitle")}
+              value={
+                amenities.length > 0
                   ? amenities.map((id) => t(`amenities.${id}`)).join(", ")
-                  : t("wizard.property.amenitiesEmpty")}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4 p-4">
-              <dt className="text-muted-foreground">{t("common.photos")}</dt>
-              <dd className="font-semibold">{photoCount}</dd>
-            </div>
+                  : t("wizard.property.amenitiesEmpty")
+              }
+            />
+            <ReviewRow label={t("common.photos")} value={String(photoCount)} />
+            {hasDelegate ? (
+              <ReviewRow
+                label={t("wizard.property.delegateTitle")}
+                value={[managerName, managerRole, managerPhone, managerEmail].filter(Boolean).join(" · ")}
+              />
+            ) : (
+              <ReviewRow label={t("wizard.property.delegateTitle")} value={t("wizard.property.delegateNone")} />
+            )}
             {([...existingUrls.map((url) => listingImageUrl(url)), ...previews][coverIndex]) && (
               <div className="p-4 space-y-2">
                 <dt className="text-muted-foreground">{t("wizard.property.coverBadge")}</dt>
@@ -675,11 +761,7 @@ export function PropertyCreationWizard({
           {t("wizard.property.saveDraft")}
         </Button>
         {step < steps.length - 1 ? (
-          <Button
-            type="button"
-            className="rounded-full bg-brand hover:bg-brand-dark ml-auto"
-            onClick={next}
-          >
+          <Button type="button" className="rounded-full bg-brand hover:bg-brand-dark ml-auto" onClick={next}>
             {t("wizard.next")}
           </Button>
         ) : (
@@ -708,6 +790,15 @@ function AddressRow({ label, value }: { label: string; value: string }) {
         {label}
       </dt>
       <dd className="font-semibold text-foreground break-words sm:text-right">{value || "—"}</dd>
+    </div>
+  );
+}
+
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-4 p-4">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-semibold text-right">{value}</dd>
     </div>
   );
 }

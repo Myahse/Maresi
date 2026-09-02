@@ -115,6 +115,21 @@ public class VisitRequestController {
         exceptionUtils);
   }
 
+  @PostMapping("/{id}/host-agreement")
+  public ResponseEntity<Response<Map<String, Object>>> signHostAgreement(
+      @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return visitRequestService.signHostAgreement(id, request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
   @PostMapping("/{id}/extension")
   public ResponseEntity<Response<Map<String, Object>>> requestExtension(
       @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {

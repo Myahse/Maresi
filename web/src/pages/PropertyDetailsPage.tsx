@@ -14,7 +14,7 @@ import { RatingsSection } from "@/components/rating/RatingsSection";
 import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
 import { cn } from "@/lib/utils";
 import { listingImageUrls } from "@/lib/media";
-import { isPropertyType, normalizeAmenities } from "@/lib/amenities";
+import { displayPropertyType, isPropertyType, normalizeAmenities } from "@/lib/amenities";
 import { shareListingPage } from "@/lib/listingShare";
 
 export function PropertyDetailsPage() {
@@ -156,9 +156,9 @@ export function PropertyDetailsPage() {
               {property.location}
             </p>
             <p className="text-sm text-muted-foreground capitalize mt-1">
-              {isPropertyType(property.property_type)
-                ? t(`propertyTypes.${property.property_type}`)
-                : property.property_type}
+                {isPropertyType(property.property_type) || property.property_type
+                  ? t(`propertyTypes.${displayPropertyType(property.property_type)}`)
+                  : property.property_type}
             </p>
             <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mt-2">
               {property.bedrooms != null && property.bedrooms > 0 && (
@@ -240,6 +240,27 @@ export function PropertyDetailsPage() {
             <CardHeader className="pb-2">
               <p className="text-sm font-medium text-muted-foreground">{t("propertyDetails.contactOwner")}</p>
               {property.owner_name && <p className="font-medium">{property.owner_name}</p>}
+              {property.manager_name && (
+                <div className="mt-3 rounded-xl border border-border bg-muted/50 px-3 py-2">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {t("propertyDetails.managedBy")}
+                  </p>
+                  <p className="font-medium text-foreground">{property.manager_name}</p>
+                  {property.manager_role && (
+                    <p className="text-xs text-muted-foreground">{property.manager_role}</p>
+                  )}
+                  {property.manager_phone && (
+                    <a href={`tel:${property.manager_phone}`} className="flex items-center gap-2 text-sm text-brand mt-1">
+                      <Phone className="h-4 w-4" /> {property.manager_phone}
+                    </a>
+                  )}
+                  {property.manager_email && (
+                    <a href={`mailto:${property.manager_email}`} className="flex items-center gap-2 text-sm text-brand">
+                      <Mail className="h-4 w-4" /> {property.manager_email}
+                    </a>
+                  )}
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-2">
               {property.owner_email && (

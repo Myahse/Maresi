@@ -140,17 +140,31 @@ export function BottomNav() {
             </Link>
           </li>
           <li>
-            <button
-              type="button"
-              className={cn(
-                "flex h-16 w-full flex-col items-center justify-center gap-0.5 text-[10px] font-semibold",
-                moreOpen ? "text-brand" : "text-muted-foreground"
-              )}
-              onClick={() => setMoreOpen((o) => !o)}
-            >
-              <User className={cn("h-5 w-5", moreOpen && "stroke-[2.25]")} />
-              <span className="truncate px-1">{t("nav.account")}</span>
-            </button>
+            {isAuthenticated ? (
+              <Link
+                to="/owner/account"
+                className={cn(
+                  "flex h-16 w-full flex-col items-center justify-center gap-0.5 text-[10px] font-semibold",
+                  pathname.startsWith("/owner/account") ? "text-brand" : "text-muted-foreground"
+                )}
+                onClick={() => setMoreOpen(false)}
+              >
+                <User className={cn("h-5 w-5", pathname.startsWith("/owner/account") && "stroke-[2.25]")} />
+                <span className="truncate px-1">{t("nav.account")}</span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className={cn(
+                  "flex h-16 w-full flex-col items-center justify-center gap-0.5 text-[10px] font-semibold",
+                  moreOpen ? "text-brand" : "text-muted-foreground"
+                )}
+                onClick={() => setMoreOpen((o) => !o)}
+              >
+                <User className={cn("h-5 w-5", moreOpen && "stroke-[2.25]")} />
+                <span className="truncate px-1">{t("nav.account")}</span>
+              </button>
+            )}
           </li>
         </ul>
       </nav>

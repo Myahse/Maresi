@@ -77,7 +77,7 @@ export function Header() {
               {isAuthenticated ? (
                 <button
                   type="button"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/account")}
                   className="flex w-9 h-9 rounded-full items-center justify-center text-sm font-bold shrink-0 bg-white text-brand"
                   aria-label="Account"
                 >

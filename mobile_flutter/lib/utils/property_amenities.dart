@@ -73,6 +73,7 @@ List<PropertyAmenityId> inferPropertyAmenities(Property property) {
       amenities.add(PropertyAmenityId.furnished);
     case PropertyTypes.apartment:
       amenities.add(PropertyAmenityId.security);
+    case PropertyTypes.villa:
     case PropertyTypes.house:
       amenities.add(PropertyAmenityId.parking);
     default:

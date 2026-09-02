@@ -24,6 +24,16 @@ export interface UserProfile extends User {
   created_at?: string;
 }
 
+export interface AppNotification {
+  id: string;
+  type?: string;
+  title: string;
+  message: string;
+  property_id?: string;
+  read_at?: string;
+  created_at?: string;
+}
+
 export interface Property {
   id: string;
   owner_id: string;
@@ -53,6 +63,10 @@ export interface Property {
   price_midday?: number;
   price_full_day?: number;
   premium_positioning?: boolean;
+  manager_name?: string;
+  manager_phone?: string;
+  manager_email?: string;
+  manager_role?: string;
 }
 
 export interface VisitRequestPayload {
@@ -85,6 +99,7 @@ export type VisitRequestStatus =
   | "accepted"
   | "declined"
   | "awaiting_agreement"
+  | "awaiting_host_agreement"
   | "awaiting_key"
   | "awaiting_payment"
   | "payment_sent"
@@ -121,6 +136,9 @@ export interface VisitRequest {
   requester_id_back_url?: string;
   agreement_full_name?: string;
   agreement_signed_at?: string;
+  host_agreement_full_name?: string;
+  host_agreement_accepted?: boolean;
+  host_agreement_signed_at?: string;
   key_code?: string;
   key_confirmed_at?: string;
   owner_note?: string;

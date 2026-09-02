@@ -6,6 +6,17 @@ import java.util.UUID;
 public final class StayAgreementText {
   private StayAgreementText() {}
 
+  public static String plainArticles() {
+    return """
+        Article 1 — Le client prend soin du logement, du mobilier, des clés et du matériel, et le laisse propre à la fin du séjour.
+        Article 2 — Le client est responsable des dégâts qu’il cause et du coût de réparation ou de remplacement.
+        Article 3 — Le règlement intérieur, les voisins, les heures de calme et le nombre d’occupants doivent être respectés.
+        Article 4 — Aucune sous-location ni événement sans l’accord écrit de l’hôte.
+        Article 5 — Un manquement peut entraîner l’annulation du séjour sans remboursement de la commission Maresi.
+        """
+        .trim();
+  }
+
   public static String pageUrl(String webOrigin, UUID visitId) {
     String base = origin(webOrigin);
     return base + "/visits/" + visitId + "/agreement";

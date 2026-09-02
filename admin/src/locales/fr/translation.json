@@ -41,9 +41,11 @@
   },
   "propertyTypes": {
     "apartment": "Appartement",
-    "house": "Maison",
+    "villa": "Villa",
     "studio": "Studio",
-    "residence": "Résidence"
+    "hotel": "Hôtel",
+    "house": "Villa",
+    "residence": "Appartement"
   },
   "header": {
     "browse": "Parcourir",
@@ -310,6 +312,7 @@
       "accepted": "Acceptée",
       "declined": "Refusée",
       "awaiting_agreement": "Engagement",
+      "awaiting_host_agreement": "Signature hôte",
       "awaiting_key": "Code clé",
       "awaiting_payment": "Paiement hôte",
       "payment_sent": "Paiement déclaré",

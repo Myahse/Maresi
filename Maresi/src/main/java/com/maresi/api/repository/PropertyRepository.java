@@ -133,9 +133,10 @@ public class PropertyRepository {
                     owner_id, title, description, price, location, property_type, images,
                     latitude, longitude, bedrooms, max_guests, virtual_tour_url,
                     wave_payment_url, orange_money_url, is_active, amenities,
-                    check_in_time, check_out_time, price_midday, price_full_day
+                    check_in_time, check_out_time, price_midday, price_full_day,
+                    manager_name, manager_phone, manager_email, manager_role
                   )
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS time), CAST(? AS time), ?, ?)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS time), CAST(? AS time), ?, ?, ?, ?, ?, ?)
                   RETURNING *
                   """)) {
             ps.setObject(1, ownerId);
@@ -160,6 +161,10 @@ public class PropertyRepository {
             ps.setObject(18, extra.get("check_out_time"));
             ps.setObject(19, extra.get("price_midday"));
             ps.setObject(20, extra.get("price_full_day"));
+            ps.setObject(21, extra.get("manager_name"));
+            ps.setObject(22, extra.get("manager_phone"));
+            ps.setObject(23, extra.get("manager_email"));
+            ps.setObject(24, extra.get("manager_role"));
             try (var rs = ps.executeQuery()) {
               if (rs.next()) return RowMaps.property(rs);
               throw new IllegalStateException("Insert failed");
@@ -189,7 +194,11 @@ public class PropertyRepository {
             "check_in_time",
             "check_out_time",
             "price_midday",
-            "price_full_day");
+            "price_full_day",
+            "manager_name",
+            "manager_phone",
+            "manager_email",
+            "manager_role");
     List<String> updateKeys = new ArrayList<>();
     List<Object> updateValues = new ArrayList<>();
     for (String key : keys) {

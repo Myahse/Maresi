@@ -78,6 +78,10 @@ public final class RowMaps {
     putTime(rs, m, "check_out_time");
     putIfPresent(rs, m, "price_midday");
     putIfPresent(rs, m, "price_full_day");
+    putIfPresent(rs, m, "manager_name");
+    putIfPresent(rs, m, "manager_phone");
+    putIfPresent(rs, m, "manager_email");
+    putIfPresent(rs, m, "manager_role");
     m.put("created_at", toIso(rs.getTimestamp("created_at")));
     m.put("updated_at", toIso(rs.getTimestamp("updated_at")));
     putIfPresent(rs, m, "owner_name");
@@ -166,6 +170,9 @@ public final class RowMaps {
     putIfPresent(rs, m, "agreement_full_name");
     putIfPresent(rs, m, "agreement_accepted");
     putIfPresent(rs, m, "agreement_signed_at");
+    putIfPresent(rs, m, "host_agreement_full_name");
+    putIfPresent(rs, m, "host_agreement_accepted");
+    putTimestamp(rs, m, "host_agreement_signed_at");
     putIfPresent(rs, m, "key_code");
     putIfPresent(rs, m, "key_confirmed_at");
     putIfPresent(rs, m, "checkin_notified_at");

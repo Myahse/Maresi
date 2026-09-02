@@ -53,8 +53,15 @@ export function BottomNav() {
       id: "account",
       label: t("nav.account"),
       icon: User,
-      active: moreOpen || ["/dashboard", "/login", "/register", "/become-host"].some((p) => pathname.startsWith(p)),
-      onClick: () => setMoreOpen((o) => !o),
+      active: moreOpen || pathname.startsWith("/account") || ["/login", "/register"].some((p) => pathname.startsWith(p)),
+      onClick: () => {
+        if (isAuthenticated) {
+          setMoreOpen(false);
+          goProtected("/account");
+          return;
+        }
+        setMoreOpen((o) => !o);
+      },
     },
   ] as const;
 

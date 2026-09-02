@@ -13,8 +13,20 @@ import { OwnerDashboardPage } from "@/pages/owner/OwnerDashboardPage";
 import { HostApplicationPage } from "@/pages/owner/HostApplicationPage";
 import { PropertyEditPage } from "@/pages/owner/PropertyEditPage";
 import { OwnerVisitsPage } from "@/pages/owner/OwnerVisitsPage";
-import { OwnerIdentityPage } from "@/pages/owner/OwnerIdentityPage";
+import { HostStayAgreementPage } from "@/pages/owner/HostStayAgreementPage";
 import { OwnerSubscriptionPage } from "@/pages/owner/OwnerSubscriptionPage";
+import {
+  AccountHubPage,
+  AccountPersonalPage,
+  AccountDocumentsPage,
+  AccountAlertsPage,
+  AccountNotificationsPage,
+  AccountSecurityPage,
+  AccountLanguagePage,
+  AccountSystemPage,
+  AccountLegalPage,
+  AccountSupportPage,
+} from "@/pages/account/AccountPages";
 import { PaymentSuccessPage, PaymentErrorPage } from "@/pages/PaymentResultPages";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { AppSplash } from "@/components/layout/AppSplash";
@@ -77,8 +89,18 @@ function App() {
             <Route path="owner/new" element={<ProtectedRoute approvedOnly><PropertyEditPage /></ProtectedRoute>} />
             <Route path="owner/edit/:id" element={<ProtectedRoute approvedOnly><PropertyEditPage /></ProtectedRoute>} />
             <Route path="owner/visits" element={<ProtectedRoute approvedOnly><OwnerVisitsPage /></ProtectedRoute>} />
+            <Route path="owner/visits/:id/agreement" element={<ProtectedRoute approvedOnly><HostStayAgreementPage /></ProtectedRoute>} />
             <Route path="visits/:id/agreement" element={<GuestAgreementRedirect />} />
-            <Route path="owner/account" element={<ProtectedRoute><OwnerIdentityPage /></ProtectedRoute>} />
+            <Route path="owner/account" element={<ProtectedRoute><AccountHubPage /></ProtectedRoute>} />
+            <Route path="owner/account/personal" element={<ProtectedRoute><AccountPersonalPage /></ProtectedRoute>} />
+            <Route path="owner/account/documents" element={<ProtectedRoute><AccountDocumentsPage /></ProtectedRoute>} />
+            <Route path="owner/account/alerts" element={<ProtectedRoute><AccountAlertsPage /></ProtectedRoute>} />
+            <Route path="owner/account/notifications" element={<ProtectedRoute><AccountNotificationsPage /></ProtectedRoute>} />
+            <Route path="owner/account/security" element={<ProtectedRoute><AccountSecurityPage /></ProtectedRoute>} />
+            <Route path="owner/account/language" element={<ProtectedRoute><AccountLanguagePage /></ProtectedRoute>} />
+            <Route path="owner/account/system" element={<ProtectedRoute><AccountSystemPage /></ProtectedRoute>} />
+            <Route path="owner/account/legal" element={<ProtectedRoute><AccountLegalPage /></ProtectedRoute>} />
+            <Route path="owner/account/support" element={<ProtectedRoute><AccountSupportPage /></ProtectedRoute>} />
             <Route path="payments/success" element={<PaymentSuccessPage />} />
             <Route path="payments/error" element={<PaymentErrorPage />} />
             <Route path="*" element={<NotFoundPage />} />

@@ -72,7 +72,7 @@ export function AdminVisitsPage() {
         onChange={(e) => setFilter(e.target.value)}
       >
         <option value="">{t("common.any")}</option>
-        {["pending", "awaiting_agreement", "awaiting_key", "awaiting_payment", "payment_sent", "confirmed", "declined", "cancelled"].map(
+        {["pending", "awaiting_agreement", "awaiting_host_agreement", "awaiting_key", "awaiting_payment", "payment_sent", "confirmed", "declined", "cancelled"].map(
           (status) => (
             <option key={status} value={status}>
               {t(`visits.status.${status}`, { defaultValue: status })}

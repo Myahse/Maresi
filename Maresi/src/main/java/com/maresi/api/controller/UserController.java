@@ -45,6 +45,15 @@ public class UserController {
     return ControllerSupport.run(() -> userService.me(loc), loc, exceptionUtils);
   }
 
+  @PatchMapping("/me/password")
+  @Operation(summary = "Changer le mot de passe", security = @SecurityRequirement(name = "bearerAuth"))
+  public ResponseEntity<Response<Map<String, Object>>> changePassword(
+      @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> userService.changePassword(request == null ? null : request.getData(), loc), loc, exceptionUtils);
+  }
+
   @PatchMapping("/me/location")
   @Operation(summary = "Enregistrer la position du voyageur", security = @SecurityRequirement(name = "bearerAuth"))
   public ResponseEntity<Response<Map<String, Object>>> updateLocation(

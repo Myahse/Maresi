@@ -72,6 +72,7 @@ export type VisitRequestStatus =
   | "accepted"
   | "declined"
   | "awaiting_agreement"
+  | "awaiting_host_agreement"
   | "awaiting_key"
   | "awaiting_payment"
   | "payment_sent"

@@ -87,6 +87,10 @@ public class PropertyController {
       @RequestParam(name = "check_out_time", required = false) String checkOutTime,
       @RequestParam(name = "price_midday", required = false) BigDecimal priceMidday,
       @RequestParam(name = "price_full_day", required = false) BigDecimal priceFullDay,
+      @RequestParam(name = "manager_name", required = false) String managerName,
+      @RequestParam(name = "manager_phone", required = false) String managerPhone,
+      @RequestParam(name = "manager_email", required = false) String managerEmail,
+      @RequestParam(name = "manager_role", required = false) String managerRole,
       @RequestPart(name = "images", required = false) List<MultipartFile> images,
       @RequestParam(name = "image_urls", required = false) List<String> imageUrls,
       @RequestParam(required = false, defaultValue = "false") boolean draft,
@@ -105,7 +109,11 @@ public class PropertyController {
         checkInTime,
         checkOutTime,
         priceMidday,
-        priceFullDay);
+        priceFullDay,
+        managerName,
+        managerPhone,
+        managerEmail,
+        managerRole);
     return ControllerSupport.runCreated(
         () ->
             propertyService.create(
@@ -163,6 +171,10 @@ public class PropertyController {
       @RequestParam(name = "check_out_time", required = false) String checkOutTime,
       @RequestParam(name = "price_midday", required = false) BigDecimal priceMidday,
       @RequestParam(name = "price_full_day", required = false) BigDecimal priceFullDay,
+      @RequestParam(name = "manager_name", required = false) String managerName,
+      @RequestParam(name = "manager_phone", required = false) String managerPhone,
+      @RequestParam(name = "manager_email", required = false) String managerEmail,
+      @RequestParam(name = "manager_role", required = false) String managerRole,
       @RequestPart(name = "images", required = false) List<MultipartFile> images,
       @RequestParam(name = "image_urls", required = false) List<String> imageUrls,
       @RequestParam(required = false) Boolean draft,
@@ -190,7 +202,11 @@ public class PropertyController {
             checkInTime,
             checkOutTime,
             priceMidday,
-            priceFullDay));
+            priceFullDay,
+            managerName,
+            managerPhone,
+            managerEmail,
+            managerRole));
     String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
     return ControllerSupport.run(
         () -> propertyService.update(id, data, images, imageUrls, baseUrl, loc), loc, exceptionUtils);
@@ -238,7 +254,11 @@ public class PropertyController {
       String checkInTime,
       String checkOutTime,
       BigDecimal priceMidday,
-      BigDecimal priceFullDay) {
+      BigDecimal priceFullDay,
+      String managerName,
+      String managerPhone,
+      String managerEmail,
+      String managerRole) {
     Map<String, Object> extras = new HashMap<>();
     if (latitude != null) extras.put("latitude", latitude);
     if (longitude != null) extras.put("longitude", longitude);
@@ -258,7 +278,17 @@ public class PropertyController {
     if (outTime != null) extras.put("check_out_time", outTime);
     if (priceMidday != null && priceMidday.signum() > 0) extras.put("price_midday", priceMidday);
     if (priceFullDay != null && priceFullDay.signum() > 0) extras.put("price_full_day", priceFullDay);
+    putOptionalText(extras, "manager_name", managerName);
+    putOptionalText(extras, "manager_phone", managerPhone);
+    putOptionalText(extras, "manager_email", managerEmail);
+    putOptionalText(extras, "manager_role", managerRole);
     return extras;
+  }
+
+  private static void putOptionalText(Map<String, Object> extras, String key, String raw) {
+    if (raw == null) return;
+    String value = raw.trim();
+    extras.put(key, value.isEmpty() ? null : value);
   }
 
   private static String normalizeTime(String raw) {

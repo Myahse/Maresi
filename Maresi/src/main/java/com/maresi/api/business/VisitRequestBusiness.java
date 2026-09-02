@@ -330,7 +330,8 @@ public class VisitRequestBusiness {
               locale));
       return response;
     }
-    if (!List.of("pending", "awaiting_agreement", "awaiting_key", "awaiting_payment").contains(currentStatus)) {
+    if (!List.of("pending", "awaiting_agreement", "awaiting_host_agreement", "awaiting_key", "awaiting_payment")
+        .contains(currentStatus)) {
       response.setHasError(true);
       response.setStatus(functionalError.invalidData("Cette reservation ne peut plus etre annulee", locale));
       return response;
@@ -459,8 +460,7 @@ public class VisitRequestBusiness {
       response.setStatus(functionalError.invalidData("Vous devez accepter l'engagement", locale));
       return response;
     }
-    String keyCode = String.format("%06d", java.util.concurrent.ThreadLocalRandom.current().nextInt(1_000_000));
-    Map<String, Object> updated = visitRequests.signAgreement(id, user.id(), fullName.trim(), keyCode).orElse(null);
+    Map<String, Object> updated = visitRequests.signAgreement(id, user.id(), fullName.trim()).orElse(null);
     if (updated == null) {
       response.setHasError(true);
       response.setStatus(functionalError.invalidData("Signez apres acceptation de l'hote", locale));
@@ -488,21 +488,112 @@ public class VisitRequestBusiness {
     notifications.create(
         user.id(),
         "reservation",
-        "Code cle",
-        "Engagement signe. Donnez le code a 6 chiffres a l'hote pour recuperer la cle, puis allez au paiement.",
+        "Contrat signe",
+        "Vous avez signe. L'hote doit signer le meme contrat. Vous recevrez ensuite une copie par e-mail.",
         listingId);
     if (ownerId != null) {
       notifications.create(
           ownerId,
           "reservation",
-          "Attente du code cle",
-          "Le client a signe. Demandez le code a 6 chiffres, saisissez-le, puis le client paiera.",
+          "Signez le contrat",
+          "Le client a signe. Signez le contrat pour continuer.",
           listingId);
-      email.sendToUser(ownerId, EmailTemplates.keyCodeHost(listingTitle, userName(user.id()), hostVisitsUrl()));
+      email.sendToUser(
+          ownerId,
+          EmailTemplates.hostPleaseSign(listingTitle, userName(user.id()), hostAgreementUrl(id)));
     }
-    email.sendToUser(user.id(), EmailTemplates.keyCodeGuest(listingTitle, keyCode));
+    email.sendToUser(user.id(), EmailTemplates.guestWaitingHostSign(listingTitle, agreementUrl(id)));
     response.setItem(updated);
     response.setStatus(functionalError.success("Engagement signe", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> signHostAgreement(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> data = request.getData() == null ? Map.of() : request.getData();
+    String fullName = str(data.get("full_name"));
+    if (fullName == null || fullName.isBlank()) fullName = str(data.get("fullName"));
+    if (fullName == null || fullName.trim().length() < 3) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("full_name", locale));
+      return response;
+    }
+    boolean accepted =
+        Boolean.TRUE.equals(data.get("accepted"))
+            || "true".equalsIgnoreCase(String.valueOf(data.get("accepted")));
+    if (!accepted) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Vous devez accepter l'engagement", locale));
+      return response;
+    }
+    String keyCode = String.format("%06d", java.util.concurrent.ThreadLocalRandom.current().nextInt(1_000_000));
+    Map<String, Object> updated =
+        visitRequests.signHostAgreement(id, user.id(), fullName.trim(), keyCode).orElse(null);
+    if (updated == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Signez apres la signature du client", locale));
+      return response;
+    }
+    UUID listingId = UUID.fromString(updated.get("property_id").toString());
+    UUID requesterId = UUID.fromString(updated.get("user_id").toString());
+    Map<String, Object> published = new java.util.HashMap<>(updated);
+    hideKeyCode(published);
+    realtime.publish("visit.status_changed", published, requesterId, user.id(), true);
+    String listingTitle =
+        properties
+            .findById(listingId)
+            .map(p -> p.get("title"))
+            .map(Object::toString)
+            .orElse("la residence");
+    String location = str(updated.get("location"));
+    String checkIn = str(updated.get("check_in"));
+    String checkOut = str(updated.get("check_out"));
+    String guestName = str(updated.get("agreement_full_name"));
+    String guestSignedAt = str(updated.get("agreement_signed_at"));
+    String hostName = fullName.trim();
+    String hostSignedAt = str(updated.get("host_agreement_signed_at"));
+    EmailTemplates.Mail contractGuest =
+        EmailTemplates.stayContractCopy(
+            listingTitle,
+            location,
+            checkIn,
+            checkOut,
+            guestName,
+            guestSignedAt,
+            hostName,
+            hostSignedAt,
+            agreementUrl(id));
+    EmailTemplates.Mail contractHost =
+        EmailTemplates.stayContractCopy(
+            listingTitle,
+            location,
+            checkIn,
+            checkOut,
+            guestName,
+            guestSignedAt,
+            hostName,
+            hostSignedAt,
+            hostAgreementUrl(id));
+    email.sendToUser(requesterId, contractGuest);
+    email.sendToUser(user.id(), contractHost);
+    notifications.create(
+        requesterId,
+        "reservation",
+        "Code cle",
+        "Le contrat est signe des deux cotes. Donnez le code a 6 chiffres a l'hote, puis allez au paiement.",
+        listingId);
+    notifications.create(
+        user.id(),
+        "reservation",
+        "Attente du code cle",
+        "Vous avez signe. Demandez le code a 6 chiffres, saisissez-le, puis le client paiera.",
+        listingId);
+    email.sendToUser(user.id(), EmailTemplates.keyCodeHost(listingTitle, userName(requesterId), hostVisitsUrl()));
+    email.sendToUser(requesterId, EmailTemplates.keyCodeGuest(listingTitle, keyCode));
+    response.setItem(updated);
+    response.setStatus(functionalError.success("Contrat hote signe", locale));
     return response;
   }
 
@@ -908,6 +999,10 @@ public class VisitRequestBusiness {
 
   private String agreementUrl(UUID visitId) {
     return EmailTemplates.guestApp(appProperties) + "/visits/" + visitId + "/agreement";
+  }
+
+  private String hostAgreementUrl(UUID visitId) {
+    return EmailTemplates.hostApp(appProperties) + "/owner/visits/" + visitId + "/agreement";
   }
 
   private String hostVisitsUrl() {
