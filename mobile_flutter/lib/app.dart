@@ -5,6 +5,7 @@ import 'package:maresi_mobile/providers/favorites_provider.dart';
 import 'package:maresi_mobile/providers/location_provider.dart';
 import 'package:maresi_mobile/providers/locale_provider.dart';
 import 'package:maresi_mobile/screens/app_navigator.dart';
+import 'package:maresi_mobile/services/api_service.dart';
 import 'package:maresi_mobile/services/auth_service.dart';
 import 'package:maresi_mobile/services/maresi_client.dart';
 import 'package:maresi_mobile/theme/app_theme.dart';
@@ -31,6 +32,9 @@ class _MaresiAppState extends State<MaresiApp> {
     final api = maresiApi;
     _authService = AuthService(api);
     _authProvider = AuthProvider(_authService);
+    if (api is ApiService) {
+      api.onUnauthorized = _authProvider.syncAfterRemoteLogout;
+    }
     _favoritesProvider = FavoritesProvider(api);
     _localeProvider = LocaleProvider();
     _locationProvider = LocationProvider();

@@ -18,12 +18,29 @@ class AuthService {
   Future<void> loadStoredSession() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_userKey);
-    if (raw == null) return;
+    final token = prefs.getString(_tokenKey);
+    if (raw == null || token == null || token.isEmpty) {
+      if (raw != null || token != null) {
+        await prefs.remove(_userKey);
+        await prefs.remove(_tokenKey);
+      }
+      _user = null;
+      return;
+    }
     try {
       _user = User.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (_) {
-      await prefs.remove(_userKey);
-      await prefs.remove(_tokenKey);
+      await logout();
+      return;
+    }
+    try {
+      await _api.getMyProfile();
+    } catch (_) {
+      final still = await SharedPreferences.getInstance();
+      if (still.getString(_tokenKey) == null) {
+        _user = null;
+        _api.clearSessionCache();
+      }
     }
   }
 

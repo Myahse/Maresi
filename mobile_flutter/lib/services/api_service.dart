@@ -25,6 +25,8 @@ class ApiService implements MaresiApi {
   static const _writeTimeout = Duration(seconds: 15);
 
   final Set<String> _favoritePropertyIds = {};
+  void Function()? onUnauthorized;
+  bool _expiringSession = false;
 
   bool _isNetworkFailure(Object error) {
     if (error is TimeoutException || error is SocketException || error is HttpException) {
@@ -39,8 +41,8 @@ class ApiService implements MaresiApi {
         text.contains('network');
   }
 
-  Future<http.Response> _sendOnce(String method, Uri uri, {String? body}) async {
-    final headers = await _authHeaders();
+  Future<http.Response> _sendOnce(String method, Uri uri, {String? body, bool includeToken = true}) async {
+    final headers = await _authHeaders(includeToken: includeToken && !uri.path.contains('/auth/'));
     final timeout = method == 'GET' ? _getTimeout : _writeTimeout;
     final Future<http.Response> request = switch (method) {
       'GET' => http.get(uri, headers: headers),
@@ -74,7 +76,13 @@ class ApiService implements MaresiApi {
 
     for (var i = 0; i < attempts; i++) {
       try {
-        final res = await _sendOnce(method, uri, body: body);
+        var res = await _sendOnce(method, uri, body: body);
+        if (res.statusCode == 401) {
+          await _expireStoredSessionIfNeeded(res);
+          if (method == 'GET' && !path.startsWith('/users/')) {
+            res = await _sendOnce(method, uri, body: body, includeToken: false);
+          }
+        }
         final data = _parseBody(res);
         if (res.statusCode >= 400) _throwFromResponse(res, data);
         final unwrapped = _unwrapEnvelope(data);
@@ -113,8 +121,9 @@ class ApiService implements MaresiApi {
     throw Exception(lastError?.toString() ?? 'Request failed');
   }
 
-  Future<Map<String, String>> _authHeaders() async {
+  Future<Map<String, String>> _authHeaders({bool includeToken = true}) async {
     final headers = {'Content-Type': 'application/json'};
+    if (!includeToken) return headers;
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('maresi_token');
     if (token != null && token.isNotEmpty) {
@@ -153,7 +162,34 @@ class ApiService implements MaresiApi {
 
   String _wrapBody(Map<String, dynamic> data) => jsonEncode({'data': data});
 
+  Future<void> _expireStoredSession() async {
+    if (_expiringSession) return;
+    _expiringSession = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getString('maresi_token') == null) return;
+      await prefs.remove('maresi_token');
+      await prefs.remove('maresi_user');
+      clearSessionCache();
+      onUnauthorized?.call();
+    } finally {
+      _expiringSession = false;
+    }
+  }
+
+  Future<void> _expireStoredSessionIfNeeded(http.Response res) async {
+    if (res.statusCode != 401) return;
+    final path = res.request?.url.path ?? '';
+    if (path.contains('/auth/')) return;
+    await _expireStoredSession();
+  }
+
+  void _logoutIfUnauthorized(http.Response res) {
+    unawaited(_expireStoredSessionIfNeeded(res));
+  }
+
   Never _throwFromResponse(http.Response res, dynamic data) {
+    _logoutIfUnauthorized(res);
     if (data is Map && data['hasError'] == true) {
       final status = data['status'];
       final message = status is Map ? status['message'] as String? : null;
@@ -235,6 +271,7 @@ class ApiService implements MaresiApi {
     );
     final data = _parseBody(res);
     if (res.statusCode == 401 || res.statusCode == 403) {
+      _logoutIfUnauthorized(res);
       _favoritePropertyIds.clear();
       return [];
     }
@@ -390,6 +427,7 @@ class ApiService implements MaresiApi {
       headers: await _authHeaders(),
     );
     final data = _parseBody(res);
+    if (res.statusCode == 401) await _expireStoredSessionIfNeeded(res);
     if (res.statusCode >= 400) _throwFromResponse(res, data);
     return _unwrapEnvelope(data) as Map<String, dynamic>;
   }

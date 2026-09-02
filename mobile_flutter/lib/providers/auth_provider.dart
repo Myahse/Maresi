@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:maresi_mobile/models/user.dart';
 import 'package:maresi_mobile/services/auth_service.dart';
@@ -68,5 +70,9 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     await _authService.logout();
     notifyListeners();
+  }
+
+  void syncAfterRemoteLogout() {
+    unawaited(logout());
   }
 }

@@ -34,7 +34,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         AuthUser parsed = jwtService.parse(token);
         var db = users.findById(parsed.id());
         if (db.isEmpty()) {
-          SecurityContextHolder.clearContext();
+          if (rejectInvalidSession(request, response)) {
+            return;
+          }
         } else {
           String role = String.valueOf(db.get().getOrDefault("role", parsed.role()));
           if (role.isBlank() || "null".equals(role)) role = "client";
@@ -46,9 +48,35 @@ public class JwtAuthFilter extends OncePerRequestFilter {
           SecurityContextHolder.getContext().setAuthentication(auth);
         }
       } catch (Exception ignored) {
-        SecurityContextHolder.clearContext();
+        if (rejectInvalidSession(request, response)) {
+          return;
+        }
       }
     }
     chain.doFilter(request, response);
+  }
+
+  /** @return true when the response was written and the chain must stop */
+  private boolean rejectInvalidSession(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    SecurityContextHolder.clearContext();
+    if (allowAnonymousDespiteInvalidToken(request)) {
+      return false;
+    }
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    response.setContentType("application/json");
+    response.getWriter().write("{\"error\":\"Authentication required\"}");
+    return true;
+  }
+
+  private static boolean allowAnonymousDespiteInvalidToken(HttpServletRequest request) {
+    String uri = request.getRequestURI() == null ? "" : request.getRequestURI();
+    return uri.contains("/api/auth/")
+        || uri.contains("/api/webhooks/")
+        || uri.contains("/api/health")
+        || uri.contains("/api/media/")
+        || uri.contains("/api/payments/confirm")
+        || uri.contains("/swagger")
+        || uri.contains("/v3/api-docs")
+        || uri.contains("/ws");
   }
 }

@@ -2,8 +2,22 @@ import type { Property, PropertyRating, RatingStats } from "@/types";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
 
+export const SESSION_EXPIRED_EVENT = "maresi:session-expired";
+
 function getToken(): string | null {
   return localStorage.getItem("token");
+}
+
+function isAuthPath(path: string): boolean {
+  return path.startsWith("/auth/");
+}
+
+function handleUnauthorized(path: string, hadToken: boolean) {
+  if (!hadToken || isAuthPath(path) || typeof window === "undefined") return;
+  if (!localStorage.getItem("token") && !localStorage.getItem("user")) return;
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
 }
 
 type Envelope = {
@@ -34,14 +48,18 @@ function unwrapEnvelope<T>(data: unknown): T {
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
-  const headers: HeadersInit = {
+  const attachAuth = !!token && !isAuthPath(path);
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
-  if (token) (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+  if (attachAuth) headers.Authorization = `Bearer ${token}`;
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && attachAuth) {
+    handleUnauthorized(path, true);
+  }
   // Backend may return 4xx with hasError + status.message (Peya envelope)
   if (!res.ok || (data && typeof data === "object" && (data as Envelope).hasError)) {
     throw new Error(envelopeMessage(data as Envelope, res.statusText || "Request failed"));
@@ -77,6 +95,7 @@ function emptyRatingStats(): RatingStats {
 
 async function parseFormResponse<T>(res: Response): Promise<T> {
   const data = await res.json().catch(() => ({}));
+  if (res.status === 401) handleUnauthorized("/users/me", true);
   if (!res.ok) {
     throw new Error(envelopeMessage(data as Envelope, "Failed"));
   }

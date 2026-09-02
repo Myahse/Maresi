@@ -17,8 +17,19 @@ const REQUEST_TIMEOUT_MS = 90_000;
 export const SERVER_WAKING_MESSAGE =
   "Le serveur démarre. Patientez quelques secondes et réessayez.";
 
+export const SESSION_EXPIRED_EVENT = "maresi:session-expired";
+
 function getToken(): string | null {
   return localStorage.getItem("token");
+}
+
+function handleUnauthorized(path: string, hadToken: boolean) {
+  if (!hadToken || isAuthPath(path) || typeof window === "undefined") return;
+  if (!localStorage.getItem("token") && !localStorage.getItem("user")) return;
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  void import("@/lib/offline").then((m) => m.clearOfflineSession()).catch(() => undefined);
+  window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
 }
 
 type Envelope = {
@@ -72,16 +83,30 @@ function isAuthPath(path: string): boolean {
 
 async function rawRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
-  const headers: HeadersInit = {
+  const attachAuth = !!token && !isAuthPath(path);
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
-  if (token) (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+  if (attachAuth) headers.Authorization = `Bearer ${token}`;
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
     const res = await fetch(`${API_BASE}${path}`, { ...options, headers, signal: controller.signal });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && attachAuth) {
+      handleUnauthorized(path, true);
+      const method = (options.method || "GET").toUpperCase();
+      if (method === "GET" && !path.startsWith("/users/")) {
+        const retryHeaders = { ...headers };
+        delete retryHeaders.Authorization;
+        const retry = await fetch(`${API_BASE}${path}`, { ...options, headers: retryHeaders, signal: controller.signal });
+        const retryData = await retry.json().catch(() => ({}));
+        if (retry.ok && !(retryData && typeof retryData === "object" && (retryData as Envelope).hasError)) {
+          return unwrapEnvelope<T>(retryData);
+        }
+      }
+    }
     if (!res.ok || (data && typeof data === "object" && (data as Envelope).hasError)) {
       throw new Error(envelopeMessage(data as Envelope, res.statusText || "Request failed"));
     }
@@ -170,6 +195,7 @@ function emptyRatingStats(): RatingStats {
 
 async function parseFormResponse<T>(res: Response): Promise<T> {
   const data = await res.json().catch(() => ({}));
+  if (res.status === 401) handleUnauthorized("/users/me", true);
   if (!res.ok) {
     throw new Error(envelopeMessage(data as Envelope, "Failed"));
   }

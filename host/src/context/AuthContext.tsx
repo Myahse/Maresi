@@ -1,6 +1,7 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { User } from "@/types";
 import * as authService from "@/services/auth";
+import { getMyProfile, SESSION_EXPIRED_EVENT } from "@/services/api";
 
 interface AuthContextValue {
   user: User | null;
@@ -19,7 +20,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(
     () => authService.consumeHandoff()?.user ?? authService.getStoredUser()
   );
-  const loading = false;
+  const [loading, setLoading] = useState(() => !!authService.getToken());
+
+  useEffect(() => {
+    const onExpired = () => {
+      authService.logout();
+      setUser(null);
+      setLoading(false);
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, []);
+
+  useEffect(() => {
+    if (!authService.getToken()) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    void getMyProfile()
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await authService.login(email, password);
