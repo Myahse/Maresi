@@ -254,6 +254,18 @@ public final class RowMaps {
     return m;
   }
 
+  public static Map<String, Object> visitMessage(ResultSet rs) throws SQLException {
+    Map<String, Object> m = new LinkedHashMap<>();
+    m.put("id", rs.getObject("id"));
+    m.put("visit_request_id", rs.getObject("visit_request_id"));
+    m.put("sender_id", rs.getObject("sender_id"));
+    m.put("body", rs.getString("body"));
+    m.put("created_at", toIso(rs.getTimestamp("created_at")));
+    putIfPresent(rs, m, "sender_name");
+    putIfPresent(rs, m, "sender_role");
+    return m;
+  }
+
   public static Map<String, Object> hostApplication(ResultSet rs) throws SQLException {
     Map<String, Object> m = new LinkedHashMap<>();
     m.put("id", rs.getObject("id"));

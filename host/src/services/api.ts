@@ -333,6 +333,14 @@ export function getVisitRequest(id: string) {
   return api.get<import("@/types").VisitRequest>(`/visit-requests/${id}`);
 }
 
+export function getVisitMessages(id: string) {
+  return api.get<import("@/types").VisitMessage[]>(`/visit-requests/${id}/messages`);
+}
+
+export function sendVisitMessage(id: string, body: string) {
+  return api.post<import("@/types").VisitMessage>(`/visit-requests/${id}/messages`, { body });
+}
+
 export function getNotifications() {
   return api.get<AppNotification[]>(`/notifications`);
 }

@@ -164,6 +164,16 @@ export interface VisitRequest {
   guest_host_notes?: { score: number; note?: string; created_at?: string }[];
 }
 
+export interface VisitMessage {
+  id: string;
+  visit_request_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+  sender_name?: string;
+  sender_role?: string;
+}
+
 export interface Payment {
   id: string;
   user_id: string;

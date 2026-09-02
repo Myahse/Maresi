@@ -64,6 +64,27 @@ public class VisitRequestController {
     return ControllerSupport.run(() -> visitRequestService.listForOwner(loc), loc, exceptionUtils);
   }
 
+  @GetMapping("/{id}/messages")
+  public ResponseEntity<Response<Map<String, Object>>> listMessages(@PathVariable UUID id, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> visitRequestService.listMessages(id, loc), loc, exceptionUtils);
+  }
+
+  @PostMapping("/{id}/messages")
+  public ResponseEntity<Response<Map<String, Object>>> postMessage(
+      @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> {
+          Response<Map<String, Object>> response = new Response<>();
+          Validate.validateObject(request, response, functionalError, loc);
+          if (response.isHasError()) return response;
+          return visitRequestService.postMessage(id, request, loc);
+        },
+        loc,
+        exceptionUtils);
+  }
+
   @GetMapping("/{id}")
   public ResponseEntity<Response<Map<String, Object>>> getOne(@PathVariable UUID id, Locale locale) {
     Locale loc = ControllerSupport.locale(locale);

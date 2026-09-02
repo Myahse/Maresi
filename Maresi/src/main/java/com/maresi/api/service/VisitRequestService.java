@@ -29,6 +29,15 @@ public class VisitRequestService {
     return visitRequestBusiness.getOne(id, locale);
   }
 
+  public Response<Map<String, Object>> listMessages(UUID id, Locale locale) {
+    return visitRequestBusiness.listMessages(id, locale);
+  }
+
+  public Response<Map<String, Object>> postMessage(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    return visitRequestBusiness.postMessage(id, request, locale);
+  }
+
   public Response<Map<String, Object>> listForOwner(Locale locale) {
     return visitRequestBusiness.listForOwner(locale);
   }

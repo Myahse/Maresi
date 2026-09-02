@@ -6,6 +6,7 @@ export const MARESI_REALTIME = "maresi:realtime";
 export const VISIT_REALTIME_TYPES = [
   "visit.created",
   "visit.status_changed",
+  "visit.message",
   "payment.completed",
 ] as const;
 

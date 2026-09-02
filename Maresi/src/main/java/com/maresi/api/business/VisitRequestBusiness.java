@@ -10,6 +10,7 @@ import com.maresi.api.repository.PaymentRepository;
 import com.maresi.api.repository.PropertyRepository;
 import com.maresi.api.repository.GuestReviewRepository;
 import com.maresi.api.repository.UserRepository;
+import com.maresi.api.repository.VisitMessageRepository;
 import com.maresi.api.repository.VisitRequestRepository;
 import com.maresi.api.security.AuthUser;
 import com.maresi.api.security.SecurityUtils;
@@ -35,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class VisitRequestBusiness {
   private static final Logger log = LoggerFactory.getLogger(VisitRequestBusiness.class);
   private final VisitRequestRepository visitRequests;
+  private final VisitMessageRepository visitMessages;
   private final GuestReviewRepository guestReviews;
   private final PropertyRepository properties;
   private final NotificationRepository notifications;
@@ -50,6 +52,7 @@ public class VisitRequestBusiness {
 
   public VisitRequestBusiness(
       VisitRequestRepository visitRequests,
+      VisitMessageRepository visitMessages,
       GuestReviewRepository guestReviews,
       PropertyRepository properties,
       NotificationRepository notifications,
@@ -63,6 +66,7 @@ public class VisitRequestBusiness {
       UserRepository users,
       UserBusiness userBusiness) {
     this.visitRequests = visitRequests;
+    this.visitMessages = visitMessages;
     this.guestReviews = guestReviews;
     this.properties = properties;
     this.notifications = notifications;
@@ -231,6 +235,97 @@ public class VisitRequestBusiness {
     response.setItem(item);
     response.setStatus(functionalError.success("Demande", locale));
     return response;
+  }
+
+  public Response<Map<String, Object>> listMessages(UUID id, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    Map<String, Object> visit = loadVisitForParty(id, locale, response);
+    if (visit == null) return response;
+    List<Map<String, Object>> items = visitMessages.findByVisit(id);
+    response.setItems(items);
+    response.setCount((long) items.size());
+    response.setStatus(functionalError.success("Messages", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> postMessage(UUID id, Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    if (userBusiness.rejectIfSuspended(response, user.id(), locale)) {
+      return response;
+    }
+    Map<String, Object> visit = loadVisitForParty(id, locale, response);
+    if (visit == null) return response;
+    Map<String, Object> body = request.getData() == null ? Map.of() : request.getData();
+    String text = str(body.get("body"));
+    if (text == null) text = str(body.get("message"));
+    if (text == null || text.isBlank()) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("body", locale));
+      return response;
+    }
+    String trimmed = text.trim();
+    if (trimmed.length() > 2000) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Message trop long", locale));
+      return response;
+    }
+    Map<String, Object> created = visitMessages.create(id, user.id(), trimmed);
+    created.put("sender_name", EmailTemplates.personName(users.findById(user.id()).orElse(null)));
+    created.put("sender_role", user.role());
+    notifyVisitMessage(visit, user, created);
+    response.setItem(created);
+    response.setStatus(functionalError.success("Message", locale));
+    return response;
+  }
+
+  private Map<String, Object> loadVisitForParty(UUID id, Locale locale, Response<?> response) {
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> item = visitRequests.findById(id).orElse(null);
+    if (item == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Demande introuvable", locale));
+      return null;
+    }
+    boolean guest = user.id().toString().equalsIgnoreCase(String.valueOf(item.get("user_id")));
+    boolean owner =
+        item.get("property_owner_id") != null
+            && user.id().toString().equalsIgnoreCase(String.valueOf(item.get("property_owner_id")));
+    boolean admin = "admin".equals(user.role());
+    if (!guest && !owner && !admin) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Action non autorisee", locale));
+      return null;
+    }
+    return item;
+  }
+
+  private void notifyVisitMessage(Map<String, Object> visit, AuthUser sender, Map<String, Object> message) {
+    UUID guestId = uuid(visit.get("user_id"));
+    UUID ownerId = visit.get("property_owner_id") == null ? null : uuid(visit.get("property_owner_id"));
+    UUID listingId = visit.get("property_id") == null ? null : uuid(visit.get("property_id"));
+    UUID recipient = sender.id().equals(guestId) ? ownerId : guestId;
+    String listing =
+        visit.get("property_title") == null ? "la residence" : String.valueOf(visit.get("property_title"));
+    String fromName = EmailTemplates.personName(users.findById(sender.id()).orElse(null));
+    if (fromName == null || fromName.isBlank()) fromName = sender.email();
+    String preview = String.valueOf(message.get("body"));
+    if (preview.length() > 160) preview = preview.substring(0, 157) + "...";
+    if (recipient != null) {
+      notifications.create(
+          recipient,
+          "reservation",
+          "Nouveau message",
+          fromName + " : " + preview,
+          listingId);
+      boolean toGuest = recipient.equals(guestId);
+      String cta =
+          toGuest
+              ? EmailTemplates.guestApp(appProperties) + "/visits"
+              : EmailTemplates.hostApp(appProperties) + "/owner/visits";
+      email.sendToUser(recipient, EmailTemplates.visitChat(listing, fromName, preview, cta));
+    }
+    realtime.publish("visit.message", message, guestId, ownerId, false);
   }
 
   public Response<Map<String, Object>> listForOwner(Locale locale) {

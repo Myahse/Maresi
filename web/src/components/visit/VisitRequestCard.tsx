@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Calendar, Clock, Users, Phone, MapPin, MessageSquare } from "lucide-react";
 import type { VisitRequest, VisitRequestStatus } from "@/types";
 import { cn } from "@/lib/utils";
+import { VisitChat } from "@/components/visit/VisitChat";
 
 const STATUS_STYLES: Record<VisitRequestStatus, string> = {
   pending: "bg-amber-100 text-amber-800 border-amber-200",
@@ -164,6 +165,8 @@ export function VisitRequestCard({ visit, showRequester, children }: VisitReques
             <> · {t("visits.responded")} {new Date(visit.responded_at).toLocaleString()}</>
           )}
         </p>
+
+        <VisitChat visitId={visit.id} />
 
         {children}
       </div>

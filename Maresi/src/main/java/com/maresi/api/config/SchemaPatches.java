@@ -90,6 +90,16 @@ public class SchemaPatches {
     "ALTER TABLE properties ADD COLUMN IF NOT EXISTS manager_role VARCHAR(80)",
     "UPDATE properties SET property_type = 'villa' WHERE property_type = 'house'",
     "UPDATE properties SET property_type = 'apartment' WHERE property_type = 'residence'",
+    """
+    CREATE TABLE IF NOT EXISTS visit_messages (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      visit_request_id UUID NOT NULL REFERENCES visit_requests(id) ON DELETE CASCADE,
+      sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      body TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS visit_messages_visit_idx ON visit_messages (visit_request_id, created_at)",
   };
 
   private final JdbcTemplate jdbc;

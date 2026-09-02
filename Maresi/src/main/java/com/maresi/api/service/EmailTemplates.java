@@ -130,12 +130,15 @@ public final class EmailTemplates {
   }
 
   public static Mail reservationSent(String title) {
+    String listing = title == null || title.isBlank() ? "cette résidence" : title.trim();
     return build(
         "Demande envoyée",
         "Réservation",
-        "Votre demande est partie",
-        "Bonjour,\n\nNous avons bien transmis votre demande à l’hôte. Vous recevrez un e-mail dès qu’il accepte ou refuse.\n\nEn attendant, rien n’est encore confirmé : ne partez pas et n’effectuez aucun paiement.",
-        details("Résidence", title),
+        "Votre demande a été enregistrée",
+        "Bonjour,\n\nVotre demande de réservation pour "
+            + listing
+            + " a bien été enregistrée et transmise au propriétaire.\n\nNous vous informerons dès que votre demande aura été traitée. Votre réservation ne sera confirmée qu’après acceptation du propriétaire et finalisation du paiement.\n\nMerci de votre confiance et à bientôt sur Maresi.",
+        details("Résidence", listing),
         null,
         null,
         null);
@@ -416,6 +419,20 @@ public final class EmailTemplates {
         null,
         null,
         null);
+  }
+
+  public static Mail visitChat(String listing, String fromName, String preview, String ctaUrl) {
+    return build(
+        "Nouveau message — " + (listing == null || listing.isBlank() ? "Maresi" : listing),
+        "Discussion",
+        "Un message vous attend",
+        "Bonjour,\n\n"
+            + (fromName == null || fromName.isBlank() ? "Quelqu’un" : fromName)
+            + " a écrit à propos de cette demande. Répondez dans Maresi pour rester sur le dossier.",
+        details("Résidence", listing, "Message", preview),
+        null,
+        "Ouvrir la discussion",
+        ctaUrl);
   }
 
   public static Mail hostActivated(String ctaUrl) {
