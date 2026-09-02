@@ -336,6 +336,22 @@ CREATE INDEX IF NOT EXISTS idx_users_account_status ON users(account_status);
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS host_intent BOOLEAN NOT NULL DEFAULT FALSE;
 
+-- ========== 029_receipt_and_settings.sql ==========
+ALTER TABLE visit_requests
+  ADD COLUMN IF NOT EXISTS payment_receipt_url TEXT;
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO app_settings (key, value)
+VALUES
+  ('client_pays_operator_fees', 'false'),
+  ('operator_fee_percent', '1')
+ON CONFLICT (key) DO NOTHING;
+
 -- ========== 031_visit_status_width.sql ==========
 ALTER TABLE visit_requests ALTER COLUMN status TYPE VARCHAR(40);
 ALTER TABLE visit_requests DROP CONSTRAINT IF EXISTS visit_requests_status_check;

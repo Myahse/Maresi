@@ -241,16 +241,15 @@ public final class EmailTemplates {
         "Copie du contrat de séjour",
         "Contrat",
         "Votre contrat signé",
-        "Bonjour,\n\nLe contrat de séjour est signé par le client et l’hôte. Conservez cet e-mail : il constitue votre copie.\n\n"
-            + StayAgreementText.plainArticles(),
+        "Bonjour,\n\nLe contrat de séjour est signé par le client et l’hôte. Conservez le PDF joint : c’est votre copie officielle.",
         details(
             "Résidence", title,
             "Adresse", location,
-            "Arrivée", checkIn,
-            "Départ", checkOut,
-            "Signature client", namedStamp(guestName, guestSignedAt),
-            "Signature hôte", namedStamp(hostName, hostSignedAt)),
-        new Highlight("Contrat", "Signé par les deux parties"),
+            "Arrivée", StayContractPdf.formatDate(checkIn),
+            "Départ", StayContractPdf.formatDate(checkOut),
+            "Signature client", namedStamp(guestName, StayContractPdf.formatStamp(guestSignedAt)),
+            "Signature hôte", namedStamp(hostName, StayContractPdf.formatStamp(hostSignedAt))),
+        null,
         "Ouvrir le contrat",
         ctaUrl);
   }

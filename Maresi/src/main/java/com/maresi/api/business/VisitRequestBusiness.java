@@ -17,6 +17,7 @@ import com.maresi.api.config.AppProperties;
 import com.maresi.api.service.EmailService;
 import com.maresi.api.service.EmailTemplates;
 import com.maresi.api.service.FileStorageService;
+import com.maresi.api.service.StayContractPdf;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -25,11 +26,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Component
 public class VisitRequestBusiness {
+  private static final Logger log = LoggerFactory.getLogger(VisitRequestBusiness.class);
   private final VisitRequestRepository visitRequests;
   private final GuestReviewRepository guestReviews;
   private final PropertyRepository properties;
@@ -541,13 +545,11 @@ public class VisitRequestBusiness {
     Map<String, Object> published = new java.util.HashMap<>(updated);
     hideKeyCode(published);
     realtime.publish("visit.status_changed", published, requesterId, user.id(), true);
-    String listingTitle =
-        properties
-            .findById(listingId)
-            .map(p -> p.get("title"))
-            .map(Object::toString)
-            .orElse("la residence");
-    String location = str(updated.get("location"));
+    Map<String, Object> listing = properties.findById(listingId).orElse(Map.of());
+    String listingTitle = str(listing.get("title"));
+    if (listingTitle == null || listingTitle.isBlank()) listingTitle = "la residence";
+    String location = str(listing.get("location"));
+    if (location == null) location = str(updated.get("location"));
     String checkIn = str(updated.get("check_in"));
     String checkOut = str(updated.get("check_out"));
     String guestName = str(updated.get("agreement_full_name"));
@@ -576,8 +578,10 @@ public class VisitRequestBusiness {
             hostName,
             hostSignedAt,
             hostAgreementUrl(id));
-    email.sendToUser(requesterId, contractGuest);
-    email.sendToUser(user.id(), contractHost);
+    EmailService.Attachment pdf = stayContractAttachment(
+        id, listingTitle, location, checkIn, checkOut, guestName, guestSignedAt, hostName, hostSignedAt);
+    email.sendToUser(requesterId, contractGuest, pdf);
+    email.sendToUser(user.id(), contractHost, pdf);
     notifications.create(
         requesterId,
         "reservation",
@@ -991,6 +995,36 @@ public class VisitRequestBusiness {
     response.setItem(updated);
     response.setStatus(functionalError.success("Recu enregistre", locale));
     return response;
+  }
+
+  private EmailService.Attachment stayContractAttachment(
+      UUID visitId,
+      String title,
+      String location,
+      String checkIn,
+      String checkOut,
+      String guestName,
+      String guestSignedAt,
+      String hostName,
+      String hostSignedAt) {
+    try {
+      byte[] pdf =
+          StayContractPdf.render(
+              new StayContractPdf.Data(
+                  visitId,
+                  title,
+                  location,
+                  checkIn,
+                  checkOut,
+                  guestName,
+                  guestSignedAt,
+                  hostName,
+                  hostSignedAt));
+      return new EmailService.Attachment(StayContractPdf.filename(visitId), pdf);
+    } catch (Exception e) {
+      log.warn("Stay contract PDF not attached for visit {}: {}", visitId, e.getMessage());
+      return null;
+    }
   }
 
   private boolean sameId(Object raw, UUID id) {

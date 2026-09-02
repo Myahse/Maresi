@@ -142,7 +142,7 @@ public class EmailService {
             List.of(
                 Map.of(
                     "name",
-                    attachment.filename() != null ? attachment.filename() : "engagement-soin-maresi.txt",
+                    attachment.filename() != null ? attachment.filename() : "contrat-sejour-maresi.pdf",
                     "content",
                     Base64.getEncoder().encodeToString(attachment.content()))));
       }
@@ -181,9 +181,9 @@ public class EmailService {
       helper.setSubject(message.subject());
       helper.setText(message.text(), message.html());
       if (multipart) {
-        helper.addAttachment(
-            attachment.filename() != null ? attachment.filename() : "engagement-soin-maresi.txt",
-            new ByteArrayResource(attachment.content()));
+        String filename =
+            attachment.filename() != null ? attachment.filename() : "contrat-sejour-maresi.pdf";
+        helper.addAttachment(filename, new ByteArrayResource(attachment.content()), "application/pdf");
       }
       mailSender.send(mime);
       log.info("Email sent via SMTP to {} subject={}", to, message.subject());

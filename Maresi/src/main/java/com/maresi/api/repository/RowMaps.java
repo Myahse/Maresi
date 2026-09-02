@@ -169,7 +169,7 @@ public final class RowMaps {
     putTime(rs, m, "departure_time");
     putIfPresent(rs, m, "agreement_full_name");
     putIfPresent(rs, m, "agreement_accepted");
-    putIfPresent(rs, m, "agreement_signed_at");
+    putTimestamp(rs, m, "agreement_signed_at");
     putIfPresent(rs, m, "host_agreement_full_name");
     putIfPresent(rs, m, "host_agreement_accepted");
     putTimestamp(rs, m, "host_agreement_signed_at");
