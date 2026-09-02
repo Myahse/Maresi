@@ -485,7 +485,8 @@ public class VisitRequestRepository {
     return jdbc.query(
             """
             UPDATE visit_requests vr
-            SET closed_at = NOW()
+            SET closed_at = NOW(),
+                chat_closed_at = COALESCE(vr.chat_closed_at, NOW())
             FROM properties p
             WHERE vr.property_id = p.id
               AND p.owner_id = ?
@@ -496,6 +497,20 @@ public class VisitRequestRepository {
             """,
             (rs, rowNum) -> RowMaps.visitRequest(rs),
             ownerId,
+            id)
+        .stream()
+        .findFirst();
+  }
+
+  public Optional<Map<String, Object>> closeChat(UUID id) {
+    return jdbc.query(
+            """
+            UPDATE visit_requests
+            SET chat_closed_at = NOW()
+            WHERE id = ? AND chat_closed_at IS NULL
+            RETURNING *
+            """,
+            (rs, rowNum) -> RowMaps.visitRequest(rs),
             id)
         .stream()
         .findFirst();

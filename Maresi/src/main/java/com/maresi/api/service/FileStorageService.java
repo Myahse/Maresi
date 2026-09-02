@@ -65,6 +65,8 @@ public class FileStorageService {
       Pattern.compile("(?:^|/)(properties/[A-Za-z0-9._-]+)", Pattern.CASE_INSENSITIVE);
   private static final Pattern IDENTITY_KEY =
       Pattern.compile("(?:^|/)(identity/[A-Za-z0-9._-]+)", Pattern.CASE_INSENSITIVE);
+  private static final Pattern CHAT_KEY =
+      Pattern.compile("(?:^|/)(chat/[A-Za-z0-9._-]+)", Pattern.CASE_INSENSITIVE);
 
   private final Path propertyDir;
   private final Path identityDir;
@@ -149,6 +151,61 @@ public class FileStorageService {
       }
     }
     return storePrepared(prepareImage(file, "receipts"), localDir, baseUrl);
+  }
+
+  public String storeChatFile(MultipartFile file, String baseUrl) {
+    if (file == null || file.isEmpty()) {
+      throw ApiException.of(400, "Document required");
+    }
+    String name = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase(Locale.ROOT);
+    String type = file.getContentType() == null ? "" : file.getContentType().toLowerCase(Locale.ROOT);
+    boolean pdf = type.contains("pdf") || name.endsWith(".pdf");
+    Path localDir = identityDir != null ? identityDir : propertyDir;
+    if (pdf) {
+      if (file.getSize() > 8L * 1024 * 1024) {
+        throw ApiException.of(400, "File too large");
+      }
+      try {
+        String filename = System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8) + ".pdf";
+        return storePrepared(new PreparedImage(file.getBytes(), "application/pdf", "chat/" + filename), localDir, baseUrl);
+      } catch (IOException e) {
+        throw ApiException.of(500, "Failed to store file");
+      }
+    }
+    return storePrepared(prepareImage(file, "chat"), localDir, baseUrl);
+  }
+
+  public StoredMedia loadChatFile(String stored) {
+    String key = extractChatObjectKey(stored);
+    if (key == null) return null;
+    if (r2Client != null) {
+      try {
+        GetObjectRequest request = GetObjectRequest.builder().bucket(r2.getBucket()).key(key).build();
+        try (ResponseInputStream<GetObjectResponse> in = r2Client.getObject(request)) {
+          String contentType = in.response().contentType();
+          if (contentType == null || contentType.isBlank()) contentType = contentTypeForKey(key);
+          return new StoredMedia(in.readAllBytes(), contentType);
+        }
+      } catch (NoSuchKeyException e) {
+        return null;
+      } catch (S3Exception e) {
+        if (e.statusCode() == 404) return null;
+        log.error("R2 chat get failed for key={}: {}", key, e.getMessage());
+        return null;
+      } catch (IOException e) {
+        log.error("R2 chat read failed for key={}: {}", key, e.getMessage());
+        return null;
+      }
+    }
+    if (identityDir == null && propertyDir == null) return null;
+    Path dir = identityDir != null ? identityDir : propertyDir;
+    Path target = dir.resolve(key.substring(key.lastIndexOf('/') + 1)).normalize();
+    if (!target.startsWith(dir) || !Files.isRegularFile(target)) return null;
+    try {
+      return new StoredMedia(Files.readAllBytes(target), contentTypeForKey(key));
+    } catch (IOException e) {
+      return null;
+    }
   }
 
   public List<String> acceptOwnedImageUrls(List<String> urls, String baseUrl) {
@@ -516,6 +573,18 @@ public class FileStorageService {
     int query = value.indexOf('?');
     if (query >= 0) value = value.substring(0, query);
     Matcher matcher = IDENTITY_KEY.matcher(value);
+    if (!matcher.find()) return null;
+    String key = matcher.group(1);
+    if (key.contains("..")) return null;
+    return key;
+  }
+
+  static String extractChatObjectKey(String stored) {
+    if (stored == null || stored.isBlank()) return null;
+    String value = stored.trim().replace('\\', '/');
+    int query = value.indexOf('?');
+    if (query >= 0) value = value.substring(0, query);
+    Matcher matcher = CHAT_KEY.matcher(value);
     if (!matcher.find()) return null;
     String key = matcher.group(1);
     if (key.contains("..")) return null;

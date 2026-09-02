@@ -242,6 +242,9 @@ public class VisitRequestBusiness {
     Map<String, Object> visit = loadVisitForParty(id, locale, response);
     if (visit == null) return response;
     List<Map<String, Object>> items = visitMessages.findByVisit(id);
+    for (Map<String, Object> item : items) {
+      exposeMessageAttachment(id, item);
+    }
     response.setItems(items);
     response.setCount((long) items.size());
     response.setStatus(functionalError.success("Messages", locale));
@@ -256,6 +259,7 @@ public class VisitRequestBusiness {
     }
     Map<String, Object> visit = loadVisitForParty(id, locale, response);
     if (visit == null) return response;
+    if (rejectIfChatLocked(visit, response, locale)) return response;
     Map<String, Object> body = request.getData() == null ? Map.of() : request.getData();
     String text = str(body.get("body"));
     if (text == null) text = str(body.get("message"));
@@ -264,19 +268,67 @@ public class VisitRequestBusiness {
       response.setStatus(functionalError.fieldEmpty("body", locale));
       return response;
     }
-    String trimmed = text.trim();
-    if (trimmed.length() > 2000) {
-      response.setHasError(true);
-      response.setStatus(functionalError.invalidData("Message trop long", locale));
+    return saveMessage(id, visit, user, text.trim(), null, null, null, response, locale);
+  }
+
+  public Response<Map<String, Object>> postMessageWithFile(
+      UUID id, String text, MultipartFile file, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    if (userBusiness.rejectIfSuspended(response, user.id(), locale)) {
       return response;
     }
-    Map<String, Object> created = visitMessages.create(id, user.id(), trimmed);
-    created.put("sender_name", EmailTemplates.personName(users.findById(user.id()).orElse(null)));
-    created.put("sender_role", user.role());
-    notifyVisitMessage(visit, user, created);
-    response.setItem(created);
-    response.setStatus(functionalError.success("Message", locale));
+    Map<String, Object> visit = loadVisitForParty(id, locale, response);
+    if (visit == null) return response;
+    if (rejectIfChatLocked(visit, response, locale)) return response;
+    String trimmed = text == null ? "" : text.trim();
+    if (file == null || file.isEmpty()) {
+      if (trimmed.isBlank()) {
+        response.setHasError(true);
+        response.setStatus(functionalError.fieldEmpty("body", locale));
+        return response;
+      }
+      return saveMessage(id, visit, user, trimmed, null, null, null, response, locale);
+    }
+    String stored = fileStorage.storeChatFile(file, EmailTemplates.guestApp(appProperties));
+    String fileName = originalFileName(file);
+    String fileType = file.getContentType();
+    return saveMessage(id, visit, user, trimmed, stored, fileName, fileType, response, locale);
+  }
+
+  public Response<Map<String, Object>> closeChat(UUID id, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    Map<String, Object> visit = loadVisitForParty(id, locale, response);
+    if (visit == null) return response;
+    if (isChatLocked(visit)) {
+      normalizeVisit(visit);
+      response.setItem(visit);
+      response.setStatus(functionalError.success("Discussion fermee", locale));
+      return response;
+    }
+    if (!canCloseChat(visit)) {
+      response.setHasError(true);
+      response.setStatus(
+          functionalError.invalidData("Fermez la discussion une fois le sejour termine", locale));
+      return response;
+    }
+    Map<String, Object> updated = visitRequests.closeChat(id).orElse(visit);
+    normalizeVisit(updated);
+    UUID guestId = uuid(updated.get("user_id"));
+    UUID ownerId = updated.get("property_owner_id") == null ? null : uuid(updated.get("property_owner_id"));
+    realtime.publish("visit.status_changed", updated, guestId, ownerId, true);
+    response.setItem(updated);
+    response.setStatus(functionalError.success("Discussion fermee", locale));
     return response;
+  }
+
+  public FileStorageService.StoredMedia loadMessageAttachment(UUID visitId, UUID messageId) {
+    Response<Map<String, Object>> response = new Response<>();
+    Map<String, Object> visit = loadVisitForParty(visitId, Locale.FRENCH, response);
+    if (visit == null) return null;
+    Map<String, Object> message = visitMessages.findById(visitId, messageId).orElse(null);
+    if (message == null) return null;
+    return fileStorage.loadChatFile(str(message.get("attachment_url")));
   }
 
   private Map<String, Object> loadVisitForParty(UUID id, Locale locale, Response<?> response) {
@@ -309,7 +361,11 @@ public class VisitRequestBusiness {
         visit.get("property_title") == null ? "la residence" : String.valueOf(visit.get("property_title"));
     String fromName = EmailTemplates.personName(users.findById(sender.id()).orElse(null));
     if (fromName == null || fromName.isBlank()) fromName = sender.email();
-    String preview = String.valueOf(message.get("body"));
+    String preview = str(message.get("body"));
+    if (preview == null || preview.isBlank()) {
+      preview = str(message.get("attachment_name"));
+      if (preview == null || preview.isBlank()) preview = "Document";
+    }
     if (preview.length() > 160) preview = preview.substring(0, 157) + "...";
     if (recipient != null) {
       notifications.create(
@@ -319,10 +375,11 @@ public class VisitRequestBusiness {
           fromName + " : " + preview,
           listingId);
       boolean toGuest = recipient.equals(guestId);
+      String visitId = String.valueOf(visit.get("id"));
       String cta =
           toGuest
-              ? EmailTemplates.guestApp(appProperties) + "/visits"
-              : EmailTemplates.hostApp(appProperties) + "/owner/visits";
+              ? EmailTemplates.guestApp(appProperties) + "/visits/" + visitId + "/chat"
+              : EmailTemplates.hostApp(appProperties) + "/owner/visits/" + visitId + "/chat";
       email.sendToUser(recipient, EmailTemplates.visitChat(listing, fromName, preview, cta));
     }
     realtime.publish("visit.message", message, guestId, ownerId, false);
@@ -1173,6 +1230,75 @@ public class VisitRequestBusiness {
     }
     visit.put("overstay", isOverstay(visit));
     visit.put("can_close", canClose(visit));
+    visit.put("chat_locked", isChatLocked(visit));
+    visit.put("can_close_chat", canCloseChat(visit));
+  }
+
+  private Response<Map<String, Object>> saveMessage(
+      UUID id,
+      Map<String, Object> visit,
+      AuthUser user,
+      String trimmed,
+      String attachmentUrl,
+      String attachmentName,
+      String attachmentType,
+      Response<Map<String, Object>> response,
+      Locale locale) {
+    if (trimmed.length() > 2000) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Message trop long", locale));
+      return response;
+    }
+    Map<String, Object> created =
+        visitMessages.create(id, user.id(), trimmed, attachmentUrl, attachmentName, attachmentType);
+    created.put("sender_name", EmailTemplates.personName(users.findById(user.id()).orElse(null)));
+    created.put("sender_role", user.role());
+    exposeMessageAttachment(id, created);
+    notifyVisitMessage(visit, user, created);
+    response.setItem(created);
+    response.setStatus(functionalError.success("Message", locale));
+    return response;
+  }
+
+  private static void exposeMessageAttachment(UUID visitId, Map<String, Object> message) {
+    if (message == null || message.get("attachment_url") == null || message.get("id") == null) return;
+    message.put(
+        "attachment_url",
+        "/api/visit-requests/" + visitId + "/messages/" + message.get("id") + "/file");
+  }
+
+  private boolean rejectIfChatLocked(
+      Map<String, Object> visit, Response<?> response, Locale locale) {
+    if (!isChatLocked(visit)) return false;
+    response.setHasError(true);
+    response.setStatus(functionalError.invalidData("Cette discussion est fermee", locale));
+    return true;
+  }
+
+  private static boolean isChatLocked(Map<String, Object> visit) {
+    if (visit.get("chat_closed_at") != null || visit.get("closed_at") != null) return true;
+    String status = String.valueOf(visit.get("status"));
+    return "cancelled".equals(status) || "declined".equals(status);
+  }
+
+  private static boolean canCloseChat(Map<String, Object> visit) {
+    if (isChatLocked(visit)) return false;
+    if (visit.get("closed_at") != null) return true;
+    String status = String.valueOf(visit.get("status"));
+    if (!List.of("confirmed", "payment_sent").contains(status)) return false;
+    LocalDate out = parseDate(visit.get("check_out"));
+    return out == null || !out.isAfter(LocalDate.now());
+  }
+
+  private static String originalFileName(MultipartFile file) {
+    String name = file.getOriginalFilename();
+    if (name == null || name.isBlank()) return "document";
+    String base = name.replace('\\', '/');
+    int slash = base.lastIndexOf('/');
+    if (slash >= 0) base = base.substring(slash + 1);
+    base = base.trim();
+    if (base.isEmpty()) return "document";
+    return base.length() > 200 ? base.substring(0, 200) : base;
   }
 
   private static boolean isOverstay(Map<String, Object> visit) {

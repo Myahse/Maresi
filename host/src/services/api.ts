@@ -341,6 +341,22 @@ export function sendVisitMessage(id: string, body: string) {
   return api.post<import("@/types").VisitMessage>(`/visit-requests/${id}/messages`, { body });
 }
 
+export function sendVisitMessageWithFile(id: string, body: string, file?: File | null) {
+  const token = getToken();
+  const form = new FormData();
+  if (body.trim()) form.append("body", body.trim());
+  if (file) form.append("file", file);
+  return fetch(`${API_BASE}/visit-requests/${id}/messages/file`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  }).then((res) => parseFormResponse<import("@/types").VisitMessage>(res));
+}
+
+export function closeVisitChat(id: string) {
+  return api.post<import("@/types").VisitRequest>(`/visit-requests/${id}/chat/close`, {});
+}
+
 export function getNotifications() {
   return api.get<AppNotification[]>(`/notifications`);
 }

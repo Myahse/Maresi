@@ -151,6 +151,9 @@ export interface VisitRequest {
   extension_amount?: number;
   extension_note?: string;
   closed_at?: string;
+  chat_closed_at?: string;
+  chat_locked?: boolean;
+  can_close_chat?: boolean;
   overstay?: boolean;
   can_close?: boolean;
   guest_rating_avg?: number;
@@ -166,6 +169,9 @@ export interface VisitMessage {
   created_at: string;
   sender_name?: string;
   sender_role?: string;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_type?: string;
 }
 
 export interface Payment {

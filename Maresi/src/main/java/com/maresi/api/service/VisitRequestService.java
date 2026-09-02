@@ -38,6 +38,20 @@ public class VisitRequestService {
     return visitRequestBusiness.postMessage(id, request, locale);
   }
 
+  public Response<Map<String, Object>> postMessageWithFile(
+      UUID id, String body, MultipartFile file, Locale locale) {
+    return visitRequestBusiness.postMessageWithFile(id, body, file, locale);
+  }
+
+  public Response<Map<String, Object>> closeChat(UUID id, Locale locale) {
+    return visitRequestBusiness.closeChat(id, locale);
+  }
+
+  public com.maresi.api.service.FileStorageService.StoredMedia loadMessageAttachment(
+      UUID visitId, UUID messageId) {
+    return visitRequestBusiness.loadMessageAttachment(visitId, messageId);
+  }
+
   public Response<Map<String, Object>> listForOwner(Locale locale) {
     return visitRequestBusiness.listForOwner(locale);
   }

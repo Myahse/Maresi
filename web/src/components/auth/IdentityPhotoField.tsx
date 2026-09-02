@@ -60,7 +60,7 @@ export function IdentityPhotoField({
       <div
         className={cn(
           "flex flex-col items-center justify-center gap-2 rounded-xl border-2 overflow-hidden min-h-[10rem]",
-          hasPhoto ? "border-brand bg-card" : "border-dashed border-border bg-muted"
+          hasPhoto ? "border-brand bg-muted" : "border-dashed border-border bg-muted"
         )}
       >
         {preview ? (
@@ -70,10 +70,10 @@ export function IdentityPhotoField({
             onClick={() => setLightbox(true)}
             title={t("register.previewPhoto")}
           >
-            <img src={preview} alt={label} className="w-full h-40 object-cover" />
+            <img src={preview} alt={label} className="mx-auto max-h-64 w-full object-contain" />
           </button>
         ) : currentSrc ? (
-          <AuthImage src={currentSrc} alt={label} className="w-full h-40 object-cover" />
+          <AuthImage src={currentSrc} alt={label} className="mx-auto max-h-64 w-full object-contain bg-muted" />
         ) : (
           <label
             htmlFor={id}

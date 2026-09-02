@@ -2,6 +2,7 @@ package com.maresi.api.repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -18,6 +19,7 @@ public class VisitMessageRepository {
     return jdbc.query(
         """
         SELECT m.id, m.visit_request_id, m.sender_id, m.body, m.created_at,
+               m.attachment_url, m.attachment_name, m.attachment_type,
                u.full_name AS sender_name, u.role AS sender_role
         FROM visit_messages m
         JOIN users u ON u.id = m.sender_id
@@ -28,19 +30,49 @@ public class VisitMessageRepository {
         visitId);
   }
 
+  public Optional<Map<String, Object>> findById(UUID visitId, UUID messageId) {
+    List<Map<String, Object>> rows =
+        jdbc.query(
+            """
+            SELECT m.id, m.visit_request_id, m.sender_id, m.body, m.created_at,
+                   m.attachment_url, m.attachment_name, m.attachment_type,
+                   u.full_name AS sender_name, u.role AS sender_role
+            FROM visit_messages m
+            JOIN users u ON u.id = m.sender_id
+            WHERE m.visit_request_id = ? AND m.id = ?
+            """,
+            (rs, rowNum) -> RowMaps.visitMessage(rs),
+            visitId,
+            messageId);
+    return rows.stream().findFirst();
+  }
+
   public Map<String, Object> create(UUID visitId, UUID senderId, String body) {
+    return create(visitId, senderId, body, null, null, null);
+  }
+
+  public Map<String, Object> create(
+      UUID visitId,
+      UUID senderId,
+      String body,
+      String attachmentUrl,
+      String attachmentName,
+      String attachmentType) {
     return jdbc.queryForObject(
         """
-        INSERT INTO visit_messages (visit_request_id, sender_id, body)
-        VALUES (?, ?, ?)
-        RETURNING id, visit_request_id, sender_id, body, created_at
+        INSERT INTO visit_messages (
+          visit_request_id, sender_id, body, attachment_url, attachment_name, attachment_type
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        RETURNING id, visit_request_id, sender_id, body, created_at,
+                  attachment_url, attachment_name, attachment_type
         """,
-        (rs, rowNum) -> {
-          Map<String, Object> row = RowMaps.visitMessage(rs);
-          return row;
-        },
+        (rs, rowNum) -> RowMaps.visitMessage(rs),
         visitId,
         senderId,
-        body);
+        body == null ? "" : body,
+        attachmentUrl,
+        attachmentName,
+        attachmentType);
   }
 }

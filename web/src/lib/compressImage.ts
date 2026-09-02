@@ -101,11 +101,16 @@ async function bitmapFromFile(
 
   if (probed) {
     const next = targetSize(probed.width, probed.height, maxEdge);
+    // One edge only: width+height plus EXIF rotation can squash the image.
+    const resize =
+      next.scale < 1
+        ? probed.width >= probed.height
+          ? { resizeWidth: next.width, resizeQuality: "low" as const }
+          : { resizeHeight: next.height, resizeQuality: "low" as const }
+        : {};
     const bitmap = await createImageBitmap(file, {
       ...bitmapOptions,
-      ...(next.scale < 1
-        ? { resizeWidth: next.width, resizeHeight: next.height, resizeQuality: "low" as const }
-        : {}),
+      ...resize,
     });
     return { bitmap, scale: next.scale };
   }

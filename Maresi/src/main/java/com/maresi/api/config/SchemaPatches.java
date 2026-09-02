@@ -100,6 +100,10 @@ public class SchemaPatches {
     )
     """,
     "CREATE INDEX IF NOT EXISTS visit_messages_visit_idx ON visit_messages (visit_request_id, created_at)",
+    "ALTER TABLE visit_messages ADD COLUMN IF NOT EXISTS attachment_url TEXT",
+    "ALTER TABLE visit_messages ADD COLUMN IF NOT EXISTS attachment_name VARCHAR(260)",
+    "ALTER TABLE visit_messages ADD COLUMN IF NOT EXISTS attachment_type VARCHAR(120)",
+    "ALTER TABLE visit_requests ADD COLUMN IF NOT EXISTS chat_closed_at TIMESTAMPTZ",
   };
 
   private final JdbcTemplate jdbc;

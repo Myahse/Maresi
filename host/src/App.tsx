@@ -14,6 +14,7 @@ import { HostApplicationPage } from "@/pages/owner/HostApplicationPage";
 import { PropertyEditPage } from "@/pages/owner/PropertyEditPage";
 import { OwnerVisitsPage } from "@/pages/owner/OwnerVisitsPage";
 import { HostStayAgreementPage } from "@/pages/owner/HostStayAgreementPage";
+import { VisitChatPage } from "@/pages/VisitChatPage";
 import { OwnerSubscriptionPage } from "@/pages/owner/OwnerSubscriptionPage";
 import {
   AccountHubPage,
@@ -90,6 +91,7 @@ function App() {
             <Route path="owner/edit/:id" element={<ProtectedRoute><PropertyEditPage /></ProtectedRoute>} />
             <Route path="owner/visits" element={<ProtectedRoute approvedOnly><OwnerVisitsPage /></ProtectedRoute>} />
             <Route path="owner/visits/:id/agreement" element={<ProtectedRoute approvedOnly><HostStayAgreementPage /></ProtectedRoute>} />
+            <Route path="owner/visits/:id/chat" element={<ProtectedRoute approvedOnly><VisitChatPage backTo="/owner/visits" /></ProtectedRoute>} />
             <Route path="visits/:id/agreement" element={<GuestAgreementRedirect />} />
             <Route path="owner/account" element={<ProtectedRoute><AccountHubPage /></ProtectedRoute>} />
             <Route path="owner/account/personal" element={<ProtectedRoute><AccountPersonalPage /></ProtectedRoute>} />

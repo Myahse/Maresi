@@ -85,6 +85,40 @@ public class VisitRequestController {
         exceptionUtils);
   }
 
+  @PostMapping(value = "/{id}/messages/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<Response<Map<String, Object>>> postMessageFile(
+      @PathVariable UUID id,
+      @RequestParam(name = "body", required = false) String body,
+      @RequestParam(name = "file", required = false) MultipartFile file,
+      Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(
+        () -> visitRequestService.postMessageWithFile(id, body, file, loc), loc, exceptionUtils);
+  }
+
+  @PostMapping("/{id}/chat/close")
+  public ResponseEntity<Response<Map<String, Object>>> closeChat(
+      @PathVariable UUID id, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> visitRequestService.closeChat(id, loc), loc, exceptionUtils);
+  }
+
+  @GetMapping("/{id}/messages/{messageId}/file")
+  public ResponseEntity<byte[]> messageFile(@PathVariable UUID id, @PathVariable UUID messageId) {
+    StoredMedia media = visitRequestService.loadMessageAttachment(id, messageId);
+    if (media == null) return ResponseEntity.notFound().build();
+    MediaType type;
+    try {
+      type = MediaType.parseMediaType(media.contentType());
+    } catch (Exception e) {
+      type = MediaType.APPLICATION_OCTET_STREAM;
+    }
+    return ResponseEntity.ok()
+        .contentType(type)
+        .cacheControl(CacheControl.noStore())
+        .body(media.bytes());
+  }
+
   @GetMapping("/{id}")
   public ResponseEntity<Response<Map<String, Object>>> getOne(@PathVariable UUID id, Locale locale) {
     Locale loc = ControllerSupport.locale(locale);

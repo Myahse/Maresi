@@ -14,6 +14,7 @@ import { PropertyDetailsPage } from "@/pages/PropertyDetailsPage";
 import { FavoritesPage } from "@/pages/FavoritesPage";
 import { VisitRequestsPage } from "@/pages/VisitRequestsPage";
 import { StayAgreementPage } from "@/pages/StayAgreementPage";
+import { VisitChatPage } from "@/pages/VisitChatPage";
 import { ReservationPage } from "@/pages/ReservationPage";
 import { PaymentSuccessPage, PaymentErrorPage } from "@/pages/PaymentResultPages";
 import { BecomeHostPage } from "@/pages/BecomeHostPage";
@@ -97,6 +98,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <StayAgreementPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="visits/:id/chat"
+                element={
+                  <ProtectedRoute>
+                    <VisitChatPage />
                   </ProtectedRoute>
                 }
               />

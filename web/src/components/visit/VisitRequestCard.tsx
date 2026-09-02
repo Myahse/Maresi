@@ -166,7 +166,7 @@ export function VisitRequestCard({ visit, showRequester, children }: VisitReques
           )}
         </p>
 
-        <VisitChat visitId={visit.id} />
+        <VisitChat visit={visit} />
 
         {children}
       </div>

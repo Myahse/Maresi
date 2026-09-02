@@ -189,6 +189,7 @@ public final class RowMaps {
     putIfPresent(rs, m, "extension_responded_at");
     putIfPresent(rs, m, "extension_note");
     putIfPresent(rs, m, "closed_at");
+    putTimestamp(rs, m, "chat_closed_at");
     putIfPresent(rs, m, "payment_receipt_url");
     return m;
   }
@@ -261,6 +262,9 @@ public final class RowMaps {
     m.put("sender_id", rs.getObject("sender_id"));
     m.put("body", rs.getString("body"));
     m.put("created_at", toIso(rs.getTimestamp("created_at")));
+    putIfPresent(rs, m, "attachment_url");
+    putIfPresent(rs, m, "attachment_name");
+    putIfPresent(rs, m, "attachment_type");
     putIfPresent(rs, m, "sender_name");
     putIfPresent(rs, m, "sender_role");
     return m;
