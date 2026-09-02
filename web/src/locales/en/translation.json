@@ -572,6 +572,7 @@
     "agreementDocRef": "Reservation {{id}}",
     "agreementPreamble": "By signing this document, the guest agrees to occupy the residence with care. This agreement is required before payment on Maresi.",
     "agreementProperty": "Residence",
+    "agreementAcceptAll": "Accept all articles",
     "agreementArticle": "Article {{n}}",
     "agreementArt1": "I will take care of the residence, its furniture, keys, and equipment, and leave it clean at the end of the stay.",
     "agreementArt2": "I will not break, steal, or damage the property. I am responsible for any damage I cause and for the cost of repair or replacement.",

@@ -240,11 +240,97 @@ public final class EmailTemplates {
       String hostName,
       String hostSignedAt,
       String ctaUrl) {
+    return stayContractCopy(
+        title,
+        location,
+        checkIn,
+        checkOut,
+        guestName,
+        guestSignedAt,
+        hostName,
+        hostSignedAt,
+        ctaUrl,
+        "Bonjour,\n\nLe contrat de séjour est signé par le client et l’hôte. Conservez le PDF joint : c’est votre copie officielle.",
+        null,
+        "Ouvrir le contrat");
+  }
+
+  public static Mail stayContractCopyForGuest(
+      String title,
+      String location,
+      String checkIn,
+      String checkOut,
+      String guestName,
+      String guestSignedAt,
+      String hostName,
+      String hostSignedAt,
+      String ctaUrl,
+      String keyCode) {
+    return stayContractCopy(
+        title,
+        location,
+        checkIn,
+        checkOut,
+        guestName,
+        guestSignedAt,
+        hostName,
+        hostSignedAt,
+        ctaUrl,
+        "Bonjour,\n\nLe contrat de séjour est signé par le client et l’hôte. Conservez le PDF joint : c’est votre copie officielle.\n\nDonnez uniquement ce code à 6 chiffres à l’hôte pour récupérer la clé, puis allez au paiement dans Maresi. Sans ce code, l’hôte ne pourra pas confirmer la remise des clés.",
+        keyCode == null || keyCode.isBlank() ? null : new Highlight("Code à 6 chiffres", keyCode),
+        "Ouvrir le contrat");
+  }
+
+  public static Mail stayContractCopyForHost(
+      String title,
+      String location,
+      String checkIn,
+      String checkOut,
+      String guestName,
+      String guestSignedAt,
+      String hostName,
+      String hostSignedAt,
+      String ctaUrl,
+      String requesterName) {
+    String who = personName(requesterName);
+    return stayContractCopy(
+        title,
+        location,
+        checkIn,
+        checkOut,
+        guestName,
+        guestSignedAt,
+        hostName,
+        hostSignedAt,
+        ctaUrl,
+        greet(
+            null,
+            "Le contrat de séjour est signé par le client et l’hôte. Conservez le PDF joint : c’est votre copie officielle.\n\n"
+                + "Demandez "
+                + (who.isBlank() ? "au client" : "à " + who)
+                + " son code à 6 chiffres, saisissez-le dans Maresi Hôte, puis il pourra vous payer. Ne communiquez jamais ce code à une autre personne."),
+        null,
+        "Saisir le code");
+  }
+
+  private static Mail stayContractCopy(
+      String title,
+      String location,
+      String checkIn,
+      String checkOut,
+      String guestName,
+      String guestSignedAt,
+      String hostName,
+      String hostSignedAt,
+      String ctaUrl,
+      String body,
+      Highlight highlight,
+      String ctaLabel) {
     return build(
         "Copie du contrat de séjour",
         "Contrat",
         "Votre contrat signé",
-        "Bonjour,\n\nLe contrat de séjour est signé par le client et l’hôte. Conservez le PDF joint : c’est votre copie officielle.",
+        body,
         details(
             "Résidence", title,
             "Adresse", location,
@@ -252,8 +338,8 @@ public final class EmailTemplates {
             "Départ", StayContractPdf.formatDate(checkOut),
             "Signature client", namedStamp(guestName, StayContractPdf.formatStamp(guestSignedAt)),
             "Signature hôte", namedStamp(hostName, StayContractPdf.formatStamp(hostSignedAt))),
-        null,
-        "Ouvrir le contrat",
+        highlight,
+        ctaLabel,
         ctaUrl);
   }
 

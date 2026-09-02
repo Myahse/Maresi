@@ -113,6 +113,22 @@ class _StayAgreementScreenState extends State<StayAgreementScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: !_checks.contains(false),
+                  activeColor: AppColors.primary,
+                  onChanged: (v) => setState(() {
+                    final next = v ?? false;
+                    for (var i = 0; i < _checks.length; i++) {
+                      _checks[i] = next;
+                    }
+                  }),
+                  title: Text(
+                    locale.t('visits.agreementAcceptAll'),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
                 ...List.generate(articles.length, (i) {
                   return CheckboxListTile(
                     contentPadding: EdgeInsets.zero,

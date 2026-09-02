@@ -134,6 +134,18 @@ export function HostStayAgreementPage() {
           </div>
         </section>
 
+        {canSign && (
+          <label className="mb-4 flex items-start gap-3 rounded-xl border border-brand/30 bg-brand/5 px-3 py-3 text-sm font-semibold text-foreground">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-brand"
+              checked={checks.every(Boolean)}
+              onChange={(e) => setChecks(articles.map(() => e.target.checked))}
+            />
+            {t("visits.agreementAcceptAll")}
+          </label>
+        )}
+
         <ol className="space-y-5 mb-10">
           {articles.map((text, index) => (
             <li key={index} className="flex gap-3 text-sm leading-relaxed text-foreground">

@@ -357,8 +357,6 @@ public class VisitRequestBusiness {
     UUID ownerId = visit.get("property_owner_id") == null ? null : uuid(visit.get("property_owner_id"));
     UUID listingId = visit.get("property_id") == null ? null : uuid(visit.get("property_id"));
     UUID recipient = sender.id().equals(guestId) ? ownerId : guestId;
-    String listing =
-        visit.get("property_title") == null ? "la residence" : String.valueOf(visit.get("property_title"));
     String fromName = EmailTemplates.personName(users.findById(sender.id()).orElse(null));
     if (fromName == null || fromName.isBlank()) fromName = sender.email();
     String preview = str(message.get("body"));
@@ -374,13 +372,6 @@ public class VisitRequestBusiness {
           "Nouveau message",
           fromName + " : " + preview,
           listingId);
-      boolean toGuest = recipient.equals(guestId);
-      String visitId = String.valueOf(visit.get("id"));
-      String cta =
-          toGuest
-              ? EmailTemplates.guestApp(appProperties) + "/visits/" + visitId + "/chat"
-              : EmailTemplates.hostApp(appProperties) + "/owner/visits/" + visitId + "/chat";
-      email.sendToUser(recipient, EmailTemplates.visitChat(listing, fromName, preview, cta));
     }
     realtime.publish("visit.message", message, guestId, ownerId, false);
   }
@@ -658,7 +649,6 @@ public class VisitRequestBusiness {
           ownerId,
           EmailTemplates.hostPleaseSign(listingTitle, userName(user.id()), hostAgreementUrl(id)));
     }
-    email.sendToUser(user.id(), EmailTemplates.guestWaitingHostSign(listingTitle, agreementUrl(id)));
     response.setItem(updated);
     response.setStatus(functionalError.success("Engagement signe", locale));
     return response;
@@ -709,7 +699,7 @@ public class VisitRequestBusiness {
     String hostName = fullName.trim();
     String hostSignedAt = str(updated.get("host_agreement_signed_at"));
     EmailTemplates.Mail contractGuest =
-        EmailTemplates.stayContractCopy(
+        EmailTemplates.stayContractCopyForGuest(
             listingTitle,
             location,
             checkIn,
@@ -718,9 +708,10 @@ public class VisitRequestBusiness {
             guestSignedAt,
             hostName,
             hostSignedAt,
-            agreementUrl(id));
+            agreementUrl(id),
+            keyCode);
     EmailTemplates.Mail contractHost =
-        EmailTemplates.stayContractCopy(
+        EmailTemplates.stayContractCopyForHost(
             listingTitle,
             location,
             checkIn,
@@ -729,7 +720,8 @@ public class VisitRequestBusiness {
             guestSignedAt,
             hostName,
             hostSignedAt,
-            hostAgreementUrl(id));
+            hostVisitsUrl(),
+            userName(requesterId));
     EmailService.Attachment pdf = stayContractAttachment(
         id, listingTitle, location, checkIn, checkOut, guestName, guestSignedAt, hostName, hostSignedAt);
     email.sendToUser(requesterId, contractGuest, pdf);
@@ -746,8 +738,6 @@ public class VisitRequestBusiness {
         "Attente du code cle",
         "Vous avez signe. Demandez le code a 6 chiffres, saisissez-le, puis le client paiera.",
         listingId);
-    email.sendToUser(user.id(), EmailTemplates.keyCodeHost(listingTitle, userName(requesterId), hostVisitsUrl()));
-    email.sendToUser(requesterId, EmailTemplates.keyCodeGuest(listingTitle, keyCode));
     response.setItem(updated);
     response.setStatus(functionalError.success("Contrat hote signe", locale));
     return response;

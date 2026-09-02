@@ -586,6 +586,7 @@
     "agreementHostSigned": "Host: signed by {{name}} on {{date}}",
     "agreementFailed": "Could not save the contract",
     "agreementProperty": "Residence",
+    "agreementAcceptAll": "Accept all articles",
     "agreementArticle": "Article {{n}}",
     "agreementArt1": "The guest will take care of the residence, furniture, keys and equipment, and leave it clean.",
     "agreementArt2": "The guest will not break, steal or damage the property. They are responsible for repairs.",

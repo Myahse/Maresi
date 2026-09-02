@@ -586,6 +586,7 @@
     "agreementHostSigned": "Hôte : signé par {{name}} le {{date}}",
     "agreementFailed": "Impossible d'enregistrer le contrat",
     "agreementProperty": "Résidence",
+    "agreementAcceptAll": "Tout accepter",
     "agreementArticle": "Article {{n}}",
     "agreementArt1": "Le client prendra soin de la résidence, du mobilier, des clés et du matériel, et laissera le logement propre.",
     "agreementArt2": "Le client ne cassera, volera ni n'endommagera le bien. Il est responsable des dégâts et du coût de réparation.",

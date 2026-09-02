@@ -572,6 +572,7 @@
     "agreementDocRef": "Réservation {{id}}",
     "agreementPreamble": "En signant ce document, le client s'engage à occuper le logement avec soin. Cet engagement est obligatoire avant le paiement sur Maresi.",
     "agreementProperty": "Résidence",
+    "agreementAcceptAll": "Tout accepter",
     "agreementArticle": "Article {{n}}",
     "agreementArt1": "Je prendrai soin de la résidence, du mobilier, des clés et du matériel, et je laisserai le logement propre à la fin du séjour.",
     "agreementArt2": "Je ne casserai, volerai ni n'endommagerai le bien. Je suis responsable des dégâts que je cause et du coût de réparation ou de remplacement.",
