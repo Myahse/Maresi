@@ -120,6 +120,7 @@ public class AppProperties {
     private String from = "";
     private String fromName = "Maresi";
     private String brevoApiKey = "";
+    private String admin = "maresi00225@gmail.com";
 
     public String getFrom() {
       return from;
@@ -143,6 +144,14 @@ public class AppProperties {
 
     public void setBrevoApiKey(String brevoApiKey) {
       this.brevoApiKey = brevoApiKey;
+    }
+
+    public String getAdmin() {
+      return admin;
+    }
+
+    public void setAdmin(String admin) {
+      this.admin = admin == null ? "" : admin.trim();
     }
   }
 

@@ -156,8 +156,14 @@ public class HostApplicationBusiness {
     realtime.publish("host.application.submitted", created, userId, null, true);
     email.sendToUser(
         userId, EmailTemplates.hostApplySent(EmailTemplates.hostApp(props) + "/login"));
-    for (UUID adminId : users.findIdsByRole("admin")) {
-      email.sendToUser(adminId, EmailTemplates.hostApplyAdmin(fullName, phone));
+    String applicantEmail =
+        users
+            .findById(userId)
+            .map(u -> str(u.get("email")))
+            .orElse(null);
+    String adminInbox = props.getMail() != null ? props.getMail().getAdmin() : "";
+    if (adminInbox != null && !adminInbox.isBlank()) {
+      email.send(adminInbox, EmailTemplates.hostApplyAdmin(fullName, phone, applicantEmail), null);
     }
   }
 

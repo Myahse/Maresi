@@ -310,9 +310,9 @@ public final class EmailTemplates {
         "Reçu de paiement — Maresi",
         "Paiement",
         "Votre paiement est confirmé",
-        "Bonjour,\n\nVotre paiement a bien été reçu. La réservation est validée.\n\nJoignez aussi le reçu de votre opérateur (PDF ou image) dans vos visites.",
+        "Bonjour,\n\nVotre paiement a bien été reçu. La réservation est validée. Le reçu Maresi est joint à cet e-mail (PDF).\n\nJoignez aussi le reçu de votre opérateur (PDF ou image) dans vos visites.",
         details("Résidence", title, "Montant", paid + " XOF"),
-        new Highlight("Reçu", "Conservez cet e-mail"),
+        new Highlight("Reçu", "PDF joint à cet e-mail"),
         "Voir mes visites",
         ctaUrl);
   }
@@ -403,12 +403,16 @@ public final class EmailTemplates {
   }
 
   public static Mail hostApplyAdmin(String fullName, String phone) {
+    return hostApplyAdmin(fullName, phone, null);
+  }
+
+  public static Mail hostApplyAdmin(String fullName, String phone, String applicantEmail) {
     return build(
         "Nouvelle demande hôte",
         "Admin",
         "Une demande hôte attend votre avis",
         "Bonjour,\n\nUne personne souhaite devenir hôte. Vérifiez son identité, puis acceptez ou refusez dans l’espace admin.",
-        details("Nom", fullName, "Téléphone", phone),
+        details("Nom", fullName, "E-mail", applicantEmail, "Téléphone", phone),
         null,
         null,
         null);

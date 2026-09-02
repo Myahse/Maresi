@@ -21,6 +21,7 @@ import com.maresi.api.security.SecurityUtils;
 import com.maresi.api.service.EmailService;
 import com.maresi.api.service.EmailTemplates;
 import com.maresi.api.service.GeniusPayClient;
+import com.maresi.api.service.PaymentReceiptPdf;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -34,10 +35,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PaymentBusiness {
+  private static final Logger log = LoggerFactory.getLogger(PaymentBusiness.class);
   private static final Set<Integer> WALLET_TOPUP_AMOUNTS = Set.of(5000, 10000, 25000, 50000);
 
   private final PaymentRepository payments;
@@ -854,13 +858,49 @@ public class PaymentBusiness {
               ? String.valueOf(visit.get("property_title"))
               : "votre reservation";
       BigDecimal paid = toMoney(payment.get("amount"));
+      String paidText = paid == null ? "" : paid.toPlainString();
       email.sendToUser(
           userId,
           EmailTemplates.paymentReceiptGuest(
-              listingTitle,
-              paid == null ? "" : paid.toPlainString(),
-              EmailTemplates.guestApp(props) + "/visits"));
+              listingTitle, paidText, EmailTemplates.guestApp(props) + "/visits"),
+          paymentReceiptAttachment(payment, visit, userId, listingTitle, paidText));
       realtime.publish("payment.completed", payment, userId, ownerId, true);
+    }
+  }
+
+  private EmailService.Attachment paymentReceiptAttachment(
+      Map<String, Object> payment,
+      Map<String, Object> visit,
+      UUID userId,
+      String listingTitle,
+      String paidText) {
+    try {
+      UUID paymentId = uuid(payment.get("id"));
+      UUID visitId = uuid(payment.get("visit_request_id"));
+      String guestName = visit == null ? null : str(visit.get("requester_name"));
+      if (guestName == null) {
+        guestName = users.findById(userId).map(EmailTemplates::personName).orElse("");
+      }
+      byte[] pdf =
+          PaymentReceiptPdf.render(
+              new PaymentReceiptPdf.Data(
+                  paymentId,
+                  visitId,
+                  listingTitle,
+                  visit == null ? null : str(visit.get("location")),
+                  visit == null ? null : str(visit.get("check_in")),
+                  visit == null ? null : str(visit.get("check_out")),
+                  guestName,
+                  paidText,
+                  str(payment.get("currency")),
+                  str(payment.get("updated_at")) != null
+                      ? str(payment.get("updated_at"))
+                      : str(payment.get("created_at")),
+                  str(payment.get("provider_reference"))));
+      return new EmailService.Attachment(PaymentReceiptPdf.filename(paymentId), pdf);
+    } catch (Exception e) {
+      log.warn("Payment receipt PDF not attached: {}", e.getMessage());
+      return null;
     }
   }
 
