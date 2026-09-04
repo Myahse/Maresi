@@ -37,6 +37,8 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
   final _phoneController = TextEditingController();
   final _idCardController = TextEditingController();
   final _messageController = TextEditingController();
+  final _agreementNameController = TextEditingController();
+  final _agreementChecks = List<bool>.filled(5, false);
 
   @override
   void initState() {
@@ -65,6 +67,7 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
     _phoneController.dispose();
     _idCardController.dispose();
     _messageController.dispose();
+    _agreementNameController.dispose();
     super.dispose();
   }
 
@@ -147,6 +150,10 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
         final idCard = _idCardController.text.trim();
         if (!_isValidIdCard(idCard)) return locale.t('reserve.errorIdCard');
         return null;
+      case 2:
+        if (_agreementChecks.contains(false)) return locale.t('reserve.errorAgreementChecks');
+        if (_agreementNameController.text.trim().length < 3) return locale.t('reserve.errorAgreementName');
+        return null;
       default:
         return null;
     }
@@ -159,7 +166,7 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
       _showMessage(error);
       return;
     }
-    if (_step < 2) {
+    if (_step < 3) {
       setState(() => _step++);
       return;
     }
@@ -195,6 +202,8 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
           contactPhone: _phoneController.text.trim(),
           idCard: _idCardController.text.trim(),
           message: _messageController.text.trim(),
+          agreementFullName: _agreementNameController.text.trim(),
+          agreementAccepted: true,
         ),
       );
       if (mounted) setState(() => _done = true);
@@ -247,6 +256,7 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
     final steps = [
       locale.t('reserve.stepDates'),
       locale.t('reserve.stepContact'),
+      locale.t('reserve.stepAgreement'),
       locale.t('reserve.stepReview'),
     ];
 
@@ -284,6 +294,7 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
                 child: switch (_step) {
                   0 => _buildDatesStep(locale),
                   1 => _buildContactStep(locale),
+                  2 => _buildAgreementStep(locale),
                   _ => _buildReviewStep(locale),
                 },
               ),
@@ -293,7 +304,7 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
             showBack: _step > 0,
             onBack: _goBack,
             onNext: _onNext,
-            nextLabel: _step == 2 ? locale.t('reserve.submit') : locale.t('register.next'),
+            nextLabel: _step == 3 ? locale.t('reserve.submit') : locale.t('register.next'),
             loading: _loading,
           ),
         ],
@@ -397,6 +408,62 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
             maxLines: 3,
             decoration: InputDecoration(hintText: locale.t('reserve.messageHint')),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAgreementStep(LocaleProvider locale) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MaresiSectionHeader(
+          title: locale.t('reserve.agreementTitle'),
+          subtitle: locale.t('reserve.agreementHint'),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          locale.t('visits.agreementPreamble'),
+          style: const TextStyle(fontSize: 14, color: Color(0xFF374151), height: 1.5),
+        ),
+        const SizedBox(height: 16),
+        ...List.generate(5, (index) {
+          final n = index + 1;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Checkbox(
+                  value: _agreementChecks[index],
+                  onChanged: (value) {
+                    setState(() => _agreementChecks[index] = value ?? false);
+                  },
+                  activeColor: AppColors.primary,
+                ),
+                Expanded(
+                  child: Text(
+                    '${locale.t('visits.agreementArticle', args: ['$n'])} — ${locale.t('visits.agreementArt$n')}',
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+        const SizedBox(height: 16),
+        PropertyLabeledField(
+          label: locale.t('visits.agreementSignAs'),
+          child: TextField(
+            controller: _agreementNameController,
+            enabled: !_loading,
+            decoration: InputDecoration(hintText: locale.t('visits.agreementNamePlaceholder')),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          locale.t('visits.agreementSignLegal'),
+          style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
         ),
       ],
     );

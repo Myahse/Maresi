@@ -81,6 +81,8 @@ export interface VisitRequestPayload {
   
   arrival_time?: string;
   departure_time?: string;
+  agreement_full_name?: string;
+  agreement_accepted?: boolean;
 }
 
 export interface Favorite {

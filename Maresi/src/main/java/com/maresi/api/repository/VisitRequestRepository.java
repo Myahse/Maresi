@@ -53,6 +53,48 @@ public class VisitRequestRepository {
         departureTime);
   }
 
+  public Map<String, Object> createWithAgreement(
+      UUID userId,
+      UUID propertyId,
+      String message,
+      Object checkIn,
+      Object checkOut,
+      Object visitDate,
+      String visitTime,
+      Integer guestsCount,
+      String contactPhone,
+      String idCard,
+      String arrivalTime,
+      String departureTime,
+      String agreementFullName) {
+    return jdbc.queryForObject(
+        """
+        INSERT INTO visit_requests (
+          user_id, property_id, message, check_in, check_out,
+          visit_date, visit_time, guests_count, contact_phone, id_card,
+          arrival_time, departure_time,
+          status, agreement_full_name, agreement_accepted, agreement_signed_at
+        )
+        VALUES (?, ?, ?, CAST(? AS date), CAST(? AS date), CAST(? AS date), ?, ?, ?, ?, CAST(? AS time), CAST(? AS time),
+                'awaiting_host_agreement', ?, TRUE, NOW())
+        RETURNING *
+        """,
+        (rs, rowNum) -> RowMaps.visitRequest(rs),
+        userId,
+        propertyId,
+        message,
+        checkIn != null ? checkIn.toString() : null,
+        checkOut != null ? checkOut.toString() : null,
+        visitDate != null ? visitDate.toString() : null,
+        visitTime,
+        guestsCount != null ? guestsCount : 1,
+        contactPhone,
+        idCard,
+        arrivalTime,
+        departureTime,
+        agreementFullName);
+  }
+
   public Optional<Map<String, Object>> findById(UUID id) {
     return jdbc.query(
             """

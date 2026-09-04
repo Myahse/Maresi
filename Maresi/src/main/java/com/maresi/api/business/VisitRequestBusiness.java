@@ -139,20 +139,41 @@ public class VisitRequestBusiness {
       return response;
     }
 
+    String agreementFullName = str(body.get("agreement_full_name"));
+    boolean hasAgreement =
+        agreementFullName != null
+            && agreementFullName.trim().length() >= 3
+            && Boolean.TRUE.equals(body.get("agreement_accepted"));
+
     Map<String, Object> created =
-        visitRequests.create(
-            user.id(),
-            listingId,
-            str(body.get("message")),
-            body.get("check_in"),
-            body.get("check_out"),
-            visitDate,
-            visitTime,
-            intOrNull(body.get("guests_count")),
-            str(body.get("contact_phone")),
-            idCard,
-            arrivalTime,
-            departureTime);
+        hasAgreement
+            ? visitRequests.createWithAgreement(
+                user.id(),
+                listingId,
+                str(body.get("message")),
+                body.get("check_in"),
+                body.get("check_out"),
+                visitDate,
+                visitTime,
+                intOrNull(body.get("guests_count")),
+                str(body.get("contact_phone")),
+                idCard,
+                arrivalTime,
+                departureTime,
+                agreementFullName.trim())
+            : visitRequests.create(
+                user.id(),
+                listingId,
+                str(body.get("message")),
+                body.get("check_in"),
+                body.get("check_out"),
+                visitDate,
+                visitTime,
+                intOrNull(body.get("guests_count")),
+                str(body.get("contact_phone")),
+                idCard,
+                arrivalTime,
+                departureTime);
 
     notifyVisitRequestSubmitted(user.id(), listingId, String.valueOf(property.get("title")));
     UUID ownerId =
@@ -179,6 +200,7 @@ public class VisitRequestBusiness {
               idCard,
               hostVisitsUrl()));
     }
+    String guestStatusKey = hasAgreement ? "reservation.sent.signed" : "reservation.sent";
     email.sendToUser(user.id(), EmailTemplates.reservationSent(String.valueOf(property.get("title"))));
 
     response.setItem(created);
@@ -423,11 +445,27 @@ public class VisitRequestBusiness {
           functionalError.disallowed("Reglez la commission Maresi avant d'accepter une reservation", locale));
       return response;
     }
-    String storedStatus = "accepted".equals(status) ? "awaiting_agreement" : status;
-    Map<String, Object> updated =
-        visitRequests
-            .updateStatus(id, storedStatus, user.id(), str(request.getData().get("ownerNote")))
-            .orElse(null);
+
+    String hostFullName = str(request.getData().get("host_agreement_full_name"));
+    boolean hostHasAgreement =
+        hostFullName != null
+            && hostFullName.trim().length() >= 3
+            && Boolean.TRUE.equals(request.getData().get("host_agreement_accepted"));
+
+    String storedStatus;
+    Map<String, Object> updated;
+    if ("accepted".equals(status) && hostHasAgreement) {
+      String keyCode = String.format("%06d", java.util.concurrent.ThreadLocalRandom.current().nextInt(1_000_000));
+      updated =
+          visitRequests.signHostAgreement(id, user.id(), hostFullName.trim(), keyCode).orElse(null);
+      storedStatus = "awaiting_key";
+    } else {
+      storedStatus = "accepted".equals(status) ? "awaiting_host_agreement" : status;
+      updated =
+          visitRequests
+              .updateStatus(id, storedStatus, user.id(), str(request.getData().get("ownerNote")))
+              .orElse(null);
+    }
     if (updated == null) {
       response.setHasError(true);
       response.setStatus(functionalError.dataNotFound("Demande introuvable", locale));
@@ -436,15 +474,33 @@ public class VisitRequestBusiness {
     UUID requesterId = UUID.fromString(updated.get("user_id").toString());
     UUID listingId = UUID.fromString(updated.get("property_id").toString());
     String title = String.valueOf(updated.get("property_title") == null ? "la residence" : updated.get("property_title"));
-    realtime.publish("visit.status_changed", updated, requesterId, user.id(), true);
-    if ("awaiting_agreement".equals(storedStatus)) {
+    Map<String, Object> published = new java.util.HashMap<>(updated);
+    if ("awaiting_key".equals(storedStatus)) {
+      hideKeyCode(published);
+    }
+    realtime.publish("visit.status_changed", published, requesterId, user.id(), true);
+    if ("awaiting_host_agreement".equals(storedStatus)) {
       notifications.create(
           requesterId,
           "reservation",
-          "Signez l'engagement",
-          "Votre demande a ete acceptee. Signez l'engagement de soin du logement, puis allez au paiement.",
+          "En attente de l'hote",
+          "Votre demande a ete recue. L'hote va examiner et valider votre reservation.",
           listingId);
-      email.sendToUser(requesterId, EmailTemplates.reservationAccepted(title, agreementUrl(id)));
+      email.sendToUser(requesterId, EmailTemplates.reservationAccepted(title, hostVisitsUrl()));
+    } else if ("awaiting_key".equals(storedStatus)) {
+      notifications.create(
+          requesterId,
+          "reservation",
+          "Code cle",
+          "Le contrat est signe des deux cotes. Demandez le code a 6 chiffres a l'hote, puis allez au paiement.",
+          listingId);
+      notifications.create(
+          user.id(),
+          "reservation",
+          "Attente du code cle",
+          "Vous avez accepte et signe. Demandez le code a 6 chiffres au client, saisissez-le, puis le client paiera.",
+          listingId);
+      email.sendToUser(requesterId, EmailTemplates.reservationAccepted(title, visitUrl(id)));
     } else {
       notifyVisitRequestStatusUpdated(requesterId, listingId, status);
       email.sendToUser(requesterId, EmailTemplates.reservationDeclined(title));
@@ -1186,6 +1242,10 @@ public class VisitRequestBusiness {
 
   private String guestVisitsUrl() {
     return EmailTemplates.guestApp(appProperties) + "/visits";
+  }
+
+  private String visitUrl(UUID visitId) {
+    return EmailTemplates.guestApp(appProperties) + "/visits/" + visitId;
   }
 
   private String userName(UUID userId) {

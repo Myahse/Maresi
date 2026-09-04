@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   getMyVisitRequests,
@@ -47,7 +46,6 @@ export function VisitRequestsPage() {
     check_out: string;
     nights: number;
   } | null>>({});
-  const [confirmingPayment, setConfirmingPayment] = useState<string | null>(null);
 
   const reload = useCallback(
     () =>
@@ -173,20 +171,9 @@ export function VisitRequestsPage() {
           {visits.map((v) => (
             <li key={v.id}>
               <VisitRequestCard visit={v}>
-                {v.status === "awaiting_agreement" && (
-                  <div className="pt-2 border-t border-gray-100">
-                    <p className="text-sm text-muted-foreground mb-3">{t("visits.agreementOpenHint")}</p>
-                    <Button asChild className="w-full rounded-full bg-brand hover:bg-brand-dark">
-                      <Link to={`/visits/${v.id}/agreement`}>{t("visits.agreementOpen")}</Link>
-                    </Button>
-                  </div>
-                )}
                 {v.status === "awaiting_host_agreement" && (
                   <div className="pt-2 border-t border-gray-100">
                     <p className="text-sm text-muted-foreground mb-3">{t("visits.agreementWaitingHost")}</p>
-                    <Button asChild variant="outline" className="w-full rounded-full">
-                      <Link to={`/visits/${v.id}/agreement`}>{t("visits.agreementOpen")}</Link>
-                    </Button>
                   </div>
                 )}
                 {v.status === "awaiting_key" && (

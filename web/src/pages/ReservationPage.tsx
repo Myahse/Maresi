@@ -37,10 +37,13 @@ export function ReservationPage() {
   const [contact_phone, setContactPhone] = useState("");
   const [id_card, setIdCard] = useState("");
   const [message, setMessage] = useState("");
+  const [agreementName, setAgreementName] = useState("");
+  const [agreementChecks, setAgreementChecks] = useState([false, false, false, false, false]);
 
   const steps = [
     { id: "dates", label: t("wizard.reserve.steps.dates") },
     { id: "contact", label: t("wizard.reserve.steps.contact") },
+    { id: "agreement", label: t("wizard.reserve.steps.agreement") },
     { id: "review", label: t("wizard.reserve.steps.review") },
   ];
 
@@ -93,6 +96,10 @@ export function ReservationPage() {
         if (!isValidPhone(contact_phone)) return t("wizard.reserve.errors.phoneInvalid");
         if (!isValidIdCard(id_card)) return t("wizard.reserve.errors.idCard");
         return null;
+      case 2:
+        if (!agreementChecks.every(Boolean)) return t("wizard.reserve.errors.agreementChecks");
+        if (agreementName.trim().length < 3) return t("wizard.reserve.errors.agreementName");
+        return null;
       default:
         return null;
     }
@@ -134,6 +141,8 @@ export function ReservationPage() {
           contact_phone: contact_phone.trim(),
           id_card: id_card.trim(),
           message: message.trim() || undefined,
+          agreement_full_name: agreementName.trim(),
+          agreement_accepted: true,
         };
         await requestVisit(payload);
         setDone(true);
@@ -293,6 +302,53 @@ export function ReservationPage() {
       )}
 
       {step === 2 && (
+        <div className="space-y-4">
+          <h2 className="font-bold text-foreground">{t("wizard.reserve.agreementTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("wizard.reserve.agreementHint")}</p>
+          <section className="space-y-2 text-sm leading-relaxed text-foreground bg-muted/60 border border-border rounded-xl p-4">
+            <p>{t("visits.agreementPreamble")}</p>
+          </section>
+          <label className="flex items-start gap-3 rounded-xl border border-brand/30 bg-brand/5 px-3 py-3 text-sm font-semibold text-foreground">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-brand"
+              checked={agreementChecks.every(Boolean)}
+              onChange={(e) => setAgreementChecks(agreementChecks.map(() => e.target.checked))}
+            />
+            {t("visits.agreementAcceptAll")}
+          </label>
+          <ol className="space-y-4">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <li key={n} className="flex gap-3 text-sm leading-relaxed text-foreground">
+                <input
+                  type="checkbox"
+                  className="mt-1 shrink-0 h-4 w-4 accent-brand"
+                  checked={agreementChecks[n - 1]}
+                  onChange={() =>
+                    setAgreementChecks((prev) => prev.map((v, i) => (i === n - 1 ? !v : v)))
+                  }
+                />
+                <span>
+                  <span className="font-semibold">{t("visits.agreementArticle", { n })} — </span>
+                  {t(`visits.agreementArt${n}`)}
+                </span>
+              </li>
+            ))}
+          </ol>
+          <div className="space-y-2">
+            <Label htmlFor="agreementName">{t("visits.agreementSignAs")}</Label>
+            <Input
+              id="agreementName"
+              value={agreementName}
+              onChange={(e) => setAgreementName(e.target.value)}
+              placeholder={t("visits.agreementNamePlaceholder")}
+            />
+            <p className="text-xs text-muted-foreground">{t("visits.agreementSignLegal")}</p>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
         <div className="space-y-4">
           <h2 className="font-bold text-foreground">{t("wizard.reserve.reviewTitle")}</h2>
           <dl className="rounded-2xl border-2 border-border divide-y text-sm">

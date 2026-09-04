@@ -11,6 +11,8 @@ class VisitRequestPayload {
     required this.contactPhone,
     required this.idCard,
     this.message,
+    this.agreementFullName,
+    this.agreementAccepted,
   });
 
   final String propertyId;
@@ -24,6 +26,8 @@ class VisitRequestPayload {
   final String contactPhone;
   final String idCard;
   final String? message;
+  final String? agreementFullName;
+  final bool? agreementAccepted;
 
   Map<String, dynamic> toJson() => {
         'propertyId': propertyId,
@@ -37,6 +41,9 @@ class VisitRequestPayload {
         'contact_phone': contactPhone,
         'id_card': idCard,
         if (message != null && message!.trim().isNotEmpty) 'message': message!.trim(),
+        if (agreementFullName != null && agreementFullName!.trim().isNotEmpty)
+          'agreement_full_name': agreementFullName!.trim(),
+        if (agreementAccepted == true) 'agreement_accepted': true,
       };
 }
 

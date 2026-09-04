@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import {
   billStayOverstay,
@@ -29,6 +31,9 @@ export function OwnerVisitsPage() {
   const [closeScores, setCloseScores] = useState<Record<string, number>>({});
   const [closeNotes, setCloseNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
+  const [acceptId, setAcceptId] = useState<string | null>(null);
+  const [acceptName, setAcceptName] = useState("");
+  const [acceptChecks, setAcceptChecks] = useState([false, false, false, false, false]);
 
   const refresh = useCallback(() => {
     return getOwnerVisitRequests()
@@ -51,6 +56,28 @@ export function OwnerVisitsPage() {
       setVisits((prev) => prev.map((v) => (v.id === id ? updated : v)));
       setDeclineId(null);
       setDeclineNote("");
+    } catch (e) {
+      setError(actionErrorMessage(e, t("owner.visitValidation"), t("offline.queued")));
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const acceptReady = acceptChecks.every(Boolean) && acceptName.trim().length >= 3;
+
+  const handleAcceptWithAgreement = async () => {
+    if (!acceptId || !acceptReady) return;
+    setActingId(acceptId);
+    setError("");
+    try {
+      const updated = await updateVisitRequestStatus(acceptId, "accepted", undefined, {
+        host_agreement_full_name: acceptName.trim(),
+        host_agreement_accepted: true,
+      });
+      setVisits((prev) => prev.map((v) => (v.id === acceptId ? updated : v)));
+      setAcceptId(null);
+      setAcceptName("");
+      setAcceptChecks([false, false, false, false, false]);
     } catch (e) {
       setError(actionErrorMessage(e, t("owner.visitValidation"), t("offline.queued")));
     } finally {
@@ -192,13 +219,58 @@ export function OwnerVisitsPage() {
                         </Button>
                       </div>
                     </div>
+                  ) : acceptId === v.id ? (
+                    <div className="space-y-4 pt-2 border-t border-gray-100">
+                      <p className="text-sm font-semibold text-foreground">{t("visits.agreementTitle")}</p>
+                      <ol className="space-y-3">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <li key={n} className="flex gap-3 text-sm leading-relaxed text-foreground">
+                            <input
+                              type="checkbox"
+                              className="mt-1 shrink-0 h-4 w-4 accent-brand"
+                              checked={acceptChecks[n - 1]}
+                              onChange={() =>
+                                setAcceptChecks((prev) => prev.map((v, i) => (i === n - 1 ? !v : v)))
+                              }
+                            />
+                            <span>
+                              <span className="font-semibold">{t("visits.agreementArticle", { n })} — </span>
+                              {t(`visits.agreementArt${n}`)}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                      <div className="space-y-2">
+                        <Label htmlFor="acceptName">{t("visits.agreementSignAs")}</Label>
+                        <Input
+                          id="acceptName"
+                          value={acceptName}
+                          onChange={(e) => setAcceptName(e.target.value)}
+                          placeholder={t("visits.agreementNamePlaceholder")}
+                        />
+                        <p className="text-xs text-muted-foreground">{t("visits.agreementSignLegal")}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="rounded-full bg-brand hover:bg-brand-dark"
+                          disabled={actingId === v.id || !acceptReady}
+                          onClick={() => void handleAcceptWithAgreement()}
+                        >
+                          {t("owner.accept")}
+                        </Button>
+                        <Button size="sm" variant="ghost" className="rounded-full" onClick={() => { setAcceptId(null); setAcceptName(""); setAcceptChecks([false, false, false, false, false]); }}>
+                          {t("common.cancel")}
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
                       <Button
                         size="sm"
                         className="rounded-full bg-brand hover:bg-brand-dark"
                         disabled={actingId === v.id}
-                        onClick={() => handleStatus(v.id, "accepted")}
+                        onClick={() => { setAcceptId(v.id); setAcceptName(""); setAcceptChecks([false, false, false, false, false]); }}
                       >
                         {t("owner.accept")}
                       </Button>
@@ -226,11 +298,72 @@ export function OwnerVisitsPage() {
               <p className="text-sm text-muted-foreground">{t("visits.agreementHostSignHint")}</p>
               {awaitingHost.map((v) => (
                 <VisitRequestCard key={v.id} visit={v} showRequester>
-                  <div className="pt-2 border-t border-gray-100">
-                    <Button asChild className="w-full rounded-full bg-brand hover:bg-brand-dark">
-                      <Link to={`/owner/visits/${v.id}/agreement`}>{t("visits.agreementHostOpen")}</Link>
-                    </Button>
-                  </div>
+                  {acceptId === v.id ? (
+                    <div className="space-y-4 pt-2 border-t border-gray-100">
+                      <p className="text-sm font-semibold text-foreground">{t("visits.agreementTitle")}</p>
+                      <ol className="space-y-3">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <li key={n} className="flex gap-3 text-sm leading-relaxed text-foreground">
+                            <input
+                              type="checkbox"
+                              className="mt-1 shrink-0 h-4 w-4 accent-brand"
+                              checked={acceptChecks[n - 1]}
+                              onChange={() =>
+                                setAcceptChecks((prev) => prev.map((v, i) => (i === n - 1 ? !v : v)))
+                              }
+                            />
+                            <span>
+                              <span className="font-semibold">{t("visits.agreementArticle", { n })} — </span>
+                              {t(`visits.agreementArt${n}`)}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                      <div className="space-y-2">
+                        <Label htmlFor="acceptName">{t("visits.agreementSignAs")}</Label>
+                        <Input
+                          id="acceptName"
+                          value={acceptName}
+                          onChange={(e) => setAcceptName(e.target.value)}
+                          placeholder={t("visits.agreementNamePlaceholder")}
+                        />
+                        <p className="text-xs text-muted-foreground">{t("visits.agreementSignLegal")}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="rounded-full bg-brand hover:bg-brand-dark"
+                          disabled={actingId === v.id || !acceptReady}
+                          onClick={() => void handleAcceptWithAgreement()}
+                        >
+                          {t("owner.accept")}
+                        </Button>
+                        <Button size="sm" variant="ghost" className="rounded-full" onClick={() => { setAcceptId(null); setAcceptName(""); setAcceptChecks([false, false, false, false, false]); }}>
+                          {t("common.cancel")}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+                      <Button
+                        size="sm"
+                        className="rounded-full bg-brand hover:bg-brand-dark"
+                        disabled={actingId === v.id}
+                        onClick={() => { setAcceptId(v.id); setAcceptName(""); setAcceptChecks([false, false, false, false, false]); }}
+                      >
+                        {t("owner.accept")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full border-red-300 text-red-700 hover:bg-red-50"
+                        disabled={actingId === v.id}
+                        onClick={() => setDeclineId(v.id)}
+                      >
+                        {t("owner.decline")}
+                      </Button>
+                    </div>
+                  )}
                 </VisitRequestCard>
               ))}
             </section>

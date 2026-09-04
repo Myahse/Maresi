@@ -61,7 +61,7 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
 
   bool _canCancel(String status) =>
       status == 'pending' ||
-      status == 'awaiting_agreement' ||
+      status == 'awaiting_host_agreement' ||
       status == 'awaiting_key' ||
       status == 'awaiting_payment';
 
@@ -182,13 +182,6 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
     }
   }
 
-  Future<void> _signAgreement(VisitRequest visit) async {
-    final signed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => StayAgreementScreen(visit: visit)),
-    );
-    if (signed == true && mounted) await _load();
-  }
-
   Widget _previewRow(String label, String value, {bool bold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -261,15 +254,9 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
                                   _statusLabel(locale, visit.status),
                                   style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
                                 ),
-                                if (visit.status == 'awaiting_agreement') ...[
+                                if (visit.status == 'awaiting_host_agreement') ...[
                                   const SizedBox(height: 8),
-                                  Text(locale.t('visits.agreementBody'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
-                                  const SizedBox(height: 12),
-                                  FilledButton(
-                                    onPressed: _actingId == visit.id ? null : () => _signAgreement(visit),
-                                    style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
-                                    child: Text(locale.t('visits.agreementSign')),
-                                  ),
+                                  Text(locale.t('visits.agreementWaitingHost'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
                                 ],
                                 if (visit.status == 'awaiting_key') ...[
                                   const SizedBox(height: 8),

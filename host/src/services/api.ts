@@ -405,11 +405,13 @@ export function confirmStayExtensionPayment(id: string) {
 export function updateVisitRequestStatus(
   id: string,
   status: import("@/types").VisitRequestStatus,
-  ownerNote?: string
+  ownerNote?: string,
+  extra?: { host_agreement_full_name?: string; host_agreement_accepted?: boolean }
 ) {
   return api.patch<import("@/types").VisitRequest>(`/visit-requests/${id}/status`, {
     status,
     ownerNote,
+    ...extra,
   });
 }
 
