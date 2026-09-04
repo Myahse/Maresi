@@ -500,7 +500,27 @@ public class VisitRequestBusiness {
           "Attente du code cle",
           "Vous avez accepte et signe. Demandez le code a 6 chiffres au client, saisissez-le, puis le client paiera.",
           listingId);
-      email.sendToUser(requesterId, EmailTemplates.reservationAccepted(title, visitUrl(id)));
+      Map<String, Object> listing = properties.findById(listingId).orElse(Map.of());
+      String listingTitle = str(listing.get("title"));
+      if (listingTitle == null || listingTitle.isBlank()) listingTitle = "la residence";
+      String location = str(listing.get("location"));
+      if (location == null) location = str(updated.get("location"));
+      String checkIn = str(updated.get("check_in"));
+      String checkOut = str(updated.get("check_out"));
+      String guestName = str(updated.get("agreement_full_name"));
+      String guestSignedAt = str(updated.get("agreement_signed_at"));
+      String hostName = str(updated.get("host_agreement_full_name"));
+      String hostSignedAt = str(updated.get("host_agreement_signed_at"));
+      EmailTemplates.Mail contractGuest =
+          EmailTemplates.stayContractCopyForGuest(
+              listingTitle, location, checkIn, checkOut, guestName, guestSignedAt,
+              hostName, hostSignedAt, visitUrl(id), null);
+      EmailTemplates.Mail contractHost =
+          EmailTemplates.stayContractCopyForHost(
+              listingTitle, location, checkIn, checkOut, guestName, guestSignedAt,
+              hostName, hostSignedAt, hostVisitsUrl(), userName(requesterId));
+      email.sendToUser(requesterId, contractGuest);
+      email.sendToUser(user.id(), contractHost);
     } else {
       notifyVisitRequestStatusUpdated(requesterId, listingId, status);
       email.sendToUser(requesterId, EmailTemplates.reservationDeclined(title));

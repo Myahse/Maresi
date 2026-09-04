@@ -222,6 +222,15 @@ export function OwnerVisitsPage() {
                   ) : acceptId === v.id ? (
                     <div className="space-y-4 pt-2 border-t border-gray-100">
                       <p className="text-sm font-semibold text-foreground">{t("visits.agreementTitle")}</p>
+                      <label className="flex items-start gap-3 rounded-xl border border-brand/30 bg-brand/5 px-3 py-3 text-sm font-semibold text-foreground">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 h-4 w-4 shrink-0 accent-brand"
+                          checked={acceptChecks.every(Boolean)}
+                          onChange={(e) => setAcceptChecks(acceptChecks.map(() => e.target.checked))}
+                        />
+                        {t("visits.agreementAcceptAll")}
+                      </label>
                       <ol className="space-y-3">
                         {[1, 2, 3, 4, 5].map((n) => (
                           <li key={n} className="flex gap-3 text-sm leading-relaxed text-foreground">
@@ -301,6 +310,15 @@ export function OwnerVisitsPage() {
                   {acceptId === v.id ? (
                     <div className="space-y-4 pt-2 border-t border-gray-100">
                       <p className="text-sm font-semibold text-foreground">{t("visits.agreementTitle")}</p>
+                      <label className="flex items-start gap-3 rounded-xl border border-brand/30 bg-brand/5 px-3 py-3 text-sm font-semibold text-foreground">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 h-4 w-4 shrink-0 accent-brand"
+                          checked={acceptChecks.every(Boolean)}
+                          onChange={(e) => setAcceptChecks(acceptChecks.map(() => e.target.checked))}
+                        />
+                        {t("visits.agreementAcceptAll")}
+                      </label>
                       <ol className="space-y-3">
                         {[1, 2, 3, 4, 5].map((n) => (
                           <li key={n} className="flex gap-3 text-sm leading-relaxed text-foreground">

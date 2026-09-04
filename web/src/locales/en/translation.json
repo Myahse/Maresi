@@ -640,6 +640,7 @@
     "pendingText": "The payment is not finalized yet. Refresh this page in a moment.",
     "errorTitle": "Payment failed",
     "errorText": "Payment did not complete. You can retry from My visits.",
+    "sessionExpired": "Your session has expired. Please log in again and check My visits to verify your payment.",
     "viewSubscription": "View my subscription",
     "subscriptionTitle": "Owner subscription",
     "subscriptionHint": "Publish residences with an active monthly subscription.",

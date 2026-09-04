@@ -27,13 +27,19 @@ export function PaymentSuccessPage() {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setPhase("fail");
-        setDetail(err instanceof Error ? err.message : "");
+        const msg = err instanceof Error ? err.message : "";
+        if (/401|unauthorized|session/i.test(msg)) {
+          setPhase("fail");
+          setDetail(t("payments.sessionExpired"));
+        } else {
+          setPhase("fail");
+          setDetail(msg || t("payments.errorText"));
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [reference]);
+  }, [reference, t]);
 
   useEffect(() => {
     if (phase !== "ok") return;

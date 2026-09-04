@@ -178,16 +178,16 @@ public static Mail reservationSent(String title) {
         ctaUrl);
   }
 
-  public static Mail reservationAccepted(String title, String agreementUrl) {
+  public static Mail reservationAccepted(String title, String url) {
     return build(
         "Demande acceptée",
         "Réservation",
-        "Bonne nouvelle : l’hôte a accepté",
-        "Bonjour,\n\nVotre demande a été acceptée. Signez maintenant le contrat de séjour.\n\nL’hôte signera ensuite le même contrat. Vous recevrez alors une copie par e-mail, puis un code à 6 chiffres pour récupérer la clé. Le paiement se fait ensuite dans Maresi.",
-        details("Résidence", title, "Prochaine étape", "Signer le contrat"),
+        "Bonne nouvelle : votre demande est en cours de traitement",
+        "Bonjour,\n\nVotre demande a été reçue avec votre contrat signé. Le propriétaire va examiner votre réservation et confirmer sa décision.\n\nVous recevrez une notification une fois que le propriétaire aura accepté et signé le contrat. Le code à 6 chiffres et le paiement suivront ensuite.",
+        details("Résidence", title, "Prochaine étape", "Réponse du propriétaire"),
         null,
-        "Signer l’engagement",
-        agreementUrl);
+        "Voir ma réservation",
+        url);
   }
 
   public static Mail reservationDeclined(String title) {

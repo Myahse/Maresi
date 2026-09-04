@@ -358,10 +358,10 @@ public class AppProperties {
   public static class Payments {
     private long ownerSubscriptionFcfa = 10000;
     private int reservationCommissionPercent = 10;
-    private String successUrl = "http://localhost:3000/payments/success";
-    private String errorUrl = "http://localhost:3000/payments/error";
-    private String hostSuccessUrl = "";
-    private String hostErrorUrl = "";
+    private String successUrl = "https://ma-resi.com/payments/success";
+    private String errorUrl = "https://ma-resi.com/payments/error";
+    private String hostSuccessUrl = "https://host.ma-resi.com/payments/success";
+    private String hostErrorUrl = "https://host.ma-resi.com/payments/error";
 
     public long getOwnerSubscriptionFcfa() {
       return ownerSubscriptionFcfa;
