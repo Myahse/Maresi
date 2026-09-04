@@ -182,7 +182,7 @@ export function PropertyCard({
         )}
         <p className="text-brand font-bold text-base sm:text-lg">
           {formatPrice(property.price)}
-          <span className="text-muted-foreground font-normal text-xs sm:text-sm"> {t("common.night")}</span>
+          <span className="text-muted-foreground font-normal text-xs sm:text-sm"> {property.price_unit === "day" ? t("common.day") : t("common.night")}</span>
         </p>
       </div>
     </>
@@ -218,7 +218,7 @@ export function PropertyCard({
           </p>
           <p className="text-brand font-bold text-sm mt-1">
             {formatPrice(property.price)}
-            <span className="text-muted-foreground font-normal text-xs"> {t("common.night")}</span>
+            <span className="text-muted-foreground font-normal text-xs"> {property.price_unit === "day" ? t("common.day") : t("common.night")}</span>
           </p>
         </div>
         {onToggleFavorite && (

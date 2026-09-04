@@ -216,7 +216,7 @@ public final class StayContractPdf {
     return value == null || value.isBlank() ? fallback : value.trim();
   }
 
-  /** Helvetica/WinAnsi cannot encode curly quotes or em dashes. */
+
   private static String win(String raw) {
     if (raw == null) return "";
     return raw.replace('\u2019', '\'')

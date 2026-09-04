@@ -260,8 +260,6 @@ class MockApiService implements MaresiApi {
     List<String> imagePaths = const [],
     String? checkInTime,
     String? checkOutTime,
-    int? priceMidday,
-    int? priceFullDay,
   }) async {
     await _delay();
     if (_sessionUser == null) throw Exception('Authentification requise');

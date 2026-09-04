@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { Stepper } from "@/components/ui/stepper";
 import { WizardPane } from "@/components/ui/WizardPane";
-import { cn } from "@/lib/utils";
 import { getMyProfile, getProperty, requestVisit } from "@/services/api";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,12 +14,9 @@ import { usePriceFormatter } from "@/context/CurrencyContext";
 import { isFutureDate, isValidDateRange, isValidPhone, isValidIdCard, isPositiveInt } from "@/lib/validation";
 import type { Property, VisitRequestPayload } from "@/types";
 
-const TIME_SLOTS = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
-
 export function ReservationPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { requireAuth } = useAuthModal();
@@ -38,18 +33,13 @@ export function ReservationPage() {
   const [check_out, setCheckOut] = useState("");
   const [arrivalTime, setArrivalTime] = useState("14:00");
   const [departureTime, setDepartureTime] = useState("12:00");
-  const [includeVisit, setIncludeVisit] = useState(searchParams.get("visit") === "1");
-  const [visit_date, setVisitDate] = useState("");
-  const [visit_time, setVisitTime] = useState("10:00");
   const [guests_count, setGuestsCount] = useState("2");
   const [contact_phone, setContactPhone] = useState("");
   const [id_card, setIdCard] = useState("");
   const [message, setMessage] = useState("");
-  const [stayRate, setStayRate] = useState<"night" | "midday" | "full_day">("night");
 
   const steps = [
     { id: "dates", label: t("wizard.reserve.steps.dates") },
-    { id: "visit", label: t("wizard.reserve.steps.visit") },
     { id: "contact", label: t("wizard.reserve.steps.contact") },
     { id: "review", label: t("wizard.reserve.steps.review") },
   ];
@@ -95,12 +85,6 @@ export function ReservationPage() {
         }
         return null;
       case 1:
-        if (!includeVisit) return null;
-        if (!visit_date) return t("wizard.reserve.errors.visitDate");
-        if (!isFutureDate(visit_date)) return t("wizard.reserve.errors.visitFuture");
-        if (!visit_time) return t("wizard.reserve.errors.visitTime");
-        return null;
-      case 2:
         if (!isPositiveInt(guests_count)) return t("wizard.reserve.errors.guests");
         if (property?.max_guests && Number(guests_count) > property.max_guests) {
           return t("wizard.reserve.errors.maxGuests", { max: property.max_guests });
@@ -131,7 +115,7 @@ export function ReservationPage() {
 
   const submit = () => {
     if (!id) return;
-    const err = validateStep(2);
+    const err = validateStep(1);
     if (err) {
       setError(err);
       return;
@@ -146,13 +130,10 @@ export function ReservationPage() {
           check_out,
           arrival_time: arrivalTime,
           departure_time: departureTime,
-          visit_date: includeVisit ? visit_date : undefined,
-          visit_time: includeVisit ? visit_time : undefined,
           guests_count: Number(guests_count),
           contact_phone: contact_phone.trim(),
           id_card: id_card.trim(),
           message: message.trim() || undefined,
-          stay_rate: stayRate,
         };
         await requestVisit(payload);
         setDone(true);
@@ -255,81 +236,13 @@ export function ReservationPage() {
               })}
             </p>
           )}
-          {(property.price_midday || property.price_full_day) && (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold">{t("wizard.reserve.rateTitle")}</p>
-              <p className="text-xs text-muted-foreground">{t("wizard.reserve.rateHint")}</p>
-              <div className="grid sm:grid-cols-3 gap-2">
-                <RateCard
-                  selected={stayRate === "night"}
-                  title={t("wizard.reserve.rateNight")}
-                  price={formatPrice(property.price)}
-                  onClick={() => setStayRate("night")}
-                />
-                {property.price_midday ? (
-                  <RateCard
-                    selected={stayRate === "midday"}
-                    title={t("wizard.reserve.rateMidday")}
-                    price={formatPrice(Number(property.price_midday))}
-                    onClick={() => setStayRate("midday")}
-                  />
-                ) : null}
-                {property.price_full_day ? (
-                  <RateCard
-                    selected={stayRate === "full_day"}
-                    title={t("wizard.reserve.rateFullDay")}
-                    price={formatPrice(Number(property.price_full_day))}
-                    onClick={() => setStayRate("full_day")}
-                  />
-                ) : null}
-              </div>
-            </div>
-          )}
           <p className="text-sm text-brand font-semibold">
-            {t("common.perNight")}: {formatPrice(property.price)}
+            {property.price_unit === "day" ? t("common.perDay") : t("common.perNight")}: {formatPrice(property.price)}
           </p>
         </WizardPane>
       )}
 
       {step === 1 && (
-        <div className="space-y-4">
-          <h2 className="font-bold text-foreground">{t("wizard.reserve.visitTitle")}</h2>
-          <p className="text-sm text-muted-foreground">{t("wizard.reserve.visitHint")}</p>
-          <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <input
-              type="checkbox"
-              checked={includeVisit}
-              onChange={(e) => setIncludeVisit(e.target.checked)}
-            />
-            {t("wizard.reserve.addVisit")}
-          </label>
-          {includeVisit && (
-          <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="visit_date">{t("wizard.reserve.visitDate")} *</Label>
-            <Input
-              id="visit_date"
-              type="date"
-              value={visit_date}
-              onChange={(e) => setVisitDate(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="visit_time">{t("wizard.reserve.visitTime")} *</Label>
-            <Select id="visit_time" value={visit_time} onChange={(e) => setVisitTime(e.target.value)}>
-              {TIME_SLOTS.map((slot) => (
-                <option key={slot} value={slot}>
-                  {slot}
-                </option>
-              ))}
-            </Select>
-          </div>
-          </div>
-          )}
-        </div>
-      )}
-
-      {step === 2 && (
         <div className="space-y-4">
           <h2 className="font-bold text-foreground">{t("wizard.reserve.contactTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("wizard.reserve.contactHint")}</p>
@@ -379,7 +292,7 @@ export function ReservationPage() {
         </div>
       )}
 
-      {step === 3 && (
+      {step === 2 && (
         <div className="space-y-4">
           <h2 className="font-bold text-foreground">{t("wizard.reserve.reviewTitle")}</h2>
           <dl className="rounded-2xl border-2 border-border divide-y text-sm">
@@ -391,12 +304,6 @@ export function ReservationPage() {
               <dt className="text-muted-foreground">{t("wizard.reserve.stay")}</dt>
               <dd className="font-semibold">
                 {check_in} {arrivalTime} → {check_out} {departureTime}
-              </dd>
-            </div>
-            <div className="p-4">
-              <dt className="text-muted-foreground">{t("wizard.reserve.visitSlot")}</dt>
-              <dd className="font-semibold">
-                {includeVisit ? `${visit_date} · ${visit_time}` : t("wizard.reserve.visitSkipped")}
               </dd>
             </div>
             <div className="p-4 flex justify-between">
@@ -443,28 +350,4 @@ export function ReservationPage() {
   );
 }
 
-function RateCard({
-  selected,
-  title,
-  price,
-  onClick,
-}: {
-  selected: boolean;
-  title: string;
-  price: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "rounded-xl border-2 p-3 text-left transition-colors",
-        selected ? "border-brand bg-accent" : "border-border"
-      )}
-    >
-      <p className="text-sm font-semibold">{title}</p>
-      <p className="text-brand font-bold">{price}</p>
-    </button>
-  );
-}
+

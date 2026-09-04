@@ -290,6 +290,12 @@ export function updateProperty(id: string, formData: FormData) {
   }).then((res) => parseFormResponse<Property>(res));
 }
 
+export function publishProperty(id: string) {
+  const formData = new FormData();
+  formData.set("draft", "false");
+  return updateProperty(id, formData);
+}
+
 export function deleteProperty(id: string) {
   return api.delete(`/properties/${id}`);
 }

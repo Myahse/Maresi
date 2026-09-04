@@ -19,6 +19,7 @@ class Property {
     this.bedrooms,
     this.maxGuests,
     this.amenities = const [],
+    this.priceUnit = "night",
     this.premiumPositioning = false,
   });
 
@@ -39,6 +40,7 @@ class Property {
   final int? bedrooms;
   final int? maxGuests;
   final List<String> amenities;
+  final String priceUnit;
   final bool premiumPositioning;
 
   factory Property.fromJson(Map<String, dynamic> json) {
@@ -63,6 +65,7 @@ class Property {
       bedrooms: (json['bedrooms'] as num?)?.toInt(),
       maxGuests: (json['max_guests'] as num?)?.toInt(),
       amenities: (json['amenities'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      priceUnit: json['price_unit'] as String? ?? 'night',
       premiumPositioning: json['premium_positioning'] as bool? ?? json['premiumPositioning'] as bool? ?? false,
     );
   }
@@ -89,6 +92,7 @@ class Property {
       bedrooms: bedrooms,
       maxGuests: maxGuests,
       amenities: amenities,
+      priceUnit: priceUnit,
       premiumPositioning: premiumPositioning,
     );
   }

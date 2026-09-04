@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:maresi_mobile/models/payment.dart';
 import 'package:maresi_mobile/models/visit_request.dart';
 import 'package:maresi_mobile/providers/locale_provider.dart';
 import 'package:maresi_mobile/screens/stay_agreement_screen.dart';
@@ -21,6 +22,7 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
   bool _loading = true;
   String? _actingId;
   String? _error;
+  final Map<String, PaymentPreview?> _previews = {};
 
   @override
   void initState() {
@@ -40,6 +42,14 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
         _visits = visits;
         _loading = false;
       });
+      for (final v in visits) {
+        if (v.status == 'awaiting_payment' && !_previews.containsKey(v.id)) {
+          _previews[v.id] = null;
+          maresiApi.previewReservationPayment(v.id).then((preview) {
+            if (mounted) setState(() => _previews[v.id] = preview);
+          }).catchError((_) {});
+        }
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -179,6 +189,19 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
     if (signed == true && mounted) await _load();
   }
 
+  Widget _previewRow(String label, String value, {bool bold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Text(value, style: TextStyle(fontSize: 13, fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+        ],
+      ),
+    );
+  }
+
   String _statusLabel(LocaleProvider locale, String status) {
     final key = 'visits.status.$status';
     final value = locale.t(key);
@@ -308,17 +331,43 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
                                 ],
                                 if (visit.status == 'awaiting_payment') ...[
                                   const SizedBox(height: 8),
-                                  Text(locale.t('payments.payMaresiHint'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
-                                  const SizedBox(height: 12),
-                                  FilledButton(
-                                    onPressed: _actingId == visit.id ? null : () => _payReservation(visit),
-                                    style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
-                                    child: Text(
-                                      _actingId == visit.id
-                                          ? locale.t('payments.paying')
-                                          : locale.t('payments.payReservation'),
+                                  if (_previews[visit.id] != null) ...[
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: palette.backgroundSecondary.withOpacity(0.5),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          _previewRow(locale.t('payments.stayAmount'), '${_previews[visit.id]!.stayAmount.toStringAsFixed(0)} XOF'),
+                                          if (_previews[visit.id]!.clientPaysOperatorFees && _previews[visit.id]!.operatorFee > 0)
+                                            _previewRow(locale.t('payments.operatorFee'), '${_previews[visit.id]!.operatorFee.toStringAsFixed(0)} XOF'),
+                                          const Divider(),
+                                          _previewRow(locale.t('payments.totalToPay'), '${_previews[visit.id]!.total.toStringAsFixed(0)} XOF', bold: true),
+                                        ],
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(height: 8),
+                                  ] else ...[
+                                    Text(locale.t('payments.payMaresiHint'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
+                                    const SizedBox(height: 8),
+                                  ],
+FilledButton(
+                                      onPressed: _actingId == visit.id ? null : () => _payReservation(visit),
+                                      style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                                      child: Text(
+                                        _actingId == visit.id
+                                            ? locale.t('payments.paying')
+                                            : locale.t('payments.payReservation'),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      locale.t('payments.noOffPlatform'),
+                                      style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w600),
+                                      textAlign: TextAlign.center,
+                                    ),
                                 ],
                                 if (_isPaidStay(visit.status)) ...[
                                   const SizedBox(height: 8),

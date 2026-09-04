@@ -459,8 +459,6 @@ class ApiService implements MaresiApi {
     List<String> imagePaths = const [],
     String? checkInTime,
     String? checkOutTime,
-    int? priceMidday,
-    int? priceFullDay,
   }) async {
     final request = http.MultipartRequest('POST', Uri.parse('${AppConfig.apiPrefix}/properties'));
     final headers = await _authHeaders();
@@ -473,8 +471,6 @@ class ApiService implements MaresiApi {
     request.fields['property_type'] = propertyType;
     if (checkInTime != null && checkInTime.isNotEmpty) request.fields['check_in_time'] = checkInTime;
     if (checkOutTime != null && checkOutTime.isNotEmpty) request.fields['check_out_time'] = checkOutTime;
-    if (priceMidday != null && priceMidday > 0) request.fields['price_midday'] = priceMidday.toString();
-    if (priceFullDay != null && priceFullDay > 0) request.fields['price_full_day'] = priceFullDay.toString();
 
     for (final path in imagePaths) {
       request.files.add(await http.MultipartFile.fromPath('images', path));
@@ -590,6 +586,18 @@ class ApiService implements MaresiApi {
     final data = _parseBody(res);
     if (res.statusCode >= 400) _throwFromResponse(res, data);
     return Payment.fromJson(_unwrapEnvelope(data) as Map<String, dynamic>);
+  }
+
+  @override
+  Future<PaymentPreview> previewReservationPayment(String visitRequestId) async {
+    final res = await http.post(
+      Uri.parse('${AppConfig.apiPrefix}/payments/reservation/preview'),
+      headers: await _authHeaders(),
+      body: _wrapBody({'visitRequestId': visitRequestId}),
+    );
+    final data = _parseBody(res);
+    if (res.statusCode >= 400) _throwFromResponse(res, data);
+    return PaymentPreview.fromJson(_unwrapEnvelope(data) as Map<String, dynamic>);
   }
 
   @override

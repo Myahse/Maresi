@@ -32,6 +32,11 @@ public class PaymentService {
     return paymentBusiness.startReservationPayment(request, locale);
   }
 
+  public Response<Map<String, Object>> previewReservationPayment(
+      Request<Map<String, Object>> request, Locale locale) {
+    return paymentBusiness.previewReservationPayment(request, locale);
+  }
+
   public Response<Map<String, Object>> startCommissionSettlement(Locale locale) {
     return paymentBusiness.startCommissionSettlement(locale);
   }

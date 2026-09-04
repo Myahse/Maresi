@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
-import { getProperties, deleteProperty, getOwnerVisitRequests, getMySubscription } from "@/services/api";
+import { getProperties, deleteProperty, getOwnerVisitRequests, getMySubscription, publishProperty } from "@/services/api";
 import { listingImageUrl } from "@/lib/media";
 import { shareListingPage } from "@/lib/listingShare";
 import { isApprovedHost } from "@/lib/hostAccess";
@@ -23,6 +23,7 @@ export function OwnerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [shareNote, setShareNote] = useState("");
+  const [publishingId, setPublishingId] = useState("");
 
   const refreshVisits = useCallback(() => {
     return getOwnerVisitRequests()
@@ -77,6 +78,24 @@ export function OwnerDashboardPage() {
       setProperties((prev) => prev.filter((p) => p.id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : t("owner.deleteFailed"));
+    }
+  };
+
+  const handlePublish = async (property: Property) => {
+    if (!approved) {
+      setError(t("owner.publishNeedApproval"));
+      navigate("/owner/application");
+      return;
+    }
+    setError("");
+    setPublishingId(property.id);
+    try {
+      const updated = await publishProperty(property.id);
+      setProperties((prev) => prev.map((item) => (item.id === property.id ? { ...item, ...updated } : item)));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("owner.publishFailed"));
+    } finally {
+      setPublishingId("");
     }
   };
 
@@ -225,6 +244,17 @@ export function OwnerDashboardPage() {
                     )}
                   </CardTitle>
                   <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                    {p.is_active === false && (
+                      <Button
+                        size="sm"
+                        className="flex-1 sm:flex-none bg-brand hover:bg-brand-dark"
+                        disabled={publishingId === p.id}
+                        title={!approved ? t("owner.publishNeedApproval") : undefined}
+                        onClick={() => void handlePublish(p)}
+                      >
+                        {publishingId === p.id ? t("common.saving") : t("owner.publish")}
+                      </Button>
+                    )}
                     {p.is_active !== false && (
                       <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={() => void handleShare(p)}>
                         {t("owner.share")}
@@ -242,7 +272,7 @@ export function OwnerDashboardPage() {
                   <p>
                     {p.location} · {p.property_type}
                   </p>
-                  <p className="font-semibold text-brand">{formatPrice(Number(p.price))}</p>
+                  <p className="font-semibold text-brand">{formatPrice(Number(p.price))} <span className="text-muted-foreground font-normal text-xs">{p.price_unit === "day" ? t("common.day") : t("common.night")}</span></p>
                 </CardContent>
               </Card>
             );

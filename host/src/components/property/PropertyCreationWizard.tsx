@@ -63,8 +63,6 @@ export function PropertyCreationWizard({
   const [orange_money_url] = useState(initial?.orange_money_url ?? "");
   const [checkInTime, setCheckInTime] = useState(initial?.check_in_time?.slice(0, 5) ?? "14:00");
   const [checkOutTime, setCheckOutTime] = useState(initial?.check_out_time?.slice(0, 5) ?? "12:00");
-  const [priceMidday, setPriceMidday] = useState(initial?.price_midday?.toString() ?? "");
-  const [priceFullDay, setPriceFullDay] = useState(initial?.price_full_day?.toString() ?? "");
   const [hasDelegate, setHasDelegate] = useState(Boolean(initial?.manager_name));
   const [managerName, setManagerName] = useState(initial?.manager_name ?? "");
   const [managerPhone, setManagerPhone] = useState(initial?.manager_phone ?? "");
@@ -139,8 +137,6 @@ export function PropertyCreationWizard({
         return null;
       case 8:
         if (!isValidPrice(price)) return t("wizard.property.errors.price");
-        if (priceMidday && !isValidPrice(priceMidday)) return t("wizard.property.errors.price");
-        if (priceFullDay && !isValidPrice(priceFullDay)) return t("wizard.property.errors.price");
         return null;
       case 9:
         if (hasDelegate && managerName.trim().length < 2) return t("wizard.property.errors.delegateName");
@@ -286,8 +282,6 @@ export function PropertyCreationWizard({
     if (orange_money_url.trim()) formData.set("orange_money_url", orange_money_url.trim());
     if (checkInTime) formData.set("check_in_time", checkInTime);
     if (checkOutTime) formData.set("check_out_time", checkOutTime);
-    if (priceMidday) formData.set("price_midday", priceMidday);
-    if (priceFullDay) formData.set("price_full_day", priceFullDay);
     formData.set("manager_name", hasDelegate ? managerName.trim() : "");
     formData.set("manager_phone", hasDelegate ? managerPhone.trim() : "");
     formData.set("manager_email", hasDelegate ? managerEmail.trim() : "");
@@ -616,9 +610,9 @@ export function PropertyCreationWizard({
       {step === 8 && (
         <WizardPane step={8}>
           <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("wizard.property.pricingTitle")}</h2>
-          <p className="text-sm text-muted-foreground">{t("wizard.property.pricingHint")}</p>
+          <p className="text-sm text-muted-foreground">{property_type === "hotel" ? t("wizard.property.pricingHintNight") : t("wizard.property.pricingHintDay")}</p>
           <div className="space-y-2 max-w-md">
-            <Label htmlFor="price">{t("wizard.property.priceXof")} *</Label>
+            <Label htmlFor="price">{property_type === "hotel" ? t("wizard.property.priceXofNight") : t("wizard.property.priceXofDay")} *</Label>
             <Input
               id="price"
               type="number"
@@ -627,37 +621,7 @@ export function PropertyCreationWizard({
               onChange={(e) => setPrice(e.target.value)}
             />
           </div>
-          <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
-            <div>
-              <p className="font-semibold text-foreground">{t("wizard.property.ratesTitle")}</p>
-              <p className="text-sm text-muted-foreground">{t("wizard.property.ratesHint")}</p>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="midday">{t("wizard.property.priceMidday")}</Label>
-                <Input
-                  id="midday"
-                  type="number"
-                  min={0}
-                  value={priceMidday}
-                  onChange={(e) => setPriceMidday(e.target.value)}
-                  placeholder={t("common.optional")}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="fullday">{t("wizard.property.priceFullDay")}</Label>
-                <Input
-                  id="fullday"
-                  type="number"
-                  min={0}
-                  value={priceFullDay}
-                  onChange={(e) => setPriceFullDay(e.target.value)}
-                  placeholder={t("common.optional")}
-                />
-              </div>
-            </div>
-          </div>
-        </WizardPane>
+          </WizardPane>
       )}
 
       {step === 9 && (
@@ -718,13 +682,7 @@ export function PropertyCreationWizard({
             <ReviewRow label={t("propertyForm.location")} value={location} />
             <ReviewRow label={t("wizard.property.bedrooms")} value={bedrooms} />
             <ReviewRow label={t("wizard.property.maxGuests")} value={max_guests} />
-            <ReviewRow label={t("common.perNight")} value={formatPrice(Number(price) || 0)} />
-            {priceMidday ? (
-              <ReviewRow label={t("wizard.property.priceMidday")} value={formatPrice(Number(priceMidday))} />
-            ) : null}
-            {priceFullDay ? (
-              <ReviewRow label={t("wizard.property.priceFullDay")} value={formatPrice(Number(priceFullDay))} />
-            ) : null}
+            <ReviewRow label={property_type === "hotel" ? t("common.perNight") : t("common.perDay")} value={formatPrice(Number(price) || 0)} />
             <ReviewRow
               label={t("wizard.property.amenitiesTitle")}
               value={

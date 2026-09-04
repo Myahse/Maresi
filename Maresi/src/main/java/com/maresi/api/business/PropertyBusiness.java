@@ -149,6 +149,9 @@ public class PropertyBusiness {
     }
     Map<String, Object> extra = extras == null ? new HashMap<>() : new HashMap<>(extras);
     extra.put("is_active", !draft);
+    if (!extra.containsKey("price_unit")) {
+      extra.put("price_unit", "hotel".equals(safeType) ? "night" : "day");
+    }
     Map<String, Object> created =
         properties.create(
             user.id(),
@@ -194,6 +197,10 @@ public class PropertyBusiness {
     List<String> ownedUrls = fileStorage.acceptOwnedImageUrls(uploadedImageUrls, baseUrl);
     List<String> storedUrls = fileStorage.storePropertyImages(images, baseUrl);
     data = new HashMap<>(data);
+    if (data.containsKey("property_type") && !data.containsKey("price_unit")) {
+      String type = String.valueOf(data.get("property_type")).trim().toLowerCase(Locale.ROOT);
+      data.put("price_unit", "hotel".equals(type) ? "night" : "day");
+    }
     if (uploadedImageUrls != null || !storedUrls.isEmpty()) {
       List<String> next = new ArrayList<>(ownedUrls);
       next.addAll(storedUrls);

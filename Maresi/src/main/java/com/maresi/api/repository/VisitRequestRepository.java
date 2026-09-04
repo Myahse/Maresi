@@ -26,17 +26,16 @@ public class VisitRequestRepository {
       Integer guestsCount,
       String contactPhone,
       String idCard,
-      String stayRate,
       String arrivalTime,
       String departureTime) {
     return jdbc.queryForObject(
         """
         INSERT INTO visit_requests (
           user_id, property_id, message, check_in, check_out,
-          visit_date, visit_time, guests_count, contact_phone, id_card, stay_rate,
+          visit_date, visit_time, guests_count, contact_phone, id_card,
           arrival_time, departure_time
         )
-        VALUES (?, ?, ?, CAST(? AS date), CAST(? AS date), CAST(? AS date), ?, ?, ?, ?, ?, CAST(? AS time), CAST(? AS time))
+        VALUES (?, ?, ?, CAST(? AS date), CAST(? AS date), CAST(? AS date), ?, ?, ?, ?, CAST(? AS time), CAST(? AS time))
         RETURNING *
         """,
         (rs, rowNum) -> RowMaps.visitRequest(rs),
@@ -50,7 +49,6 @@ public class VisitRequestRepository {
         guestsCount != null ? guestsCount : 1,
         contactPhone,
         idCard,
-        stayRate != null && !stayRate.isBlank() ? stayRate : "night",
         arrivalTime,
         departureTime);
   }
@@ -58,10 +56,10 @@ public class VisitRequestRepository {
   public Optional<Map<String, Object>> findById(UUID id) {
     return jdbc.query(
             """
-            SELECT vr.*, p.title AS property_title, p.location, p.price AS property_price,
-                   p.owner_id AS property_owner_id, p.wave_payment_url, p.orange_money_url,
-                   p.price_midday, p.price_full_day, p.check_in_time, p.check_out_time,
-                   u.phone AS owner_phone
+SELECT vr.*, p.title AS property_title, p.location, p.price AS property_price,
+               p.owner_id AS property_owner_id, p.wave_payment_url, p.orange_money_url,
+               p.check_in_time, p.check_out_time,
+               u.phone AS owner_phone
             FROM visit_requests vr
             JOIN properties p ON vr.property_id = p.id
             JOIN users u ON p.owner_id = u.id
@@ -86,7 +84,7 @@ public class VisitRequestRepository {
         """
         SELECT vr.*, p.title AS property_title, p.location, p.price AS property_price,
                p.owner_id AS property_owner_id, p.wave_payment_url, p.orange_money_url,
-               p.price_midday, p.price_full_day, p.check_in_time, p.check_out_time,
+               p.check_in_time, p.check_out_time,
                u.phone AS owner_phone
         FROM visit_requests vr
         JOIN properties p ON vr.property_id = p.id

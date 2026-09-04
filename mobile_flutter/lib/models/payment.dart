@@ -36,6 +36,47 @@ class Payment {
   }
 }
 
+class PaymentPreview {
+  const PaymentPreview({
+    required this.stayAmount,
+    required this.operatorFee,
+    required this.operatorFeePercent,
+    required this.clientPaysOperatorFees,
+    required this.total,
+    this.propertyPrice = 0,
+    this.propertyTitle = '',
+    this.checkIn = '',
+    this.checkOut = '',
+    this.nights = 1,
+  });
+
+  final double stayAmount;
+  final double operatorFee;
+  final double operatorFeePercent;
+  final bool clientPaysOperatorFees;
+  final double total;
+  final double propertyPrice;
+  final String propertyTitle;
+  final String checkIn;
+  final String checkOut;
+  final int nights;
+
+  factory PaymentPreview.fromJson(Map<String, dynamic> json) {
+    return PaymentPreview(
+      stayAmount: double.tryParse(json['stay_amount'].toString()) ?? 0,
+      operatorFee: double.tryParse(json['operator_fee'].toString()) ?? 0,
+      operatorFeePercent: double.tryParse(json['operator_fee_percent'].toString()) ?? 0,
+      clientPaysOperatorFees: json['client_pays_operator_fees'] == true,
+      total: double.tryParse(json['total'].toString()) ?? 0,
+      propertyPrice: (json['property_price'] as num?)?.toDouble() ?? 0,
+      propertyTitle: json['property_title'] as String? ?? '',
+      checkIn: json['check_in'] as String? ?? '',
+      checkOut: json['check_out'] as String? ?? '',
+      nights: (json['nights'] as num?)?.toInt() ?? 1,
+    );
+  }
+}
+
 class OwnerSubscription {
   const OwnerSubscription({
     required this.status,

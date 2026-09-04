@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getMyHostApplication, submitHostApplication } from "@/services/api";
 import { isApprovedHost } from "@/lib/hostAccess";
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import type { HostApplication } from "@/types";
 
 export function HostApplicationPage() {
@@ -22,12 +23,19 @@ export function HostApplicationPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const reload = useCallback(
+    () =>
+      getMyHostApplication()
+        .then(setCurrent)
+        .catch(() => setCurrent(null)),
+    []
+  );
+
   useEffect(() => {
-    getMyHostApplication()
-      .then(setCurrent)
-      .catch(() => setCurrent(null))
-      .finally(() => setLoading(false));
-  }, []);
+    void reload().finally(() => setLoading(false));
+  }, [reload]);
+
+  useRealtimeRefresh(reload);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -46,7 +46,8 @@ owner_subscriptions.last_payment_id → payments
 | owner_id | UUID FK users | ON DELETE CASCADE |
 | title, description, location | | |
 | price | DECIMAL(12,2) | Listing price (FCFA) |
-| property_type | VARCHAR(50) | apartment, house, studio |
+| property_type | VARCHAR(50) | apartment, house, studio, hotel |
+| price_unit | VARCHAR(10) | night (hotel) or day (apartment, house, studio) |
 | images | TEXT[] | URLs / upload paths |
 | is_active | BOOLEAN | default true |
 | latitude / longitude | DECIMAL(10,7) | |

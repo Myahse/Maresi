@@ -46,8 +46,6 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   final _locationController = TextEditingController();
   final _surfaceController = TextEditingController();
   final _priceController = TextEditingController();
-  final _priceMiddayController = TextEditingController();
-  final _priceFullDayController = TextEditingController();
   final _titleController = TextEditingController();
   final _picker = ImagePicker();
 
@@ -78,8 +76,6 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
     _idCardController.dispose();
     _phoneController.dispose();
     _locationController.dispose();
-    _priceMiddayController.dispose();
-    _priceFullDayController.dispose();
     _surfaceController.dispose();
     _priceController.dispose();
     _titleController.dispose();
@@ -704,27 +700,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        _LabeledField(
-          label: locale.t('register.priceMidday'),
-          child: TextField(
-            controller: _priceMiddayController,
-            enabled: !_loading,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(hintText: '15000'),
-          ),
-        ),
-        const SizedBox(height: 16),
-        _LabeledField(
-          label: locale.t('register.priceFullDay'),
-          child: TextField(
-            controller: _priceFullDayController,
-            enabled: !_loading,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(hintText: '20000'),
-          ),
-        ),
+],
       ],
     );
   }

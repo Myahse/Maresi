@@ -73,8 +73,6 @@ abstract class MaresiApi {
     List<String> imagePaths = const [],
     String? checkInTime,
     String? checkOutTime,
-    int? priceMidday,
-    int? priceFullDay,
   });
 
   Future<VisitRequest> createVisitRequest(VisitRequestPayload payload);
@@ -94,6 +92,8 @@ abstract class MaresiApi {
   Future<Payment> startSubscriptionPayment();
 
   Future<Payment> startReservationPayment(String visitRequestId);
+
+  Future<PaymentPreview> previewReservationPayment(String visitRequestId);
 
   Future<PropertyRatingsResult> getPropertyRatings(String propertyId);
 

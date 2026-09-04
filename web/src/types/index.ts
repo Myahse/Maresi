@@ -60,8 +60,7 @@ export interface Property {
   orange_money_url?: string;
   check_in_time?: string;
   check_out_time?: string;
-  price_midday?: number;
-  price_full_day?: number;
+  price_unit?: "night" | "day";
   premium_positioning?: boolean;
   manager_name?: string;
   manager_phone?: string;
@@ -79,7 +78,7 @@ export interface VisitRequestPayload {
   guests_count: number;
   contact_phone: string;
   id_card: string;
-  stay_rate?: "night" | "midday" | "full_day";
+  
   arrival_time?: string;
   departure_time?: string;
 }

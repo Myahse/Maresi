@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS properties (
   price DECIMAL(12, 2) NOT NULL,
   location VARCHAR(500) NOT NULL,
   property_type VARCHAR(50) NOT NULL,
+  price_unit VARCHAR(10) NOT NULL DEFAULT 'night',
   images TEXT[] DEFAULT '{}',
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW(),

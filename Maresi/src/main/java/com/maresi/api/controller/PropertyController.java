@@ -85,8 +85,6 @@ public class PropertyController {
       @RequestParam(required = false) List<String> amenities,
       @RequestParam(name = "check_in_time", required = false) String checkInTime,
       @RequestParam(name = "check_out_time", required = false) String checkOutTime,
-      @RequestParam(name = "price_midday", required = false) BigDecimal priceMidday,
-      @RequestParam(name = "price_full_day", required = false) BigDecimal priceFullDay,
       @RequestParam(name = "manager_name", required = false) String managerName,
       @RequestParam(name = "manager_phone", required = false) String managerPhone,
       @RequestParam(name = "manager_email", required = false) String managerEmail,
@@ -108,8 +106,6 @@ public class PropertyController {
         amenities,
         checkInTime,
         checkOutTime,
-        priceMidday,
-        priceFullDay,
         managerName,
         managerPhone,
         managerEmail,
@@ -169,8 +165,6 @@ public class PropertyController {
       @RequestParam(required = false) List<String> amenities,
       @RequestParam(name = "check_in_time", required = false) String checkInTime,
       @RequestParam(name = "check_out_time", required = false) String checkOutTime,
-      @RequestParam(name = "price_midday", required = false) BigDecimal priceMidday,
-      @RequestParam(name = "price_full_day", required = false) BigDecimal priceFullDay,
       @RequestParam(name = "manager_name", required = false) String managerName,
       @RequestParam(name = "manager_phone", required = false) String managerPhone,
       @RequestParam(name = "manager_email", required = false) String managerEmail,
@@ -201,8 +195,6 @@ public class PropertyController {
             amenities,
             checkInTime,
             checkOutTime,
-            priceMidday,
-            priceFullDay,
             managerName,
             managerPhone,
             managerEmail,
@@ -242,7 +234,7 @@ public class PropertyController {
     return ControllerSupport.run(() -> propertyService.remove(id, loc), loc, exceptionUtils);
   }
 
-  private static Map<String, Object> extraFields(
+      private static Map<String, Object> extraFields(
       BigDecimal latitude,
       BigDecimal longitude,
       Integer bedrooms,
@@ -253,8 +245,6 @@ public class PropertyController {
       List<String> amenities,
       String checkInTime,
       String checkOutTime,
-      BigDecimal priceMidday,
-      BigDecimal priceFullDay,
       String managerName,
       String managerPhone,
       String managerEmail,
@@ -276,8 +266,6 @@ public class PropertyController {
     String outTime = normalizeTime(checkOutTime);
     if (inTime != null) extras.put("check_in_time", inTime);
     if (outTime != null) extras.put("check_out_time", outTime);
-    if (priceMidday != null && priceMidday.signum() > 0) extras.put("price_midday", priceMidday);
-    if (priceFullDay != null && priceFullDay.signum() > 0) extras.put("price_full_day", priceFullDay);
     putOptionalText(extras, "manager_name", managerName);
     putOptionalText(extras, "manager_phone", managerPhone);
     putOptionalText(extras, "manager_email", managerEmail);

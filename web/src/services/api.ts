@@ -406,6 +406,22 @@ export function startReservationPayment(visitRequestId: string) {
   return api.post<import("@/types").Payment>(`/payments/reservation`, { visitRequestId });
 }
 
+export function previewReservationPayment(visitRequestId: string) {
+  return api.post<{
+    stay_amount: string;
+    operator_fee: string;
+    operator_fee_percent: string;
+    client_pays_operator_fees: boolean;
+    total: string;
+    currency: string;
+    property_price: number;
+    property_title: string;
+    check_in: string;
+    check_out: string;
+    nights: number;
+  }>(`/payments/reservation/preview`, { visitRequestId });
+}
+
 export function uploadVisitReceipt(id: string, file: File) {
   const token = getToken();
   const form = new FormData();

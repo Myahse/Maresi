@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   getMyVisitRequests,
   markStayExtensionPaid,
+  previewReservationPayment,
   requestStayExtension,
   startReservationPayment,
   updateVisitRequestStatus,
@@ -33,6 +34,20 @@ export function VisitRequestsPage() {
   const [actingId, setActingId] = useState<string | null>(null);
   const [extendDates, setExtendDates] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
+  const [previews, setPreviews] = useState<Record<string, {
+    stay_amount: string;
+    operator_fee: string;
+    operator_fee_percent: string;
+    client_pays_operator_fees: boolean;
+    total: string;
+    currency: string;
+    property_price: number;
+    property_title: string;
+    check_in: string;
+    check_out: string;
+    nights: number;
+  } | null>>({});
+  const [confirmingPayment, setConfirmingPayment] = useState<string | null>(null);
 
   const reload = useCallback(
     () =>
@@ -46,6 +61,17 @@ export function VisitRequestsPage() {
     setLoading(true);
     void reload().finally(() => setLoading(false));
   }, [reload]);
+
+  useEffect(() => {
+    const awaitingPayment = visits.filter((v) => v.status === "awaiting_payment");
+    for (const v of awaitingPayment) {
+      if (previews[v.id] !== undefined) continue;
+      setPreviews((prev) => ({ ...prev, [v.id]: null }));
+      previewReservationPayment(v.id)
+        .then((data) => setPreviews((prev) => ({ ...prev, [v.id]: data })))
+        .catch(() => setPreviews((prev) => ({ ...prev, [v.id]: null })));
+    }
+  }, [visits]);
 
   useRealtimeRefresh(reload);
 
@@ -174,9 +200,28 @@ export function VisitRequestsPage() {
                 )}
                 {v.status === "awaiting_payment" && (
                   <div className="space-y-3 pt-2 border-t border-gray-100">
-                    <p className="text-sm font-semibold text-foreground">
-                      {t("payments.payHostAmount")}: {formatPrice(stayAmount(v))}
-                    </p>
+                    {previews[v.id] ? (
+                      <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">{t("payments.stayAmount")}</span>
+                          <span className="font-medium">{formatPrice(Number(previews[v.id]!.stay_amount))}</span>
+                        </div>
+                        {previews[v.id]!.client_pays_operator_fees && Number(previews[v.id]!.operator_fee) > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">{t("payments.operatorFee")} ({previews[v.id]!.operator_fee_percent}%)</span>
+                            <span className="font-medium">{formatPrice(Number(previews[v.id]!.operator_fee))}</span>
+                          </div>
+                        )}
+                        <div className="border-t pt-2 flex justify-between text-sm font-semibold">
+                          <span>{t("payments.totalToPay")}</span>
+                          <span className="text-brand">{formatPrice(Number(previews[v.id]!.total))}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm font-semibold text-foreground">
+                        {t("payments.payHostAmount")}: {formatPrice(stayAmount(v))}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">{t("payments.payMaresiHint")}</p>
                     <Button
                       className="w-full rounded-full bg-brand hover:bg-brand-dark"
@@ -185,6 +230,7 @@ export function VisitRequestsPage() {
                     >
                       {actingId === v.id ? t("payments.paying") : t("payments.goToPayment")}
                     </Button>
+                    <p className="text-xs font-semibold text-red-600 text-center">{t("payments.noOffPlatform")}</p>
                     <ReceiptUpload
                       visit={v}
                       actingId={actingId}

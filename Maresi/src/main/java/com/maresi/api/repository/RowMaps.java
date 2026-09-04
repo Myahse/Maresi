@@ -76,8 +76,7 @@ public final class RowMaps {
     putIfPresent(rs, m, "orange_money_url");
     putTime(rs, m, "check_in_time");
     putTime(rs, m, "check_out_time");
-    putIfPresent(rs, m, "price_midday");
-    putIfPresent(rs, m, "price_full_day");
+    putIfPresent(rs, m, "price_unit");
     putIfPresent(rs, m, "manager_name");
     putIfPresent(rs, m, "manager_phone");
     putIfPresent(rs, m, "manager_email");
@@ -160,9 +159,6 @@ public final class RowMaps {
     putIfPresent(rs, m, "requester_selfie_url");
     putIfPresent(rs, m, "requester_id_photo_url");
     putIfPresent(rs, m, "requester_id_back_url");
-    putIfPresent(rs, m, "stay_rate");
-    putIfPresent(rs, m, "price_midday");
-    putIfPresent(rs, m, "price_full_day");
     putTime(rs, m, "check_in_time");
     putTime(rs, m, "check_out_time");
     putTime(rs, m, "arrival_time");

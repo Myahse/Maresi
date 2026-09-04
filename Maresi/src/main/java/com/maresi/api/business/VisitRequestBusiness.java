@@ -151,7 +151,6 @@ public class VisitRequestBusiness {
             intOrNull(body.get("guests_count")),
             str(body.get("contact_phone")),
             idCard,
-            stayRate(body.get("stay_rate")),
             arrivalTime,
             departureTime);
 
@@ -1343,13 +1342,7 @@ public class VisitRequestBusiness {
 
   private static BigDecimal extraNightsAmount(
       Map<String, Object> visit, LocalDate currentOut, LocalDate newOut) {
-    String rate = visit.get("stay_rate") == null ? "night" : visit.get("stay_rate").toString();
     BigDecimal unit = toMoney(visit.get("property_price"));
-    if ("midday".equals(rate) && visit.get("price_midday") != null) {
-      unit = toMoney(visit.get("price_midday"));
-    } else if ("full_day".equals(rate) && visit.get("price_full_day") != null) {
-      unit = toMoney(visit.get("price_full_day"));
-    }
     if (unit == null) unit = BigDecimal.ZERO;
     long nights = ChronoUnit.DAYS.between(currentOut, newOut);
     if (nights < 1) nights = 1;
@@ -1365,13 +1358,6 @@ public class VisitRequestBusiness {
     } catch (Exception e) {
       return null;
     }
-  }
-
-  private static String stayRate(Object raw) {
-    if (raw == null) return "night";
-    String value = raw.toString().trim().toLowerCase(Locale.ROOT);
-    if ("midday".equals(value) || "full_day".equals(value) || "night".equals(value)) return value;
-    return "night";
   }
 
   private static String clock(Object raw) {

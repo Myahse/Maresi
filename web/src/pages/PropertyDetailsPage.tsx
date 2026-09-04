@@ -89,11 +89,9 @@ export function PropertyDetailsPage() {
     });
   };
 
-  const handleReserve = (withVisit = false) => {
+  const handleReserve = () => {
     if (!id) return;
-    requireAuth(() =>
-      navigate(withVisit ? `/properties/${id}/reserve?visit=1` : `/properties/${id}/reserve`)
-    );
+    requireAuth(() => navigate(`/properties/${id}/reserve`));
   };
 
   if (loading) return <div className="container mx-auto px-4 py-8">{t("common.loading")}</div>;
@@ -116,7 +114,7 @@ export function PropertyDetailsPage() {
             <div className="flex flex-wrap items-center gap-3 mt-2">
               <p className="text-brand font-bold text-xl">
                 {formatPrice(property.price)}
-                <span className="text-muted-foreground font-normal text-base ml-1">{t("common.night")}</span>
+                <span className="text-muted-foreground font-normal text-base ml-1">{property.price_unit === "day" ? t("common.day") : t("common.night")}</span>
               </p>
               {ratingCount > 0 && (
                 <span className="text-sm text-muted-foreground">
@@ -263,15 +261,8 @@ export function PropertyDetailsPage() {
               <p className="text-xs text-muted-foreground mt-1">{t("propertyDetails.reserveHint")}</p>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full rounded-full bg-brand hover:bg-brand-dark" onClick={() => handleReserve(false)}>
+              <Button className="w-full rounded-full bg-brand hover:bg-brand-dark" onClick={handleReserve}>
                 {t("propertyDetails.startReservation")}
-              </Button>
-              <Button
-                className="w-full rounded-full"
-                variant="outline"
-                onClick={() => handleReserve(true)}
-              >
-                {t("propertyDetails.requestVisit")}
               </Button>
               <button
                 type="button"
@@ -289,12 +280,9 @@ export function PropertyDetailsPage() {
         <div className="flex flex-col gap-2">
           <Button
             className="w-full rounded-full bg-brand hover:bg-brand-dark"
-            onClick={() => handleReserve(false)}
+            onClick={handleReserve}
           >
             {t("propertyDetails.startReservation")}
-          </Button>
-          <Button className="w-full rounded-full" variant="outline" onClick={() => handleReserve(true)}>
-            {t("propertyDetails.requestVisit")}
           </Button>
         </div>
       </div>

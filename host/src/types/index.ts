@@ -60,8 +60,7 @@ export interface Property {
   orange_money_url?: string;
   check_in_time?: string;
   check_out_time?: string;
-  price_midday?: number;
-  price_full_day?: number;
+  price_unit?: "night" | "day";
   premium_positioning?: boolean;
   manager_name?: string;
   manager_phone?: string;

@@ -69,14 +69,14 @@ public final class EmailTemplates {
     return welcomeGuest(null, phone, ctaUrl);
   }
 
-  public static Mail welcomeGuest(String name, String phone, String ctaUrl) {
+public static Mail welcomeGuest(String name, String phone, String ctaUrl) {
     return build(
         "Bienvenue sur Maresi",
         "Compte",
         "Bienvenue chez vous",
         greet(
             name,
-            "Votre compte Maresi est prêt. Explorez les résidences à Abidjan, comparez les quartiers et réservez en quelques étapes.\n\nGardez votre téléphone à portée : l’hôte vous contacte souvent par WhatsApp ou appel."),
+            "Votre compte Maresi est prêt. Explorez les résidences à Abidjan, comparez les quartiers et réservez en quelques étapes.\n\nGardez votre téléphone à portée : l'hôte vous contacte souvent par WhatsApp ou appel.\n\n⚠ IMPORTANT : Ne jamais payer en dehors de la plateforme. Si un hôte vous demande de payer en dehors de Maresi, refusez directement."),
         details("Voyageur", personName(name), "Téléphone", phone),
         null,
         "Voir les résidences",
@@ -94,7 +94,7 @@ public final class EmailTemplates {
         "Votre espace hôte est ouvert",
         greet(
             name,
-            "Votre compte hôte Maresi est prêt. Publiez une résidence, recevez des demandes et suivez chaque séjour depuis Maresi Hôte."),
+            "Votre compte hôte Maresi est prêt. Publiez une résidence, recevez des demandes et suivez chaque séjour depuis Maresi Hôte.\n\n⚠ IMPORTANT : Ne jamais demander à un voyageur de payer en dehors de la plateforme Maresi."),
         details("Hôte", personName(name), "Téléphone", phone),
         null,
         "Ouvrir Maresi Hôte",
@@ -129,7 +129,7 @@ public final class EmailTemplates {
         ctaUrl);
   }
 
-  public static Mail reservationSent(String title) {
+public static Mail reservationSent(String title) {
     String listing = title == null || title.isBlank() ? "cette résidence" : title.trim();
     return build(
         "Demande envoyée",
@@ -137,7 +137,7 @@ public final class EmailTemplates {
         "Votre demande a été enregistrée",
         "Bonjour,\n\nVotre demande de réservation pour "
             + listing
-            + " a bien été enregistrée et transmise au propriétaire.\n\nNous vous informerons dès que votre demande aura été traitée. Votre réservation ne sera confirmée qu’après acceptation du propriétaire et finalisation du paiement.\n\nMerci de votre confiance et à bientôt sur Maresi.",
+            + " a bien été enregistrée et transmise au propriétaire.\n\nNous vous informerons dès que votre demande aura été traitée. Votre réservation ne sera confirmée qu'après acceptation du propriétaire et finalisation du paiement.\n\n⚠ IMPORTANT : Ne jamais payer en dehors de la plateforme. Tous les paiements doivent être effectués via Maresi.\n\nMerci de votre confiance et à bientôt sur Maresi.",
         details("Résidence", listing),
         null,
         null,
@@ -382,12 +382,12 @@ public final class EmailTemplates {
         null);
   }
 
-  public static Mail payHost(String ctaUrl) {
+public static Mail payHost(String ctaUrl) {
     return build(
         "Allez au paiement",
         "Paiement",
-        "C’est le moment de payer",
-        "Bonjour,\n\nL’hôte a confirmé le code clé. Payez via votre opérateur mobile money dans l’application Maresi.",
+        "C'est le moment de payer",
+        "Bonjour,\n\nL'hôte a confirmé le code clé. Payez via votre opérateur mobile money dans l'application Maresi.\n\n⚠ IMPORTANT : Ne jamais payer en dehors de la plateforme. Tous les paiements doivent être effectués via Maresi.",
         details("À faire", "Payer dans Maresi"),
         null,
         "Aller au paiement",
@@ -775,9 +775,16 @@ public final class EmailTemplates {
     StringBuilder sb = new StringBuilder();
     for (String raw : parts) {
       String part = raw.trim();
-      sb.append("<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#334155;\">")
-          .append(escape(part).replace("\n", "<br>"))
-          .append("</p>");
+      if (part.startsWith("\u26A0")) {
+        sb.append("<div style=\"margin:0 0 14px;padding:14px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;\">")
+            .append("<p style=\"margin:0;font-size:14px;line-height:1.6;color:#dc2626;font-weight:600;\">")
+            .append(escape(part).replace("\n", "<br>"))
+            .append("</p></div>");
+      } else {
+        sb.append("<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#334155;\">")
+            .append(escape(part).replace("\n", "<br>"))
+            .append("</p>");
+      }
     }
     return sb.toString();
   }

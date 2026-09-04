@@ -985,15 +985,7 @@ public class PaymentBusiness {
   }
 
   private BigDecimal computeReservationAmount(Map<String, Object> visit) {
-    String rate = visit.get("stay_rate") == null ? "night" : visit.get("stay_rate").toString();
     BigDecimal unit = toMoney(visit.get("property_price"));
-    if ("midday".equals(rate)) {
-      BigDecimal midday = toMoney(visit.get("price_midday"));
-      if (midday != null) unit = midday;
-    } else if ("full_day".equals(rate)) {
-      BigDecimal full = toMoney(visit.get("price_full_day"));
-      if (full != null) unit = full;
-    }
     if (unit == null) unit = BigDecimal.ZERO;
     Object checkIn = visit.get("check_in");
     Object checkOut = visit.get("check_out");
@@ -1008,6 +1000,71 @@ public class PaymentBusiness {
       }
     }
     return unit.setScale(2, RoundingMode.HALF_UP);
+  }
+
+  public Response<Map<String, Object>> previewReservationPayment(
+      Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<String, Object> body = request.getData() == null ? Map.of() : request.getData();
+    UUID visitId = uuid(body.get("visitRequestId"));
+    if (visitId == null) visitId = uuid(body.get("visit_request_id"));
+    if (visitId == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("visitRequestId", locale));
+      return response;
+    }
+    Map<String, Object> visit = visitRequests.findById(visitId).orElse(null);
+    if (visit == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.dataNotFound("Reservation introuvable", locale));
+      return response;
+    }
+    if (!sameId(visit.get("user_id"), user.id())) {
+      response.setHasError(true);
+      response.setStatus(functionalError.disallowed("Action non autorisee", locale));
+      return response;
+    }
+    BigDecimal stayAmount = computeReservationAmount(visit);
+    boolean clientPaysFees = settings.clientPaysOperatorFees();
+    BigDecimal fee = BigDecimal.ZERO;
+    BigDecimal total = stayAmount;
+    if (clientPaysFees) {
+      fee = stayAmount
+          .multiply(settings.operatorFeePercent())
+          .divide(BigDecimal.valueOf(100), 0, RoundingMode.UP);
+      total = stayAmount.add(fee);
+    }
+    Map<String, Object> preview = new java.util.LinkedHashMap<>();
+    preview.put("stay_amount", stayAmount.setScale(2, RoundingMode.HALF_UP).toPlainString());
+    preview.put("operator_fee", fee.setScale(2, RoundingMode.HALF_UP).toPlainString());
+    preview.put("operator_fee_percent", settings.operatorFeePercent().toPlainString());
+    preview.put("client_pays_operator_fees", clientPaysFees);
+    preview.put("total", total.setScale(2, RoundingMode.HALF_UP).toPlainString());
+    preview.put("currency", "XOF");
+    preview.put("property_price", visit.get("property_price"));
+    preview.put("property_title", visit.get("property_title"));
+    preview.put("check_in", visit.get("check_in"));
+    preview.put("check_out", visit.get("check_out"));
+    preview.put("nights", countNights(visit));
+    response.setItem(preview);
+    response.setStatus(functionalError.success("Apercu paiement", locale));
+    return response;
+  }
+
+  private long countNights(Map<String, Object> visit) {
+    Object checkIn = visit.get("check_in");
+    Object checkOut = visit.get("check_out");
+    if (checkIn != null && checkOut != null) {
+      try {
+        LocalDate in = LocalDate.parse(String.valueOf(checkIn).substring(0, 10));
+        LocalDate out = LocalDate.parse(String.valueOf(checkOut).substring(0, 10));
+        long nights = ChronoUnit.DAYS.between(in, out);
+        return Math.max(1, nights);
+      } catch (Exception ignored) {
+      }
+    }
+    return 1;
   }
 
   private void putWalletSnapshot(Map<String, Object> item, UUID userId) {
