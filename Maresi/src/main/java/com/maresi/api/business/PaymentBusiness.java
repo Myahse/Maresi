@@ -201,6 +201,7 @@ public class PaymentBusiness {
       response.setStatus(functionalError.fieldEmpty("visitRequestId", locale));
       return response;
     }
+    String paymentMethod = str(body.get("payment_method"));
     Map<String, Object> visit = visitRequests.findById(visitId).orElse(null);
     if (visit == null) {
       response.setHasError(true);
@@ -241,6 +242,9 @@ public class PaymentBusiness {
     metadata.put("commission_percent", props.getPayments().getReservationCommissionPercent());
     metadata.put("stay_amount", stayAmount.toPlainString());
     metadata.put("client_pays_operator_fees", clientPaysFees);
+    if (paymentMethod != null && !paymentMethod.isBlank()) {
+      metadata.put("payment_method", paymentMethod);
+    }
     Map<String, Object> payment =
         payments.create(
             user.id(),
@@ -264,7 +268,8 @@ public class PaymentBusiness {
             props.getPayments().getSuccessUrl(),
             props.getPayments().getErrorUrl(),
             metadata,
-            clientPaysFees);
+            clientPaysFees,
+            paymentMethod);
     payment =
         payments.updateCheckout(
             UUID.fromString(payment.get("id").toString()),
@@ -834,7 +839,7 @@ public class PaymentBusiness {
               "stay",
               paymentId,
               visitId,
-              "Sejour paye par le client (90%)");
+              "Sejour paye par le client");
         }
         notifications.create(
             ownerId,
@@ -842,7 +847,7 @@ public class PaymentBusiness {
             "Paiement recu",
             "Le client a paye. "
                 + (stayAmount == null ? "" : stayAmount + " XOF")
-                + " (90%) sont dans votre portefeuille, geles jusqu'au depart du client.",
+                + " sont dans votre portefeuille, geles jusqu'au depart du client.",
             propertyId);
         String listingTitle =
             visit.get("property_title") == null ? "la residence" : String.valueOf(visit.get("property_title"));

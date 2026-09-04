@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maresi_mobile/models/payment.dart';
+import 'package:maresi_mobile/models/payment_method.dart';
 import 'package:maresi_mobile/models/visit_request.dart';
 import 'package:maresi_mobile/providers/locale_provider.dart';
 import 'package:maresi_mobile/screens/stay_agreement_screen.dart';
@@ -7,6 +8,7 @@ import 'package:maresi_mobile/services/maresi_client.dart';
 import 'package:maresi_mobile/services/offline_store.dart';
 import 'package:maresi_mobile/theme/app_colors.dart';
 import 'package:maresi_mobile/theme/maresi_palette.dart';
+import 'package:maresi_mobile/widgets/payment_method_logos.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -23,6 +25,8 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
   String? _actingId;
   String? _error;
   final Map<String, PaymentPreview?> _previews = {};
+  Map<String, dynamic>? _paymentMethodModal;
+  String _selectedPaymentMethod = 'wave';
 
   @override
   void initState() {
@@ -163,9 +167,43 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
   }
 
   Future<void> _payReservation(VisitRequest visit) async {
+    final preview = _previews[visit.id];
+    final baseAmount = preview?.stayAmount ?? visit.propertyPrice?.toInt() ?? 0;
+    final clientPaysFees = preview?.clientPaysOperatorFees ?? false;
+    
+    if (!clientPaysFees) {
+      setState(() => _actingId = visit.id);
+      try {
+        final payment = await maresiApi.startReservationPayment(visit.id);
+        final url = payment.checkoutUrl;
+        if (url != null && url.isNotEmpty) {
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+        }
+        if (!mounted) return;
+        await _load();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_friendlyError(e))),
+        );
+      } finally {
+        if (mounted) setState(() => _actingId = null);
+      }
+      return;
+    }
+    
+    setState(() {
+      _selectedPaymentMethod = 'wave';
+      _paymentMethodModal = {'visit': visit, 'baseAmount': baseAmount};
+    });
+  }
+
+  Future<void> _confirmPaymentWithMethod() async {
+    if (_paymentMethodModal == null) return;
+    final visit = _paymentMethodModal!['visit'] as VisitRequest;
     setState(() => _actingId = visit.id);
     try {
-      final payment = await maresiApi.startReservationPayment(visit.id);
+      final payment = await maresiApi.startReservationPayment(visit.id, _selectedPaymentMethod);
       final url = payment.checkoutUrl;
       if (url != null && url.isNotEmpty) {
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
@@ -178,7 +216,12 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
         SnackBar(content: Text(_friendlyError(e))),
       );
     } finally {
-      if (mounted) setState(() => _actingId = null);
+      if (mounted) {
+        setState(() {
+          _actingId = null;
+          _paymentMethodModal = null;
+        });
+      }
     }
   }
 
@@ -377,6 +420,162 @@ FilledButton(
                         },
                       ),
                     ),
+      if (_paymentMethodModal != null) ...[
+        Stack(
+          children: [
+            ModalBarrier(
+              dismissible: true,
+              onDismiss: () => setState(() => _paymentMethodModal = null),
+              color: Colors.black54,
+            ),
+            Center(
+              child: Container(
+                margin: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      locale.t('payments.selectMethod'),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      locale.t('payments.selectMethodHint'),
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 16),
+                    ...PaymentMethod.all.map((method) {
+                      final Logo = getPaymentMethodLogo(method.id);
+                      final breakdown = calculateTotalAmount(
+                        _paymentMethodModal!['baseAmount'] as int,
+                        method,
+                        true,
+                      );
+                      final isSelected = _selectedPaymentMethod == method.id;
+                      return InkWell(
+                        onTap: () => setState(() => _selectedPaymentMethod = method.id),
+                        borderRadius: BorderRadius.circular(12),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected ? AppColors.primary : Colors.grey[300]!,
+                              width: isSelected ? 2 : 1,
+                            ),
+                            color: isSelected ? AppColors.primary.withOpacity(0.05) : Colors.transparent,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Center(child: Logo(size: 24, color: AppColors.primary)),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      method.name,
+                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF111827)),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      method.description,
+                                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '${breakdown.total} XOF',
+                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+                                  ),
+                                  Text(
+                                    '${locale.t('payments.baseAmount')}: ${_paymentMethodModal!['baseAmount']} XOF',
+                                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                  ),
+                                  Text(
+                                    '${locale.t('payments.operatorFee')}: ${breakdown.operatorFee} XOF',
+                                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                  ),
+                                  Text(
+                                    '${locale.t('payments.geniusPayFee')}: ${breakdown.geniusPayFee} XOF',
+                                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                              if (isSelected)
+                                const Icon(Icons.check_circle, color: AppColors.primary, size: 24),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => setState(() => _paymentMethodModal = null),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Text(locale.t('common.cancel')),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: _actingId == (_paymentMethodModal!['visit'] as VisitRequest).id
+                                ? null
+                                : _confirmPaymentWithMethod,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Text(
+                              _actingId == (_paymentMethodModal!['visit'] as VisitRequest).id
+                                  ? locale.t('payments.paying')
+                                  : locale.t('payments.confirmPay'),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

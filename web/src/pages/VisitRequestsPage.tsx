@@ -15,6 +15,8 @@ import { usePriceFormatter } from "@/context/CurrencyContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { actionErrorMessage } from "@/lib/offline";
 import type { VisitRequest } from "@/types";
+import { PAYMENT_METHODS, calculateTotalAmount } from "@/lib/paymentMethods";
+import { getPaymentMethodLogo } from "@/components/payment/PaymentMethodLogos";
 
 function stayAmount(visit: VisitRequest): number {
   const unit = Number(visit.property_price ?? 0);
@@ -46,6 +48,9 @@ export function VisitRequestsPage() {
     check_out: string;
     nights: number;
   } | null>>({});
+  const [paymentMethodModal, setPaymentMethodModal] = useState<{ visitId: string; baseAmount: number } | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("wave");
+  const [securityModalVisitId, setSecurityModalVisitId] = useState<string | null>(null);
 
   const reload = useCallback(
     () =>
@@ -140,10 +145,37 @@ export function VisitRequestsPage() {
   };
 
   const payReservation = async (visitId: string) => {
-    setActingId(visitId);
+    const visit = visits.find(v => v.id === visitId);
+    if (!visit) return;
+    const baseAmount = previews[visitId] ? Number(previews[visitId]!.stay_amount) : stayAmount(visit);
+    const clientPaysFees = previews[visitId]?.client_pays_operator_fees ?? false;
+    if (!clientPaysFees) {
+      setActingId(visitId);
+      setError("");
+      try {
+        const payment = await startReservationPayment(visitId);
+        if (payment.checkout_url) {
+          window.location.assign(payment.checkout_url);
+          return;
+        }
+        setError(t("payments.payFailed"));
+      } catch (e) {
+        setError(actionErrorMessage(e, t("payments.payFailed"), t("offline.queued")));
+      } finally {
+        setActingId(null);
+      }
+      return;
+    }
+    setSelectedPaymentMethod("wave");
+    setPaymentMethodModal({ visitId, baseAmount });
+  };
+
+  const confirmPaymentWithMethod = async () => {
+    if (!paymentMethodModal) return;
+    setActingId(paymentMethodModal.visitId);
     setError("");
     try {
-      const payment = await startReservationPayment(visitId);
+      const payment = await startReservationPayment(paymentMethodModal.visitId, selectedPaymentMethod);
       if (payment.checkout_url) {
         window.location.assign(payment.checkout_url);
         return;
@@ -153,10 +185,11 @@ export function VisitRequestsPage() {
       setError(actionErrorMessage(e, t("payments.payFailed"), t("offline.queued")));
     } finally {
       setActingId(null);
+      setPaymentMethodModal(null);
     }
   };
 
-  return (
+return (
     <div className="font-jakarta max-w-3xl mx-auto px-4 py-6 sm:py-8">
       <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">{t("visits.title")}</h1>
       <p className="text-muted-foreground text-sm mb-5">{t("visits.subtitle")}</p>
@@ -183,6 +216,15 @@ export function VisitRequestsPage() {
                       {v.key_code || "------"}
                     </p>
                     <p className="text-xs text-muted-foreground">{t("visits.keyWaitingHost")}</p>
+                    {v.key_code && !securityModalVisitId && (
+                      <Button
+                        variant="outline"
+                        className="w-full rounded-full mt-2"
+                        onClick={() => setSecurityModalVisitId(v.id)}
+                      >
+                        {t("visits.showSecurityMessage")}
+                      </Button>
+                    )}
                   </div>
                 )}
                 {v.status === "awaiting_payment" && (
@@ -318,9 +360,106 @@ export function VisitRequestsPage() {
             </li>
           ))}
         </ul>
-      )}
-    </div>
-  );
+        )}
+      </div>
+      {paymentMethodModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="bg-card rounded-2xl w-full max-w-md p-6 space-y-4 animate-in slide-in-from-bottom-4 duration-200">
+          <h2 className="text-lg font-bold text-foreground">{t("payments.selectMethod")}</h2>
+          <p className="text-sm text-muted-foreground">{t("payments.selectMethodHint")}</p>
+          <div className="space-y-2">
+            {PAYMENT_METHODS.map((method) => {
+              const Logo = getPaymentMethodLogo(method.id);
+              const breakdown = calculateTotalAmount(paymentMethodModal.baseAmount, method, true);
+              return (
+                <button
+                  key={method.id}
+                  type="button"
+                  className={`w-full flex items-center gap-4 p-3 rounded-xl border-2 transition-all ${
+                    selectedPaymentMethod === method.id
+                      ? "border-brand bg-brand/5"
+                      : "border-border hover:border-brand/50"
+                  }`}
+                  onClick={() => setSelectedPaymentMethod(method.id)}
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center">
+                    <Logo className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-foreground">{method.name}</p>
+                    <p className="text-xs text-muted-foreground">{method.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-foreground">{formatPrice(breakdown.total)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("payments.baseAmount")}: {formatPrice(paymentMethodModal.baseAmount)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("payments.operatorFee")}: {formatPrice(breakdown.operatorFee)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("payments.geniusPayFee")}: {formatPrice(breakdown.geniusPayFee)}
+                    </p>
+                  </div>
+                  {selectedPaymentMethod === method.id && (
+                    <svg className="w-5 h-5 text-brand" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Button
+              variant="outline"
+              className="flex-1 rounded-full"
+              onClick={() => setPaymentMethodModal(null)}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              className="flex-1 rounded-full bg-brand hover:bg-brand-dark"
+              disabled={actingId === paymentMethodModal.visitId}
+              onClick={() => void confirmPaymentWithMethod()}
+            >
+              {actingId === paymentMethodModal.visitId ? t("common.saving") : t("payments.confirmPay")}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
+    {securityModalVisitId && (
+      <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 pb-20">
+        <div className="bg-card rounded-t-2xl w-full max-w-md p-6 space-y-4 animate-in slide-in-from-bottom-4 duration-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-foreground">{t("visits.securityTitle")}</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSecurityModalVisitId(null)}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </Button>
+          </div>
+          <div className="space-y-3 text-sm">
+            <p className="text-foreground">{t("visits.securityMessage1")}</p>
+            <p className="text-foreground font-semibold">{t("visits.securityMessage2")}</p>
+            <p className="text-muted-foreground">{t("visits.securityMessage3")}</p>
+          </div>
+          <Button
+            className="w-full rounded-full bg-brand hover:bg-brand-dark"
+            onClick={() => setSecurityModalVisitId(null)}
+          >
+            {t("common.gotIt")}
+          </Button>
+        </div>
+      </div>
+    )}
+);
 }
 
 function ReceiptUpload({

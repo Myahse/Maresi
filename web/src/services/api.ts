@@ -402,8 +402,8 @@ export function startSubscriptionPayment() {
   return api.post<import("@/types").Payment>(`/payments/subscription`, {});
 }
 
-export function startReservationPayment(visitRequestId: string) {
-  return api.post<import("@/types").Payment>(`/payments/reservation`, { visitRequestId });
+export function startReservationPayment(visitRequestId: string, paymentMethod?: string) {
+  return api.post<import("@/types").Payment>(`/payments/reservation`, { visitRequestId, payment_method: paymentMethod });
 }
 
 export function previewReservationPayment(visitRequestId: string) {

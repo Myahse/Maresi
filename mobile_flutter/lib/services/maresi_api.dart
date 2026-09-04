@@ -91,7 +91,7 @@ abstract class MaresiApi {
 
   Future<Payment> startSubscriptionPayment();
 
-  Future<Payment> startReservationPayment(String visitRequestId);
+  Future<Payment> startReservationPayment(String visitRequestId, {String? paymentMethod});
 
   Future<PaymentPreview> previewReservationPayment(String visitRequestId);
 

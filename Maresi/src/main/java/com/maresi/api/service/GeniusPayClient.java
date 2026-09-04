@@ -37,7 +37,7 @@ public class GeniusPayClient {
       String successUrl,
       String errorUrl,
       Map<String, Object> metadata) {
-    return createCheckoutPayment(amount, description, customer, successUrl, errorUrl, metadata, false);
+    return createCheckoutPayment(amount, description, customer, successUrl, errorUrl, metadata, false, null);
   }
 
   public Map<String, Object> createCheckoutPayment(
@@ -48,6 +48,18 @@ public class GeniusPayClient {
       String errorUrl,
       Map<String, Object> metadata,
       boolean customerPaysOperatorFees) {
+    return createCheckoutPayment(amount, description, customer, successUrl, errorUrl, metadata, customerPaysOperatorFees, null);
+  }
+
+  public Map<String, Object> createCheckoutPayment(
+      BigDecimal amount,
+      String description,
+      Map<String, Object> customer,
+      String successUrl,
+      String errorUrl,
+      Map<String, Object> metadata,
+      boolean customerPaysOperatorFees,
+      String paymentMethod) {
     AppProperties.GeniusPay gp = requireKeys();
 
     Map<String, Object> body = new LinkedHashMap<>();
@@ -61,6 +73,9 @@ public class GeniusPayClient {
     if (customerPaysOperatorFees) {
       body.put("fees_on_customer", true);
       body.put("customer_pays_fees", true);
+    }
+    if (paymentMethod != null && !paymentMethod.isBlank()) {
+      body.put("payment_method", paymentMethod);
     }
 
     try {

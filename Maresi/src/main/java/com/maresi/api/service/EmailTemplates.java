@@ -410,8 +410,8 @@ public static Mail payHost(String ctaUrl) {
     return build(
         "Paiement reçu — portefeuille",
         "Paiement",
-        "90 % ont été ajoutés à votre portefeuille",
-        "Bonjour,\n\nLe client a payé. 90 % du séjour sont maintenant dans votre portefeuille, gelés jusqu’à l’heure de départ du client. Vous pourrez retirer ensuite vers Wave ou Orange Money.",
+        "Pour votre sécurité, payez toujours directement sur MaResi. Ne payez jamais en dehors de l'application, même à la demande du propriétaire. En cas de doute, contactez notre service client.",
+        "Bonjour,\n\nLe client a payé. Votre paiement est confirmé. Un code à 6 chiffres vous sera remis par l'hôte pour récupérer la clé du logement. Vous pourrez retirer ensuite vos fonds vers Wave ou Orange Money après la fin du séjour.",
         details("Résidence", title, "Crédit portefeuille", hostShare + " XOF"),
         null,
         "Ouvrir le portefeuille",
