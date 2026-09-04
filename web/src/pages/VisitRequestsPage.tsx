@@ -17,6 +17,7 @@ import { actionErrorMessage } from "@/lib/offline";
 import type { VisitRequest } from "@/types";
 import { PaymentOperatorPicker } from "@/components/payment/PaymentOperatorPicker";
 import { PhoneInput } from "@/components/auth/PhoneInput";
+import { LocalFilePreview } from "@/components/visit/FilePreviewer";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertTriangle } from "lucide-react";
 
@@ -482,6 +483,15 @@ function ReceiptUpload({
   onUpload: (file: File) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const [file, setFile] = useState<File | null>(null);
+  const busy = actingId === visit.id;
+
+  const send = async () => {
+    if (!file || busy) return;
+    await onUpload(file);
+    setFile(null);
+  };
+
   return (
     <div className="space-y-2 pt-2 border-t border-border">
       <p className="text-sm font-semibold">{t("payments.receiptTitle")}</p>
@@ -489,16 +499,31 @@ function ReceiptUpload({
       {visit.payment_receipt_url ? (
         <p className="text-xs text-brand font-medium">{t("payments.receiptUploaded")}</p>
       ) : null}
+      {file ? <LocalFilePreview file={file} onRemove={() => setFile(null)} /> : null}
       <input
+        id={`receipt-${visit.id}`}
         type="file"
         accept="image/*,.pdf,application/pdf"
-        className="block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-brand file:px-4 file:py-2 file:text-white"
-        disabled={actingId === visit.id}
+        className="sr-only"
+        disabled={busy}
         onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) void onUpload(file);
+          setFile(e.target.files?.[0] ?? null);
+          e.target.value = "";
         }}
       />
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" className="flex-1 rounded-full" disabled={busy} asChild>
+          <label htmlFor={`receipt-${visit.id}`}>{t("payments.receiptChoose")}</label>
+        </Button>
+        <Button
+          type="button"
+          className="flex-1 rounded-full bg-brand hover:bg-brand-dark text-white"
+          disabled={busy || !file}
+          onClick={() => void send()}
+        >
+          {busy ? t("common.saving") : t("payments.receiptSend")}
+        </Button>
+      </div>
     </div>
   );
 }

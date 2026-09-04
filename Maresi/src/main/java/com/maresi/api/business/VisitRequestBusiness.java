@@ -1239,9 +1239,21 @@ public class VisitRequestBusiness {
     }
     String url = fileStorage.storeReceipt(file, EmailTemplates.guestApp(appProperties));
     Map<String, Object> updated = visitRequests.setPaymentReceipt(id, url).orElse(current);
+    if (!isChatLocked(current)) {
+      saveMessage(
+          id,
+          current,
+          user,
+          "Reçu de paiement",
+          url,
+          originalFileName(file),
+          file.getContentType(),
+          new Response<>(),
+          locale);
+    }
     normalizeVisit(updated);
     response.setItem(updated);
-    response.setStatus(functionalError.success("Recu enregistre", locale));
+    response.setStatus(functionalError.success("Recu envoye", locale));
     return response;
   }
 
