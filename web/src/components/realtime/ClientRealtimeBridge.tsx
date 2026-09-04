@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRealtime } from "@/hooks/useRealtime";
 import { emitRealtime } from "@/hooks/useRealtimeRefresh";
 import { applySession, normalizeAuthResponse } from "@/services/auth";
+import { ackIncomingVisitMessage } from "@/services/api";
 import type { RealtimeEvent, User } from "@/types";
 
 export function ClientRealtimeBridge() {
@@ -12,6 +13,7 @@ export function ClientRealtimeBridge() {
   const onEvent = useCallback(
     (event: RealtimeEvent) => {
       emitRealtime(event);
+      ackIncomingVisitMessage(event, user?.id);
       if (event.type === "host.application.reviewed") {
         const token = event.data.token;
         const nextUser = event.data.user;

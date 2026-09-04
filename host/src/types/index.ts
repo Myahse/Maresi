@@ -171,6 +171,8 @@ export interface VisitMessage {
   attachment_url?: string;
   attachment_name?: string;
   attachment_type?: string;
+  delivered_at?: string;
+  read_at?: string;
 }
 
 export interface Payment {

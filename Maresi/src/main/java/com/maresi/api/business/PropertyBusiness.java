@@ -127,7 +127,7 @@ public class PropertyBusiness {
       response.setHasError(true);
       response.setStatus(
           functionalError.disallowed(
-              "Votre compte hôte n'est pas encore validé. Enregistrez un brouillon en attendant la validation.",
+              "Votre compte propriétaire n'est pas encore validé. Enregistrez un brouillon en attendant la validation.",
               locale));
       return response;
     }
@@ -210,7 +210,7 @@ public class PropertyBusiness {
       response.setHasError(true);
       response.setStatus(
           functionalError.disallowed(
-              "Votre compte hôte n'est pas encore validé. Enregistrez un brouillon en attendant la validation.",
+              "Votre compte propriétaire n'est pas encore validé. Enregistrez un brouillon en attendant la validation.",
               locale));
       return response;
     }

@@ -202,6 +202,17 @@ public class PaymentBusiness {
       return response;
     }
     String paymentMethod = str(body.get("payment_method"));
+    if (paymentMethod == null || paymentMethod.isBlank()) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("payment_method", locale));
+      return response;
+    }
+    paymentMethod = paymentMethod.trim().toLowerCase();
+    if (!isSupportedOperator(paymentMethod)) {
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Operateur de paiement invalide", locale));
+      return response;
+    }
     Map<String, Object> visit = visitRequests.findById(visitId).orElse(null);
     if (visit == null) {
       response.setHasError(true);
@@ -224,15 +235,20 @@ public class PaymentBusiness {
       response.setStatus(functionalError.invalidData("Montant minimum 200 XOF", locale));
       return response;
     }
-    boolean clientPaysFees = settings.clientPaysOperatorFees();
-    BigDecimal amount = stayAmount;
-    if (clientPaysFees) {
-      BigDecimal fee =
-          stayAmount
-              .multiply(settings.operatorFeePercent())
-              .divide(BigDecimal.valueOf(100), 0, RoundingMode.UP);
-      amount = stayAmount.add(fee);
-    }
+    BigDecimal operatorFeePercent = operatorFeePercent(paymentMethod);
+    BigDecimal operatorFee =
+        stayAmount
+            .multiply(operatorFeePercent)
+            .divide(BigDecimal.valueOf(100), 0, RoundingMode.UP);
+    BigDecimal amount = stayAmount.add(operatorFee).setScale(0, RoundingMode.UP);
+    log.info(
+        "Reservation checkout {} stay={} fee={} ({}%) total={} method={}",
+        visitId,
+        stayAmount.toPlainString(),
+        operatorFee.toPlainString(),
+        operatorFeePercent.toPlainString(),
+        amount.toPlainString(),
+        paymentMethod);
     BigDecimal commission = reservationCommission(stayAmount);
     BigDecimal ownerAmount = stayAmount.subtract(commission);
     Map<String, Object> metadata = new HashMap<>();
@@ -241,10 +257,10 @@ public class PaymentBusiness {
     metadata.put("visit_request_id", visitId.toString());
     metadata.put("commission_percent", props.getPayments().getReservationCommissionPercent());
     metadata.put("stay_amount", stayAmount.toPlainString());
-    metadata.put("client_pays_operator_fees", clientPaysFees);
-    if (paymentMethod != null && !paymentMethod.isBlank()) {
-      metadata.put("payment_method", paymentMethod);
-    }
+    metadata.put("operator_fee", operatorFee.toPlainString());
+    metadata.put("operator_fee_percent", operatorFeePercent.toPlainString());
+    metadata.put("client_pays_operator_fees", true);
+    metadata.put("payment_method", paymentMethod);
     Map<String, Object> payment =
         payments.create(
             user.id(),
@@ -268,7 +284,7 @@ public class PaymentBusiness {
             props.getPayments().getSuccessUrl(),
             props.getPayments().getErrorUrl(),
             metadata,
-            clientPaysFees,
+            false,
             paymentMethod);
     payment =
         payments.updateCheckout(
@@ -1203,6 +1219,18 @@ public class PaymentBusiness {
     } catch (Exception e) {
       return null;
     }
+  }
+
+  private static boolean isSupportedOperator(String paymentMethod) {
+    return "wave".equals(paymentMethod)
+        || "orange_money".equals(paymentMethod)
+        || "mtn_money".equals(paymentMethod)
+        || "moov_money".equals(paymentMethod);
+  }
+
+  private static BigDecimal operatorFeePercent(String paymentMethod) {
+    if ("wave".equals(paymentMethod)) return new BigDecimal("1.5");
+    return new BigDecimal("3.5");
   }
 
   private static boolean sameId(Object a, Object b) {

@@ -316,6 +316,29 @@ export function sendVisitMessage(id: string, body: string) {
   return api.post<import("@/types").VisitMessage>(`/visit-requests/${id}/messages`, { body });
 }
 
+export function ackVisitMessages(id: string, seen: boolean) {
+  return api.post<{ updated: number; seen: boolean }>(`/visit-requests/${id}/messages/receipt`, {
+    seen,
+    state: seen ? "seen" : "delivered",
+  });
+}
+
+export function ackIncomingVisitMessage(
+  event: { type: string; data?: Record<string, unknown> },
+  userId?: string | null
+) {
+  if (event.type !== "visit.message" || !userId) return;
+  const visitId = event.data?.visit_request_id;
+  const senderId = event.data?.sender_id;
+  if (visitId == null || senderId == null) return;
+  if (String(senderId) === String(userId)) return;
+  const path = window.location.pathname;
+  const id = String(visitId);
+  const onChat =
+    path.includes(`/visits/${id}/chat`) || path.includes(`/owner/visits/${id}/chat`);
+  void ackVisitMessages(id, onChat).catch(() => undefined);
+}
+
 export function sendVisitMessageWithFile(id: string, body: string, file?: File | null) {
   const token = getToken();
   const form = new FormData();

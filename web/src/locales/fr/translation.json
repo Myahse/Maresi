@@ -39,7 +39,8 @@
     "creatingAccount": "Création du compte...",
     "user": "vous",
     "back": "Retour",
-    "next": "Suivant"
+    "next": "Suivant",
+    "gotIt": "J'ai compris"
   },
   "offline": {
     "banner": "Pas de connexion. Affichage des dernières données enregistrées.",
@@ -119,7 +120,7 @@
     "register": "S'inscrire",
     "dashboard": "Tableau de bord",
     "becomeHost": "Je suis propriétaire",
-    "openHostApp": "Ouvrir l'app hôte"
+    "openHostApp": "Ouvrir l'app propriétaire"
   },
   "nav": {
     "home": "Accueil",
@@ -157,7 +158,7 @@
     "browseTitle": "Parcourir les annonces",
     "browseText": "Créez un compte pour voir les biens disponibles, filtrer par lieu et prix, et enregistrer des favoris.",
     "listTitle": "Publiez votre bien",
-    "listText": "Demandez à devenir hôte. Après validation admin, gérez vos annonces dans l'app hôte.",
+    "listText": "Demandez à devenir propriétaire. Après validation admin, gérez vos annonces dans l'app propriétaire.",
     "ctaHint": "Inscrivez-vous ou connectez-vous pour accéder aux annonces.",
     "registerNow": "S'inscrire maintenant",
     "dedicatedServices": "Services dédiés",
@@ -224,8 +225,8 @@
     "resend": "Renvoyer l’e-mail",
     "resendWait": "Renvoyer dans {{seconds}} s",
     "failed": "Impossible de confirmer cet e-mail",
-    "openHost": "Ouvrir Maresi Hôte",
-    "hostPending": "Votre demande hôte a été envoyée. Connectez-vous sur Maresi Hôte et attendez la validation."
+    "openHost": "Ouvrir Maresi Propriétaire",
+    "hostPending": "Votre demande propriétaire a été envoyée. Connectez-vous sur Maresi Propriétaire et attendez la validation."
   },
   "theme": {
     "toDark": "Passer en mode sombre",
@@ -249,7 +250,7 @@
     "clientHint": "Parcourir chambres et appartements et réserver un séjour.",
     "hostTitle": "Je suis propriétaire",
     "hostHint": "Mettre en location votre résidence. Un admin validera votre demande avant publication.",
-    "roleRequired": "Choisissez si vous êtes client ou hôte.",
+    "roleRequired": "Choisissez si vous êtes client ou propriétaire.",
     "personalRequired": "Saisissez votre prénom, nom, date de naissance et genre.",
     "ageRequired": "Vous devez avoir au moins 18 ans.",
     "accountRequired": "Saisissez votre e-mail, téléphone et un mot de passe d'au moins 6 caractères.",
@@ -296,7 +297,7 @@
     "termsRequired": "Acceptez les conditions d'utilisation pour créer le compte."
   },
   "legal": {
-    "termsBody": "En créant un compte Maresi, vous confirmez que les informations et pièces d'identité fournies sont les vôtres et exactes.\n\nVous vous engagez à utiliser la plateforme pour chercher ou publier une résidence de bonne foi, à payer les séjours via Maresi, et à traiter logements, voisins et hôtes avec soin.\n\nAprès paiement, la réservation est engagée. Une annulation n'est possible que via un administrateur Maresi, après explication du motif (contact@maresi.com).\n\nMaresi peut suspendre un compte si les documents sont faux ou si le règlement d'un séjour n'est pas respecté."
+    "termsBody": "En créant un compte Maresi, vous confirmez que les informations et pièces d'identité fournies sont les vôtres et exactes.\n\nVous vous engagez à utiliser la plateforme pour chercher ou publier une résidence de bonne foi, à payer les séjours via Maresi, et à traiter logements, voisins et propriétaires avec soin.\n\nAprès paiement, la réservation est engagée. Une annulation n'est possible que via un administrateur Maresi, après explication du motif (contact@maresi.com).\n\nMaresi peut suspendre un compte si les documents sont faux ou si le règlement d'un séjour n'est pas respecté."
   },
   "dashboard": {
     "title": "Parcourir les résidences",
@@ -304,7 +305,7 @@
     "noneFound": "Aucun bien trouvé.",
     "hub": "Votre espace",
     "hello": "Bonjour, {{name}}",
-    "subtitle": "Accès rapide aux annonces, favoris, réservations et demande hôte.",
+    "subtitle": "Accès rapide aux annonces, favoris, réservations et demande propriétaire.",
     "cards": {
       "browse": "Parcourir les annonces",
       "browseDesc": "Rechercher sur la carte et la grille",
@@ -324,7 +325,7 @@
       "subscriptionDesc": "Activez votre forfait pour publier des résidences",
       "becomeHost": "Je suis propriétaire",
       "becomeHostDesc": "Demandez à publier des résidences sur Maresi",
-      "openHost": "App hôte",
+      "openHost": "App propriétaire",
       "openHostDesc": "Gérez vos annonces, réservations et portefeuille"
     }
   },
@@ -386,7 +387,7 @@
       "checkOut": "Départ",
       "arrivalTime": "Heure d'arrivée",
       "departureTime": "Heure de départ",
-      "houseHoursHint": "L'hôte reçoit en général à {{arrival}} et demande de partir à {{departure}}. Vous pouvez choisir une autre heure.",
+      "houseHoursHint": "Le propriétaire reçoit en général à {{arrival}} et demande de partir à {{departure}}. Vous pouvez choisir une autre heure.",
       "agreementTitle": "Contrat de bon entretien",
       "agreementHint": "Lisez et acceptez les termes du contrat avant d'envoyer votre réservation.",
       "contactTitle": "Contact et voyageurs",
@@ -448,6 +449,9 @@
     "description": "Description",
     "amenities": "Équipements",
     "location": "Lieu",
+    "directions": "Itinéraire",
+    "directionsHint": "Ouvre Google Maps avec le GPS pas à pas jusqu'à cette résidence.",
+    "routeSummary": "{{minutes}} min · {{km}} km",
     "reserveTitle": "Réserver cette résidence",
     "reserveHint": "Choisissez vos dates et envoyez la demande pour validation par le propriétaire.",
     "startReservation": "Réserver",
@@ -530,11 +534,16 @@
     "chatSend": "Envoyer",
     "chatYou": "Vous",
     "chatOther": "Autre partie",
-    "chatHost": "Hôte",
+    "chatHost": "Propriétaire",
     "chatFailed": "Impossible d'envoyer le message.",
     "chatBack": "Retour aux réservations",
     "chatAttach": "Envoyer un document",
     "chatRemoveFile": "Retirer le fichier",
+    "chatPreview": "Aperçu",
+    "chatPreviewClose": "Fermer l'aperçu",
+    "chatReceiptSent": "Envoyé",
+    "chatReceiptDelivered": "Reçu",
+    "chatReceiptSeen": "Vu",
     "chatCloseReady": "Le séjour est terminé. Vous pouvez fermer cette discussion.",
     "chatClose": "Fermer la discussion",
     "chatCloseConfirm": "Fermer cette discussion ? Plus personne ne pourra écrire, mais l'historique restera visible.",
@@ -591,6 +600,7 @@
       "keyHint": "Donnez ce code au propriétaire pour récupérer la clé. Ensuite allez au paiement.",
       "keyWaitingHost": "Le propriétaire doit saisir ce code pour confirmer la remise de la clé.",
       "showSecurityMessage": "Voir le message de sécurité",
+      "securityWarning": "Avertissement",
       "securityTitle": "Sécurité du paiement",
       "securityMessage1": "Pour votre sécurité, payez toujours directement sur MaResi.",
       "securityMessage2": "Ne payez jamais en dehors de l'application, même à la demande du propriétaire.",
@@ -624,7 +634,7 @@
     "payMaresiHint": "Payez via votre opérateur mobile money dans l'application Maresi.",
     "paying": "Ouverture du paiement…",
     "goToPayment": "Aller au paiement",
-    "noOffPlatform": "NE JAMAIS payer en dehors de la plateforme. Si un propriétaire vous demande de payer en dehors de Maresi, refusez.",
+    "noOffPlatform": "Pour votre sécurité, payez toujours directement sur MaResi. Ne payez jamais en dehors de l'application, même à la demande du propriétaire. En cas de doute, contactez notre service client.",
     "stayAmount": "Montant du séjour",
     "operatorFee": "Frais de service",
     "totalToPay": "Total à payer",
@@ -647,8 +657,9 @@
     "errorTitle": "Paiement échoué",
     "errorText": "Le paiement n'a pas abouti. Vous pouvez réessayer depuis Mes réservations.",
     "sessionExpired": "Votre session a expiré. Connectez-vous à nouveau et vérifiez vos réservations pour confirmer le paiement.",
-    "selectMethod": "Choisir le moyen de paiement",
-    "selectMethodHint": "Sélectionnez votre opérateur Mobile Money pour voir le total avec frais",
+    "selectMethod": "Choisir votre opérateur",
+    "selectMethodHint": "Choisissez Wave, Orange Money, MTN ou Moov pour voir le total avec les frais opérateur.",
+    "chooseOperatorFirst": "Sélectionnez un opérateur pour voir le total avant le paiement.",
     "confirmPay": "Continuer au paiement",
     "baseAmount": "Montant du séjour",
     "operatorFee": "Frais opérateur",
@@ -732,17 +743,17 @@
     "phone": "Téléphone",
     "city": "Ville",
     "idCard": "N° pièce d'identité",
-    "message": "Pourquoi voulez-vous être hôte ?",
+    "message": "Pourquoi voulez-vous être propriétaire ?",
     "submit": "Envoyer la demande",
     "failed": "Impossible d'envoyer la demande",
     "pending": "Demande en attente",
     "pendingHint": "Nous vous préviendrons après examen par un admin.",
-    "approved": "Vous êtes validé comme hôte.",
-    "openHostApp": "Ouvrir l'app hôte",
+    "approved": "Vous êtes validé comme propriétaire.",
+    "openHostApp": "Ouvrir l'app propriétaire",
     "rejected": "Votre demande a été refusée. Vous pouvez réessayer."
   },
   "admin": {
-    "title": "Demandes hôte",
+    "title": "Demandes propriétaire",
     "empty": "Aucune demande.",
     "approve": "Accepter",
     "reject": "Refuser",
@@ -752,6 +763,6 @@
     "filter": "Statut"
   },
   "hostGate": {
-    "wrongRole": "Cette app est réservée aux hôtes validés. Faites la demande depuis le site client."
+    "wrongRole": "Cette app est réservée aux propriétaires validés. Faites la demande depuis le site client."
   }
 }

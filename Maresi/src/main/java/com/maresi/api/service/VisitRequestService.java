@@ -33,6 +33,11 @@ public class VisitRequestService {
     return visitRequestBusiness.listMessages(id, locale);
   }
 
+  public Response<Map<String, Object>> ackMessages(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    return visitRequestBusiness.ackMessages(id, request, locale);
+  }
+
   public Response<Map<String, Object>> postMessage(
       UUID id, Request<Map<String, Object>> request, Locale locale) {
     return visitRequestBusiness.postMessage(id, request, locale);

@@ -10,6 +10,7 @@ import 'package:maresi_mobile/theme/app_colors.dart';
 import 'package:maresi_mobile/theme/maresi_palette.dart';
 import 'package:maresi_mobile/widgets/payment_method_logos.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MyVisitsScreen extends StatefulWidget {
@@ -25,8 +26,7 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
   String? _actingId;
   String? _error;
   final Map<String, PaymentPreview?> _previews = {};
-  Map<String, dynamic>? _paymentMethodModal;
-  String _selectedPaymentMethod = 'wave';
+  final Map<String, String> _selectedMethods = {};
 
   @override
   void initState() {
@@ -45,6 +45,9 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
       setState(() {
         _visits = visits;
         _loading = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _maybeShowSecuritySheet();
       });
       for (final v in visits) {
         if (v.status == 'awaiting_payment' && !_previews.containsKey(v.id)) {
@@ -167,43 +170,16 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
   }
 
   Future<void> _payReservation(VisitRequest visit) async {
-    final preview = _previews[visit.id];
-    final baseAmount = preview?.stayAmount ?? visit.propertyPrice?.toInt() ?? 0;
-    final clientPaysFees = preview?.clientPaysOperatorFees ?? false;
-    
-    if (!clientPaysFees) {
-      setState(() => _actingId = visit.id);
-      try {
-        final payment = await maresiApi.startReservationPayment(visit.id);
-        final url = payment.checkoutUrl;
-        if (url != null && url.isNotEmpty) {
-          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-        }
-        if (!mounted) return;
-        await _load();
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_friendlyError(e))),
-        );
-      } finally {
-        if (mounted) setState(() => _actingId = null);
-      }
+    final method = _selectedMethods[visit.id];
+    if (method == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.read<LocaleProvider>().t('payments.chooseOperatorFirst'))),
+      );
       return;
     }
-    
-    setState(() {
-      _selectedPaymentMethod = 'wave';
-      _paymentMethodModal = {'visit': visit, 'baseAmount': baseAmount};
-    });
-  }
-
-  Future<void> _confirmPaymentWithMethod() async {
-    if (_paymentMethodModal == null) return;
-    final visit = _paymentMethodModal!['visit'] as VisitRequest;
     setState(() => _actingId = visit.id);
     try {
-      final payment = await maresiApi.startReservationPayment(visit.id, _selectedPaymentMethod);
+      final payment = await maresiApi.startReservationPayment(visit.id, method);
       final url = payment.checkoutUrl;
       if (url != null && url.isNotEmpty) {
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
@@ -216,13 +192,191 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
         SnackBar(content: Text(_friendlyError(e))),
       );
     } finally {
-      if (mounted) {
-        setState(() {
-          _actingId = null;
-          _paymentMethodModal = null;
-        });
+      if (mounted) setState(() => _actingId = null);
+    }
+  }
+
+  String _securitySeenKey(String visitId) => 'maresi-key-security-$visitId';
+
+  Future<void> _maybeShowSecuritySheet() async {
+    final prefs = await SharedPreferences.getInstance();
+    VisitRequest? ready;
+    for (final visit in _visits) {
+      if (visit.status == 'awaiting_key' &&
+          (visit.keyCode?.isNotEmpty ?? false) &&
+          prefs.getBool(_securitySeenKey(visit.id)) != true) {
+        ready = visit;
+        break;
       }
     }
+    if (ready == null || !mounted) return;
+    await _openSecuritySheet(ready.id);
+  }
+
+  Future<void> _openSecuritySheet(String visitId) async {
+    final locale = context.read<LocaleProvider>();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      backgroundColor: const Color(0xFFFFFBEB),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFDE68A),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.warning_amber_rounded, color: Color(0xFF92400E)),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    locale.t('visits.securityWarning'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.4,
+                      color: Color(0xFF92400E),
+                    ),
+                  ),
+                  Text(
+                    locale.t('visits.securityTitle'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF451A03)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                locale.t('visits.securityMessage1'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 15, height: 1.45, color: Color(0xFF451A03)),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                locale.t('visits.securityMessage2'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.45, color: Color(0xFF451A03)),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                locale.t('visits.securityMessage3'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, height: 1.45, color: Color(0xFF78350F)),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFD97706),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                ),
+                child: Text(locale.t('visits.gotIt')),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_securitySeenKey(visitId), true);
+  }
+
+  Widget _operatorPicker(VisitRequest visit, LocaleProvider locale, MaresiPalette palette) {
+    final baseAmount = (_previews[visit.id]?.stayAmount ?? visit.propertyPrice ?? 0).round();
+    final selectedId = _selectedMethods[visit.id];
+    PaymentMethod? selected;
+    for (final method in PaymentMethod.all) {
+      if (method.id == selectedId) selected = method;
+    }
+    final breakdown = selected == null ? null : calculateTotalAmount(baseAmount, selected, true);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(locale.t('payments.selectMethod'), style: TextStyle(fontWeight: FontWeight.w700, color: palette.text)),
+        const SizedBox(height: 4),
+        Text(locale.t('payments.selectMethodHint'), style: TextStyle(color: palette.textSecondary, fontSize: 12)),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: PaymentMethod.all.map((method) {
+            final active = selectedId == method.id;
+            return InkWell(
+              onTap: () => setState(() => _selectedMethods[visit.id] = method.id),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 148,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: active ? AppColors.primary : Colors.grey[300]!,
+                    width: active ? 2 : 1,
+                  ),
+                  color: active ? AppColors.primary.withOpacity(0.06) : Colors.transparent,
+                ),
+                child: Row(
+                  children: [
+                    getPaymentMethodLogo(method.id, size: 22, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            method.name,
+                            style: TextStyle(fontWeight: FontWeight.w600, color: palette.text, fontSize: 13),
+                          ),
+                          Text(
+                            '${method.operatorFeePercent}%',
+                            style: TextStyle(color: palette.textSecondary, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 10),
+        if (breakdown != null)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: palette.pillBg,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                _previewRow(locale.t('payments.stayAmount'), '$baseAmount XOF'),
+                _previewRow(locale.t('payments.operatorFee'), '${breakdown.operatorFee} XOF'),
+                const Divider(),
+                _previewRow(locale.t('payments.totalToPay'), '${breakdown.total} XOF', bold: true),
+              ],
+            ),
+          )
+        else
+          Text(locale.t('payments.chooseOperatorFirst'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
+      ],
+    );
   }
 
   Widget _previewRow(String label, String value, {bool bold = false}) {
@@ -361,30 +515,12 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
                                 ],
                                 if (visit.status == 'awaiting_payment') ...[
                                   const SizedBox(height: 8),
-                                  if (_previews[visit.id] != null) ...[
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: palette.backgroundSecondary.withOpacity(0.5),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          _previewRow(locale.t('payments.stayAmount'), '${_previews[visit.id]!.stayAmount.toStringAsFixed(0)} XOF'),
-                                          if (_previews[visit.id]!.clientPaysOperatorFees && _previews[visit.id]!.operatorFee > 0)
-                                            _previewRow(locale.t('payments.operatorFee'), '${_previews[visit.id]!.operatorFee.toStringAsFixed(0)} XOF'),
-                                          const Divider(),
-                                          _previewRow(locale.t('payments.totalToPay'), '${_previews[visit.id]!.total.toStringAsFixed(0)} XOF', bold: true),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                  ] else ...[
-                                    Text(locale.t('payments.payMaresiHint'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
-                                    const SizedBox(height: 8),
-                                  ],
-FilledButton(
-                                      onPressed: _actingId == visit.id ? null : () => _payReservation(visit),
+                                  _operatorPicker(visit, locale, palette),
+                                  const SizedBox(height: 8),
+                                  FilledButton(
+                                      onPressed: _actingId == visit.id || _selectedMethods[visit.id] == null
+                                          ? null
+                                          : () => _payReservation(visit),
                                       style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
                                       child: Text(
                                         _actingId == visit.id
@@ -395,8 +531,7 @@ FilledButton(
                                     const SizedBox(height: 8),
                                     Text(
                                       locale.t('payments.noOffPlatform'),
-                                      style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w600),
-                                      textAlign: TextAlign.center,
+                                      style: TextStyle(color: palette.textSecondary, fontSize: 13, height: 1.45),
                                     ),
                                 ],
                                 if (_isPaidStay(visit.status)) ...[
@@ -420,162 +555,6 @@ FilledButton(
                         },
                       ),
                     ),
-      if (_paymentMethodModal != null) ...[
-        Stack(
-          children: [
-            ModalBarrier(
-              dismissible: true,
-              onDismiss: () => setState(() => _paymentMethodModal = null),
-              color: Colors.black54,
-            ),
-            Center(
-              child: Container(
-                margin: const EdgeInsets.all(24),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      locale.t('payments.selectMethod'),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      locale.t('payments.selectMethodHint'),
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 16),
-                    ...PaymentMethod.all.map((method) {
-                      final Logo = getPaymentMethodLogo(method.id);
-                      final breakdown = calculateTotalAmount(
-                        _paymentMethodModal!['baseAmount'] as int,
-                        method,
-                        true,
-                      );
-                      final isSelected = _selectedPaymentMethod == method.id;
-                      return InkWell(
-                        onTap: () => setState(() => _selectedPaymentMethod = method.id),
-                        borderRadius: BorderRadius.circular(12),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected ? AppColors.primary : Colors.grey[300]!,
-                              width: isSelected ? 2 : 1,
-                            ),
-                            color: isSelected ? AppColors.primary.withOpacity(0.05) : Colors.transparent,
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Center(child: Logo(size: 24, color: AppColors.primary)),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      method.name,
-                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF111827)),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      method.description,
-                                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '${breakdown.total} XOF',
-                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
-                                  ),
-                                  Text(
-                                    '${locale.t('payments.baseAmount')}: ${_paymentMethodModal!['baseAmount']} XOF',
-                                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                                  ),
-                                  Text(
-                                    '${locale.t('payments.operatorFee')}: ${breakdown.operatorFee} XOF',
-                                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                                  ),
-                                  Text(
-                                    '${locale.t('payments.geniusPayFee')}: ${breakdown.geniusPayFee} XOF',
-                                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                                  ),
-                                ],
-                              ),
-                              if (isSelected)
-                                const Icon(Icons.check_circle, color: AppColors.primary, size: 24),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => setState(() => _paymentMethodModal = null),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: Text(locale.t('common.cancel')),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: _actingId == (_paymentMethodModal!['visit'] as VisitRequest).id
-                                ? null
-                                : _confirmPaymentWithMethod,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: Text(
-                              _actingId == (_paymentMethodModal!['visit'] as VisitRequest).id
-                                  ? locale.t('payments.paying')
-                                  : locale.t('payments.confirmPay'),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

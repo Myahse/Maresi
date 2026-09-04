@@ -463,7 +463,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
           MaresiWizardActions(
             showBack: _step > _stepIntent,
             onBack: _goBack,
-            onNext: _onNext,
+            onNext: _step == _stepAccount && !_acceptedTerms ? null : _onNext,
             nextLabel: _nextLabel(locale),
             loading: _loading,
           ),

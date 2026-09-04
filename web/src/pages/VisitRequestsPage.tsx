@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getMyVisitRequests,
@@ -15,8 +15,26 @@ import { usePriceFormatter } from "@/context/CurrencyContext";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { actionErrorMessage } from "@/lib/offline";
 import type { VisitRequest } from "@/types";
-import { PAYMENT_METHODS, calculateTotalAmount } from "@/lib/paymentMethods";
-import { getPaymentMethodLogo } from "@/components/payment/PaymentMethodLogos";
+import { PaymentOperatorPicker } from "@/components/payment/PaymentOperatorPicker";
+import { AlertTriangle } from "lucide-react";
+
+const SECURITY_SEEN_PREFIX = "maresi-key-security-";
+
+function hasSeenSecurity(visitId: string) {
+  try {
+    return localStorage.getItem(`${SECURITY_SEEN_PREFIX}${visitId}`) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markSecuritySeen(visitId: string) {
+  try {
+    localStorage.setItem(`${SECURITY_SEEN_PREFIX}${visitId}`, "1");
+  } catch {
+    /* private mode */
+  }
+}
 
 function stayAmount(visit: VisitRequest): number {
   const unit = Number(visit.property_price ?? 0);
@@ -48,8 +66,7 @@ export function VisitRequestsPage() {
     check_out: string;
     nights: number;
   } | null>>({});
-  const [paymentMethodModal, setPaymentMethodModal] = useState<{ visitId: string; baseAmount: number } | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("wave");
+  const [selectedMethods, setSelectedMethods] = useState<Record<string, string>>({});
   const [securityModalVisitId, setSecurityModalVisitId] = useState<string | null>(null);
 
   const reload = useCallback(
@@ -77,6 +94,19 @@ export function VisitRequestsPage() {
   }, [visits]);
 
   useRealtimeRefresh(reload);
+
+  useEffect(() => {
+    if (securityModalVisitId) return;
+    const ready = visits.find(
+      (v) => v.status === "awaiting_key" && Boolean(v.key_code) && !hasSeenSecurity(v.id)
+    );
+    if (ready) setSecurityModalVisitId(ready.id);
+  }, [visits, securityModalVisitId]);
+
+  const dismissSecurityModal = () => {
+    if (securityModalVisitId) markSecuritySeen(securityModalVisitId);
+    setSecurityModalVisitId(null);
+  };
 
   const canCancel = (status: VisitRequest["status"]) =>
     status === "pending" ||
@@ -145,37 +175,15 @@ export function VisitRequestsPage() {
   };
 
   const payReservation = async (visitId: string) => {
-    const visit = visits.find(v => v.id === visitId);
-    if (!visit) return;
-    const baseAmount = previews[visitId] ? Number(previews[visitId]!.stay_amount) : stayAmount(visit);
-    const clientPaysFees = previews[visitId]?.client_pays_operator_fees ?? false;
-    if (!clientPaysFees) {
-      setActingId(visitId);
-      setError("");
-      try {
-        const payment = await startReservationPayment(visitId);
-        if (payment.checkout_url) {
-          window.location.assign(payment.checkout_url);
-          return;
-        }
-        setError(t("payments.payFailed"));
-      } catch (e) {
-        setError(actionErrorMessage(e, t("payments.payFailed"), t("offline.queued")));
-      } finally {
-        setActingId(null);
-      }
+    const method = selectedMethods[visitId];
+    if (!method) {
+      setError(t("payments.chooseOperatorFirst"));
       return;
     }
-    setSelectedPaymentMethod("wave");
-    setPaymentMethodModal({ visitId, baseAmount });
-  };
-
-  const confirmPaymentWithMethod = async () => {
-    if (!paymentMethodModal) return;
-    setActingId(paymentMethodModal.visitId);
+    setActingId(visitId);
     setError("");
     try {
-      const payment = await startReservationPayment(paymentMethodModal.visitId, selectedPaymentMethod);
+      const payment = await startReservationPayment(visitId, method);
       if (payment.checkout_url) {
         window.location.assign(payment.checkout_url);
         return;
@@ -185,11 +193,11 @@ export function VisitRequestsPage() {
       setError(actionErrorMessage(e, t("payments.payFailed"), t("offline.queued")));
     } finally {
       setActingId(null);
-      setPaymentMethodModal(null);
     }
   };
 
 return (
+    <>
     <div className="font-jakarta max-w-3xl mx-auto px-4 py-6 sm:py-8">
       <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">{t("visits.title")}</h1>
       <p className="text-muted-foreground text-sm mb-5">{t("visits.subtitle")}</p>
@@ -216,50 +224,23 @@ return (
                       {v.key_code || "------"}
                     </p>
                     <p className="text-xs text-muted-foreground">{t("visits.keyWaitingHost")}</p>
-                    {v.key_code && !securityModalVisitId && (
-                      <Button
-                        variant="outline"
-                        className="w-full rounded-full mt-2"
-                        onClick={() => setSecurityModalVisitId(v.id)}
-                      >
-                        {t("visits.showSecurityMessage")}
-                      </Button>
-                    )}
                   </div>
                 )}
                 {v.status === "awaiting_payment" && (
                   <div className="space-y-3 pt-2 border-t border-gray-100">
-                    {previews[v.id] ? (
-                      <div className="rounded-lg bg-muted/50 p-3 space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{t("payments.stayAmount")}</span>
-                          <span className="font-medium">{formatPrice(Number(previews[v.id]!.stay_amount))}</span>
-                        </div>
-                        {previews[v.id]!.client_pays_operator_fees && Number(previews[v.id]!.operator_fee) > 0 && (
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">{t("payments.operatorFee")} ({previews[v.id]!.operator_fee_percent}%)</span>
-                            <span className="font-medium">{formatPrice(Number(previews[v.id]!.operator_fee))}</span>
-                          </div>
-                        )}
-                        <div className="border-t pt-2 flex justify-between text-sm font-semibold">
-                          <span>{t("payments.totalToPay")}</span>
-                          <span className="text-brand">{formatPrice(Number(previews[v.id]!.total))}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-sm font-semibold text-foreground">
-                        {t("payments.payHostAmount")}: {formatPrice(stayAmount(v))}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground">{t("payments.payMaresiHint")}</p>
+                    <PaymentOperatorPicker
+                      selectedId={selectedMethods[v.id]}
+                      onSelect={(id) => setSelectedMethods((prev) => ({ ...prev, [v.id]: id }))}
+                      baseAmount={previews[v.id] ? Number(previews[v.id]!.stay_amount) : stayAmount(v)}
+                    />
                     <Button
                       className="w-full rounded-full bg-brand hover:bg-brand-dark"
-                      disabled={actingId === v.id}
+                      disabled={actingId === v.id || !selectedMethods[v.id]}
                       onClick={() => void payReservation(v.id)}
                     >
                       {actingId === v.id ? t("payments.paying") : t("payments.goToPayment")}
                     </Button>
-                    <p className="text-xs font-semibold text-red-600 text-center">{t("payments.noOffPlatform")}</p>
+                    <p className="text-sm text-muted-foreground">{t("payments.noOffPlatform")}</p>
                     <ReceiptUpload
                       visit={v}
                       actingId={actingId}
@@ -362,104 +343,107 @@ return (
         </ul>
         )}
       </div>
-      {paymentMethodModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <div className="bg-card rounded-2xl w-full max-w-md p-6 space-y-4 animate-in slide-in-from-bottom-4 duration-200">
-          <h2 className="text-lg font-bold text-foreground">{t("payments.selectMethod")}</h2>
-          <p className="text-sm text-muted-foreground">{t("payments.selectMethodHint")}</p>
-          <div className="space-y-2">
-            {PAYMENT_METHODS.map((method) => {
-              const Logo = getPaymentMethodLogo(method.id);
-              const breakdown = calculateTotalAmount(paymentMethodModal.baseAmount, method, true);
-              return (
-                <button
-                  key={method.id}
-                  type="button"
-                  className={`w-full flex items-center gap-4 p-3 rounded-xl border-2 transition-all ${
-                    selectedPaymentMethod === method.id
-                      ? "border-brand bg-brand/5"
-                      : "border-border hover:border-brand/50"
-                  }`}
-                  onClick={() => setSelectedPaymentMethod(method.id)}
-                >
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center">
-                    <Logo className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-foreground">{method.name}</p>
-                    <p className="text-xs text-muted-foreground">{method.description}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-foreground">{formatPrice(breakdown.total)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t("payments.baseAmount")}: {formatPrice(paymentMethodModal.baseAmount)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t("payments.operatorFee")}: {formatPrice(breakdown.operatorFee)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t("payments.geniusPayFee")}: {formatPrice(breakdown.geniusPayFee)}
-                    </p>
-                  </div>
-                  {selectedPaymentMethod === method.id && (
-                    <svg className="w-5 h-5 text-brand" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                    </svg>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="outline"
-              className="flex-1 rounded-full"
-              onClick={() => setPaymentMethodModal(null)}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              className="flex-1 rounded-full bg-brand hover:bg-brand-dark"
-              disabled={actingId === paymentMethodModal.visitId}
-              onClick={() => void confirmPaymentWithMethod()}
-            >
-              {actingId === paymentMethodModal.visitId ? t("common.saving") : t("payments.confirmPay")}
-            </Button>
-          </div>
-        </div>
-      </div>
-    )}
-    {securityModalVisitId && (
-      <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 pb-20">
-        <div className="bg-card rounded-t-2xl w-full max-w-md p-6 space-y-4 animate-in slide-in-from-bottom-4 duration-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">{t("visits.securityTitle")}</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSecurityModalVisitId(null)}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </Button>
-          </div>
-          <div className="space-y-3 text-sm">
-            <p className="text-foreground">{t("visits.securityMessage1")}</p>
-            <p className="text-foreground font-semibold">{t("visits.securityMessage2")}</p>
-            <p className="text-muted-foreground">{t("visits.securityMessage3")}</p>
-          </div>
-          <Button
-            className="w-full rounded-full bg-brand hover:bg-brand-dark"
-            onClick={() => setSecurityModalVisitId(null)}
-          >
-            {t("common.gotIt")}
-          </Button>
-        </div>
-      </div>
-    )}
+    {securityModalVisitId && <SecurityWarningModal onDismiss={dismissSecurityModal} />}
+    </>
 );
+}
+
+function SecurityWarningModal({ onDismiss }: { onDismiss: () => void }) {
+  const { t } = useTranslation();
+  const [offset, setOffset] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startY = useRef(0);
+  const lastY = useRef(0);
+  const lastAt = useRef(0);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onDismiss();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onDismiss]);
+
+  const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
+
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (isDesktop() || (event.target as HTMLElement).closest("button")) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    startY.current = event.clientY;
+    lastY.current = event.clientY;
+    lastAt.current = Date.now();
+    setDragging(true);
+  };
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragging) return;
+    lastY.current = event.clientY;
+    lastAt.current = Date.now();
+    setOffset(Math.max(0, event.clientY - startY.current));
+  };
+
+  const endDrag = () => {
+    if (!dragging) return;
+    const velocity = (lastY.current - startY.current) / Math.max(1, Date.now() - lastAt.current);
+    const shouldClose = offset > 90 || velocity > 0.6;
+    setDragging(false);
+    if (shouldClose) {
+      onDismiss();
+      return;
+    }
+    setOffset(0);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[1100] flex items-end justify-center p-0 md:items-center md:p-4"
+      style={{ backgroundColor: `rgba(0,0,0,${0.5 * (1 - Math.min(offset / 280, 0.75))})` }}
+      onClick={onDismiss}
+      role="presentation"
+    >
+      <div
+        className="w-full max-w-md space-y-4 border border-amber-300 bg-amber-50 p-6 text-amber-950 shadow-lg touch-none select-none rounded-t-3xl pb-[max(1.5rem,env(safe-area-inset-bottom))] md:touch-auto md:select-auto md:rounded-2xl md:pb-6 md:animate-in md:fade-in-0 md:zoom-in-95"
+        style={{
+          transform: `translateY(${offset}px)`,
+          transition: dragging ? "none" : "transform 200ms ease",
+        }}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="security-sheet-title"
+      >
+        <div className="flex cursor-grab justify-center active:cursor-grabbing md:hidden">
+          <div className="h-1.5 w-10 rounded-full bg-amber-400/80" />
+        </div>
+        <div className="flex flex-col items-center text-center gap-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-200">
+            <AlertTriangle className="h-5 w-5 text-amber-800" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">{t("visits.securityWarning")}</p>
+            <h2 id="security-sheet-title" className="text-lg font-bold text-amber-950">
+              {t("visits.securityTitle")}
+            </h2>
+          </div>
+        </div>
+        <div className="space-y-3 text-sm text-center">
+          <p>{t("visits.securityMessage1")}</p>
+          <p className="font-semibold">{t("visits.securityMessage2")}</p>
+          <p>{t("visits.securityMessage3")}</p>
+        </div>
+        <Button
+          className="w-full rounded-full bg-amber-600 text-white hover:bg-amber-700"
+          onClick={onDismiss}
+        >
+          {t("visits.gotIt")}
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 function ReceiptUpload({

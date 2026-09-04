@@ -96,6 +96,19 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     }
   }
 
+  Future<void> _openDirections(Property property) async {
+    final dest = property.hasCoordinates
+        ? '${property.latitude},${property.longitude}'
+        : Uri.encodeComponent(property.location);
+    final uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$dest&travelmode=driving',
+    );
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+      final message = context.read<LocaleProvider>().t('details.directionsFailed');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
   Future<void> _startReservation(Property property) async {
     if (!context.read<AuthProvider>().isAuthenticated) {
       final loggedIn = await Navigator.of(context).push<bool>(
@@ -394,6 +407,21 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                           Expanded(child: Text(property.location, style: TextStyle(color: palette.textSecondary))),
                                         ],
                                       ),
+                                    ],
+                                    if (property.hasCoordinates || property.location.isNotEmpty) ...[
+                                      const SizedBox(height: 12),
+                                      OutlinedButton.icon(
+                                        onPressed: () => _openDirections(property),
+                                        icon: const Icon(Icons.navigation_outlined, size: 18),
+                                        label: Text(locale.t('details.directions')),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: AppColors.primary,
+                                          side: const BorderSide(color: AppColors.primary),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(locale.t('details.directionsHint'), style: TextStyle(color: palette.textSecondary, fontSize: 12)),
                                     ],
                                     const SizedBox(height: 20),
                                     if (images.isNotEmpty)

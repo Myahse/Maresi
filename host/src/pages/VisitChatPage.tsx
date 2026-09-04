@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ChevronDown, Paperclip, Send, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, Paperclip, Send } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   closeVisitChat,
@@ -12,6 +12,8 @@ import {
 } from "@/services/api";
 import { MARESI_REALTIME } from "@/hooks/useRealtimeRefresh";
 import { AuthAttachment } from "@/components/visit/AuthAttachment";
+import { LocalFilePreview } from "@/components/visit/FilePreviewer";
+import { MessageReceipt } from "@/components/visit/MessageReceipt";
 import { cn } from "@/lib/utils";
 import type { RealtimeEvent, VisitMessage, VisitRequest } from "@/types";
 
@@ -75,7 +77,7 @@ export function VisitChatPage({ backTo = "/owner/visits" }: { backTo?: string })
     const onEvent = (event: Event) => {
       const type = (event as CustomEvent<RealtimeEvent>).detail?.type;
       const data = (event as CustomEvent<RealtimeEvent>).detail?.data;
-      if (type !== "visit.message" && type !== "visit.status_changed") return;
+      if (type !== "visit.message" && type !== "visit.message.receipt" && type !== "visit.status_changed") return;
       const related = data?.visit_request_id != null && String(data.visit_request_id) === id;
       const sameVisit = data?.id != null && String(data.id) === id;
       if (related || sameVisit || !data?.visit_request_id) void load();
@@ -261,7 +263,10 @@ export function VisitChatPage({ backTo = "/owner/visits" }: { backTo?: string })
                         </div>
                       )}
                       {item.body && <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{item.body}</p>}
-                      <p className="mt-0.5 text-right text-[10px] text-[#667781]">{formatClock(item.created_at)}</p>
+                      <p className="mt-0.5 flex items-center justify-end text-[10px] text-[#667781]">
+                        <span>{formatClock(item.created_at)}</span>
+                        {mine && <MessageReceipt message={item} />}
+                      </p>
                     </div>
                   </div>
                 );
@@ -281,11 +286,8 @@ export function VisitChatPage({ backTo = "/owner/visits" }: { backTo?: string })
       ) : (
         <div className="shrink-0 bg-[#f0f2f5] px-2 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
           {file && (
-            <div className="mb-2 flex items-center justify-between rounded-xl bg-white px-3 py-2 text-sm">
-              <span className="truncate">{file.name}</span>
-              <button type="button" onClick={() => setFile(null)} aria-label={t("visits.chatRemoveFile")}>
-                <X className="h-4 w-4" />
-              </button>
+            <div className="mb-2 w-fit rounded-xl bg-white p-2 shadow-sm">
+              <LocalFilePreview file={file} onRemove={() => setFile(null)} />
             </div>
           )}
           <div className="flex items-end gap-2">

@@ -28,6 +28,8 @@ abstract final class MockProperties {
           ownerPhone: '+2250700000002',
           averageRating: 4.5,
           ratingCount: 12,
+          latitude: 5.3482,
+          longitude: -3.9872,
         ),
         Property(
           id: MockIds.propertyPlateau,

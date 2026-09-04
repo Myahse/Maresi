@@ -21,6 +21,8 @@ class Property {
     this.amenities = const [],
     this.priceUnit = "night",
     this.premiumPositioning = false,
+    this.latitude,
+    this.longitude,
   });
 
   final String id;
@@ -42,6 +44,10 @@ class Property {
   final List<String> amenities;
   final String priceUnit;
   final bool premiumPositioning;
+  final double? latitude;
+  final double? longitude;
+
+  bool get hasCoordinates => latitude != null && longitude != null;
 
   factory Property.fromJson(Map<String, dynamic> json) {
     return Property(
@@ -67,6 +73,8 @@ class Property {
       amenities: (json['amenities'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
       priceUnit: json['price_unit'] as String? ?? 'night',
       premiumPositioning: json['premium_positioning'] as bool? ?? json['premiumPositioning'] as bool? ?? false,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 
@@ -94,6 +102,8 @@ class Property {
       amenities: amenities,
       priceUnit: priceUnit,
       premiumPositioning: premiumPositioning,
+      latitude: latitude,
+      longitude: longitude,
     );
   }
 }

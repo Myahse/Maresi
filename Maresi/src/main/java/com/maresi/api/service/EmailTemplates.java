@@ -15,6 +15,9 @@ public final class EmailTemplates {
 
   private EmailTemplates() {}
 
+  static final String PAY_ONLY_ON_MARESI =
+      "Pour votre sécurité, payez toujours directement sur MaResi. Ne payez jamais en dehors de l'application, même à la demande du propriétaire. En cas de doute, contactez notre service client.";
+
   public static String guestApp(AppProperties props) {
     return firstAppOrigin(
         props.getApps().getGuestUrl(),
@@ -76,7 +79,8 @@ public static Mail welcomeGuest(String name, String phone, String ctaUrl) {
         "Bienvenue chez vous",
         greet(
             name,
-            "Votre compte Maresi est prêt. Explorez les résidences à Abidjan, comparez les quartiers et réservez en quelques étapes.\n\nGardez votre téléphone à portée : l'hôte vous contacte souvent par WhatsApp ou appel.\n\n⚠ IMPORTANT : Ne jamais payer en dehors de la plateforme. Si un hôte vous demande de payer en dehors de Maresi, refusez directement."),
+            "Votre compte Maresi est prêt. Explorez les résidences à Abidjan, comparez les quartiers et réservez en quelques étapes.\n\nGardez votre téléphone à portée : le propriétaire vous contacte souvent par WhatsApp ou appel.\n\n"
+                + PAY_ONLY_ON_MARESI),
         details("Voyageur", personName(name), "Téléphone", phone),
         null,
         "Voir les résidences",
@@ -89,15 +93,15 @@ public static Mail welcomeGuest(String name, String phone, String ctaUrl) {
 
   public static Mail welcomeHost(String name, String phone, String ctaUrl) {
     return build(
-        "Votre compte hôte est prêt",
-        "Compte hôte",
-        "Votre espace hôte est ouvert",
+        "Votre compte propriétaire est prêt",
+        "Compte propriétaire",
+        "Votre espace propriétaire est ouvert",
         greet(
             name,
-            "Votre compte hôte Maresi est prêt. Publiez une résidence, recevez des demandes et suivez chaque séjour depuis Maresi Hôte.\n\n⚠ IMPORTANT : Ne jamais demander à un voyageur de payer en dehors de la plateforme Maresi."),
-        details("Hôte", personName(name), "Téléphone", phone),
+            "Votre compte propriétaire Maresi est prêt. Publiez une résidence, recevez des demandes et suivez chaque séjour depuis Maresi Propriétaire.\n\nLes clients doivent toujours payer directement sur MaResi. Ne demandez jamais un paiement en dehors de l'application."),
+        details("Propriétaire", personName(name), "Téléphone", phone),
         null,
-        "Ouvrir Maresi Hôte",
+        "Ouvrir Maresi Propriétaire",
         ctaUrl);
   }
 
@@ -137,7 +141,9 @@ public static Mail reservationSent(String title) {
         "Votre demande a été enregistrée",
         "Bonjour,\n\nVotre demande de réservation pour "
             + listing
-            + " a bien été enregistrée et transmise au propriétaire.\n\nNous vous informerons dès que votre demande aura été traitée. Votre réservation ne sera confirmée qu'après acceptation du propriétaire et finalisation du paiement.\n\n⚠ IMPORTANT : Ne jamais payer en dehors de la plateforme. Tous les paiements doivent être effectués via Maresi.\n\nMerci de votre confiance et à bientôt sur Maresi.",
+            + " a bien été enregistrée et transmise au propriétaire.\n\nNous vous informerons dès que votre demande aura été traitée. Votre réservation ne sera confirmée qu'après acceptation du propriétaire et finalisation du paiement.\n\n"
+            + PAY_ONLY_ON_MARESI
+            + "\n\nMerci de votre confiance et à bientôt sur Maresi.",
         details("Résidence", listing),
         null,
         null,
@@ -195,7 +201,7 @@ public static Mail reservationSent(String title) {
         "Demande refusée",
         "Réservation",
         "Cette demande n’a pas abouti",
-        "Bonjour,\n\nL’hôte a refusé votre demande. Ce n’est pas un blocage de votre compte : vous pouvez chercher une autre résidence tout de suite.\n\nLes disponibilités changent souvent à Abidjan, une autre option peut se libérer aujourd’hui.",
+        "Bonjour,\n\nLe propriétaire a refusé votre demande. Ce n’est pas un blocage de votre compte : vous pouvez chercher une autre résidence tout de suite.\n\nLes disponibilités changent souvent à Abidjan, une autre option peut se libérer aujourd’hui.",
         details("Résidence", title),
         null,
         null,
@@ -220,11 +226,11 @@ public static Mail reservationSent(String title) {
 
   public static Mail guestWaitingHostSign(String title, String ctaUrl) {
     return build(
-        "Contrat envoyé à l’hôte",
+        "Contrat envoyé au propriétaire",
         "Contrat",
-        "L’hôte doit encore signer",
-        "Bonjour,\n\nVotre signature est enregistrée. L’hôte va signer le même contrat.\n\nVous recevrez ensuite une copie complète par e-mail, puis le code clé pour récupérer le logement.",
-        details("Résidence", title, "Prochaine étape", "Attendre la signature de l’hôte"),
+        "Le propriétaire doit encore signer",
+        "Bonjour,\n\nVotre signature est enregistrée. Le propriétaire va signer le même contrat.\n\nVous recevrez ensuite une copie complète par e-mail, puis le code clé pour récupérer le logement.",
+        details("Résidence", title, "Prochaine étape", "Attendre la signature du propriétaire"),
         null,
         "Voir le contrat",
         ctaUrl);
@@ -250,7 +256,7 @@ public static Mail reservationSent(String title) {
         hostName,
         hostSignedAt,
         ctaUrl,
-        "Bonjour,\n\nLe contrat de séjour est signé par le client et l’hôte. Conservez le PDF joint : c’est votre copie officielle.",
+        "Bonjour,\n\nLe contrat de séjour est signé par le client et le propriétaire. Conservez le PDF joint : c’est votre copie officielle.",
         null,
         "Ouvrir le contrat");
   }
@@ -276,7 +282,7 @@ public static Mail reservationSent(String title) {
         hostName,
         hostSignedAt,
         ctaUrl,
-        "Bonjour,\n\nLe contrat de séjour est signé par le client et l’hôte. Conservez le PDF joint : c’est votre copie officielle.\n\nDonnez uniquement ce code à 6 chiffres à l’hôte pour récupérer la clé, puis allez au paiement dans Maresi. Sans ce code, l’hôte ne pourra pas confirmer la remise des clés.",
+        "Bonjour,\n\nLe contrat de séjour est signé par le client et le propriétaire. Conservez le PDF joint : c’est votre copie officielle.\n\nDonnez uniquement ce code à 6 chiffres au propriétaire pour récupérer la clé, puis allez au paiement dans Maresi. Sans ce code, le propriétaire ne pourra pas confirmer la remise des clés.",
         keyCode == null || keyCode.isBlank() ? null : new Highlight("Code à 6 chiffres", keyCode),
         "Ouvrir le contrat");
   }
@@ -305,10 +311,10 @@ public static Mail reservationSent(String title) {
         ctaUrl,
         greet(
             null,
-            "Le contrat de séjour est signé par le client et l’hôte. Conservez le PDF joint : c’est votre copie officielle.\n\n"
+            "Le contrat de séjour est signé par le client et le propriétaire. Conservez le PDF joint : c’est votre copie officielle.\n\n"
                 + "Demandez "
                 + (who.isBlank() ? "au client" : "à " + who)
-                + " son code à 6 chiffres, saisissez-le dans Maresi Hôte, puis il pourra vous payer. Ne communiquez jamais ce code à une autre personne."),
+                + " son code à 6 chiffres, saisissez-le dans Maresi Propriétaire, puis il pourra vous payer. Ne communiquez jamais ce code à une autre personne."),
         null,
         "Saisir le code");
   }
@@ -337,7 +343,7 @@ public static Mail reservationSent(String title) {
             "Arrivée", StayContractPdf.formatDate(checkIn),
             "Départ", StayContractPdf.formatDate(checkOut),
             "Signature client", namedStamp(guestName, StayContractPdf.formatStamp(guestSignedAt)),
-            "Signature hôte", namedStamp(hostName, StayContractPdf.formatStamp(hostSignedAt))),
+            "Signature propriétaire", namedStamp(hostName, StayContractPdf.formatStamp(hostSignedAt))),
         highlight,
         ctaLabel,
         ctaUrl);
@@ -363,7 +369,7 @@ public static Mail reservationSent(String title) {
         greet(
             null,
             (who.isBlank() ? "Le client" : who)
-                + " a signé. Demandez-lui son code à 6 chiffres, saisissez-le dans Maresi Hôte, puis il pourra vous payer.\n\nNe communiquez jamais ce code à une autre personne."),
+                + " a signé. Demandez-lui son code à 6 chiffres, saisissez-le dans Maresi Propriétaire, puis il pourra vous payer.\n\nNe communiquez jamais ce code à une autre personne."),
         details("Voyageur", who, "Résidence", title, "À faire", "Saisir le code à 6 chiffres"),
         null,
         "Saisir le code",
@@ -375,7 +381,7 @@ public static Mail reservationSent(String title) {
         "Votre code clé",
         "Clé",
         "Voici votre code clé",
-        "Bonjour,\n\nVotre engagement est enregistré. Donnez uniquement ce code à l’hôte pour récupérer la clé, puis allez au paiement dans Maresi.\n\nGardez ce message : sans ce code, l’hôte ne pourra pas confirmer la remise des clés.",
+        "Bonjour,\n\nVotre engagement est enregistré. Donnez uniquement ce code au propriétaire pour récupérer la clé, puis allez au paiement dans Maresi.\n\nGardez ce message : sans ce code, le propriétaire ne pourra pas confirmer la remise des clés.",
         details("Résidence", title),
         new Highlight("Code à 6 chiffres", keyCode),
         null,
@@ -387,7 +393,8 @@ public static Mail payHost(String ctaUrl) {
         "Allez au paiement",
         "Paiement",
         "C'est le moment de payer",
-        "Bonjour,\n\nL'hôte a confirmé le code clé. Payez via votre opérateur mobile money dans l'application Maresi.\n\n⚠ IMPORTANT : Ne jamais payer en dehors de la plateforme. Tous les paiements doivent être effectués via Maresi.",
+        "Bonjour,\n\nLe propriétaire a confirmé le code clé. Payez via votre opérateur mobile money dans l'application Maresi.\n\n"
+            + PAY_ONLY_ON_MARESI,
         details("À faire", "Payer dans Maresi"),
         null,
         "Aller au paiement",
@@ -410,8 +417,8 @@ public static Mail payHost(String ctaUrl) {
     return build(
         "Paiement reçu — portefeuille",
         "Paiement",
-        "Pour votre sécurité, payez toujours directement sur MaResi. Ne payez jamais en dehors de l'application, même à la demande du propriétaire. En cas de doute, contactez notre service client.",
-        "Bonjour,\n\nLe client a payé. Votre paiement est confirmé. Un code à 6 chiffres vous sera remis par l'hôte pour récupérer la clé du logement. Vous pourrez retirer ensuite vos fonds vers Wave ou Orange Money après la fin du séjour.",
+        "Votre paiement est confirmé",
+        "Bonjour,\n\nLe client a payé. Votre paiement est confirmé. Un code à 6 chiffres vous sera remis par le propriétaire pour récupérer la clé du logement. Vous pourrez retirer ensuite vos fonds vers Wave ou Orange Money après la fin du séjour.",
         details("Résidence", title, "Crédit portefeuille", hostShare + " XOF"),
         null,
         "Ouvrir le portefeuille",
@@ -448,7 +455,7 @@ public static Mail payHost(String ctaUrl) {
         "Prolongation acceptée",
         "Prolongation",
         "Votre prolongation est acceptée",
-        "Bonjour,\n\nL’hôte a accepté de prolonger votre séjour. Payez le supplément directement à l’hôte, puis déclarez le paiement dans Maresi.\n\nLe nouveau départ s’applique seulement après confirmation de l’hôte.",
+        "Bonjour,\n\nLe propriétaire a accepté de prolonger votre séjour. Payez le supplément directement au propriétaire, puis déclarez le paiement dans Maresi.\n\nLe nouveau départ s’applique seulement après confirmation du propriétaire.",
         details("Résidence", title, "Nouveau départ", until),
         null,
         null,
@@ -460,7 +467,7 @@ public static Mail payHost(String ctaUrl) {
         "Prolongation refusée",
         "Prolongation",
         "La prolongation n’a pas été acceptée",
-        "Bonjour,\n\nL’hôte a refusé de prolonger votre séjour. La date de départ initiale reste valable.\n\nPrévoyez de libérer la résidence à l’heure indiquée pour éviter un dépassement facturé.",
+        "Bonjour,\n\nLe propriétaire a refusé de prolonger votre séjour. La date de départ initiale reste valable.\n\nPrévoyez de libérer la résidence à l’heure indiquée pour éviter un dépassement facturé.",
         details("Résidence", title),
         null,
         null,
@@ -472,7 +479,7 @@ public static Mail payHost(String ctaUrl) {
         "Dépassement à payer",
         "Dépassement",
         "Des nuits supplémentaires sont dues",
-        "Bonjour,\n\nVotre séjour a dépassé la date de départ. L’hôte a facturé les nuits en plus.\n\nPayez ce montant à l’hôte pour régulariser votre présence jusqu’à la nouvelle date.",
+        "Bonjour,\n\nVotre séjour a dépassé la date de départ. Le propriétaire a facturé les nuits en plus.\n\nPayez ce montant au propriétaire pour régulariser votre présence jusqu’à la nouvelle date.",
         details("Nouveau départ", until, "Montant dû", amount + " XOF"),
         null,
         "Payer le dépassement",
@@ -481,13 +488,13 @@ public static Mail payHost(String ctaUrl) {
 
   public static Mail hostApplySent(String ctaUrl) {
     return build(
-        "Demande hôte envoyée",
-        "Compte hôte",
+        "Demande propriétaire envoyée",
+        "Compte propriétaire",
         "Nous avons bien reçu votre demande",
-        "Bonjour,\n\nVotre demande pour devenir hôte est en cours de vérification.\n\nOuvrez Maresi Hôte pour suivre votre dossier. Vous pourrez publier des résidences seulement après validation.",
+        "Bonjour,\n\nVotre demande pour devenir propriétaire est en cours de vérification.\n\nOuvrez Maresi Propriétaire pour suivre votre dossier. Vous pourrez publier des résidences seulement après validation.",
         List.of(),
         null,
-        "Ouvrir Maresi Hôte",
+        "Ouvrir Maresi Propriétaire",
         ctaUrl);
   }
 
@@ -497,10 +504,10 @@ public static Mail payHost(String ctaUrl) {
 
   public static Mail hostApplyAdmin(String fullName, String phone, String applicantEmail) {
     return build(
-        "Nouvelle demande hôte",
+        "Nouvelle demande propriétaire",
         "Admin",
-        "Une demande hôte attend votre avis",
-        "Bonjour,\n\nUne personne souhaite devenir hôte. Vérifiez son identité, puis acceptez ou refusez dans l’espace admin.",
+        "Une demande propriétaire attend votre avis",
+        "Bonjour,\n\nUne personne souhaite devenir propriétaire. Vérifiez son identité, puis acceptez ou refusez dans l’espace admin.",
         details("Nom", fullName, "E-mail", applicantEmail, "Téléphone", phone),
         null,
         null,
@@ -523,13 +530,13 @@ public static Mail payHost(String ctaUrl) {
 
   public static Mail hostActivated(String ctaUrl) {
     return build(
-        "Compte hôte activé",
-        "Compte hôte",
+        "Compte propriétaire activé",
+        "Compte propriétaire",
         "Vous pouvez publier vos résidences",
-        "Bonjour,\n\nVotre demande a été acceptée. Votre compte hôte est actif.\n\nOuvrez Maresi Hôte, ajoutez vos photos, vos tarifs et vos moyens de paiement, puis recevez vos premières demandes.",
+        "Bonjour,\n\nVotre demande a été acceptée. Votre compte propriétaire est actif.\n\nOuvrez Maresi Propriétaire, ajoutez vos photos, vos tarifs et vos moyens de paiement, puis recevez vos premières demandes.",
         List.of(),
         null,
-        "Ouvrir Maresi Hôte",
+        "Ouvrir Maresi Propriétaire",
         ctaUrl);
   }
 
@@ -537,14 +544,14 @@ public static Mail payHost(String ctaUrl) {
     String reason =
         note != null && !note.isBlank()
             ? note
-            : "Votre demande pour devenir hôte n’a pas été retenue pour le moment.";
+            : "Votre demande pour devenir propriétaire n’a pas été retenue pour le moment.";
     return build(
-        "Demande hôte refusée",
-        "Compte hôte",
+        "Demande propriétaire refusée",
+        "Compte propriétaire",
         "Votre demande n’a pas été acceptée",
         "Bonjour,\n\n"
             + reason
-            + "\n\nCorrigez les points indiqués, puis renvoyez votre demande depuis Maresi Hôte.",
+            + "\n\nCorrigez les points indiqués, puis renvoyez votre demande depuis Maresi Propriétaire.",
         List.of(),
         null,
         "Corriger et renvoyer",
@@ -617,7 +624,7 @@ public static Mail payHost(String ctaUrl) {
         "C’est l’heure d’arriver",
         "Séjour",
         "Votre arrivée commence maintenant",
-        "Bonjour,\n\nC’est l’heure. Présentez-vous à la résidence avec votre pièce d’identité et le code clé si l’hôte le demande.\n\nSi vous êtes en retard, prévenez l’hôte directement.",
+        "Bonjour,\n\nC’est l’heure. Présentez-vous à la résidence avec votre pièce d’identité et le code clé si le propriétaire le demande.\n\nSi vous êtes en retard, prévenez le propriétaire directement.",
         details("Résidence", title),
         null,
         null,
@@ -641,7 +648,7 @@ public static Mail payHost(String ctaUrl) {
         "C’est l’heure de partir",
         "Séjour",
         "Votre départ est maintenant",
-        "Bonjour,\n\nC’est l’heure de quitter la résidence. Laissez les lieux propres, refermez et rendez la clé à l’hôte.\n\nUn départ en retard peut être facturé en nuits supplémentaires.",
+        "Bonjour,\n\nC’est l’heure de quitter la résidence. Laissez les lieux propres, refermez et rendez la clé au propriétaire.\n\nUn départ en retard peut être facturé en nuits supplémentaires.",
         details("Résidence", title),
         null,
         null,
@@ -653,7 +660,7 @@ public static Mail payHost(String ctaUrl) {
         "Départ du client",
         "Séjour",
         "Le client doit quitter aujourd’hui",
-        "Bonjour,\n\nC’est l’heure du départ. Vérifiez l’état de la résidence après le séjour.\n\nS’il reste, facturez le dépassement puis clôturez le séjour avec votre note hôte.",
+        "Bonjour,\n\nC’est l’heure du départ. Vérifiez l’état de la résidence après le séjour.\n\nS’il reste, facturez le dépassement puis clôturez le séjour avec votre note propriétaire.",
         details("Résidence", title),
         null,
         null,
@@ -775,16 +782,9 @@ public static Mail payHost(String ctaUrl) {
     StringBuilder sb = new StringBuilder();
     for (String raw : parts) {
       String part = raw.trim();
-      if (part.startsWith("\u26A0")) {
-        sb.append("<div style=\"margin:0 0 14px;padding:14px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;\">")
-            .append("<p style=\"margin:0;font-size:14px;line-height:1.6;color:#dc2626;font-weight:600;\">")
-            .append(escape(part).replace("\n", "<br>"))
-            .append("</p></div>");
-      } else {
-        sb.append("<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#334155;\">")
-            .append(escape(part).replace("\n", "<br>"))
-            .append("</p>");
-      }
+      sb.append("<p style=\"margin:0 0 14px;font-size:15px;line-height:1.6;color:#334155;\">")
+          .append(escape(part).replace("\n", "<br>"))
+          .append("</p>");
     }
     return sb.toString();
   }
@@ -852,7 +852,7 @@ public static Mail payHost(String ctaUrl) {
                     <td style="padding:8px 28px 28px;font-family:Manrope,'Segoe UI',Arial,sans-serif;">
                       <div style="border-top:1px solid #e4e4e7;padding-top:16px;">
                         <p style="margin:0;font-size:12px;line-height:1.5;color:#71717a;">Maresi · Abidjan</p>
-                        <p style="margin:6px 0 0;font-size:12px;line-height:1.5;color:#a1a1aa;">Message automatique. Pour une question sur un séjour, écrivez à l’hôte dans l’application.</p>
+                        <p style="margin:6px 0 0;font-size:12px;line-height:1.5;color:#a1a1aa;">Message automatique. Pour une question sur un séjour, écrivez au propriétaire dans l’application.</p>
                       </div>
                     </td>
                   </tr>

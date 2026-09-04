@@ -103,7 +103,7 @@ public final class StayContractPdf {
           new Paragraph(
               win(
                   "Document généré automatiquement par Maresi. Conservez cette copie. "
-                      + "Elle atteste que le client et l’hôte ont accepté les mêmes conditions."),
+                      + "Elle atteste que le client et le propriétaire ont accepté les mêmes conditions."),
               font(8, Font.NORMAL, MUTED));
       footer.setSpacingBefore(22);
       document.add(footer);
@@ -123,7 +123,7 @@ public final class StayContractPdf {
     row(table, "Arrivée", formatDate(data.checkIn()));
     row(table, "Départ", formatDate(data.checkOut()));
     row(table, "Client", data.guestName());
-    row(table, "Hôte", data.hostName());
+    row(table, "Propriétaire", data.hostName());
     return table;
   }
 
@@ -132,7 +132,7 @@ public final class StayContractPdf {
     table.setWidthPercentage(100);
     table.setSpacingBefore(4);
     table.addCell(signCell("Signature client", data.guestName(), data.guestSignedAt()));
-    table.addCell(signCell("Signature hôte", data.hostName(), data.hostSignedAt()));
+    table.addCell(signCell("Signature propriétaire", data.hostName(), data.hostSignedAt()));
     return table;
   }
 

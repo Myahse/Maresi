@@ -1,9 +1,9 @@
 {
   "meta": {
-    "title": "Maresi Hôte"
+    "title": "Maresi Propriétaire"
   },
   "splash": {
-    "loading": "Chargement de Maresi Hôte"
+    "loading": "Chargement de Maresi Propriétaire"
   },
   "common": {
     "loading": "Chargement...",
@@ -203,7 +203,7 @@
     "browseTitle": "Parcourir les annonces",
     "browseText": "Créez un compte pour voir les biens disponibles, filtrer par lieu et prix, et enregistrer des favoris.",
     "listTitle": "Publiez votre bien",
-    "listText": "Demandez à devenir hôte. Après validation admin, gérez vos annonces dans l'app hôte.",
+    "listText": "Demandez à devenir propriétaire. Après validation admin, gérez vos annonces dans l'app propriétaire.",
     "ctaHint": "Inscrivez-vous ou connectez-vous pour accéder aux annonces.",
     "registerNow": "S'inscrire maintenant",
     "dedicatedServices": "Services dédiés",
@@ -236,7 +236,7 @@
     "serverStarting": "Le serveur démarre. Patientez quelques secondes et réessayez.",
     "noAccount": "Pas encore de compte ?",
     "registerLink": "S'inscrire",
-    "registerOnClient": "Créer un compte hôte",
+    "registerOnClient": "Créer un compte propriétaire",
     "forgot": "Mot de passe oublié ?"
   },
   "forgot": {
@@ -261,14 +261,14 @@
   },
   "verify": {
     "title": "Confirmez votre e-mail",
-    "description": "Nous devons confirmer votre adresse pour activer le compte hôte.",
+    "description": "Nous devons confirmer votre adresse pour activer le compte propriétaire.",
     "checking": "Confirmation en cours…",
     "success": "Votre e-mail est confirmé. Vous pouvez vous connecter.",
     "sent": "Un e-mail de confirmation a été envoyé. Ouvrez le lien dans le message.",
     "resend": "Renvoyer l’e-mail",
     "resendWait": "Renvoyer dans {{seconds}} s",
     "failed": "Impossible de confirmer cet e-mail",
-    "hostPending": "Votre e-mail est confirmé. Votre demande hôte est chez un admin. Connectez-vous à Maresi Hôte et attendez la validation avant de publier des annonces."
+    "hostPending": "Votre e-mail est confirmé. Votre demande propriétaire est chez un admin. Connectez-vous à Maresi Propriétaire et attendez la validation avant de publier des annonces."
   },
   "theme": {
     "toDark": "Passer en mode sombre",
@@ -277,7 +277,7 @@
   "notFound": {
     "title": "Cette page n'existe pas",
     "description": "Le lien est peut-être incorrect, ou la page a été déplacée.",
-    "home": "Tableau hôte"
+    "home": "Tableau propriétaire"
   },
   "register": {
     "kicker": "Rejoindre Maresi",
@@ -291,14 +291,14 @@
     "clientHint": "Parcourir chambres et appartements et réserver un séjour.",
     "hostTitle": "Je suis propriétaire",
     "hostHint": "Mettre en location votre résidence. Un admin validera votre demande avant publication.",
-    "hostOnlyHint": "Créez votre compte hôte ici. Après confirmation de l’e-mail, vous restez sur Maresi Hôte. La publication d’annonces attend la validation d’un admin.",
-    "roleRequired": "Choisissez si vous êtes client ou hôte.",
+    "hostOnlyHint": "Créez votre compte propriétaire ici. Après confirmation de l’e-mail, vous restez sur Maresi Propriétaire. La publication d’annonces attend la validation d’un admin.",
+    "roleRequired": "Choisissez si vous êtes client ou propriétaire.",
     "personalRequired": "Saisissez votre prénom, nom, date de naissance et genre.",
     "ageRequired": "Vous devez avoir au moins 18 ans.",
     "accountRequired": "Saisissez votre e-mail, téléphone et un mot de passe d'au moins 6 caractères.",
     "photosRequired": "Ajoutez un selfie et une photo de votre pièce d'identité.",
     "idCardInvalid": "Saisissez un numéro de pièce d'identité valide.",
-    "identityHint": "Un selfie et une photo de pièce d'identité sont requis pour les clients et les hôtes.",
+    "identityHint": "Un selfie et une photo de pièce d'identité sont requis pour les clients et les propriétaires.",
     "selfie": "Selfie",
     "selfieHint": "Prenez une photo nette de votre visage.",
     "idCardPhoto": "Photo de la pièce d'identité",
@@ -341,7 +341,7 @@
     "noneFound": "Aucun bien trouvé.",
     "hub": "Votre espace",
     "hello": "Bonjour, {{name}}",
-    "subtitle": "Accès rapide aux annonces, favoris, réservations et demande hôte.",
+    "subtitle": "Accès rapide aux annonces, favoris, réservations et demande propriétaire.",
     "cards": {
       "browse": "Parcourir les annonces",
       "browseDesc": "Rechercher sur la carte et la grille",
@@ -366,7 +366,7 @@
     "next": "Suivant",
     "property": {
       "pageHint": "Complétez chaque étape pour publier, ou enregistrez un brouillon et terminez plus tard. Les champs * sont obligatoires pour publier.",
-      "pageHintUnverified": "Votre compte hôte n'est pas encore validé. Vous pouvez enregistrer un brouillon maintenant ; la publication sera possible après validation par un admin.",
+      "pageHintUnverified": "Votre compte propriétaire n'est pas encore validé. Vous pouvez enregistrer un brouillon maintenant ; la publication sera possible après validation par un admin.",
       "unverifiedBanner": "Votre compte est en attente de validation. Vous pouvez enregistrer cette annonce en brouillon, mais pas encore la publier.",
       "steps": {
         "type": "Type",
@@ -436,7 +436,7 @@
       "reviewTitle": "Vérifier et publier",
       "reviewHint": "Relisez tout avant publication.",
       "reviewTitleUnverified": "Vérifier et enregistrer le brouillon",
-      "reviewHintUnverified": "Enregistrez un brouillon maintenant. Vous pourrez publier une fois votre compte hôte validé.",
+      "reviewHintUnverified": "Enregistrez un brouillon maintenant. Vous pourrez publier une fois votre compte propriétaire validé.",
       "latitude": "Latitude",
       "longitude": "Longitude",
       "priceXof": "Prix par nuit (XOF)",
@@ -568,6 +568,11 @@
     "chatBack": "Retour aux réservations",
     "chatAttach": "Envoyer un document",
     "chatRemoveFile": "Retirer le fichier",
+    "chatPreview": "Aperçu",
+    "chatPreviewClose": "Fermer l'aperçu",
+    "chatReceiptSent": "Envoyé",
+    "chatReceiptDelivered": "Reçu",
+    "chatReceiptSeen": "Vu",
     "chatCloseReady": "Le séjour est terminé. Vous pouvez fermer cette discussion.",
     "chatClose": "Fermer la discussion",
     "chatCloseConfirm": "Fermer cette discussion ? Plus personne ne pourra écrire, mais l'historique restera visible.",
@@ -639,14 +644,14 @@
     "overstayBillUntil": "Facturer jusqu'au",
     "overstayBillCta": "Facturer le dépassement",
     "closeStayTitle": "Clôturer le séjour",
-    "closeStayHint": "Notez le client avant de clôturer. Lui ne verra pas cette note : seulement les autres hôtes, pour décider s'ils l'acceptent.",
+    "closeStayHint": "Notez le client avant de clôturer. Lui ne verra pas cette note : seulement les autres propriétaires, pour décider s'ils l'acceptent.",
     "closeStayScore": "Note du client",
-    "closeStayNote": "Note privée entre hôtes",
+    "closeStayNote": "Note privée entre propriétaires",
     "closeStayNotePlaceholder": "Ponctualité, soin du logement, respect…",
     "closeStayCta": "Enregistrer et clôturer",
     "stayClosed": "Séjour clos",
-    "guestHostNotes": "Avis des hôtes (invisible pour le client)",
-    "guestNoNotes": "Aucun avis hôte pour l'instant.",
+    "guestHostNotes": "Avis des propriétaires (invisible pour le client)",
+    "guestNoNotes": "Aucun avis propriétaire pour l'instant.",
     "overstaySection": "Dépassements à gérer"
   },
   "payments": {
@@ -740,7 +745,7 @@
     "draftBadge": "Brouillon",
     "publish": "Publier",
     "publishFailed": "Impossible de publier cette annonce.",
-    "publishNeedApproval": "Un admin doit valider votre demande hôte avant de publier.",
+    "publishNeedApproval": "Un admin doit valider votre demande propriétaire avant de publier.",
     "failedLoad": "Échec du chargement des données propriétaire",
     "deleteConfirm": "Supprimer ce bien ?",
     "deleteFailed": "Échec de la suppression",
@@ -780,20 +785,20 @@
     "phone": "Téléphone",
     "city": "Ville",
     "idCard": "N° pièce d'identité",
-    "message": "Pourquoi voulez-vous être hôte ?",
+    "message": "Pourquoi voulez-vous être propriétaire ?",
     "submit": "Envoyer la demande",
     "failed": "Impossible d'envoyer la demande",
     "pending": "Demande en attente",
     "pendingHint": "Nous vous préviendrons après examen par un admin. En attendant, vous pouvez préparer des annonces en brouillon.",
-    "approved": "Vous êtes validé comme hôte.",
-    "openHostApp": "Ouvrir l'app hôte",
+    "approved": "Vous êtes validé comme propriétaire.",
+    "openHostApp": "Ouvrir l'app propriétaire",
     "rejected": "Votre demande a été refusée. Vous pouvez réessayer.",
     "fixHint": "Corrigez les points indiqués, mettez à jour vos pièces si besoin, puis renvoyez la demande.",
     "openRequest": "Voir ma demande",
     "prepareDraft": "Préparer une annonce en brouillon"
   },
   "admin": {
-    "title": "Demandes hôte",
+    "title": "Demandes propriétaire",
     "empty": "Aucune demande.",
     "approve": "Accepter",
     "reject": "Refuser",
@@ -803,7 +808,7 @@
     "filter": "Statut"
   },
   "hostGate": {
-    "wrongRole": "Cette app est réservée aux hôtes. Créez un compte hôte ou connectez-vous avec celui déjà déposé."
+    "wrongRole": "Cette app est réservée aux propriétaires. Créez un compte propriétaire ou connectez-vous avec celui déjà déposé."
   },
   "account": {
     "kicker": "Votre dossier",

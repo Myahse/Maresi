@@ -12,7 +12,7 @@ public final class StayAgreementText {
         "Le client prend soin du logement, du mobilier, des clés et du matériel, et le laisse propre à la fin du séjour.",
         "Le client est responsable des dégâts qu’il cause et du coût de réparation ou de remplacement.",
         "Le règlement intérieur, les voisins, les heures de calme et le nombre d’occupants doivent être respectés.",
-        "Aucune sous-location ni événement sans l’accord écrit de l’hôte.",
+        "Aucune sous-location ni événement sans l’accord écrit du propriétaire.",
         "Un manquement peut entraîner l’annulation du séjour sans remboursement de la commission Maresi.");
   }
 

@@ -19,6 +19,7 @@ public class VisitMessageRepository {
     return jdbc.query(
         """
         SELECT m.id, m.visit_request_id, m.sender_id, m.body, m.created_at,
+               m.delivered_at, m.read_at,
                m.attachment_url, m.attachment_name, m.attachment_type,
                u.full_name AS sender_name, u.role AS sender_role
         FROM visit_messages m
@@ -35,6 +36,7 @@ public class VisitMessageRepository {
         jdbc.query(
             """
             SELECT m.id, m.visit_request_id, m.sender_id, m.body, m.created_at,
+                   m.delivered_at, m.read_at,
                    m.attachment_url, m.attachment_name, m.attachment_type,
                    u.full_name AS sender_name, u.role AS sender_role
             FROM visit_messages m
@@ -65,6 +67,7 @@ public class VisitMessageRepository {
         )
         VALUES (?, ?, ?, ?, ?, ?)
         RETURNING id, visit_request_id, sender_id, body, created_at,
+                  delivered_at, read_at,
                   attachment_url, attachment_name, attachment_type
         """,
         (rs, rowNum) -> RowMaps.visitMessage(rs),
@@ -74,5 +77,27 @@ public class VisitMessageRepository {
         attachmentUrl,
         attachmentName,
         attachmentType);
+  }
+
+  public int markIncoming(UUID visitId, UUID readerId, boolean seen) {
+    if (seen) {
+      return jdbc.update(
+          """
+          UPDATE visit_messages
+          SET delivered_at = COALESCE(delivered_at, NOW()),
+              read_at = COALESCE(read_at, NOW())
+          WHERE visit_request_id = ? AND sender_id <> ? AND read_at IS NULL
+          """,
+          visitId,
+          readerId);
+    }
+    return jdbc.update(
+        """
+        UPDATE visit_messages
+        SET delivered_at = COALESCE(delivered_at, NOW())
+        WHERE visit_request_id = ? AND sender_id <> ? AND delivered_at IS NULL
+        """,
+        visitId,
+        readerId);
   }
 }

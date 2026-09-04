@@ -464,7 +464,7 @@ Maresi indiquera, lorsque cela est applicable :
 
 Le paiement d'un service Maresi ne signifie pas automatiquement qu'une location immobilière de longue durée est conclue. Pour un séjour payé via Maresi, le paiement confirme la réservation selon les conditions présentées dans l’application.
 
-Le client paie via son opérateur mobile money dans l’application Maresi. L’hôte reçoit 90 % du séjour sur son portefeuille. Cette somme reste gelée jusqu’à l’heure de départ du client, puis devient retirable. Les 10 % restants restent à Maresi.
+Le client paie via son opérateur mobile money dans l’application Maresi. Le propriétaire reçoit 90 % du séjour sur son portefeuille. Cette somme reste gelée jusqu’à l’heure de départ du client, puis devient retirable. Les 10 % restants restent à Maresi.
 
 ---
 

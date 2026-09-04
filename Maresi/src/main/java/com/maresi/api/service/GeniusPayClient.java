@@ -63,7 +63,7 @@ public class GeniusPayClient {
     AppProperties.GeniusPay gp = requireKeys();
 
     Map<String, Object> body = new LinkedHashMap<>();
-    body.put("amount", amount);
+    body.put("amount", amount.setScale(0, java.math.RoundingMode.UP).longValue());
     body.put("currency", "XOF");
     body.put("description", description);
     if (customer != null && !customer.isEmpty()) body.put("customer", customer);

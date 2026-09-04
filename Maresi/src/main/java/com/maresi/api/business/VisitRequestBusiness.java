@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -262,12 +263,32 @@ public class VisitRequestBusiness {
     Response<Map<String, Object>> response = new Response<>();
     Map<String, Object> visit = loadVisitForParty(id, locale, response);
     if (visit == null) return response;
+    AuthUser reader = SecurityUtils.requireUser();
+    if (visitMessages.markIncoming(id, reader.id(), true) > 0) {
+      notifyMessageReceipt(visit, true);
+    }
     List<Map<String, Object>> items = visitMessages.findByVisit(id);
     for (Map<String, Object> item : items) {
       exposeMessageAttachment(id, item);
     }
     response.setItems(items);
     response.setCount((long) items.size());
+    response.setStatus(functionalError.success("Messages", locale));
+    return response;
+  }
+
+  public Response<Map<String, Object>> ackMessages(
+      UUID id, Request<Map<String, Object>> request, Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    Map<String, Object> visit = loadVisitForParty(id, locale, response);
+    if (visit == null) return response;
+    AuthUser reader = SecurityUtils.requireUser();
+    Map<String, Object> body = request.getData() == null ? Map.of() : request.getData();
+    boolean seen =
+        Boolean.TRUE.equals(body.get("seen")) || "seen".equalsIgnoreCase(str(body.get("state")));
+    int updated = visitMessages.markIncoming(id, reader.id(), seen);
+    if (updated > 0) notifyMessageReceipt(visit, seen);
+    response.setItem(Map.of("updated", updated, "seen", seen));
     response.setStatus(functionalError.success("Messages", locale));
     return response;
   }
@@ -395,6 +416,16 @@ public class VisitRequestBusiness {
           listingId);
     }
     realtime.publish("visit.message", message, guestId, ownerId, false);
+  }
+
+  private void notifyMessageReceipt(Map<String, Object> visit, boolean seen) {
+    UUID guestId = uuid(visit.get("user_id"));
+    UUID ownerId = visit.get("property_owner_id") == null ? null : uuid(visit.get("property_owner_id"));
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("visit_request_id", visit.get("id"));
+    payload.put("seen", seen);
+    payload.put("delivered", true);
+    realtime.publish("visit.message.receipt", payload, guestId, ownerId, false);
   }
 
   public Response<Map<String, Object>> listForOwner(Locale locale) {

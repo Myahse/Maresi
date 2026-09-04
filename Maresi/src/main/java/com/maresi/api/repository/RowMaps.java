@@ -258,6 +258,8 @@ public final class RowMaps {
     m.put("sender_id", rs.getObject("sender_id"));
     m.put("body", rs.getString("body"));
     m.put("created_at", toIso(rs.getTimestamp("created_at")));
+    putTimestamp(rs, m, "delivered_at");
+    putTimestamp(rs, m, "read_at");
     putIfPresent(rs, m, "attachment_url");
     putIfPresent(rs, m, "attachment_name");
     putIfPresent(rs, m, "attachment_type");

@@ -101,6 +101,8 @@ public class SchemaPatches {
     "ALTER TABLE visit_messages ADD COLUMN IF NOT EXISTS attachment_url TEXT",
     "ALTER TABLE visit_messages ADD COLUMN IF NOT EXISTS attachment_name VARCHAR(260)",
     "ALTER TABLE visit_messages ADD COLUMN IF NOT EXISTS attachment_type VARCHAR(120)",
+    "ALTER TABLE visit_messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ",
+    "ALTER TABLE visit_messages ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ",
     "ALTER TABLE visit_requests ADD COLUMN IF NOT EXISTS chat_closed_at TIMESTAMPTZ",
   };
 

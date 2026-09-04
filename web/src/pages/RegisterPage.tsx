@@ -353,7 +353,11 @@ export function RegisterPage() {
                 {t("common.back")}
               </Button>
             )}
-            <Button type="submit" className="flex-1 bg-brand hover:bg-brand-dark text-white" disabled={loading}>
+            <Button
+              type="submit"
+              className="flex-1 bg-brand hover:bg-brand-dark text-white"
+              disabled={loading || (step === lastStep && !acceptedTerms)}
+            >
               {loading
                 ? t("common.creatingAccount")
                 : step < lastStep

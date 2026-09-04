@@ -70,6 +70,14 @@ public class VisitRequestController {
     return ControllerSupport.run(() -> visitRequestService.listMessages(id, loc), loc, exceptionUtils);
   }
 
+  @PostMapping("/{id}/messages/receipt")
+  public ResponseEntity<Response<Map<String, Object>>> ackMessages(
+      @PathVariable UUID id, @RequestBody(required = false) Request<Map<String, Object>> request, Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    Request<Map<String, Object>> body = request == null ? new Request<>() : request;
+    return ControllerSupport.run(() -> visitRequestService.ackMessages(id, body, loc), loc, exceptionUtils);
+  }
+
   @PostMapping("/{id}/messages")
   public ResponseEntity<Response<Map<String, Object>>> postMessage(
       @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {

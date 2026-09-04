@@ -7,6 +7,7 @@ export const VISIT_REALTIME_TYPES = [
   "visit.created",
   "visit.status_changed",
   "visit.message",
+  "visit.message.receipt",
   "payment.completed",
 ] as const;
 

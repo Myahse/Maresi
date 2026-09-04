@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtime } from "@/hooks/useRealtime";
 import { emitRealtime } from "@/hooks/useRealtimeRefresh";
+import { ackIncomingVisitMessage } from "@/services/api";
 import type { RealtimeEvent } from "@/types";
 
 export function HostRealtimeBridge() {
@@ -11,6 +12,7 @@ export function HostRealtimeBridge() {
 
   const onEvent = useCallback((event: RealtimeEvent) => {
     emitRealtime(event);
+    ackIncomingVisitMessage(event, user?.id);
     if (event.type === "host.application.reviewed") {
       const data = event.data ?? {};
       if (data.status === "approved" && typeof data.token === "string" && user) {

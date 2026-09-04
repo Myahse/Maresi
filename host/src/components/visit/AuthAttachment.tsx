@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { FileText } from "lucide-react";
-import { ImageLightbox } from "@/components/visit/ImageLightbox";
+import { FilePreviewer } from "@/components/visit/FilePreviewer";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -15,9 +14,7 @@ export function AuthAttachment({
   mine?: boolean;
 }) {
   const [blobUrl, setBlobUrl] = useState("");
-  const [open, setOpen] = useState(false);
-  const image = Boolean(type?.startsWith("image/"));
-  const label = name || "Document";
+  const [blobType, setBlobType] = useState("");
 
   useEffect(() => {
     if (!src) return;
@@ -34,6 +31,7 @@ export function AuthAttachment({
         if (!blob) return;
         objectUrl = URL.createObjectURL(blob);
         setBlobUrl(objectUrl);
+        setBlobType(blob.type || "");
       })
       .catch(() => {});
     return () => {
@@ -42,33 +40,9 @@ export function AuthAttachment({
     };
   }, [src]);
 
-  if (!src || !blobUrl) return null;
-
-  if (image) {
-    return (
-      <>
-        <button
-          type="button"
-          className="block w-full max-w-[220px] overflow-hidden rounded-lg border-0 bg-transparent p-0"
-          onClick={() => setOpen(true)}
-        >
-          <img src={blobUrl} alt={label} className="max-h-52 w-full object-contain bg-black/5" />
-        </button>
-        <ImageLightbox src={blobUrl} alt={label} open={open} onClose={() => setOpen(false)} />
-      </>
-    );
+  if (!src) return null;
+  if (!blobUrl) {
+    return <div className="h-28 w-40 animate-pulse rounded-lg bg-black/10" aria-hidden />;
   }
-
-  return (
-    <a
-      href={blobUrl}
-      target="_blank"
-      rel="noreferrer"
-      download={label}
-      className="flex items-center gap-2 rounded-lg bg-black/5 px-2 py-1.5 text-sm text-[#111b21]"
-    >
-      <FileText className="h-5 w-5 shrink-0" />
-      <span className="truncate">{label}</span>
-    </a>
-  );
+  return <FilePreviewer src={blobUrl} name={name} type={type || blobType} />;
 }

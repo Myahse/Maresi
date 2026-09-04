@@ -66,7 +66,7 @@ public class AuthController {
   }
 
   @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  @Operation(summary = "Créer un compte client ou hôte avec pièce d'identité")
+  @Operation(summary = "Créer un compte client ou propriétaire avec pièce d'identité")
   public ResponseEntity<Response<Map<String, Object>>> registerMultipart(
       @RequestParam String email,
       @RequestParam String password,

@@ -90,7 +90,7 @@
     "browseTitle": "Parcourir les annonces",
     "browseText": "Créez un compte pour voir les biens disponibles, filtrer par lieu et prix, et enregistrer des favoris.",
     "listTitle": "Publiez votre bien",
-    "listText": "Demandez à devenir hôte. Après validation admin, gérez vos annonces dans l'app hôte.",
+    "listText": "Demandez à devenir propriétaire. Après validation admin, gérez vos annonces dans l'app propriétaire.",
     "ctaHint": "Inscrivez-vous ou connectez-vous pour accéder aux annonces.",
     "registerNow": "S'inscrire maintenant",
     "dedicatedServices": "Services dédiés",
@@ -160,7 +160,7 @@
     "noneFound": "Aucun bien trouvé.",
     "hub": "Votre espace",
     "hello": "Bonjour, {{name}}",
-    "subtitle": "Accès rapide aux annonces, favoris, visites et demande hôte.",
+    "subtitle": "Accès rapide aux annonces, favoris, visites et demande propriétaire.",
     "cards": {
       "browse": "Parcourir les annonces",
       "browseDesc": "Rechercher sur la carte et la grille",
@@ -316,9 +316,9 @@
       "accepted": "Acceptée",
       "declined": "Refusée",
       "awaiting_agreement": "Engagement",
-      "awaiting_host_agreement": "Signature hôte",
+      "awaiting_host_agreement": "Signature propriétaire",
       "awaiting_key": "Code clé",
-      "awaiting_payment": "Paiement hôte",
+      "awaiting_payment": "Paiement propriétaire",
       "payment_sent": "Paiement déclaré",
       "confirmed": "Confirmée",
       "cancelled": "Annulée"
@@ -411,17 +411,17 @@
     "phone": "Téléphone",
     "city": "Ville",
     "idCard": "N° pièce d'identité",
-    "message": "Pourquoi voulez-vous être hôte ?",
+    "message": "Pourquoi voulez-vous être propriétaire ?",
     "submit": "Envoyer la demande",
     "failed": "Impossible d'envoyer la demande",
     "pending": "Demande en attente",
     "pendingHint": "Nous vous préviendrons après examen par un admin.",
-    "approved": "Vous êtes validé comme hôte.",
-    "openHostApp": "Ouvrir l'app hôte",
+    "approved": "Vous êtes validé comme propriétaire.",
+    "openHostApp": "Ouvrir l'app propriétaire",
     "rejected": "Votre demande a été refusée. Vous pouvez réessayer."
   },
   "admin": {
-    "title": "Demandes hôte",
+    "title": "Demandes propriétaire",
     "empty": "Aucune demande.",
     "approve": "Accepter",
     "reject": "Refuser",
@@ -436,12 +436,12 @@
     "navVisits": "Réservations",
     "navPayments": "Paiements",
     "clientPaysFeesTitle": "Le client paie les frais opérateur",
-    "clientPaysFeesHint": "Si activé, le client paie les frais Wave / Orange Money en plus du séjour. L'hôte reçoit toujours 90 %.",
+    "clientPaysFeesHint": "Si activé, le client paie les frais Wave / Orange Money en plus du séjour. Le propriétaire reçoit toujours 90 %.",
     "navSubscriptions": "Abonnements",
     "properties": "Annonces",
     "visitsPending": "Visites en attente",
     "visitsKey": "Codes clé",
-    "visitsPay": "Paiements hôte",
+    "visitsPay": "Paiements propriétaire",
     "visitsConfirmed": "Confirmées",
     "liveHint": "Toutes les demandes, étapes, paiements et actions arrivent ici en direct.",
     "liveEmpty": "Aucun événement pour le moment.",
@@ -454,7 +454,7 @@
     "selfie": "Selfie",
     "keyCode": "Code clé",
     "overviewTitle": "Tableau de bord",
-    "owners": "Hôtes",
+    "owners": "Propriétaires",
     "paymentsDone": "Paiements réussis",
     "paymentsPending": "Paiements en attente",
     "revenue": "Encaissé (confirmé)",
@@ -482,7 +482,7 @@
     "confirmCancel": "Annuler ce paiement en attente ?",
     "confirmRefund": "Rembourser ce paiement ? L’abonnement ou la réservation sera aussi annulé.",
     "cancelVisit": "Annuler le séjour",
-    "confirmCancelVisit": "Annuler cette réservation ? Si elle est déjà payée, 90 % seront remboursés seulement si l'hôte n'a pas encore retiré.",
+    "confirmCancelVisit": "Annuler cette réservation ? Si elle est déjà payée, 90 % seront remboursés seulement si le propriétaire n'a pas encore retiré.",
     "reviewTitle": "Vérification d'identité",
     "reviewHint": "L'inscription client n'est pas bloquée. Si une pièce est illisible, envoyez un message avec le lien de correction. Vous pouvez suspendre le compte jusqu'à la mise à jour.",
     "reviewPlaceholder": "Ex. Le recto de la pièce n'est pas lisible. Merci de reprendre une photo nette.",
@@ -495,6 +495,6 @@
     "status": "Statut"
   },
   "hostGate": {
-    "wrongRole": "Cette app est réservée aux hôtes validés. Faites la demande depuis le site client."
+    "wrongRole": "Cette app est réservée aux propriétaires validés. Faites la demande depuis le site client."
   }
 }
