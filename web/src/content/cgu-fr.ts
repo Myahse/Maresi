@@ -32,12 +32,12 @@ La plateforme Maresi est exploitée sous le nom **Maresi**.
 **Dénomination :** Maresi
 **Siège / adresse :** Plateau, Abidjan, Côte d’Ivoire
 **Téléphone :** +225 27 22 49 96 96
-**Adresse e-mail :** contact@maresi.com
+**Adresse e-mail :** maresi00225@gmail.com
 **Site internet :** https://ma-resi.com
 
 Maresi peut être contactée à :
 
-**E-mail :** contact@maresi.com
+**E-mail :** maresi00225@gmail.com
 **Téléphone :** +225 27 22 49 96 96
 
 ---
@@ -422,7 +422,7 @@ Les absences répétées, annulations abusives ou comportements destinés à per
 - la suspension du compte ;
 - la suppression du compte.
 
-Après paiement d’une réservation sur Maresi, le contrat de séjour est engagé. Le client ne peut plus annuler lui-même. Toute annulation après paiement doit être demandée à un administrateur Maresi, avec le motif, à contact@maresi.com.
+Après paiement d’une réservation sur Maresi, le contrat de séjour est engagé. Le client ne peut plus annuler lui-même. Toute annulation après paiement doit être demandée à un administrateur Maresi, avec le motif, à maresi00225@gmail.com.
 
 ---
 
@@ -1148,7 +1148,7 @@ En cas de différend relatif à l'utilisation de Maresi, les parties sont encour
 
 L'utilisateur peut contacter le support Maresi à :
 
-**E-mail :** contact@maresi.com
+**E-mail :** maresi00225@gmail.com
 **Téléphone :** +225 27 22 49 96 96
 **Adresse :** Plateau, Abidjan, Côte d’Ivoire
 
@@ -1260,7 +1260,7 @@ Pour toute question concernant les présentes CGU ou l'utilisation de Maresi :
 
 **Maresi — Service Support**
 
-E-mail : contact@maresi.com
+E-mail : maresi00225@gmail.com
 Téléphone : +225 27 22 49 96 96
 Adresse : Plateau, Abidjan, Côte d’Ivoire
 Site : https://ma-resi.com

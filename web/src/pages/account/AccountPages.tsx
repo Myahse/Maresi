@@ -463,8 +463,8 @@ export function AccountSupportPage() {
     <Shell title={t("account.sections.support")} hint={t("account.sections.supportHint")}>
       <div className="rounded-2xl border bg-card p-4 space-y-3">
         <p className="text-sm text-muted-foreground">{t("account.supportHint")}</p>
-        <a href="mailto:contact@maresi.com" className="block font-semibold text-brand">
-          contact@maresi.com
+        <a href="mailto:maresi00225@gmail.com" className="block font-semibold text-brand">
+          maresi00225@gmail.com
         </a>
       </div>
     </Shell>

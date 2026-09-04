@@ -297,7 +297,7 @@
     "termsRequired": "Acceptez les conditions d'utilisation pour créer le compte."
   },
   "legal": {
-    "termsBody": "En créant un compte Maresi, vous confirmez que les informations et pièces d'identité fournies sont les vôtres et exactes.\n\nVous vous engagez à utiliser la plateforme pour chercher ou publier une résidence de bonne foi, à payer les séjours via Maresi, et à traiter logements, voisins et propriétaires avec soin.\n\nAprès paiement, la réservation est engagée. Une annulation n'est possible que via un administrateur Maresi, après explication du motif (contact@maresi.com).\n\nMaresi peut suspendre un compte si les documents sont faux ou si le règlement d'un séjour n'est pas respecté."
+    "termsBody": "En créant un compte Maresi, vous confirmez que les informations et pièces d'identité fournies sont les vôtres et exactes.\n\nVous vous engagez à utiliser la plateforme pour chercher ou publier une résidence de bonne foi, à payer les séjours via Maresi, et à traiter logements, voisins et propriétaires avec soin.\n\nAprès paiement, la réservation est engagée. Une annulation n'est possible que via un administrateur Maresi, après explication du motif (maresi00225@gmail.com).\n\nMaresi peut suspendre un compte si les documents sont faux ou si le règlement d'un séjour n'est pas respecté."
   },
   "dashboard": {
     "title": "Parcourir les résidences",
@@ -567,7 +567,7 @@
     },
     "cancelCta": "Annuler la réservation",
     "cancelConfirm": "Annuler cette réservation ?",
-    "cancelPaidHint": "Après paiement, le contrat est engagé. Pour annuler, contactez un administrateur Maresi (contact@maresi.com) et expliquez la raison.",
+    "cancelPaidHint": "Après paiement, le contrat est engagé. Pour annuler, contactez un administrateur Maresi (maresi00225@gmail.com) et expliquez la raison.",
     "agreementTitle": "Engagement de soin du logement",
     "agreementBody": "Avant de payer, vous confirmez que vous prendrez soin de ce logement.",
     "agreementOpen": "Ouvrir et signer l'engagement",
