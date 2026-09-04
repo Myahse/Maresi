@@ -54,6 +54,15 @@ export function RegisterPage() {
     t("register.stepIdentity"),
   ];
 
+  const canAdvance =
+    step === 0
+      ? role != null
+      : step === 1
+        ? Boolean(firstName.trim() && lastName.trim() && birthDate && gender && isAdultBirthDate(birthDate))
+        : step === 2
+          ? Boolean(email.trim() && password.length >= 6 && isCompletePhone(phone))
+          : Boolean(selfie && idCardPhoto && isValidIdCard(idCard) && acceptedTerms);
+
   const goNext = () => {
     setError("");
     if (step === 0 && !role) {
@@ -356,7 +365,7 @@ export function RegisterPage() {
             <Button
               type="submit"
               className="flex-1 bg-brand hover:bg-brand-dark text-white"
-              disabled={loading || (step === lastStep && !acceptedTerms)}
+              disabled={loading || !canAdvance}
             >
               {loading
                 ? t("common.creatingAccount")

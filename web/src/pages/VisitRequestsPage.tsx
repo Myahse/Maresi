@@ -16,6 +16,8 @@ import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { actionErrorMessage } from "@/lib/offline";
 import type { VisitRequest } from "@/types";
 import { PaymentOperatorPicker } from "@/components/payment/PaymentOperatorPicker";
+import { PhoneInput } from "@/components/auth/PhoneInput";
+import { useAuth } from "@/hooks/useAuth";
 import { AlertTriangle } from "lucide-react";
 
 const SECURITY_SEEN_PREFIX = "maresi-key-security-";
@@ -36,6 +38,10 @@ function markSecuritySeen(visitId: string) {
   }
 }
 
+function visitPhone(visit: VisitRequest, accountPhone?: string) {
+  return visit.contact_phone || visit.requester_phone || accountPhone || "";
+}
+
 function stayAmount(visit: VisitRequest): number {
   const unit = Number(visit.property_price ?? 0);
   if (!visit.check_in || !visit.check_out) return unit;
@@ -48,6 +54,7 @@ function stayAmount(visit: VisitRequest): number {
 export function VisitRequestsPage() {
   const { t } = useTranslation();
   const { formatPrice } = usePriceFormatter();
+  const { user } = useAuth();
   const [visits, setVisits] = useState<VisitRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
@@ -67,6 +74,7 @@ export function VisitRequestsPage() {
     nights: number;
   } | null>>({});
   const [selectedMethods, setSelectedMethods] = useState<Record<string, string>>({});
+  const [phones, setPhones] = useState<Record<string, string>>({});
   const [securityModalVisitId, setSecurityModalVisitId] = useState<string | null>(null);
 
   const reload = useCallback(
@@ -176,19 +184,27 @@ export function VisitRequestsPage() {
 
   const payReservation = async (visitId: string) => {
     const method = selectedMethods[visitId];
+    const visit = visits.find((item) => item.id === visitId);
+    const phone = (phones[visitId] || (visit ? visitPhone(visit, user?.phone) : "")).trim();
     if (!method) {
       setError(t("payments.chooseOperatorFirst"));
+      return;
+    }
+    if (!phone) {
+      setError(t("payments.operatorPhoneRequired"));
       return;
     }
     setActingId(visitId);
     setError("");
     try {
-      const payment = await startReservationPayment(visitId, method);
-      if (payment.checkout_url) {
-        window.location.assign(payment.checkout_url);
+      const payment = await startReservationPayment(visitId, method, phone);
+      const url = typeof payment.checkout_url === "string" ? payment.checkout_url.trim() : "";
+      if (url && url !== "null" && url !== "undefined") {
+        window.location.assign(url);
         return;
       }
       setError(t("payments.payFailed"));
+      await reload();
     } catch (e) {
       setError(actionErrorMessage(e, t("payments.payFailed"), t("offline.queued")));
     } finally {
@@ -233,9 +249,19 @@ return (
                       onSelect={(id) => setSelectedMethods((prev) => ({ ...prev, [v.id]: id }))}
                       baseAmount={previews[v.id] ? Number(previews[v.id]!.stay_amount) : stayAmount(v)}
                     />
+                    <label className="block space-y-1.5">
+                      <span className="text-sm font-medium text-foreground">{t("payments.operatorPhone")}</span>
+                      <PhoneInput
+                        id={`pay-phone-${v.id}`}
+                        value={phones[v.id] ?? visitPhone(v, user?.phone)}
+                        onChange={(next) => setPhones((prev) => ({ ...prev, [v.id]: next }))}
+                        required
+                      />
+                      <span className="block text-xs text-muted-foreground">{t("payments.operatorPhoneHint")}</span>
+                    </label>
                     <Button
                       className="w-full rounded-full bg-brand hover:bg-brand-dark"
-                      disabled={actingId === v.id || !selectedMethods[v.id]}
+                      disabled={actingId === v.id || !selectedMethods[v.id] || !(phones[v.id] ?? visitPhone(v, user?.phone)).trim()}
                       onClick={() => void payReservation(v.id)}
                     >
                       {actingId === v.id ? t("payments.paying") : t("payments.goToPayment")}

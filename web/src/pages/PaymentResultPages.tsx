@@ -17,25 +17,41 @@ export function PaymentSuccessPage() {
   useEffect(() => {
     if (!reference) return;
     let cancelled = false;
-    confirmPayment(reference)
-      .then((payment) => {
-        if (cancelled) return;
-        const status = String(payment.status || "").toLowerCase();
-        if (status === "completed") setPhase("ok");
-        else if (status === "failed") setPhase("fail");
-        else setPhase("pending");
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        const msg = err instanceof Error ? err.message : "";
-        if (/401|unauthorized|session/i.test(msg)) {
-          setPhase("fail");
-          setDetail(t("payments.sessionExpired"));
-        } else {
-          setPhase("fail");
-          setDetail(msg || t("payments.errorText"));
-        }
-      });
+    let attempts = 0;
+    const check = () => {
+      confirmPayment(reference)
+        .then((payment) => {
+          if (cancelled) return;
+          const status = String(payment.status || "").toLowerCase();
+          if (status === "completed") {
+            setPhase("ok");
+            return;
+          }
+          if (status === "failed") {
+            setPhase("fail");
+            return;
+          }
+          attempts += 1;
+          if (attempts < 5) {
+            setPhase("pending");
+            window.setTimeout(check, 2500);
+          } else {
+            setPhase("pending");
+          }
+        })
+        .catch((err: unknown) => {
+          if (cancelled) return;
+          const msg = err instanceof Error ? err.message : "";
+          if (/401|unauthorized|session/i.test(msg)) {
+            setPhase("fail");
+            setDetail(t("payments.sessionExpired"));
+          } else {
+            setPhase("fail");
+            setDetail(msg || t("payments.errorText"));
+          }
+        });
+    };
+    check();
     return () => {
       cancelled = true;
     };

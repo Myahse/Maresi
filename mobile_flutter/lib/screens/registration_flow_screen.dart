@@ -67,6 +67,66 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
   bool get _isOwner => _role == UserRole.owner;
 
   @override
+  void initState() {
+    super.initState();
+    for (final controller in [
+      _emailController,
+      _passwordController,
+      _firstNameController,
+      _lastNameController,
+      _idCardController,
+      _phoneController,
+      _locationController,
+      _surfaceController,
+      _priceController,
+    ]) {
+      controller.addListener(_onFieldsChanged);
+    }
+  }
+
+  void _onFieldsChanged() {
+    if (mounted) setState(() {});
+  }
+
+  bool _canAdvance() {
+    switch (_step) {
+      case _stepIntent:
+        return _intentIndex != null && _role != null;
+      case _stepPersonal:
+        return _firstNameController.text.trim().isNotEmpty &&
+            _lastNameController.text.trim().isNotEmpty &&
+            _birthDate != null &&
+            _gender != null &&
+            _isAdult(_birthDate!);
+      case _stepIdentity:
+        return _selfie != null && _idCardPhoto != null && _idCardController.text.trim().length >= 5;
+      case _stepPropertyType:
+        return _propertyType != null;
+      case _stepPropertyDetails:
+        final location = _locationController.text.trim();
+        final surface = double.tryParse(_surfaceController.text.trim().replaceAll(',', '.'));
+        final price = int.tryParse(_priceController.text.trim());
+        return location.length >= 3 &&
+            surface != null &&
+            surface >= 10 &&
+            surface <= 10000 &&
+            price != null &&
+            price >= 1000;
+      case _stepPropertyPhotos:
+        return _photos.length >= kMinPropertyPhotos;
+      case _stepAccount:
+        final email = _emailController.text.trim();
+        final phoneDigits = _phoneController.text.replaceAll(RegExp(r'\D'), '');
+        return email.contains('@') &&
+            _passwordController.text.length >= 6 &&
+            phoneDigits.length >= 8 &&
+            _acceptedTerms;
+      default:
+        return false;
+    }
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -463,7 +523,7 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
           MaresiWizardActions(
             showBack: _step > _stepIntent,
             onBack: _goBack,
-            onNext: _step == _stepAccount && !_acceptedTerms ? null : _onNext,
+            onNext: _canAdvance() ? _onNext : null,
             nextLabel: _nextLabel(locale),
             loading: _loading,
           ),

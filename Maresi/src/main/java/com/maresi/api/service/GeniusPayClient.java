@@ -16,10 +16,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class GeniusPayClient {
+  private static final Logger log = LoggerFactory.getLogger(GeniusPayClient.class);
   private final AppProperties props;
   private final ObjectMapper objectMapper;
   private final HttpClient httpClient;
@@ -69,13 +72,14 @@ public class GeniusPayClient {
     if (customer != null && !customer.isEmpty()) body.put("customer", customer);
     if (successUrl != null && !successUrl.isBlank()) body.put("success_url", successUrl);
     if (errorUrl != null && !errorUrl.isBlank()) body.put("error_url", errorUrl);
-    if (metadata != null && !metadata.isEmpty()) body.put("metadata", metadata);
+    if (metadata != null && !metadata.isEmpty()) body.put("metadata", stringifyMetadata(metadata));
     if (customerPaysOperatorFees) {
       body.put("fees_on_customer", true);
       body.put("customer_pays_fees", true);
     }
     if (paymentMethod != null && !paymentMethod.isBlank()) {
       body.put("payment_method", paymentMethod);
+      body.put("gateway", gatewayFor(paymentMethod));
     }
 
     try {
@@ -96,10 +100,22 @@ public class GeniusPayClient {
       }
       JsonNode root = objectMapper.readTree(response.body());
       JsonNode data = root.has("data") ? root.get("data") : root;
+      String paymentUrl = text(data, "payment_url");
+      String checkoutUrl = text(data, "checkout_url");
+      String redirect = pickRedirectUrl(paymentMethod, paymentUrl, checkoutUrl);
+      log.info(
+          "GeniusPay create method={} stored={} gateway={} payment_url={} checkout_url={} redirect={}",
+          paymentMethod,
+          text(data, "payment_method"),
+          text(data, "gateway"),
+          paymentUrl,
+          checkoutUrl,
+          redirect);
       Map<String, Object> result = new LinkedHashMap<>();
       result.put("reference", text(data, "reference", "id", "transaction_id"));
-      result.put("checkout_url", text(data, "checkout_url", "payment_url"));
+      result.put("checkout_url", redirect);
       result.put("status", text(data, "status"));
+      result.put("environment", text(data, "environment"));
       result.put("raw", objectMapper.convertValue(data, Map.class));
       if (result.get("checkout_url") == null || String.valueOf(result.get("checkout_url")).isBlank()) {
         throw ApiException.of(502, "Genius Pay did not return a checkout URL");
@@ -136,14 +152,66 @@ public class GeniusPayClient {
       JsonNode data = root.has("data") ? root.get("data") : root;
       Map<String, Object> result = new LinkedHashMap<>();
       result.put("reference", text(data, "reference", "id", "transaction_id"));
-      result.put("status", text(data, "status"));
+      result.put("status", text(data, "status", "payment_status"));
       result.put("raw", objectMapper.convertValue(data, Map.class));
+      log.info("GeniusPay lookup ref={} status={}", result.get("reference"), result.get("status"));
       return result;
     } catch (ApiException e) {
       throw e;
     } catch (Exception e) {
       throw ApiException.of(502, "Genius Pay lookup failed: " + e.getMessage());
     }
+  }
+
+  public boolean isSandbox(Map<String, Object> created) {
+    if (created == null) return false;
+    String env = created.get("environment") == null ? "" : String.valueOf(created.get("environment"));
+    if ("sandbox".equalsIgnoreCase(env)) return true;
+    String ref = created.get("reference") == null ? "" : String.valueOf(created.get("reference"));
+    if (ref.toUpperCase(java.util.Locale.ROOT).startsWith("SANDBOX_")) return true;
+    String url = created.get("checkout_url") == null ? "" : String.valueOf(created.get("checkout_url"));
+    return url.toUpperCase(java.util.Locale.ROOT).contains("SANDBOX_");
+  }
+
+  public boolean simulateSandboxSuccess(String reference, String paymentMethod) {
+    if (reference == null || reference.isBlank()) return false;
+    AppProperties.GeniusPay gp = requireKeys();
+    String encoded = URLEncoder.encode(reference, StandardCharsets.UTF_8).replace("+", "%20");
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("scenario", "success");
+    body.put("status", "completed");
+    if (paymentMethod != null && !paymentMethod.isBlank()) {
+      body.put("payment_method", paymentMethod);
+      body.put("gateway", gatewayFor(paymentMethod));
+    }
+    String[] paths = {
+      "/payments/" + encoded + "/simulate",
+      "/payments/" + encoded + "/complete",
+      "/sandbox/payments/" + encoded + "/simulate"
+    };
+    try {
+      String json = objectMapper.writeValueAsString(body);
+      for (String path : paths) {
+        HttpRequest request =
+            HttpRequest.newBuilder()
+                .uri(URI.create(trimSlash(gp.getBaseUrl()) + path))
+                .timeout(Duration.ofSeconds(20))
+                .header("Content-Type", "application/json")
+                .header("X-API-Key", gp.getApiKey())
+                .header("X-API-Secret", gp.getApiSecret())
+                .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
+                .build();
+        HttpResponse<String> response =
+            httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        if (response.statusCode() < 400) {
+          log.info("GeniusPay sandbox simulate ok path={} ref={}", path, reference);
+          return true;
+        }
+      }
+    } catch (Exception e) {
+      log.info("GeniusPay sandbox simulate skipped: {}", e.getMessage());
+    }
+    return false;
   }
 
   public boolean refundPayment(String reference) {
@@ -307,6 +375,38 @@ public class GeniusPayClient {
       }
     } catch (Exception ignored) {
     }
+    return null;
+  }
+
+  private static Map<String, String> stringifyMetadata(Map<String, Object> metadata) {
+    Map<String, String> out = new LinkedHashMap<>();
+    for (Map.Entry<String, Object> e : metadata.entrySet()) {
+      if (e.getKey() == null || e.getValue() == null) continue;
+      out.put(e.getKey(), String.valueOf(e.getValue()));
+    }
+    return out;
+  }
+
+  private static String gatewayFor(String paymentMethod) {
+    if ("mtn_money".equals(paymentMethod)) return "mtn_momo";
+    return paymentMethod;
+  }
+
+  private static String pickRedirectUrl(String paymentMethod, String paymentUrl, String checkoutUrl) {
+    if (isHostedCheckout(checkoutUrl)) return checkoutUrl;
+    if (isHostedCheckout(paymentUrl)) return paymentUrl;
+    return firstNonBlank(checkoutUrl, paymentUrl);
+  }
+
+  private static boolean isHostedCheckout(String url) {
+    if (url == null || url.isBlank()) return false;
+    String u = url.toLowerCase();
+    return u.contains("genius.ci") || u.contains("geniuspay") || u.contains("/checkout/");
+  }
+
+  private static String firstNonBlank(String a, String b) {
+    if (a != null && !a.isBlank()) return a;
+    if (b != null && !b.isBlank()) return b;
     return null;
   }
 

@@ -577,9 +577,10 @@ class ApiService implements MaresiApi {
   }
 
   @override
-  Future<Payment> startReservationPayment(String visitRequestId, {String? paymentMethod}) async {
+  Future<Payment> startReservationPayment(String visitRequestId, {String? paymentMethod, String? phone}) async {
     final body = <String, dynamic>{'visitRequestId': visitRequestId};
     if (paymentMethod != null && paymentMethod.isNotEmpty) body['payment_method'] = paymentMethod;
+    if (phone != null && phone.isNotEmpty) body['phone'] = phone;
     final res = await http.post(
       Uri.parse('${AppConfig.apiPrefix}/payments/reservation'),
       headers: await _authHeaders(),

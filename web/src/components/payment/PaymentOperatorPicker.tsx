@@ -38,10 +38,10 @@ export function PaymentOperatorPicker({
               )}
               onClick={() => onSelect(method.id)}
             >
-              <Logo />
+              <Logo className="h-8 w-8 shrink-0" />
               <span className="min-w-0">
                 <span className="block text-sm font-medium text-foreground">{method.name}</span>
-                <span className="block text-[11px] text-muted-foreground">{method.operatorFeePercent}%</span>
+                <span className="block text-xs text-muted-foreground">{method.operatorFeePercent}%</span>
               </span>
             </button>
           );

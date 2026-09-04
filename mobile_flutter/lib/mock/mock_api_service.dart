@@ -478,7 +478,7 @@ class MockApiService implements MaresiApi {
   }
 
   @override
-  Future<Payment> startReservationPayment(String visitRequestId, {String? paymentMethod}) async {
+  Future<Payment> startReservationPayment(String visitRequestId, {String? paymentMethod, String? phone}) async {
     await _delay();
     if (_sessionUser == null) throw Exception('Authentification requise');
     final index = _visitRequests.indexWhere((v) => v.id == visitRequestId);

@@ -17,6 +17,40 @@ export function isValidDateRange(checkIn: string, checkOut: string): boolean {
   return new Date(checkOut) >= new Date(checkIn);
 }
 
+export const TIME_STEP_MINUTES = 15;
+
+export function parseClockMinutes(value: string): number | null {
+  const match = /^(\d{1,2}):(\d{2})/.exec(value.trim());
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return hours * 60 + minutes;
+}
+
+export function formatClockMinutes(total: number): string {
+  const clamped = Math.max(0, Math.min(23 * 60 + 45, total));
+  const hours = Math.floor(clamped / 60);
+  const minutes = clamped % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+/** Same-day stay: arrival must be at least one 15-min slot before departure. */
+export function orderSameDayTimes(arrival: string, departure: string): { arrival: string; departure: string } {
+  const arrivalMins = parseClockMinutes(arrival) ?? 14 * 60;
+  const departureMins = parseClockMinutes(departure) ?? 12 * 60;
+  if (arrivalMins < departureMins) {
+    return { arrival: formatClockMinutes(arrivalMins), departure: formatClockMinutes(departureMins) };
+  }
+  if (arrivalMins + TIME_STEP_MINUTES <= 23 * 60 + 45) {
+    return {
+      arrival: formatClockMinutes(arrivalMins),
+      departure: formatClockMinutes(arrivalMins + TIME_STEP_MINUTES),
+    };
+  }
+  return { arrival: "23:30", departure: "23:45" };
+}
+
 export function isValidPhone(phone: string): boolean {
   const cleaned = phone.replace(/\s/g, "");
   return /^\+?[\d]{8,15}$/.test(cleaned);

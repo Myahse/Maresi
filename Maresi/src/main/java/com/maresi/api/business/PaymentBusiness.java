@@ -261,6 +261,19 @@ public class PaymentBusiness {
     metadata.put("operator_fee_percent", operatorFeePercent.toPlainString());
     metadata.put("client_pays_operator_fees", true);
     metadata.put("payment_method", paymentMethod);
+    Map<String, Object> customer = customerFor(user);
+    String phone =
+        firstPhone(
+            str(body.get("phone")),
+            str(visit.get("contact_phone")),
+            str(visit.get("requester_phone")),
+            str(customer.get("phone")));
+    if (phone == null) {
+      response.setHasError(true);
+      response.setStatus(functionalError.fieldEmpty("phone", locale));
+      return response;
+    }
+    customer.put("phone", phone);
     Map<String, Object> payment =
         payments.create(
             user.id(),
@@ -275,22 +288,32 @@ public class PaymentBusiness {
             null,
             metadata);
     metadata.put("payment_id", payment.get("id").toString());
-    Map<String, Object> customer = customerFor(user);
-    Map<String, Object> gp =
-        geniusPay.createCheckoutPayment(
-            amount,
-            "Reservation Maresi",
-            customer,
-            props.getPayments().getSuccessUrl(),
-            props.getPayments().getErrorUrl(),
-            metadata,
-            false,
-            paymentMethod);
+    Map<String, Object> gp;
+    try {
+      gp =
+          geniusPay.createCheckoutPayment(
+              amount,
+              "Reservation Maresi",
+              customer,
+              props.getPayments().getSuccessUrl(),
+              props.getPayments().getErrorUrl(),
+              metadata);
+    } catch (RuntimeException e) {
+      payments.markFailed(UUID.fromString(payment.get("id").toString()));
+      throw e;
+    }
+    String checkoutUrl = str(gp.get("checkout_url"));
+    if (checkoutUrl == null) {
+      payments.markFailed(UUID.fromString(payment.get("id").toString()));
+      response.setHasError(true);
+      response.setStatus(functionalError.invalidData("Genius Pay n'a pas renvoye de page de paiement", locale));
+      return response;
+    }
     payment =
         payments.updateCheckout(
             UUID.fromString(payment.get("id").toString()),
-            String.valueOf(gp.get("reference")),
-            String.valueOf(gp.get("checkout_url")));
+            str(gp.get("reference")),
+            checkoutUrl);
     response.setItem(payment);
     response.setStatus(functionalError.success("Checkout reservation", locale));
     return response;
@@ -709,10 +732,11 @@ public class PaymentBusiness {
       UUID paymentId = UUID.fromString(payment.get("id").toString());
       String normalizedEvent = event == null ? "" : event.toLowerCase(Locale.ROOT);
       boolean success =
-          normalizedEvent.contains("success")
-              || normalizedEvent.contains("completed")
-              || isPaidStatus(text(data, "status"))
-              || isPaidStatus(text(payoutNode, "status"));
+          isPaidStatus(text(data, "status"))
+              || isPaidStatus(text(payoutNode, "status"))
+              || "payment.completed".equals(normalizedEvent)
+              || "payment.succeeded".equals(normalizedEvent)
+              || "payment.success".equals(normalizedEvent);
       boolean failed =
           normalizedEvent.contains("fail")
               || normalizedEvent.contains("expired")
@@ -1198,9 +1222,8 @@ public class PaymentBusiness {
             : user.email();
     customer.put("name", name);
     if (user.email() != null) customer.put("email", user.email());
-    if (dbUser != null && dbUser.get("phone") != null) {
-      customer.put("phone", String.valueOf(dbUser.get("phone")));
-    }
+    String phone = dbUser == null ? null : normalizeCiPhone(str(dbUser.get("phone")));
+    if (phone != null) customer.put("phone", phone);
     customer.put("country", "CI");
     return customer;
   }
@@ -1219,6 +1242,14 @@ public class PaymentBusiness {
     } catch (Exception e) {
       return null;
     }
+  }
+
+  private static String firstPhone(String... candidates) {
+    for (String raw : candidates) {
+      String phone = normalizeCiPhone(raw);
+      if (phone != null) return phone;
+    }
+    return null;
   }
 
   private static boolean isSupportedOperator(String paymentMethod) {
@@ -1240,8 +1271,12 @@ public class PaymentBusiness {
 
   private static boolean isPaidStatus(String status) {
     if (status == null || status.isBlank()) return false;
-    String s = status.toLowerCase(Locale.ROOT);
-    return s.contains("complet") || "paid".equals(s) || "success".equals(s) || "succeeded".equals(s);
+    String s = status.trim().toLowerCase(Locale.ROOT);
+    return "completed".equals(s)
+        || "paid".equals(s)
+        || "success".equals(s)
+        || "succeeded".equals(s)
+        || "successful".equals(s);
   }
 
   private static boolean isFailedStatus(String status) {

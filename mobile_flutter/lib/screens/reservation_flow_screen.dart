@@ -43,7 +43,15 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
   @override
   void initState() {
     super.initState();
+    _guestsController.addListener(_onFieldsChanged);
+    _phoneController.addListener(_onFieldsChanged);
+    _idCardController.addListener(_onFieldsChanged);
+    _agreementNameController.addListener(_onFieldsChanged);
     _prefillIdentity();
+  }
+
+  void _onFieldsChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _prefillIdentity() async {
@@ -81,12 +89,15 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
     return text;
   }
 
-  Future<String?> _pickDate(LocaleProvider locale) async {
+  Future<String?> _pickDate(LocaleProvider locale, {DateTime? firstDate}) async {
     final now = DateTime.now();
+    final start = firstDate ?? DateTime(now.year, now.month, now.day);
+    var initial = now.add(const Duration(days: 1));
+    if (initial.isBefore(start)) initial = start;
     final picked = await showDatePicker(
       context: context,
-      initialDate: now.add(const Duration(days: 1)),
-      firstDate: now,
+      initialDate: initial,
+      firstDate: start,
       lastDate: now.add(const Duration(days: 365)),
       helpText: locale.t('reserve.pickDate'),
     );
@@ -99,6 +110,26 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
 
   String _formatClock(TimeOfDay time) =>
       '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
+  int _clockMinutes(TimeOfDay time) => time.hour * 60 + time.minute;
+
+  TimeOfDay _timeFromMinutes(int total) {
+    final clamped = total.clamp(0, 23 * 60 + 45);
+    return TimeOfDay(hour: clamped ~/ 60, minute: clamped % 60);
+  }
+
+  bool get _sameDayStay => _checkIn != null && _checkIn == _checkOut;
+
+  void _orderSameDayTimes() {
+    if (!_sameDayStay) return;
+    if (_clockMinutes(_arrival) < _clockMinutes(_departure)) return;
+    if (_clockMinutes(_arrival) + 15 <= 23 * 60 + 45) {
+      _departure = _timeFromMinutes(_clockMinutes(_arrival) + 15);
+    } else {
+      _arrival = const TimeOfDay(hour: 23, minute: 30);
+      _departure = const TimeOfDay(hour: 23, minute: 45);
+    }
+  }
 
   Future<void> _pickStayTime({required bool arrival}) async {
     if (_loading) return;
@@ -113,6 +144,7 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
       } else {
         _departure = picked;
       }
+      _orderSameDayTimes();
     });
   }
 
@@ -303,7 +335,7 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
           MaresiWizardActions(
             showBack: _step > 0,
             onBack: _goBack,
-            onNext: _onNext,
+            onNext: _validateStep(locale) == null ? _onNext : null,
             nextLabel: _step == 3 ? locale.t('reserve.submit') : locale.t('register.next'),
             loading: _loading,
           ),
@@ -331,7 +363,14 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
           value: _checkIn,
           onTap: () async {
             final picked = await _pickDate(locale);
-            if (picked != null) setState(() => _checkIn = picked);
+            if (picked == null) return;
+            setState(() {
+              _checkIn = picked;
+              if (_checkOut != null && picked.compareTo(_checkOut!) > 0) {
+                _checkOut = picked;
+              }
+              _orderSameDayTimes();
+            });
           },
         ),
         const SizedBox(height: 16),
@@ -346,8 +385,17 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
           label: locale.t('reserve.checkOut'),
           value: _checkOut,
           onTap: () async {
-            final picked = await _pickDate(locale);
-            if (picked != null) setState(() => _checkOut = picked);
+            DateTime? minOut;
+            if (_checkIn != null) {
+              final parts = _checkIn!.split('-');
+              minOut = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+            }
+            final picked = await _pickDate(locale, firstDate: minOut);
+            if (picked == null) return;
+            setState(() {
+              _checkOut = picked;
+              _orderSameDayTimes();
+            });
           },
         ),
         const SizedBox(height: 16),
@@ -357,6 +405,13 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
           icon: Icons.schedule,
           onTap: () => _pickStayTime(arrival: false),
         ),
+        if (_sameDayStay) ...[
+          const SizedBox(height: 12),
+          Text(
+            locale.t('reserve.errorTimesOrder'),
+            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+          ),
+        ],
       ],
     );
   }

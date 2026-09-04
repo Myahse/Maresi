@@ -11,7 +11,17 @@ import { getMyProfile, getProperty, requestVisit } from "@/services/api";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { useAuth } from "@/hooks/useAuth";
 import { usePriceFormatter } from "@/context/CurrencyContext";
-import { isFutureDate, isValidDateRange, isValidPhone, isValidIdCard, isPositiveInt } from "@/lib/validation";
+import {
+  isFutureDate,
+  isValidDateRange,
+  isValidPhone,
+  isValidIdCard,
+  isPositiveInt,
+  orderSameDayTimes,
+  parseClockMinutes,
+  formatClockMinutes,
+  TIME_STEP_MINUTES,
+} from "@/lib/validation";
 import type { Property, VisitRequestPayload } from "@/types";
 
 export function ReservationPage() {
@@ -39,6 +49,63 @@ export function ReservationPage() {
   const [message, setMessage] = useState("");
   const [agreementName, setAgreementName] = useState("");
   const [agreementChecks, setAgreementChecks] = useState([false, false, false, false, false]);
+  const sameDayStay = Boolean(check_in && check_out && check_in === check_out);
+
+  const applySameDayTimes = (nextArrival: string, nextDeparture: string) => {
+    const ordered = orderSameDayTimes(nextArrival, nextDeparture);
+    setArrivalTime(ordered.arrival);
+    setDepartureTime(ordered.departure);
+  };
+
+  const today = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
+
+  const changeCheckIn = (value: string) => {
+    setCheckIn(value);
+    if (!check_out) return;
+    if (value > check_out) {
+      setCheckOut(value);
+      applySameDayTimes(arrivalTime, departureTime);
+      return;
+    }
+    if (value === check_out) applySameDayTimes(arrivalTime, departureTime);
+  };
+
+  const changeCheckOut = (value: string) => {
+    const nextOut = check_in && value < check_in ? check_in : value;
+    setCheckOut(nextOut);
+    if (check_in && nextOut === check_in) {
+      applySameDayTimes(arrivalTime, departureTime);
+    }
+  };
+
+  const changeArrival = (value: string) => {
+    if (sameDayStay) applySameDayTimes(value, departureTime);
+    else setArrivalTime(value);
+  };
+
+  const changeDeparture = (value: string) => {
+    if (!sameDayStay) {
+      setDepartureTime(value);
+      return;
+    }
+    const arrivalMins = parseClockMinutes(arrivalTime) ?? 0;
+    const departureMins = parseClockMinutes(value);
+    if (departureMins != null && departureMins > arrivalMins) {
+      setDepartureTime(value);
+      return;
+    }
+    applySameDayTimes(arrivalTime, value);
+  };
+
+  const arrivalMax = sameDayStay
+    ? formatClockMinutes((parseClockMinutes(departureTime) ?? 12 * 60) - TIME_STEP_MINUTES)
+    : undefined;
+  const departureMin = sameDayStay
+    ? formatClockMinutes((parseClockMinutes(arrivalTime) ?? 0) + TIME_STEP_MINUTES)
+    : undefined;
 
   const steps = [
     { id: "dates", label: t("wizard.reserve.steps.dates") },
@@ -208,7 +275,13 @@ export function ReservationPage() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="check_in">{t("wizard.reserve.checkIn")} *</Label>
-              <Input id="check_in" type="date" value={check_in} onChange={(e) => setCheckIn(e.target.value)} />
+              <Input
+                id="check_in"
+                type="date"
+                min={today}
+                value={check_in}
+                onChange={(e) => changeCheckIn(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="arrival_time">{t("wizard.reserve.arrivalTime")} *</Label>
@@ -216,14 +289,21 @@ export function ReservationPage() {
                 id="arrival_time"
                 type="time"
                 step={900}
+                max={arrivalMax}
                 value={arrivalTime}
-                onChange={(e) => setArrivalTime(e.target.value)}
+                onChange={(e) => changeArrival(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="check_out">{t("wizard.reserve.checkOut")} *</Label>
-              <Input id="check_out" type="date" value={check_out} onChange={(e) => setCheckOut(e.target.value)} />
+              <Input
+                id="check_out"
+                type="date"
+                min={check_in || today}
+                value={check_out}
+                onChange={(e) => changeCheckOut(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="departure_time">{t("wizard.reserve.departureTime")} *</Label>
@@ -231,12 +311,16 @@ export function ReservationPage() {
                 id="departure_time"
                 type="time"
                 step={900}
+                min={departureMin}
                 value={departureTime}
-                onChange={(e) => setDepartureTime(e.target.value)}
+                onChange={(e) => changeDeparture(e.target.value)}
                 required
               />
             </div>
           </div>
+          {sameDayStay && (
+            <p className="text-sm text-muted-foreground">{t("wizard.reserve.errors.timesOrder")}</p>
+          )}
           {(property.check_in_time || property.check_out_time) && (
             <p className="text-sm text-muted-foreground">
               {t("wizard.reserve.houseHoursHint", {
@@ -387,7 +471,12 @@ export function ReservationPage() {
             </Button>
           )}
           {step < steps.length - 1 ? (
-            <Button type="button" className="rounded-full bg-brand hover:bg-brand-dark flex-1 md:ml-auto md:flex-none" onClick={next}>
+            <Button
+              type="button"
+              className="rounded-full bg-brand hover:bg-brand-dark flex-1 md:ml-auto md:flex-none"
+              disabled={validateStep(step) !== null}
+              onClick={next}
+            >
               {t("wizard.next")}
             </Button>
           ) : (

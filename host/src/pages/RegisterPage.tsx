@@ -37,6 +37,13 @@ export function RegisterPage() {
   const lastStep = 2;
   const steps = [t("register.stepPersonal"), t("register.stepAccount"), t("register.stepIdentity")];
 
+  const canAdvance =
+    step === 0
+      ? Boolean(firstName.trim() && lastName.trim() && birthDate && gender && isAdultBirthDate(birthDate))
+      : step === 1
+        ? Boolean(email.trim() && password.length >= 6 && isCompletePhone(phone))
+        : Boolean(selfie && idCardPhoto && isValidIdCard(idCard));
+
   const goNext = () => {
     setError("");
     if (step === 0) {
@@ -259,7 +266,7 @@ export function RegisterPage() {
                 {t("common.back")}
               </Button>
             )}
-            <Button type="submit" className="flex-1 bg-brand hover:bg-brand-dark text-white" disabled={loading}>
+            <Button type="submit" className="flex-1 bg-brand hover:bg-brand-dark text-white" disabled={loading || !canAdvance}>
               {loading
                 ? t("common.creatingAccount")
                 : step < lastStep

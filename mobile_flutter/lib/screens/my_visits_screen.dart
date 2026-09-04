@@ -27,6 +27,7 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
   String? _error;
   final Map<String, PaymentPreview?> _previews = {};
   final Map<String, String> _selectedMethods = {};
+  final Map<String, String> _phones = {};
 
   @override
   void initState() {
@@ -171,17 +172,30 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
 
   Future<void> _payReservation(VisitRequest visit) async {
     final method = _selectedMethods[visit.id];
+    final phone = (_phones[visit.id] ?? visit.contactPhone ?? '').trim();
     if (method == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.read<LocaleProvider>().t('payments.chooseOperatorFirst'))),
       );
       return;
     }
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.read<LocaleProvider>().t('payments.operatorPhoneRequired'))),
+      );
+      return;
+    }
     setState(() => _actingId = visit.id);
     try {
-      final payment = await maresiApi.startReservationPayment(visit.id, method);
-      final url = payment.checkoutUrl;
-      if (url != null && url.isNotEmpty) {
+      final payment = await maresiApi.startReservationPayment(visit.id, paymentMethod: method, phone: phone);
+      final url = payment.checkoutUrl?.trim() ?? '';
+      if (url.isEmpty || url == 'null') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.read<LocaleProvider>().t('payments.payFailed'))),
+          );
+        }
+      } else {
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       }
       if (!mounted) return;
@@ -375,6 +389,20 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
           )
         else
           Text(locale.t('payments.chooseOperatorFirst'), style: TextStyle(color: palette.textSecondary, fontSize: 13)),
+        const SizedBox(height: 10),
+        Text(locale.t('payments.operatorPhone'), style: TextStyle(fontWeight: FontWeight.w600, color: palette.text, fontSize: 13)),
+        const SizedBox(height: 6),
+        TextFormField(
+          key: ValueKey('pay-phone-${visit.id}'),
+          initialValue: _phones[visit.id] ?? visit.contactPhone ?? '',
+          keyboardType: TextInputType.phone,
+          decoration: InputDecoration(
+            hintText: locale.t('payments.operatorPhoneHint'),
+            isDense: true,
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: (value) => _phones[visit.id] = value,
+        ),
       ],
     );
   }
