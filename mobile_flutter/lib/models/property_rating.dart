@@ -51,10 +51,11 @@ class RatingStats {
 }
 
 class PropertyRatingsResult {
-  const PropertyRatingsResult({required this.ratings, required this.statistics});
+  const PropertyRatingsResult({required this.ratings, required this.statistics, this.myScore});
 
   final List<PropertyRating> ratings;
   final RatingStats statistics;
+  final int? myScore;
 }
 
 class SubmitRatingPayload {

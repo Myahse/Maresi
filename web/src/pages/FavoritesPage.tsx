@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getFavorites, removeFavorite } from "@/services/api";
+import { getFavorites, getProperty } from "@/services/api";
 import { PropertyCard } from "@/components/property/PropertyCard";
-import type { Favorite } from "@/types";
-import { getProperty } from "@/services/api";
-import type { Property } from "@/types";
+import { useFavorites } from "@/context/FavoritesContext";
+import type { Favorite, Property } from "@/types";
 
 export function FavoritesPage() {
   const { t } = useTranslation();
+  const favorites = useFavorites();
   const [items, setItems] = useState<(Favorite & Property)[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +38,7 @@ export function FavoritesPage() {
   }, []);
 
   const remove = async (propertyId: string) => {
-    await removeFavorite(propertyId);
+    await favorites.toggle(propertyId);
     setItems((prev) => prev.filter((i) => i.property_id !== propertyId));
   };
 

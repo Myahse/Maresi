@@ -16,6 +16,7 @@ import 'package:maresi_mobile/utils/property_amenities.dart';
 import 'package:maresi_mobile/widgets/property_card.dart';
 import 'package:maresi_mobile/widgets/property_detail_section.dart';
 import 'package:maresi_mobile/widgets/property_photo_viewer.dart';
+import 'package:maresi_mobile/widgets/favorite_heart.dart';
 import 'package:maresi_mobile/widgets/property_ratings_section.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -246,10 +247,21 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                 onTap: () => _shareListing(property),
                               ),
                               const SizedBox(width: 8),
-                              _CircleIconButton(
-                                icon: isFavorite ? Icons.favorite : Icons.favorite_border,
-                                iconColor: isFavorite ? AppColors.favorite : palette.text,
-                                onTap: () => favorites.toggle(property),
+                              Material(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                shape: const CircleBorder(),
+                                child: SizedBox(
+                                  width: 36,
+                                  height: 36,
+                                  child: Center(
+                                    child: FavoriteHeart(
+                                      liked: isFavorite,
+                                      onTap: () => favorites.toggle(property),
+                                      size: 20,
+                                      inactiveColor: palette.text,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ],
                           ),

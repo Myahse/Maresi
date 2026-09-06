@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -16,41 +17,68 @@ public class RatingRepository {
     this.jdbc = jdbc;
   }
 
-  public List<Map<String, Object>> findByProperty(UUID propertyId) {
+  public List<Map<String, Object>> findReviewsByProperty(UUID propertyId) {
     return jdbc.query(
         """
-        SELECT r.id, r.property_id, r.user_id, u.full_name AS user_name, r.score, r.comment, r.created_at
-        FROM property_ratings r
-        JOIN users u ON u.id = r.user_id
-        WHERE r.property_id = ?
-        ORDER BY r.created_at DESC
+        SELECT v.id, v.property_id, v.user_id, u.full_name AS user_name,
+               COALESCE(r.score, 0) AS score, v.comment, v.created_at
+        FROM property_reviews v
+        JOIN users u ON u.id = v.user_id
+        LEFT JOIN property_ratings r
+          ON r.property_id = v.property_id AND r.user_id = v.user_id
+        WHERE v.property_id = ?
+        ORDER BY v.created_at DESC
         """,
         (rs, rowNum) -> RowMaps.rating(rs),
         propertyId);
   }
 
-  public Map<String, Object> upsert(UUID propertyId, UUID userId, int score, String comment) {
+  public Integer findScore(UUID propertyId, UUID userId) {
+    try {
+      return jdbc.queryForObject(
+          "SELECT score FROM property_ratings WHERE property_id = ? AND user_id = ?",
+          Integer.class,
+          propertyId,
+          userId);
+    } catch (EmptyResultDataAccessException e) {
+      return null;
+    }
+  }
+
+  public void insertMark(UUID propertyId, UUID userId, int score) {
+    jdbc.update(
+        """
+        INSERT INTO property_ratings (property_id, user_id, score)
+        VALUES (?, ?, ?)
+        ON CONFLICT (property_id, user_id) DO NOTHING
+        """,
+        propertyId,
+        userId,
+        score);
+  }
+
+  public Map<String, Object> insertReview(UUID propertyId, UUID userId, String comment) {
     return jdbc.queryForObject(
         """
-        INSERT INTO property_ratings (property_id, user_id, score, comment)
-        VALUES (?, ?, ?, ?)
-        ON CONFLICT (property_id, user_id)
-        DO UPDATE SET score = EXCLUDED.score, comment = EXCLUDED.comment, created_at = NOW()
-        RETURNING id, property_id, user_id, score, comment, created_at
+        INSERT INTO property_reviews (property_id, user_id, comment)
+        VALUES (?, ?, ?)
+        RETURNING id, property_id, user_id, comment, created_at
         """,
         (rs, rowNum) -> {
           Map<String, Object> m = new LinkedHashMap<>();
           m.put("id", rs.getObject("id"));
           m.put("property_id", rs.getObject("property_id"));
           m.put("user_id", rs.getObject("user_id"));
-          m.put("score", rs.getInt("score"));
           m.put("comment", rs.getString("comment"));
-          m.put("created_at", rs.getTimestamp("created_at") == null ? null : rs.getTimestamp("created_at").toInstant().toString());
+          m.put(
+              "created_at",
+              rs.getTimestamp("created_at") == null
+                  ? null
+                  : rs.getTimestamp("created_at").toInstant().toString());
           return m;
         },
         propertyId,
         userId,
-        score,
         comment);
   }
 

@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Heart, MapPin, ChevronLeft, ChevronRight, BedDouble, Users } from "lucide-react";
+import { MapPin, ChevronLeft, ChevronRight, BedDouble, Users } from "lucide-react";
 import type { Property } from "@/types";
 import { usePriceFormatter } from "@/context/CurrencyContext";
+import { useAuthModal } from "@/context/AuthModalContext";
+import { useFavorites } from "@/context/FavoritesContext";
+import { FavoriteHeart } from "@/components/property/FavoriteHeart";
 import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
 import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 import { cn } from "@/lib/utils";
@@ -33,7 +36,16 @@ export function PropertyCard({
 }: PropertyCardProps) {
   const { t } = useTranslation();
   const { formatPrice } = usePriceFormatter();
+  const { requireAuth } = useAuthModal();
+  const favorites = useFavorites();
   const navigate = useNavigate();
+  const liked = isFavorite ?? favorites.isFavorite(property.id);
+  const toggleLike = () => {
+    requireAuth(() => {
+      if (onToggleFavorite) onToggleFavorite(property.id);
+      else void favorites.toggle(property.id);
+    });
+  };
   const placeholder = `https://placehold.co/640x400/0D9488/white?text=${encodeURIComponent(t("propertyDetails.noImage"))}`;
   const resolved = listingImageUrls(property.images);
   const photos = resolved.length > 0 ? resolved : [placeholder];
@@ -102,25 +114,12 @@ export function PropertyCard({
         </>
       )}
 
-      {onToggleFavorite && (
-        <button
-          type="button"
-          className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 p-1.5 sm:p-2 rounded-full bg-black/30 hover:bg-black/40 backdrop-blur-sm transition-transform hover:scale-110"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onToggleFavorite(property.id);
-          }}
-          aria-label={isFavorite ? "Remove favorite" : "Add favorite"}
-        >
-          <Heart
-            className={cn(
-              "h-4 w-4 sm:h-5 sm:w-5 transition-colors",
-              isFavorite ? "fill-pink-500 text-pink-500" : "text-white"
-            )}
-          />
-        </button>
-      )}
+      <FavoriteHeart
+        liked={liked}
+        onToggle={toggleLike}
+        className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 p-1.5 sm:p-2 rounded-full bg-black/30 hover:bg-black/40 backdrop-blur-sm"
+        iconClassName="h-4 w-4 sm:h-5 sm:w-5"
+      />
 
       <span className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full bg-card/90 text-[10px] sm:text-xs font-semibold text-foreground capitalize">
         {isPropertyType(property.property_type) || property.property_type
@@ -231,20 +230,13 @@ export function PropertyCard({
             <span className="text-muted-foreground font-normal text-xs"> {property.price_unit === "day" ? t("common.day") : t("common.night")}</span>
           </p>
         </div>
-        {onToggleFavorite && (
-          <button
-            type="button"
-            className="self-start p-2"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onToggleFavorite(property.id);
-            }}
-            aria-label={isFavorite ? "Remove favorite" : "Add favorite"}
-          >
-            <Heart className={cn("h-4 w-4", isFavorite ? "fill-pink-500 text-pink-500" : "text-muted-foreground")} />
-          </button>
-        )}
+        <FavoriteHeart
+          liked={liked}
+          onToggle={toggleLike}
+          className="self-start p-2"
+          iconClassName="h-4 w-4"
+          emptyClassName="text-muted-foreground"
+        />
       </article>
     );
   }

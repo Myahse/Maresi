@@ -50,10 +50,12 @@ public class RatingBusiness {
       response.setStatus(functionalError.dataNotFound("Bien introuvable", locale));
       return response;
     }
-    List<Map<String, Object>> items = ratings.findByProperty(propertyId);
+    List<Map<String, Object>> items = ratings.findReviewsByProperty(propertyId);
     Map<String, Object> payload = new LinkedHashMap<>();
     payload.put("ratings", items);
     payload.put("statistics", ratings.statistics(propertyId));
+    AuthUser viewer = SecurityUtils.currentUserOrNull();
+    payload.put("my_score", viewer == null ? null : ratings.findScore(propertyId, viewer.id()));
     response.setItem(payload);
     response.setItems(items);
     response.setCount((long) items.size());
@@ -71,10 +73,33 @@ public class RatingBusiness {
       return response;
     }
     Map<String, Object> data = request.getData() == null ? Map.of() : request.getData();
-    int score = parseScore(data.get("score"));
+    Integer existingScore = ratings.findScore(propertyId, user.id());
     String comment = data.get("comment") == null ? null : data.get("comment").toString().trim();
     if (comment != null && comment.isEmpty()) comment = null;
-    Map<String, Object> saved = ratings.upsert(propertyId, user.id(), score, comment);
+
+    int score;
+    boolean firstMark = existingScore == null;
+    if (firstMark) {
+      score = parseScore(data.get("score"));
+      ratings.insertMark(propertyId, user.id(), score);
+    } else {
+      score = existingScore;
+      if (comment == null) {
+        throw ApiException.of(400, "Comment is required to add another review");
+      }
+    }
+
+    Map<String, Object> saved;
+    if (comment != null) {
+      saved = ratings.insertReview(propertyId, user.id(), comment);
+    } else {
+      saved = new LinkedHashMap<>();
+      saved.put("id", null);
+      saved.put("property_id", propertyId);
+      saved.put("user_id", user.id());
+      saved.put("comment", null);
+      saved.put("created_at", null);
+    }
     String name =
         users
             .findById(user.id())
@@ -83,14 +108,18 @@ public class RatingBusiness {
             .filter(s -> !s.isBlank())
             .orElse("Client");
     saved.put("user_name", name);
+    saved.put("score", score);
     ratings.refreshPropertyAggregate(propertyId);
     UUID ownerId =
         property.get("owner_id") != null ? UUID.fromString(property.get("owner_id").toString()) : null;
     if (ownerId != null && !ownerId.equals(user.id())) {
       String listing = String.valueOf(property.get("title") == null ? "votre residence" : property.get("title"));
-      String body = name + " a laisse un avis (" + score + "/5) sur " + listing + ".";
+      String body =
+          firstMark
+              ? name + " a laisse une note (" + score + "/5) sur " + listing + "."
+              : name + " a laisse un nouvel avis sur " + listing + ".";
       if (comment != null) body += "\n\"" + comment + "\"";
-      notifications.create(ownerId, "review", "Nouvel avis", body, propertyId);
+      notifications.create(ownerId, "review", firstMark ? "Nouvelle note" : "Nouvel avis", body, propertyId);
       email.sendToUser(ownerId, EmailTemplates.newReview(name, score, listing, comment));
     }
     response.setItem(saved);

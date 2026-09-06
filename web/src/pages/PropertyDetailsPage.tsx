@@ -3,17 +3,18 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { getProperty, addFavorite, removeFavorite, getFavorites } from "@/services/api";
+import { getProperty } from "@/services/api";
 import type { Property } from "@/types";
-import { MapPin, Heart, Mail, Phone, BedDouble, Users, Share2 } from "lucide-react";
+import { MapPin, Mail, Phone, BedDouble, Users, Share2 } from "lucide-react";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { useAuthModal } from "@/context/AuthModalContext";
+import { useFavorites } from "@/context/FavoritesContext";
+import { FavoriteHeart } from "@/components/property/FavoriteHeart";
 import { PropertyLocationMap } from "@/components/map/PropertyLocationMap";
 import { VirtualTourViewer } from "@/components/property/VirtualTourViewer";
 import { ListingPhotoGallery } from "@/components/property/ListingPhotoGallery";
 import { RatingsSection } from "@/components/rating/RatingsSection";
 import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
-import { cn } from "@/lib/utils";
 import { listingImageUrls } from "@/lib/media";
 import { displayPropertyType, isPropertyType, normalizeAmenities } from "@/lib/amenities";
 import { shareListingPage } from "@/lib/listingShare";
@@ -22,10 +23,10 @@ export function PropertyDetailsPage() {
   const { t } = useTranslation();
   const { formatPrice } = usePriceFormatter();
   const { requireAuth } = useAuthModal();
+  const favorites = useFavorites();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [property, setProperty] = useState<Property | null>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [ratingAvg, setRatingAvg] = useState(0);
   const [ratingCount, setRatingCount] = useState(0);
@@ -41,13 +42,6 @@ export function PropertyDetailsPage() {
       })
       .catch(() => setProperty(null))
       .finally(() => setLoading(false));
-  }, [id]);
-
-  useEffect(() => {
-    if (!id) return;
-    getFavorites()
-      .then((list) => setIsFavorite(list.some((f) => f.property_id === id)))
-      .catch(() => {});
   }, [id]);
 
   const placeholderImage = useMemo(
@@ -76,16 +70,11 @@ export function PropertyDetailsPage() {
     }
   };
 
+  const isFavorite = id ? favorites.isFavorite(id) : false;
   const toggleFavorite = () => {
     if (!id) return;
-    requireAuth(async () => {
-      try {
-        if (isFavorite) await removeFavorite(id);
-        else await addFavorite(id);
-        setIsFavorite(!isFavorite);
-      } catch {
-        /* ignore */
-      }
+    requireAuth(() => {
+      void favorites.toggle(id);
     });
   };
 
@@ -245,7 +234,13 @@ export function PropertyDetailsPage() {
                 </a>
               )}
               <Button className="w-full mt-2 rounded-full" variant="outline" onClick={toggleFavorite}>
-                <Heart className={cn("h-4 w-4 mr-2", isFavorite && "fill-pink-500 text-pink-500")} />
+                <FavoriteHeart
+                  liked={isFavorite}
+                  onToggle={toggleFavorite}
+                  className="mr-2 pointer-events-none"
+                  iconClassName="h-4 w-4"
+                  emptyClassName="text-foreground"
+                />
                 {isFavorite ? t("common.saved") : t("common.save")}
               </Button>
               <Button className="w-full rounded-full" variant="outline" onClick={() => void handleShare()}>

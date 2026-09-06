@@ -2,9 +2,9 @@ import 'package:intl/intl.dart';
 import 'package:maresi_mobile/models/property.dart';
 import 'package:maresi_mobile/models/property_types.dart';
 import 'package:maresi_mobile/providers/locale_provider.dart';
-import 'package:maresi_mobile/theme/app_colors.dart';
 import 'package:maresi_mobile/theme/maresi_palette.dart';
 import 'package:maresi_mobile/utils/property_amenities.dart';
+import 'package:maresi_mobile/widgets/favorite_heart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -82,13 +82,10 @@ class PropertyCard extends StatelessWidget {
           Positioned(
             top: 8,
             right: 8,
-            child: GestureDetector(
-              onTap: onFavoriteTap,
-              child: Icon(
-                isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: isFavorite ? AppColors.favorite : palette.heartInactive,
-                size: 22,
-              ),
+            child: FavoriteHeart(
+              liked: isFavorite,
+              onTap: onFavoriteTap!,
+              inactiveColor: palette.heartInactive,
             ),
           ),
         if (showTypeChip)

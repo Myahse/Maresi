@@ -104,6 +104,28 @@ public class SchemaPatches {
     "ALTER TABLE visit_messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ",
     "ALTER TABLE visit_messages ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ",
     "ALTER TABLE visit_requests ADD COLUMN IF NOT EXISTS chat_closed_at TIMESTAMPTZ",
+    """
+    CREATE TABLE IF NOT EXISTS property_reviews (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      property_id UUID NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      comment TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_property_reviews_property ON property_reviews (property_id, created_at DESC)",
+    """
+    INSERT INTO property_reviews (property_id, user_id, comment, created_at)
+    SELECT r.property_id, r.user_id, r.comment, COALESCE(r.created_at, NOW())
+    FROM property_ratings r
+    WHERE r.comment IS NOT NULL AND TRIM(r.comment) <> ''
+      AND NOT EXISTS (
+        SELECT 1 FROM property_reviews v
+        WHERE v.property_id = r.property_id
+          AND v.user_id = r.user_id
+          AND v.comment = r.comment
+      )
+    """,
   };
 
   private final JdbcTemplate jdbc;

@@ -212,7 +212,7 @@ public class PropertyController {
   }
 
   @PostMapping("/{id}/ratings")
-  @Operation(summary = "Publier ou mettre à jour un avis", security = @SecurityRequirement(name = "bearerAuth"))
+  @Operation(summary = "Publier un avis (une seule note par utilisateur)", security = @SecurityRequirement(name = "bearerAuth"))
   public ResponseEntity<Response<Map<String, Object>>> upsertRating(
       @PathVariable UUID id, @RequestBody Request<Map<String, Object>> request, Locale locale) {
     Locale loc = ControllerSupport.locale(locale);

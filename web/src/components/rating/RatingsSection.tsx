@@ -24,16 +24,18 @@ export function RatingsSection({
   const { requireAuth } = useAuthModal();
   const [reviews, setReviews] = useState<PropertyRating[]>([]);
   const [stats, setStats] = useState<RatingStats | null>(null);
+  const [myScore, setMyScore] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
     getPropertyRatings(propertyId)
-      .then(({ ratings, statistics }) => {
+      .then(({ ratings, statistics, my_score }) => {
         const list = Array.isArray(ratings) ? ratings : [];
         const average = Number(statistics?.average ?? 0);
         const count = Number(statistics?.count ?? list.length);
         setReviews(list);
+        setMyScore(my_score ?? null);
         setStats({
           average,
           count,
@@ -68,7 +70,7 @@ export function RatingsSection({
           className="rounded-full border-2 border-brand text-brand"
           onClick={() => requireAuth(() => setModalOpen(true))}
         >
-          {t("ratings.writeReview")}
+          {myScore ? t("ratings.addReview") : t("ratings.writeReview")}
         </Button>
       </div>
 
@@ -91,8 +93,10 @@ export function RatingsSection({
       <RatingModal
         open={modalOpen}
         propertyId={propertyId}
+        existingScore={myScore}
         onClose={() => setModalOpen(false)}
         onSubmitted={(review) => {
+          if (review?.score) setMyScore(review.score);
           if (review?.id) {
             setReviews((prev) => [review, ...prev.filter((r) => r.id !== review.id)]);
           }

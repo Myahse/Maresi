@@ -17,3 +17,13 @@ CREATE TABLE IF NOT EXISTS property_ratings (
 );
 
 CREATE INDEX IF NOT EXISTS idx_property_ratings_property ON property_ratings(property_id);
+
+CREATE TABLE IF NOT EXISTS property_reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id UUID NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  comment TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_property_reviews_property ON property_reviews (property_id, created_at DESC);

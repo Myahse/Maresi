@@ -520,8 +520,11 @@ class MockApiService implements MaresiApi {
   }
 
   void _updatePropertyRatingStats(String propertyId) {
-    final propertyRatings = _ratings.where((r) => r.propertyId == propertyId).toList();
-    final stats = RatingStats.fromRatings(propertyRatings);
+    final marks = <String, PropertyRating>{};
+    for (final review in _ratings.where((r) => r.propertyId == propertyId)) {
+      marks.putIfAbsent(review.userId, () => review);
+    }
+    final stats = RatingStats.fromRatings(marks.values.toList());
     final index = _residences.indexWhere((p) => p.id == propertyId);
     if (index < 0) return;
     final current = _residences[index];
@@ -536,9 +539,15 @@ class MockApiService implements MaresiApi {
     await _delay();
     final ratings = _ratings.where((r) => r.propertyId == propertyId).toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final marks = <String, PropertyRating>{};
+    for (final review in ratings) {
+      marks.putIfAbsent(review.userId, () => review);
+    }
+    final myScore = _sessionUser == null ? null : marks[_sessionUser!.id]?.score;
     return PropertyRatingsResult(
       ratings: ratings,
-      statistics: RatingStats.fromRatings(ratings),
+      statistics: RatingStats.fromRatings(marks.values.toList()),
+      myScore: myScore,
     );
   }
 
@@ -550,24 +559,23 @@ class MockApiService implements MaresiApi {
 
     _findResidence(propertyId);
 
-    final existingIndex = _ratings.indexWhere(
+    final existing = _ratings.where(
       (r) => r.propertyId == propertyId && r.userId == _sessionUser!.id,
     );
+    final lockedScore = existing.isEmpty ? payload.score : existing.first.score;
+    if (existing.isNotEmpty && (payload.comment == null || payload.comment!.trim().isEmpty)) {
+      throw Exception('Écrivez un commentaire pour ajouter un avis.');
+    }
     final rating = PropertyRating(
-      id: existingIndex >= 0 ? _ratings[existingIndex].id : 'r-${DateTime.now().millisecondsSinceEpoch}',
+      id: 'r-${DateTime.now().millisecondsSinceEpoch}',
       propertyId: propertyId,
       userId: _sessionUser!.id,
       userName: _sessionUser!.fullName,
-      score: payload.score,
+      score: lockedScore,
       comment: payload.comment,
       createdAt: DateTime.now(),
     );
-
-    if (existingIndex >= 0) {
-      _ratings[existingIndex] = rating;
-    } else {
-      _ratings.insert(0, rating);
-    }
+    _ratings.insert(0, rating);
 
     _updatePropertyRatingStats(propertyId);
     return rating;

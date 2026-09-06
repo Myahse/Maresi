@@ -220,6 +220,12 @@ export interface PropertyRating {
   created_at: string;
 }
 
+export interface PropertyRatingsResult {
+  ratings: PropertyRating[];
+  statistics: RatingStats;
+  my_score?: number | null;
+}
+
 export interface RatingStats {
   average: number;
   count: number;

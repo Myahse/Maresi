@@ -6,6 +6,7 @@ import App from "./App";
 import "./index.css";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { FavoritesProvider } from "@/context/FavoritesContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { LocationProvider } from "@/context/LocationContext";
 
@@ -16,9 +17,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ThemeProvider>
       <CurrencyProvider>
         <AuthProvider>
-          <LocationProvider>
-            <App />
-          </LocationProvider>
+          <FavoritesProvider>
+            <LocationProvider>
+              <App />
+            </LocationProvider>
+          </FavoritesProvider>
         </AuthProvider>
       </CurrencyProvider>
     </ThemeProvider>

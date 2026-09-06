@@ -640,7 +640,7 @@ class ApiService implements MaresiApi {
       final stats = statsMap is Map<String, dynamic>
           ? RatingStats.fromJson(statsMap)
           : RatingStats.fromRatings(ratings);
-      return PropertyRatingsResult(ratings: ratings, statistics: stats);
+      return PropertyRatingsResult(ratings: ratings, statistics: stats, myScore: _readMyScore(data));
     }
     final unwrapped = _unwrapEnvelope(data);
     if (unwrapped is Map<String, dynamic>) {
@@ -651,8 +651,14 @@ class ApiService implements MaresiApi {
       final stats = statsMap is Map<String, dynamic>
           ? RatingStats.fromJson(statsMap)
           : RatingStats.fromRatings(ratings);
-      return PropertyRatingsResult(ratings: ratings, statistics: stats);
+      return PropertyRatingsResult(ratings: ratings, statistics: stats, myScore: _readMyScore(unwrapped));
     }
     return const PropertyRatingsResult(ratings: [], statistics: RatingStats(average: 0, count: 0));
+  }
+
+  int? _readMyScore(Map data) {
+    final raw = data['my_score'] ?? data['myScore'];
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '');
   }
 }

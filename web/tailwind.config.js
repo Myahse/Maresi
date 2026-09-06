@@ -50,6 +50,18 @@ export default {
       maxWidth: {
         "8xl": "98rem",
       },
+      keyframes: {
+        "heart-beat": {
+          "0%, 100%": { transform: "scale(1)" },
+          "15%": { transform: "scale(1.4)" },
+          "30%": { transform: "scale(0.9)" },
+          "45%": { transform: "scale(1.25)" },
+          "60%": { transform: "scale(1)" },
+        },
+      },
+      animation: {
+        "heart-beat": "heart-beat 0.7s ease-in-out",
+      },
     },
   },
   plugins: [],

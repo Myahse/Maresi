@@ -1,15 +1,13 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { getProperties, getFavorites, addFavorite, removeFavorite } from "@/services/api";
+import { getProperties } from "@/services/api";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { PropertyFilters, type FilterValues } from "@/components/property/PropertyFilters";
 import { PropertyCardSkeleton } from "@/components/property/PropertyCardSkeleton";
 import { PropertiesMap } from "@/components/map/PropertiesMap";
-import { useAuth } from "@/hooks/useAuth";
-import { useAuthModal } from "@/context/AuthModalContext";
 import { useUserLocation } from "@/context/LocationContext";
 import { sortListings } from "@/lib/listingRank";
-import type { Property, Favorite } from "@/types";
+import type { Property } from "@/types";
 
 const defaultFilters: FilterValues = {
   location: "",
@@ -20,11 +18,8 @@ const defaultFilters: FilterValues = {
 
 export function AllPropertiesPage() {
   const { t } = useTranslation();
-  const { isAuthenticated } = useAuth();
-  const { requireAuth } = useAuthModal();
   const { coords } = useUserLocation();
   const [properties, setProperties] = useState<Property[]>([]);
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [filters, setFilters] = useState<FilterValues>(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState<FilterValues>(defaultFilters);
   const [loading, setLoading] = useState(true);
@@ -55,16 +50,12 @@ export function AllPropertiesPage() {
         property_type: appliedFilters.property_type || undefined,
       });
       setProperties(props);
-      if (isAuthenticated) {
-        const favs = await getFavorites();
-        setFavorites(favs);
-      }
     } catch (e) {
       setError(e instanceof Error ? e.message : t("dashboard.failedLoad"));
     } finally {
       setLoading(false);
     }
-  }, [appliedFilters, isAuthenticated, t]);
+  }, [appliedFilters, t]);
 
   const sortedProperties = useMemo(() => sortListings(properties, coords), [properties, coords]);
   const activeId = selectedId ?? hoveredId;
@@ -82,23 +73,6 @@ export function AllPropertiesPage() {
       block: "nearest",
     });
   }, [selectedId]);
-
-  const toggleFavorite = (propertyId: string) => {
-    requireAuth(async () => {
-      const isFav = favorites.some((f) => f.property_id === propertyId);
-      try {
-        if (isFav) await removeFavorite(propertyId);
-        else await addFavorite(propertyId);
-        setFavorites((prev) =>
-          isFav
-            ? prev.filter((f) => f.property_id !== propertyId)
-            : [...prev, { id: "", property_id: propertyId, created_at: "" }]
-        );
-      } catch {
-        /* ignore */
-      }
-    });
-  };
 
   const applyFilters = (next?: FilterValues) => {
     const v = next ?? filters;
@@ -154,8 +128,6 @@ export function AllPropertiesPage() {
                 property={p}
                 rental
                 className="!w-full !max-w-none !min-w-0 sm:!w-72 md:!w-80 lg:!w-[340px]"
-                onToggleFavorite={toggleFavorite}
-                isFavorite={favorites.some((f) => f.property_id === p.id)}
               />
             </div>
           ))}
@@ -224,8 +196,6 @@ export function AllPropertiesPage() {
                     <PropertyCard
                       property={p}
                       rental
-                      onToggleFavorite={toggleFavorite}
-                      isFavorite={favorites.some((f) => f.property_id === p.id)}
                     />
                   </div>
                 ))}
@@ -254,8 +224,6 @@ export function AllPropertiesPage() {
                 property={previewProperty}
                 rental
                 className="!w-full shadow-xl"
-                onToggleFavorite={toggleFavorite}
-                isFavorite={favorites.some((f) => f.property_id === previewProperty.id)}
               />
             </div>
           </div>

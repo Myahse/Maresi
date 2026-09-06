@@ -32,6 +32,7 @@ class PropertyRatingsSection extends StatefulWidget {
 class _PropertyRatingsSectionState extends State<PropertyRatingsSection> {
   List<PropertyRating> _ratings = [];
   RatingStats? _stats;
+  int? _myScore;
   bool _loading = true;
   String? _error;
 
@@ -52,6 +53,7 @@ class _PropertyRatingsSectionState extends State<PropertyRatingsSection> {
       setState(() {
         _ratings = result.ratings;
         _stats = result.statistics;
+        _myScore = result.myScore;
         _loading = false;
       });
       widget.onStatsUpdated?.call(result.statistics.average, result.statistics.count);
@@ -80,6 +82,7 @@ class _PropertyRatingsSectionState extends State<PropertyRatingsSection> {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (sheetContext) => _WriteReviewSheet(
         propertyId: widget.propertyId,
+        existingScore: _myScore,
         locale: locale,
         onSubmitted: () async {
           if (!mounted) return;
@@ -127,7 +130,7 @@ class _PropertyRatingsSectionState extends State<PropertyRatingsSection> {
                   side: const BorderSide(color: AppColors.primary),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
                 ),
-                child: Text(locale.t('ratings.writeReview')),
+                child: Text(locale.t(_myScore != null ? 'ratings.addReview' : 'ratings.writeReview')),
               ),
             ],
           ),
@@ -182,11 +185,13 @@ class _WriteReviewSheet extends StatefulWidget {
     required this.propertyId,
     required this.locale,
     required this.onSubmitted,
+    this.existingScore,
   });
 
   final String propertyId;
   final LocaleProvider locale;
   final Future<void> Function() onSubmitted;
+  final int? existingScore;
 
   @override
   State<_WriteReviewSheet> createState() => _WriteReviewSheetState();
@@ -194,8 +199,9 @@ class _WriteReviewSheet extends StatefulWidget {
 
 class _WriteReviewSheetState extends State<_WriteReviewSheet> {
   final _commentController = TextEditingController();
-  int _score = 5;
+  late int _score = widget.existingScore ?? 5;
   bool _submitting = false;
+  bool get _markLocked => widget.existingScore != null && widget.existingScore! > 0;
 
   @override
   void dispose() {
@@ -204,11 +210,17 @@ class _WriteReviewSheetState extends State<_WriteReviewSheet> {
   }
 
   Future<void> _submit() async {
+    if (_markLocked && _commentController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.locale.t('ratings.commentRequired'))),
+      );
+      return;
+    }
     setState(() => _submitting = true);
     try {
       await maresiApi.submitPropertyRating(
         widget.propertyId,
-        SubmitRatingPayload(score: _score, comment: _commentController.text),
+        SubmitRatingPayload(score: widget.existingScore ?? _score, comment: _commentController.text),
       );
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -234,19 +246,22 @@ class _WriteReviewSheetState extends State<_WriteReviewSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              widget.locale.t('ratings.writeReview'),
+              widget.locale.t(_markLocked ? 'ratings.addReview' : 'ratings.writeReview'),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Text(
-              widget.locale.t('ratings.yourRating'),
+              widget.locale.t(_markLocked ? 'ratings.markLocked' : 'ratings.yourRating'),
               style: TextStyle(color: context.palette.textSecondary),
             ),
             const SizedBox(height: 8),
-            StarRatingInput(
-              initialScore: _score,
-              onChanged: (value) => setState(() => _score = value),
-            ),
+            if (_markLocked)
+              StarRating(value: _score.toDouble(), size: 32)
+            else
+              StarRatingInput(
+                initialScore: _score,
+                onChanged: (value) => setState(() => _score = value),
+              ),
             const SizedBox(height: 16),
             TextField(
               controller: _commentController,

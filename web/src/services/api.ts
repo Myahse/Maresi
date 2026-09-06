@@ -243,15 +243,16 @@ export function updateMyIdentity(formData: FormData) {
 }
 
 export async function getPropertyRatings(propertyId: string) {
-  const data = await api.get<{ ratings?: PropertyRating[]; statistics?: RatingStats } | PropertyRating[]>(
-    `/properties/${propertyId}/ratings`
-  );
+  const data = await api.get<
+    { ratings?: PropertyRating[]; statistics?: RatingStats; my_score?: number | null } | PropertyRating[]
+  >(`/properties/${propertyId}/ratings`);
   if (Array.isArray(data)) {
-    return { ratings: data, statistics: emptyRatingStats() };
+    return { ratings: data, statistics: emptyRatingStats(), my_score: null as number | null };
   }
   return {
     ratings: data.ratings ?? [],
     statistics: data.statistics ?? emptyRatingStats(),
+    my_score: data.my_score ?? null,
   };
 }
 
