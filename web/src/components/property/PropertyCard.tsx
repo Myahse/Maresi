@@ -78,7 +78,7 @@ export function PropertyCard({
   const showGuestFavorite = Boolean(property.premium_positioning) || (ratingCount > 0 && rating >= 4.8);
 
   const photoBlock = (
-    <div className="relative group aspect-[4/5] w-full overflow-hidden rounded-2xl bg-muted touch-pan-y" {...swipeHandlers}>
+    <div className="relative group aspect-square w-full overflow-hidden rounded-2xl bg-muted touch-pan-y" {...swipeHandlers}>
       <div
         className="flex h-full w-full transition-transform duration-500 ease-in-out"
         style={{ transform: `translateX(-${imageIndex * 100}%)` }}

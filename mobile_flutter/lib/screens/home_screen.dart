@@ -276,14 +276,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _horizontalCarousel(LocaleProvider locale, FavoritesProvider favorites) {
     if (_loading && _list.isEmpty) {
       return const SizedBox(
-        height: 330,
+        height: 280,
         child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       );
     }
-    if (_list.isEmpty) return const SizedBox(height: 330);
+    if (_list.isEmpty) return const SizedBox(height: 280);
 
     return SizedBox(
-      height: 330,
+      height: 280,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 24),

@@ -168,7 +168,7 @@ class PropertyCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   child: SizedBox(
                     width: 200,
-                    height: 250,
+                    height: 200,
                     child: _photo(context: context, palette: palette, locale: locale),
                   ),
                 ),
@@ -197,7 +197,7 @@ class PropertyCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: AspectRatio(
-                  aspectRatio: 4 / 5,
+                  aspectRatio: 1,
                   child: _photo(context: context, palette: palette, locale: locale),
                 ),
               ),
