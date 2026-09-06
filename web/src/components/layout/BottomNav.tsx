@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { CalendarDays, Heart, Home, Search, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/context/AuthModalContext";
-import { useScrollHeader } from "@/hooks/useScrollHeader";
+import { useMobileChrome } from "@/context/MobileChromeContext";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -18,8 +18,12 @@ export function BottomNav() {
   const { isAuthenticated, user, logout } = useAuth();
   const { openLogin, openRegister } = useAuthModal();
   const [moreOpen, setMoreOpen] = useState(false);
-  const pinNav = moreOpen || pathname === "/properties";
-  const { visible } = useScrollHeader({ disabled: pinNav, resetKey: pathname });
+  const { navVisible, setNavPinned } = useMobileChrome();
+
+  useEffect(() => {
+    setNavPinned(moreOpen);
+    return () => setNavPinned(false);
+  }, [moreOpen, setNavPinned]);
 
   const goProtected = (path: string) => {
     if (!isAuthenticated) {
@@ -94,7 +98,7 @@ export function BottomNav() {
             aria-label={t("common.cancel")}
             onClick={() => setMoreOpen(false)}
           />
-          <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-2xl border border-border bg-card p-4 shadow-xl lg:hidden transition-transform duration-300 ease-out">
+          <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-3 right-3 z-50 rounded-2xl border border-border bg-card p-4 shadow-xl lg:hidden">
             <div className="flex items-center gap-2 pb-3 mb-3 border-b border-border">
               <ThemeToggle />
               <CurrencyPicker />
@@ -161,7 +165,7 @@ export function BottomNav() {
         className={cn(
           "lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]",
           "transition-transform duration-300 ease-out",
-          visible ? "translate-y-0" : "translate-y-full"
+          navVisible ? "translate-y-0" : "translate-y-full"
         )}
         aria-label="Primary"
       >

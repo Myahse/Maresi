@@ -23,6 +23,8 @@ import {
   TIME_STEP_MINUTES,
 } from "@/lib/validation";
 import type { Property, VisitRequestPayload } from "@/types";
+import { useDockedAboveNavClass } from "@/context/MobileChromeContext";
+import { cn } from "@/lib/utils";
 
 export function ReservationPage() {
   const { t } = useTranslation();
@@ -31,6 +33,7 @@ export function ReservationPage() {
   const { isAuthenticated, user } = useAuth();
   const { requireAuth } = useAuthModal();
   const { formatPrice } = usePriceFormatter();
+  const dockedClass = useDockedAboveNavClass();
 
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
@@ -255,7 +258,7 @@ export function ReservationPage() {
   }
 
   return (
-    <div className="font-jakarta container mx-auto px-4 pt-6 pb-28 md:py-8 max-w-2xl">
+    <div className="font-jakarta container mx-auto px-4 pt-6 pb-36 md:py-8 max-w-2xl">
       <Link to={`/properties/${id}`} className="text-sm text-brand hover:underline">
         ← {property.title}
       </Link>
@@ -463,7 +466,7 @@ export function ReservationPage() {
         </div>
       )}
 
-      <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-card/95 backdrop-blur-md px-4 py-3 md:static md:border-0 md:bg-transparent md:p-0 md:mt-8">
+      <div className={cn("fixed inset-x-0 border-t border-border bg-card/95 backdrop-blur-md px-4 py-3 md:static md:z-auto md:border-0 md:bottom-auto md:bg-transparent md:p-0 md:mt-8", dockedClass)}>
         <div className="flex gap-3 max-w-2xl mx-auto">
           {step > 0 && (
             <Button type="button" variant="outline" className="rounded-full flex-1 md:flex-none" onClick={back}>

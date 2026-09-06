@@ -1,15 +1,18 @@
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useUserLocation } from "@/context/LocationContext";
+import { useFloatingAboveNavClass } from "@/context/MobileChromeContext";
+import { cn } from "@/lib/utils";
 
 export function LocationPrompt() {
   const { t } = useTranslation();
   const { promptVisible, requestAccess, dismissPrompt, supported, status } = useUserLocation();
+  const floatingClass = useFloatingAboveNavClass();
 
   if (!supported || !promptVisible || status === "granted" || status === "denied") return null;
 
   return (
-    <div className="fixed left-4 right-4 z-[70] above-mobile-nav md:left-auto md:right-4 md:w-96 rounded-2xl border bg-card p-4 shadow-lg">
+    <div className={cn("fixed left-4 right-4 z-[70] md:left-auto md:right-4 md:w-96 rounded-2xl border bg-card p-4 shadow-lg", floatingClass)}>
       <p className="font-semibold text-foreground">{t("location.title")}</p>
       <p className="text-sm text-muted-foreground mt-1">{t("location.body")}</p>
       <div className="flex gap-2 mt-3">

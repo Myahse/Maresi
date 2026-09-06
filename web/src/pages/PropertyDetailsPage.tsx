@@ -18,12 +18,15 @@ import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
 import { listingImageUrls } from "@/lib/media";
 import { displayPropertyType, isPropertyType, normalizeAmenities } from "@/lib/amenities";
 import { shareListingPage } from "@/lib/listingShare";
+import { useDockedAboveNavClass } from "@/context/MobileChromeContext";
+import { cn } from "@/lib/utils";
 
 export function PropertyDetailsPage() {
   const { t } = useTranslation();
   const { formatPrice } = usePriceFormatter();
   const { requireAuth } = useAuthModal();
   const favorites = useFavorites();
+  const dockedClass = useDockedAboveNavClass();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [property, setProperty] = useState<Property | null>(null);
@@ -271,7 +274,7 @@ export function PropertyDetailsPage() {
         </div>
       </div>
 
-      <div className="md:hidden fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-card/95 backdrop-blur-md px-4 py-3">
+      <div className={cn("md:hidden fixed inset-x-0 border-t border-border bg-card/95 backdrop-blur-md px-4 py-3", dockedClass)}>
         <div className="flex flex-col gap-2">
           <Button
             className="w-full rounded-full bg-brand hover:bg-brand-dark"

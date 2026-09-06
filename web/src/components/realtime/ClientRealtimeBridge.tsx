@@ -5,10 +5,13 @@ import { emitRealtime } from "@/hooks/useRealtimeRefresh";
 import { applySession, normalizeAuthResponse } from "@/services/auth";
 import { ackIncomingVisitMessage } from "@/services/api";
 import type { RealtimeEvent, User } from "@/types";
+import { useFloatingAboveNavClass } from "@/context/MobileChromeContext";
+import { cn } from "@/lib/utils";
 
 export function ClientRealtimeBridge() {
   const { isAuthenticated, user, applySession: setSession } = useAuth();
   const [toast, setToast] = useState<string | null>(null);
+  const floatingClass = useFloatingAboveNavClass();
 
   const onEvent = useCallback(
     (event: RealtimeEvent) => {
@@ -42,7 +45,7 @@ export function ClientRealtimeBridge() {
 
   if (!toast) return null;
   return (
-    <div className="fixed right-4 z-[80] above-mobile-nav rounded-xl bg-gray-900 text-white text-sm px-4 py-3 shadow-lg">
+    <div className={cn("fixed right-4 z-[80] rounded-xl bg-gray-900 text-white text-sm px-4 py-3 shadow-lg", floatingClass)}>
       {toast === "host-approved" && "Host account approved"}
       {toast === "host-rejected" && "Host application updated"}
       {toast === "visit.status_changed" && "Visit request updated"}

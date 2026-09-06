@@ -12,6 +12,8 @@ import {
   syncPushSubscription,
   type PushApp,
 } from "@/lib/push";
+import { useFloatingAboveNavClass } from "@/context/MobileChromeContext";
+import { cn } from "@/lib/utils";
 
 export function PushPrompt({ app }: { app: PushApp }) {
   const { t } = useTranslation();
@@ -19,6 +21,7 @@ export function PushPrompt({ app }: { app: PushApp }) {
   const [visible, setVisible] = useState(false);
   const [iosHint, setIosHint] = useState(false);
   const [busy, setBusy] = useState(false);
+  const floatingClass = useFloatingAboveNavClass();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -56,7 +59,7 @@ export function PushPrompt({ app }: { app: PushApp }) {
   };
 
   return (
-    <div className="fixed left-4 right-4 z-[70] above-mobile-nav md:left-auto md:right-4 md:w-96 rounded-2xl border bg-card p-4 shadow-lg">
+    <div className={cn("fixed left-4 right-4 z-[70] md:left-auto md:right-4 md:w-96 rounded-2xl border bg-card p-4 shadow-lg", floatingClass)}>
       <p className="font-semibold text-foreground">{t("push.title")}</p>
       <p className="text-sm text-muted-foreground mt-1">{iosHint ? t("push.iosInstall") : t("push.body")}</p>
       <div className="flex gap-2 mt-3">

@@ -37,16 +37,18 @@ import { ClientRealtimeBridge } from "@/components/realtime/ClientRealtimeBridge
 import { PushPrompt } from "@/components/realtime/PushPrompt";
 import { LocationPrompt } from "@/components/location/LocationPrompt";
 import { AuthModalProvider } from "@/context/AuthModalContext";
+import { MobileChromeProvider } from "@/context/MobileChromeContext";
 
 function App() {
   return (
     <>
       <AppSplash />
-      <ClientRealtimeBridge />
-      <PushPrompt app="web" />
-      <LocationPrompt />
       <BrowserRouter>
+        <MobileChromeProvider>
         <AuthModalProvider>
+          <ClientRealtimeBridge />
+          <PushPrompt app="web" />
+          <LocationPrompt />
           <Routes>
             <Route path="/" element={<MainLayout />}>
               <Route index element={<LandingPage />} />
@@ -210,6 +212,7 @@ function App() {
             </Route>
           </Routes>
         </AuthModalProvider>
+        </MobileChromeProvider>
       </BrowserRouter>
     </>
   );

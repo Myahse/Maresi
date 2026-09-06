@@ -7,6 +7,8 @@ import { PropertyCardSkeleton } from "@/components/property/PropertyCardSkeleton
 import { PropertiesMap } from "@/components/map/PropertiesMap";
 import { useUserLocation } from "@/context/LocationContext";
 import { sortListings } from "@/lib/listingRank";
+import { useNavInsetBottomClass } from "@/context/MobileChromeContext";
+import { cn } from "@/lib/utils";
 import type { Property } from "@/types";
 
 const defaultFilters: FilterValues = {
@@ -19,6 +21,7 @@ const defaultFilters: FilterValues = {
 export function AllPropertiesPage() {
   const { t } = useTranslation();
   const { coords } = useUserLocation();
+  const navInsetClass = useNavInsetBottomClass();
   const [properties, setProperties] = useState<Property[]>([]);
   const [filters, setFilters] = useState<FilterValues>(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState<FilterValues>(defaultFilters);
@@ -138,7 +141,7 @@ export function AllPropertiesPage() {
 
   if (isPhone) {
     return (
-      <div className="fixed inset-x-0 top-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] bg-muted">
+      <div className={cn("fixed inset-x-0 top-0 bg-muted", navInsetClass)}>
         <PropertiesMap
           properties={sortedProperties}
           hoveredId={activeId}
@@ -205,7 +208,7 @@ export function AllPropertiesPage() {
   }
 
   return (
-    <div className="flex fixed inset-x-0 top-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:top-[4.5rem] lg:bottom-0 min-h-0 bg-muted">
+    <div className={cn("flex fixed inset-x-0 top-0 min-h-0 bg-muted lg:top-[4.5rem]", navInsetClass, "lg:bottom-0")}>
       <div className="w-[35%] h-full border-r border-border relative">
         <PropertiesMap
           properties={sortedProperties}
