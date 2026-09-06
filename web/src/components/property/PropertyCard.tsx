@@ -1,17 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { MapPin, ChevronLeft, ChevronRight, BedDouble, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Star } from "lucide-react";
 import type { Property } from "@/types";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { FavoriteHeart } from "@/components/property/FavoriteHeart";
-import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
 import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 import { cn } from "@/lib/utils";
 import { listingImageUrls } from "@/lib/media";
-import { displayPropertyType, isPropertyType, normalizeAmenities } from "@/lib/amenities";
+import { displayPropertyType, isPropertyType } from "@/lib/amenities";
 
 interface PropertyCardProps {
   property: Property;
@@ -61,10 +60,25 @@ export function PropertyCard({
     if (consumeSwipe()) return;
     goToDetails();
   };
-  const amenityIds = normalizeAmenities(property.amenities);
 
-  const cardInner = (
-    <div className="relative group aspect-[4/5] w-full overflow-hidden touch-pan-y" {...swipeHandlers}>
+  const typeLabel =
+    isPropertyType(property.property_type) || property.property_type
+      ? t(`propertyTypes.${displayPropertyType(property.property_type)}`)
+      : property.property_type;
+  const headline = t("properties.typeInLocation", {
+    type: typeLabel,
+    location: property.location,
+  });
+  const stayPrice = t("properties.forNights", {
+    price: formatPrice(property.price),
+    count: 1,
+  });
+  const rating = Number(property.average_rating ?? 0);
+  const ratingCount = Number(property.rating_count ?? 0);
+  const showGuestFavorite = Boolean(property.premium_positioning) || (ratingCount > 0 && rating >= 4.8);
+
+  const photoBlock = (
+    <div className="relative group aspect-[4/5] w-full overflow-hidden rounded-2xl bg-muted touch-pan-y" {...swipeHandlers}>
       <div
         className="flex h-full w-full transition-transform duration-500 ease-in-out"
         style={{ transform: `translateX(-${imageIndex * 100}%)` }}
@@ -74,7 +88,7 @@ export function PropertyCard({
             <img
               src={photo}
               alt={`${property.title} ${idx + 1}`}
-              className="w-full h-full object-cover bg-muted"
+              className="w-full h-full object-cover"
               draggable={false}
               onError={(event) => {
                 event.currentTarget.onerror = null;
@@ -94,10 +108,10 @@ export function PropertyCard({
               e.stopPropagation();
               setImageIndex((i) => (i > 0 ? i - 1 : photos.length - 1));
             }}
-            className="absolute left-1.5 sm:left-2 top-[38%] -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 text-white p-1 sm:p-1.5 rounded-full sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-foreground p-1 sm:p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
             aria-label="Previous"
           >
-            <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             type="button"
@@ -106,95 +120,59 @@ export function PropertyCard({
               e.stopPropagation();
               setImageIndex((i) => (i + 1) % photos.length);
             }}
-            className="absolute right-1.5 sm:right-2 top-[38%] -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 text-white p-1 sm:p-1.5 rounded-full sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-foreground p-1 sm:p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
             aria-label="Next"
           >
-            <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <ChevronRight className="h-4 w-4" />
           </button>
-        </>
-      )}
-
-      <FavoriteHeart
-        liked={liked}
-        onToggle={toggleLike}
-        className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 p-1.5 sm:p-2 rounded-full bg-black/30 hover:bg-black/40 backdrop-blur-sm"
-        iconClassName="h-4 w-4 sm:h-5 sm:w-5"
-      />
-
-      <span className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full bg-card/90 text-[10px] sm:text-xs font-semibold text-foreground capitalize">
-        {isPropertyType(property.property_type) || property.property_type
-          ? t(`propertyTypes.${displayPropertyType(property.property_type)}`)
-          : property.property_type}
-      </span>
-      {property.premium_positioning && (
-        <span className="absolute top-2 left-2 z-10 mt-6 px-2 py-0.5 rounded-full bg-amber-500 text-[10px] sm:text-xs font-bold text-white">
-          {t("properties.premium")}
-        </span>
-      )}
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black via-black/70 to-transparent pt-16 pb-3 px-3 sm:pt-20 sm:pb-4 sm:px-4">
-        {hasMultiple && (
-          <div className="flex justify-center gap-1 mb-2">
+          <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-10 flex gap-1">
             {photos.map((_, idx) => (
               <div
                 key={idx}
                 className={cn(
                   "h-1.5 rounded-full transition-all",
-                  idx === imageIndex ? "bg-white w-5" : "bg-white/55 w-1.5"
+                  idx === imageIndex ? "bg-white w-4" : "bg-white/70 w-1.5"
                 )}
               />
             ))}
           </div>
-        )}
-        <h3 className="font-bold text-white text-sm sm:text-lg mb-1 flex items-start gap-1.5 sm:gap-2">
-          <PropertyRatingMark
-            rating={property.average_rating}
-            count={property.rating_count}
-            className="mt-0.5 text-xs sm:text-sm text-white"
-          />
-          <span className="line-clamp-1 sm:line-clamp-2">{property.title}</span>
-        </h3>
-        <p className="text-xs sm:text-sm text-white/85 flex items-center gap-1 mb-1.5 sm:mb-2">
-          <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-          <span className="truncate">{property.location}</span>
-        </p>
-        <p className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-white/80 mb-1.5 sm:mb-2">
-          {property.bedrooms != null && property.bedrooms > 0 && (
-            <span className="inline-flex items-center gap-1">
-              <BedDouble className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-              {t("common.rooms", { count: property.bedrooms })}
-            </span>
-          )}
-          {property.max_guests != null && property.max_guests > 0 && (
-            <span className="inline-flex items-center gap-1">
-              <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-              {t("common.guests", { count: property.max_guests })}
-            </span>
-          )}
-        </p>
-        {amenityIds.length > 0 && (
-          <div className="hidden sm:flex flex-wrap gap-1.5 mb-2">
-            {amenityIds.slice(0, 3).map((id) => (
-              <span
-                key={id}
-                className="px-2 py-0.5 rounded-full bg-white/15 text-[11px] font-medium text-white"
-              >
-                {t(`amenities.${id}`)}
-              </span>
-            ))}
-            {amenityIds.length > 3 && (
-              <span className="px-2 py-0.5 rounded-full bg-white/15 text-[11px] font-medium text-white/75">
-                +{amenityIds.length - 3}
-              </span>
-            )}
-          </div>
-        )}
-        <p className="text-white font-bold text-base sm:text-lg">
-          {formatPrice(property.price)}
-          <span className="text-white/75 font-normal text-xs sm:text-sm"> {property.price_unit === "day" ? t("common.day") : t("common.night")}</span>
-        </p>
-      </div>
+        </>
+      )}
+
+      {showGuestFavorite && (
+        <span className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-white text-[11px] sm:text-xs font-semibold text-foreground shadow-sm">
+          {t("properties.guestFavorite")}
+        </span>
+      )}
+
+      <FavoriteHeart
+        liked={liked}
+        onToggle={toggleLike}
+        className="absolute top-2.5 right-2.5 z-10 p-1.5"
+        iconClassName="h-6 w-6 drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]"
+      />
     </div>
+  );
+
+  const infoBlock = (
+    <div className="pt-2 px-0.5">
+      <h3 className="font-semibold text-foreground text-sm sm:text-[15px] leading-snug line-clamp-1">{headline}</h3>
+      <p className="mt-0.5 text-[13px] text-muted-foreground flex items-center gap-1.5 min-w-0">
+        <span className="truncate">{stayPrice}</span>
+        <span aria-hidden>·</span>
+        <span className="inline-flex items-center gap-0.5 shrink-0 tabular-nums text-foreground">
+          <Star className="h-3 w-3 fill-current" />
+          {ratingCount > 0 ? rating.toFixed(2) : "—"}
+        </span>
+      </p>
+    </div>
+  );
+
+  const cardInner = (
+    <>
+      {photoBlock}
+      {infoBlock}
+    </>
   );
 
   if (compact) {
@@ -220,14 +198,16 @@ export function PropertyCard({
           }}
         />
         <div className="min-w-0 flex-1 py-2 pr-2">
-          <h3 className="font-bold text-sm text-foreground line-clamp-1">{property.title}</h3>
+          <h3 className="font-bold text-sm text-foreground line-clamp-1">{headline}</h3>
           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
             <MapPin className="h-3 w-3 shrink-0" />
             <span className="truncate">{property.location}</span>
           </p>
-          <p className="text-brand font-bold text-sm mt-1">
-            {formatPrice(property.price)}
-            <span className="text-muted-foreground font-normal text-xs"> {property.price_unit === "day" ? t("common.day") : t("common.night")}</span>
+          <p className="text-sm mt-1 text-muted-foreground">
+            {stayPrice}
+            <span className="text-foreground font-semibold"> · </span>
+            <Star className="inline h-3 w-3 fill-current align-[-1px]" />{" "}
+            {ratingCount > 0 ? rating.toFixed(2) : "—"}
           </p>
         </div>
         <FavoriteHeart
@@ -242,8 +222,7 @@ export function PropertyCard({
   }
 
   const cardClass = cn(
-    "bg-muted rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-border",
-    "cursor-pointer hover:shadow-xl hover:border-brand transition-all duration-300 hover:-translate-y-1",
+    "bg-transparent cursor-pointer",
     "w-[62vw] max-w-[240px] min-w-[196px] shrink-0 snap-start sm:w-72 sm:max-w-none sm:min-w-0 md:w-80 lg:w-[340px]",
     className
   );

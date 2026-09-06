@@ -22,7 +22,7 @@ export function Header() {
   const { openLogin, openRegister } = useAuthModal();
   const navigate = useNavigate();
   const pinHeader = ALWAYS_VISIBLE_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`));
-  const { visible } = useScrollHeader({ disabled: pinHeader });
+  const { visible } = useScrollHeader({ disabled: pinHeader, resetKey: pathname });
 
   const handleLogout = () => {
     logout();

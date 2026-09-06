@@ -1,59 +1,66 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface UseScrollHeaderOptions {
-  /** Keep header visible (e.g. map browse page). */
+  /** Keep chrome visible (e.g. map browse page). */
   disabled?: boolean;
+  /** Reset to visible when this changes (usually the route). */
+  resetKey?: string;
 }
 
-/** Hide header on scroll down, show on scroll up (immo rental pattern). */
-export function useScrollHeader({ disabled = false }: UseScrollHeaderOptions = {}) {
+function scrollTopFromEvent(event: Event) {
+  const target = event.target;
+  if (
+    target instanceof HTMLElement &&
+    target !== document.documentElement &&
+    target !== document.body &&
+    target.scrollHeight > target.clientHeight + 8
+  ) {
+    return target.scrollTop;
+  }
+  return window.scrollY || document.documentElement.scrollTop || 0;
+}
+
+/** Hide chrome on scroll down, show on scroll up. */
+export function useScrollHeader({ disabled = false, resetKey }: UseScrollHeaderOptions = {}) {
   const [visible, setVisible] = useState(true);
   const [hovered, setHovered] = useState(false);
-  const [lastY, setLastY] = useState(0);
+  const lastY = useRef(0);
 
-  const onScroll = useCallback(() => {
-    if (disabled) {
-      setVisible(true);
-      return;
-    }
-    const y = window.scrollY || document.documentElement.scrollTop || 0;
-    const docHeight = document.documentElement.scrollHeight;
-    const winHeight = window.innerHeight;
-    const atBottom = y + winHeight >= docHeight - 50;
-
-    if (y <= 100 || atBottom) {
-      setVisible(true);
-      setLastY(y);
-      return;
-    }
-
-    if (Math.abs(y - lastY) < 15) return;
-
-    if (y < lastY) setVisible(true);
-    else if (y > lastY) setVisible(false);
-
-    setLastY(y);
-  }, [disabled, lastY]);
+  useEffect(() => {
+    setVisible(true);
+    lastY.current = 0;
+  }, [resetKey]);
 
   useEffect(() => {
     if (disabled) {
       setVisible(true);
       return;
     }
-    let timeout: ReturnType<typeof setTimeout> | null = null;
-    const handler = () => {
-      if (timeout) return;
-      timeout = setTimeout(() => {
-        onScroll();
-        timeout = null;
-      }, 16);
+
+    let frame = 0;
+    const onScroll = (event: Event) => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        const y = scrollTopFromEvent(event);
+        if (y <= 24) {
+          setVisible(true);
+          lastY.current = y;
+          return;
+        }
+        const delta = y - lastY.current;
+        if (Math.abs(delta) < 8) return;
+        setVisible(delta < 0);
+        lastY.current = y;
+      });
     };
-    window.addEventListener("scroll", handler, { passive: true });
+
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
     return () => {
-      window.removeEventListener("scroll", handler);
-      if (timeout) clearTimeout(timeout);
+      window.removeEventListener("scroll", onScroll, true);
+      if (frame) window.cancelAnimationFrame(frame);
     };
-  }, [disabled, onScroll]);
+  }, [disabled]);
 
   return { visible, hovered, setHovered };
 }

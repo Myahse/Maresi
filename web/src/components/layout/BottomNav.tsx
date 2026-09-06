@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { CalendarDays, Heart, Home, Search, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/context/AuthModalContext";
+import { useScrollHeader } from "@/hooks/useScrollHeader";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -17,6 +18,8 @@ export function BottomNav() {
   const { isAuthenticated, user, logout } = useAuth();
   const { openLogin, openRegister } = useAuthModal();
   const [moreOpen, setMoreOpen] = useState(false);
+  const pinNav = moreOpen || pathname === "/properties";
+  const { visible } = useScrollHeader({ disabled: pinNav, resetKey: pathname });
 
   const goProtected = (path: string) => {
     if (!isAuthenticated) {
@@ -26,7 +29,34 @@ export function BottomNav() {
     navigate(path);
   };
 
-  const tabs = [
+  const accountTab = {
+    id: "account",
+    label: t("nav.account"),
+    icon: User,
+    active: moreOpen || pathname.startsWith("/account") || ["/login", "/register"].some((p) => pathname.startsWith(p)),
+    onClick: () => {
+      if (isAuthenticated) {
+        setMoreOpen(false);
+        goProtected("/account");
+        return;
+      }
+      setMoreOpen((o) => !o);
+    },
+  };
+
+  const guestTabs = [
+    { id: "home", to: "/", label: t("nav.home"), icon: Home, active: pathname === "/" },
+    {
+      id: "browse",
+      to: "/properties",
+      label: t("nav.browse"),
+      icon: Search,
+      active: pathname.startsWith("/properties"),
+    },
+    accountTab,
+  ] as const;
+
+  const memberTabs = [
     { id: "home", to: "/", label: t("nav.home"), icon: Home, active: pathname === "/" },
     {
       id: "browse",
@@ -49,21 +79,10 @@ export function BottomNav() {
       active: pathname.startsWith("/visits"),
       onClick: () => goProtected("/visits"),
     },
-    {
-      id: "account",
-      label: t("nav.account"),
-      icon: User,
-      active: moreOpen || pathname.startsWith("/account") || ["/login", "/register"].some((p) => pathname.startsWith(p)),
-      onClick: () => {
-        if (isAuthenticated) {
-          setMoreOpen(false);
-          goProtected("/account");
-          return;
-        }
-        setMoreOpen((o) => !o);
-      },
-    },
+    accountTab,
   ] as const;
+
+  const tabs = isAuthenticated ? memberTabs : guestTabs;
 
   return (
     <>
@@ -75,7 +94,7 @@ export function BottomNav() {
             aria-label={t("common.cancel")}
             onClick={() => setMoreOpen(false)}
           />
-          <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-2xl border border-border bg-card p-4 shadow-xl lg:hidden">
+          <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-2xl border border-border bg-card p-4 shadow-xl lg:hidden transition-transform duration-300 ease-out">
             <div className="flex items-center gap-2 pb-3 mb-3 border-b border-border">
               <ThemeToggle />
               <CurrencyPicker />
@@ -139,10 +158,14 @@ export function BottomNav() {
         </>
       )}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
+        className={cn(
+          "lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]",
+          "transition-transform duration-300 ease-out",
+          visible ? "translate-y-0" : "translate-y-full"
+        )}
         aria-label="Primary"
       >
-        <ul className="grid grid-cols-5 h-16">
+        <ul className={cn("grid h-16", isAuthenticated ? "grid-cols-5" : "grid-cols-3")}>
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const className = cn(

@@ -124,7 +124,7 @@
   },
   "nav": {
     "home": "Accueil",
-    "browse": "Chercher",
+    "browse": "Rechercher",
     "favorites": "Favoris",
     "visits": "Réservations",
     "account": "Compte",
@@ -183,6 +183,10 @@
     "showMap": "Voir la carte",
     "showList": "Voir la liste",
     "premium": "En avant",
+    "guestFavorite": "Coup de cœur",
+    "typeInLocation": "{{type}} à {{location}}",
+    "forNights_one": "{{price}} pour {{count}} nuit",
+    "forNights_other": "{{price}} pour {{count}} nuits",
     "listSheet": "Résidences"
   },
   "login": {

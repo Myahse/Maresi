@@ -124,7 +124,7 @@
   },
   "nav": {
     "home": "Home",
-    "browse": "Browse",
+    "browse": "Search",
     "favorites": "Saved",
     "visits": "Reservations",
     "account": "Account",
@@ -183,6 +183,10 @@
     "showMap": "Show map",
     "showList": "Show list",
     "premium": "Featured",
+    "guestFavorite": "Guest favorite",
+    "typeInLocation": "{{type}} in {{location}}",
+    "forNights_one": "{{price}} for {{count}} night",
+    "forNights_other": "{{price}} for {{count}} nights",
     "listSheet": "Residences"
   },
   "login": {
