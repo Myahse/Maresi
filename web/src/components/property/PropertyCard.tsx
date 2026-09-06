@@ -78,7 +78,10 @@ export function PropertyCard({
   const showGuestFavorite = Boolean(property.premium_positioning) || (ratingCount > 0 && rating >= 4.8);
 
   const photoBlock = (
-    <div className="relative group aspect-square w-full overflow-hidden rounded-2xl bg-muted touch-pan-y" {...swipeHandlers}>
+    <div
+      className="relative group aspect-square w-full overflow-hidden rounded-2xl bg-muted touch-pan-y"
+      {...swipeHandlers}
+    >
       <div
         className="flex h-full w-full transition-transform duration-500 ease-in-out"
         style={{ transform: `translateX(-${imageIndex * 100}%)` }}
@@ -140,7 +143,7 @@ export function PropertyCard({
       )}
 
       {showGuestFavorite && (
-        <span className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-white text-[11px] sm:text-xs font-semibold text-foreground shadow-sm">
+        <span className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full bg-white text-[10px] sm:text-xs font-semibold text-foreground shadow-sm">
           {t("properties.guestFavorite")}
         </span>
       )}
@@ -148,16 +151,16 @@ export function PropertyCard({
       <FavoriteHeart
         liked={liked}
         onToggle={toggleLike}
-        className="absolute top-2.5 right-2.5 z-10 p-1.5"
-        iconClassName="h-6 w-6 drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]"
+        className="absolute top-1.5 right-1.5 z-10 p-1 sm:top-2.5 sm:right-2.5 sm:p-1.5"
+        iconClassName="h-5 w-5 sm:h-6 sm:w-6 drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]"
       />
     </div>
   );
 
   const infoBlock = (
-    <div className="pt-2 px-0.5">
-      <h3 className="font-semibold text-foreground text-sm sm:text-[15px] leading-snug line-clamp-1">{headline}</h3>
-      <p className="mt-0.5 text-[13px] text-muted-foreground flex items-center gap-1.5 min-w-0">
+    <div className="pt-1.5 px-0.5 sm:pt-2">
+      <h3 className="font-semibold text-foreground text-xs sm:text-[15px] leading-snug line-clamp-1">{headline}</h3>
+      <p className="mt-0.5 text-[11px] sm:text-[13px] text-muted-foreground flex items-center gap-1.5 min-w-0">
         <span className="truncate">{stayPrice}</span>
         <span aria-hidden>·</span>
         <span className="inline-flex items-center gap-0.5 shrink-0 tabular-nums text-foreground">
@@ -223,7 +226,7 @@ export function PropertyCard({
 
   const cardClass = cn(
     "bg-transparent cursor-pointer",
-    "w-[62vw] max-w-[240px] min-w-[196px] shrink-0 snap-start sm:w-72 sm:max-w-none sm:min-w-0 md:w-80 lg:w-[340px]",
+    "w-[38vw] max-w-[148px] min-w-[128px] shrink-0 snap-start sm:w-64 sm:max-w-none sm:min-w-0 md:w-72 lg:w-[300px]",
     className
   );
 

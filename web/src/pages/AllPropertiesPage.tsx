@@ -193,10 +193,7 @@ export function AllPropertiesPage() {
                     onClick={() => setSelectedId(p.id)}
                     className={p.id === selectedId ? "ring-2 ring-brand rounded-2xl shrink-0" : "shrink-0"}
                   >
-                    <PropertyCard
-                      property={p}
-                      rental
-                    />
+                    <PropertyCard property={p} rental />
                   </div>
                 ))}
               </div>
