@@ -34,6 +34,7 @@ import { AppSplash } from "@/components/layout/AppSplash";
 import { HostRealtimeBridge } from "@/components/realtime/HostRealtimeBridge";
 import { PushPrompt } from "@/components/realtime/PushPrompt";
 import { LocationPrompt } from "@/components/location/LocationPrompt";
+import { UnreadVisitsProvider } from "@/context/UnreadVisitsContext";
 
 function ClientRegisterRedirect() {
   useEffect(() => {
@@ -64,10 +65,11 @@ function App() {
   return (
     <>
       <AppSplash />
-      <HostRealtimeBridge />
       <PushPrompt app="host" />
       <LocationPrompt />
       <BrowserRouter>
+        <UnreadVisitsProvider>
+        <HostRealtimeBridge />
         <Routes>
           <Route path="/" element={<MainLayout />}>
             <Route path="login" element={<AuthLayout />}>
@@ -108,6 +110,7 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
+        </UnreadVisitsProvider>
       </BrowserRouter>
     </>
   );

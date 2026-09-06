@@ -1,4 +1,6 @@
 import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtime } from "@/hooks/useRealtime";
 import { emitRealtime } from "@/hooks/useRealtimeRefresh";
@@ -7,11 +9,19 @@ import { ackIncomingVisitMessage } from "@/services/api";
 import type { RealtimeEvent, User } from "@/types";
 import { useFloatingAboveNavClass } from "@/context/MobileChromeContext";
 import { cn } from "@/lib/utils";
+import { alertFromRealtime, type InAppAlert } from "@/lib/visitAlerts";
 
 export function ClientRealtimeBridge() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const { isAuthenticated, user, applySession: setSession } = useAuth();
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<InAppAlert | null>(null);
   const floatingClass = useFloatingAboveNavClass();
+
+  const showToast = useCallback((next: InAppAlert | null) => {
+    setToast(next);
+    window.setTimeout(() => setToast(null), 5000);
+  }, []);
 
   const onEvent = useCallback(
     (event: RealtimeEvent) => {
@@ -31,28 +41,46 @@ export function ClientRealtimeBridge() {
             }
           }
         }
-        setToast(String(event.data.status === "rejected" ? "host-rejected" : "host-approved"));
+        showToast({
+          title:
+            event.data.status === "rejected" ? t("alerts.hostRejected") : t("alerts.hostApproved"),
+        });
+        return;
       }
-      if (event.type === "visit.status_changed" || event.type === "payment.completed" || event.type === "listing.published") {
-        setToast(event.type);
+
+      const visitAlert = alertFromRealtime(event, user?.id, t, false);
+      if (visitAlert) {
+        showToast(visitAlert);
+        return;
       }
-      window.setTimeout(() => setToast(null), 4000);
+      if (event.type === "payment.completed") {
+        showToast({ title: t("alerts.paymentCompleted"), href: "/visits" });
+        return;
+      }
+      if (event.type === "listing.published") {
+        showToast({ title: t("alerts.listingPublished"), href: "/properties" });
+      }
     },
-    [setSession, user]
+    [setSession, showToast, t, user]
   );
 
   useRealtime(isAuthenticated, onEvent);
 
   if (!toast) return null;
   return (
-    <div className={cn("fixed right-4 z-[80] rounded-xl bg-gray-900 text-white text-sm px-4 py-3 shadow-lg", floatingClass)}>
-      {toast === "host-approved" && "Host account approved"}
-      {toast === "host-rejected" && "Host application updated"}
-      {toast === "visit.status_changed" && "Visit request updated"}
-      {toast === "payment.completed" && "Payment confirmed"}
-      {toast === "listing.published" && "New residence near you"}
-      {!["host-approved", "host-rejected", "visit.status_changed", "payment.completed", "listing.published"].includes(toast) &&
-        toast}
-    </div>
+    <button
+      type="button"
+      className={cn(
+        "fixed right-4 z-[80] max-w-sm rounded-xl bg-gray-900 text-left text-white text-sm px-4 py-3 shadow-lg",
+        floatingClass
+      )}
+      onClick={() => {
+        if (toast.href) navigate(toast.href);
+        setToast(null);
+      }}
+    >
+      <p className="font-semibold">{toast.title}</p>
+      {toast.body && <p className="mt-0.5 text-xs text-white/80">{toast.body}</p>}
+    </button>
   );
 }

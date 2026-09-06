@@ -158,6 +158,12 @@ export interface VisitRequest {
   guest_rating_avg?: number;
   guest_rating_count?: number;
   guest_host_notes?: { score: number; note?: string; created_at?: string }[];
+  unread_count?: number;
+}
+
+export interface VisitUnreadSummary {
+  total_unread: number;
+  by_visit: Record<string, number>;
 }
 
 export interface VisitMessage {

@@ -8,12 +8,15 @@ import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { CLIENT_APP_URL, clientHostRegisterUrl } from "@/lib/clientApp";
+import { useUnreadVisits } from "@/context/UnreadVisitsContext";
+import { UnreadBadge } from "@/components/ui/UnreadBadge";
 
 export function BottomNav() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
+  const { totalUnread } = useUnreadVisits();
   const [moreOpen, setMoreOpen] = useState(false);
 
   const listingsActive = pathname === "/" || pathname === "/owner";
@@ -103,7 +106,10 @@ export function BottomNav() {
               )}
               onClick={() => setMoreOpen(false)}
             >
-              <CalendarDays className={cn("h-5 w-5", visitsActive && "stroke-[2.25]")} />
+              <span className="relative">
+                <CalendarDays className={cn("h-5 w-5", visitsActive && "stroke-[2.25]")} />
+                <UnreadBadge count={totalUnread} />
+              </span>
               <span className="truncate px-1">{t("nav.visits")}</span>
             </Link>
           </li>

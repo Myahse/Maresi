@@ -531,6 +531,7 @@
     "guests": "voyageurs",
     "requester": "Client",
     "chatTitle": "Discussion",
+    "chatUnread": "{{count}} non lu(s)",
     "chatHint": "Posez vos questions sur ce séjour. Seuls vous et le propriétaire voyez ce fil.",
     "chatOpenHint": "Ouvrir la conversation avec le propriétaire.",
     "chatLockedHint": "Cette conversation est fermée. Vous pouvez encore la lire.",
@@ -778,5 +779,19 @@
   },
   "hostGate": {
     "wrongRole": "Cette app est réservée aux propriétaires validés. Faites la demande depuis le site client."
+  },
+  "alerts": {
+    "reservationNew": "Nouvelle réservation",
+    "reservationAccepted": "Réservation acceptée",
+    "reservationAcceptedBody": "{{title}} a été acceptée.",
+    "reservationDeclined": "Réservation refusée",
+    "reservationUpdated": "Réservation mise à jour",
+    "reservationUpdatedBody": "{{title}} : {{status}}",
+    "newMessage": "Nouveau message",
+    "newMessageBody": "{{sender}} : {{preview}}",
+    "paymentCompleted": "Paiement confirmé",
+    "listingPublished": "Nouvelle résidence près de vous",
+    "hostApproved": "Compte propriétaire validé",
+    "hostRejected": "Demande propriétaire mise à jour"
   }
 }

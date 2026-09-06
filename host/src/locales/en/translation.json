@@ -555,6 +555,7 @@
     "guests": "guests",
     "requester": "Client",
     "chatTitle": "Discussion",
+    "chatUnread": "{{count}} unread",
     "chatHint": "Ask the guest for details about this request. Only you and the guest see this thread.",
     "chatOpenHint": "Open the conversation with the guest.",
     "chatLockedHint": "This conversation is closed. You can still read it.",
@@ -862,5 +863,17 @@
       "support": "Customer support",
       "supportHint": "Contact Maresi."
     }
+  },
+  "alerts": {
+    "reservationNew": "New reservation",
+    "reservationAccepted": "Reservation accepted",
+    "reservationAcceptedBody": "{{title}} was accepted.",
+    "reservationDeclined": "Reservation declined",
+    "reservationUpdated": "Reservation updated",
+    "reservationUpdatedBody": "{{title}}: {{status}}",
+    "newMessage": "New message",
+    "newMessageBody": "{{sender}}: {{preview}}",
+    "paymentCompleted": "Payment confirmed",
+    "hostReviewed": "Host application updated"
   }
 }

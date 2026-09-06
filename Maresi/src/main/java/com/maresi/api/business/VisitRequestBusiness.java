@@ -217,6 +217,7 @@ public class VisitRequestBusiness {
           normalizeVisit(item);
           hideHostOnlyGuestFile(item);
         });
+    attachUnreadCounts(items, SecurityUtils.requireUser().id());
     response.setItems(items);
     response.setCount((long) items.size());
     response.setStatus(functionalError.success("Demandes", locale));
@@ -254,6 +255,7 @@ public class VisitRequestBusiness {
     } else {
       hideHostOnlyGuestFile(item);
     }
+    item.put("unread_count", visitMessages.countUnreadForVisit(id, user.id()));
     response.setItem(item);
     response.setStatus(functionalError.success("Demande", locale));
     return response;
@@ -418,6 +420,33 @@ public class VisitRequestBusiness {
     realtime.publish("visit.message", message, guestId, ownerId, false);
   }
 
+  public Response<Map<String, Object>> unreadSummary(Locale locale) {
+    Response<Map<String, Object>> response = new Response<>();
+    AuthUser user = SecurityUtils.requireUser();
+    Map<UUID, Integer> counts = visitMessages.countUnreadByUser(user.id());
+    Map<String, Integer> byVisit = new LinkedHashMap<>();
+    int total = 0;
+    for (Map.Entry<UUID, Integer> entry : counts.entrySet()) {
+      byVisit.put(entry.getKey().toString(), entry.getValue());
+      total += entry.getValue();
+    }
+    Map<String, Object> item = new LinkedHashMap<>();
+    item.put("total_unread", total);
+    item.put("by_visit", byVisit);
+    response.setItem(item);
+    response.setStatus(functionalError.success("Messages non lus", locale));
+    return response;
+  }
+
+  private void attachUnreadCounts(List<Map<String, Object>> items, UUID userId) {
+    if (items == null || items.isEmpty()) return;
+    Map<UUID, Integer> counts = visitMessages.countUnreadByUser(userId);
+    for (Map<String, Object> item : items) {
+      UUID id = uuid(item.get("id"));
+      item.put("unread_count", id == null ? 0 : counts.getOrDefault(id, 0));
+    }
+  }
+
   private void notifyMessageReceipt(Map<String, Object> visit, boolean seen) {
     UUID guestId = uuid(visit.get("user_id"));
     UUID ownerId = visit.get("property_owner_id") == null ? null : uuid(visit.get("property_owner_id"));
@@ -437,6 +466,7 @@ public class VisitRequestBusiness {
       normalizeVisit(item);
       attachHostOnlyGuestFile(item);
     }
+    attachUnreadCounts(items, SecurityUtils.requireUser().id());
     response.setItems(items);
     response.setCount((long) items.size());
     response.setStatus(functionalError.success("Demandes proprietaire", locale));

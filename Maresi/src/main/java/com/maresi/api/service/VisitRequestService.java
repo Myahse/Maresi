@@ -61,6 +61,10 @@ public class VisitRequestService {
     return visitRequestBusiness.listForOwner(locale);
   }
 
+  public Response<Map<String, Object>> unreadSummary(Locale locale) {
+    return visitRequestBusiness.unreadSummary(locale);
+  }
+
   public Response<Map<String, Object>> updateStatus(
       UUID id, Request<Map<String, Object>> request, Locale locale) {
     return visitRequestBusiness.updateStatus(id, request, locale);

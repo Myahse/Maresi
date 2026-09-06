@@ -531,6 +531,7 @@
     "guests": "guests",
     "requester": "Client",
     "chatTitle": "Discussion",
+    "chatUnread": "{{count}} unread",
     "chatHint": "Ask questions about this stay. Only you and the host see this thread.",
     "chatOpenHint": "Open the conversation with the host.",
     "chatLockedHint": "This conversation is closed. You can still read it.",
@@ -778,5 +779,19 @@
   },
   "hostGate": {
     "wrongRole": "This app is for approved hosts. Apply from the client site."
+  },
+  "alerts": {
+    "reservationNew": "New reservation",
+    "reservationAccepted": "Reservation accepted",
+    "reservationAcceptedBody": "{{title}} was accepted.",
+    "reservationDeclined": "Reservation declined",
+    "reservationUpdated": "Reservation updated",
+    "reservationUpdatedBody": "{{title}}: {{status}}",
+    "newMessage": "New message",
+    "newMessageBody": "{{sender}}: {{preview}}",
+    "paymentCompleted": "Payment confirmed",
+    "listingPublished": "New residence near you",
+    "hostApproved": "Host account approved",
+    "hostRejected": "Host application updated"
   }
 }

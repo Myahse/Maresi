@@ -64,6 +64,12 @@ public class VisitRequestController {
     return ControllerSupport.run(() -> visitRequestService.listForOwner(loc), loc, exceptionUtils);
   }
 
+  @GetMapping("/unread-summary")
+  public ResponseEntity<Response<Map<String, Object>>> unreadSummary(Locale locale) {
+    Locale loc = ControllerSupport.locale(locale);
+    return ControllerSupport.run(() -> visitRequestService.unreadSummary(loc), loc, exceptionUtils);
+  }
+
   @GetMapping("/{id}/messages")
   public ResponseEntity<Response<Map<String, Object>>> listMessages(@PathVariable UUID id, Locale locale) {
     Locale loc = ControllerSupport.locale(locale);

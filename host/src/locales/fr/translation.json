@@ -555,6 +555,7 @@
     "guests": "voyageurs",
     "requester": "Client",
     "chatTitle": "Discussion",
+    "chatUnread": "{{count}} non lu(s)",
     "chatHint": "Demandez des précisions sur cette réservation. Seuls vous et le client voyez ce fil.",
     "chatOpenHint": "Ouvrir la conversation avec le client.",
     "chatLockedHint": "Cette conversation est fermée. Vous pouvez encore la lire.",
@@ -862,5 +863,17 @@
       "support": "Support client",
       "supportHint": "Contacter Maresi."
     }
+  },
+  "alerts": {
+    "reservationNew": "Nouvelle réservation",
+    "reservationAccepted": "Réservation acceptée",
+    "reservationAcceptedBody": "{{title}} a été acceptée.",
+    "reservationDeclined": "Réservation refusée",
+    "reservationUpdated": "Réservation mise à jour",
+    "reservationUpdatedBody": "{{title}} : {{status}}",
+    "newMessage": "Nouveau message",
+    "newMessageBody": "{{sender}} : {{preview}}",
+    "paymentCompleted": "Paiement confirmé",
+    "hostReviewed": "Demande propriétaire mise à jour"
   }
 }

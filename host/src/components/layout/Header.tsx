@@ -5,6 +5,8 @@ import { isApprovedHost } from "@/lib/hostAccess";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { useUnreadVisits } from "@/context/UnreadVisitsContext";
+import { UnreadBadge } from "@/components/ui/UnreadBadge";
 
 const navLinkClass = "text-sm font-semibold text-white/90 hover:text-white transition-colors";
 
@@ -12,6 +14,7 @@ export function Header() {
   const { t } = useTranslation();
   const { isAuthenticated, logout, user } = useAuth();
   const approved = isApprovedHost(user);
+  const { totalUnread } = useUnreadVisits();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -35,8 +38,9 @@ export function Header() {
                   </Link>
                   {approved ? (
                     <>
-                      <Link to="/owner/visits" className={navLinkClass}>
+                      <Link to="/owner/visits" className={`${navLinkClass} relative inline-flex items-center`}>
                         {t("dashboard.cards.validateVisits")}
+                        <UnreadBadge count={totalUnread} className="-top-2 -right-3" />
                       </Link>
                       <Link to="/owner/subscription" className={navLinkClass}>
                         {t("payments.walletNav")}

@@ -9,6 +9,8 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Heart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HOST_APP_URL } from "@/lib/hostApp";
+import { useUnreadVisits } from "@/context/UnreadVisitsContext";
+import { UnreadBadge } from "@/components/ui/UnreadBadge";
 
 const ALWAYS_VISIBLE_ROUTES = ["/properties"];
 
@@ -23,6 +25,7 @@ export function Header() {
   const navigate = useNavigate();
   const pinHeader = ALWAYS_VISIBLE_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`));
   const { visible } = useScrollHeader({ disabled: pinHeader, resetKey: pathname });
+  const { totalUnread } = useUnreadVisits();
 
   const handleLogout = () => {
     logout();
@@ -59,6 +62,10 @@ export function Header() {
                   <Link to="/favorites" className={cn(navLinkClass, "inline-flex items-center gap-1")}>
                     <Heart className="h-4 w-4" />
                     {t("header.favorites")}
+                  </Link>
+                  <Link to="/visits" className={cn(navLinkClass, "relative inline-flex items-center")}>
+                    {t("nav.visits")}
+                    <UnreadBadge count={totalUnread} className="-top-2 -right-3" />
                   </Link>
                   {user?.role === "owner" && (
                     <a href={HOST_APP_URL} className={navLinkClass}>

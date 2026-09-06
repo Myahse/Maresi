@@ -5,6 +5,8 @@ import { CalendarDays, Heart, Home, Search, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { useMobileChrome } from "@/context/MobileChromeContext";
+import { useUnreadVisits } from "@/context/UnreadVisitsContext";
+import { UnreadBadge } from "@/components/ui/UnreadBadge";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -19,6 +21,7 @@ export function BottomNav() {
   const { openLogin, openRegister } = useAuthModal();
   const [moreOpen, setMoreOpen] = useState(false);
   const { navVisible, setNavPinned } = useMobileChrome();
+  const { totalUnread } = useUnreadVisits();
 
   useEffect(() => {
     setNavPinned(moreOpen);
@@ -176,11 +179,17 @@ export function BottomNav() {
               "flex h-full w-full flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-semibold",
               tab.active ? "text-brand" : "text-muted-foreground"
             );
+            const icon = (
+              <span className="relative">
+                <Icon className={cn("h-5 w-5", tab.active && "stroke-[2.25]")} />
+                {tab.id === "visits" && <UnreadBadge count={totalUnread} />}
+              </span>
+            );
             if ("to" in tab) {
               return (
                 <li key={tab.id}>
                   <Link to={tab.to} className={className} onClick={() => setMoreOpen(false)}>
-                    <Icon className={cn("h-5 w-5", tab.active && "stroke-[2.25]")} />
+                    {icon}
                     <span className="truncate">{tab.label}</span>
                   </Link>
                 </li>
@@ -189,7 +198,7 @@ export function BottomNav() {
             return (
               <li key={tab.id}>
                 <button type="button" className={className} onClick={"onClick" in tab ? tab.onClick : undefined}>
-                  <Icon className={cn("h-5 w-5", tab.active && "stroke-[2.25]")} />
+                  {icon}
                   <span className="truncate">{tab.label}</span>
                 </button>
               </li>

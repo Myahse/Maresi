@@ -38,6 +38,7 @@ import { PushPrompt } from "@/components/realtime/PushPrompt";
 import { LocationPrompt } from "@/components/location/LocationPrompt";
 import { AuthModalProvider } from "@/context/AuthModalContext";
 import { MobileChromeProvider } from "@/context/MobileChromeContext";
+import { UnreadVisitsProvider } from "@/context/UnreadVisitsContext";
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
       <AppSplash />
       <BrowserRouter>
         <MobileChromeProvider>
+        <UnreadVisitsProvider>
         <AuthModalProvider>
           <ClientRealtimeBridge />
           <PushPrompt app="web" />
@@ -212,6 +214,7 @@ function App() {
             </Route>
           </Routes>
         </AuthModalProvider>
+        </UnreadVisitsProvider>
         </MobileChromeProvider>
       </BrowserRouter>
     </>

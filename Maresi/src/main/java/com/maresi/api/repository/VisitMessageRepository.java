@@ -1,5 +1,6 @@
 package com.maresi.api.repository;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -99,5 +100,42 @@ public class VisitMessageRepository {
         """,
         visitId,
         readerId);
+  }
+
+  public Map<UUID, Integer> countUnreadByUser(UUID userId) {
+    Map<UUID, Integer> counts = new LinkedHashMap<>();
+    jdbc.query(
+        """
+        SELECT m.visit_request_id AS visit_id, COUNT(*) AS unread_count
+        FROM visit_messages m
+        JOIN visit_requests vr ON vr.id = m.visit_request_id
+        JOIN properties p ON p.id = vr.property_id
+        WHERE m.sender_id <> ?
+          AND m.read_at IS NULL
+          AND (vr.user_id = ? OR p.owner_id = ?)
+        GROUP BY m.visit_request_id
+        """,
+        (rs, rowNum) -> {
+          counts.put((UUID) rs.getObject("visit_id"), rs.getInt("unread_count"));
+          return null;
+        },
+        userId,
+        userId,
+        userId);
+    return counts;
+  }
+
+  public int countUnreadForVisit(UUID visitId, UUID userId) {
+    Long count =
+        jdbc.queryForObject(
+            """
+            SELECT COUNT(*)
+            FROM visit_messages
+            WHERE visit_request_id = ? AND sender_id <> ? AND read_at IS NULL
+            """,
+            Long.class,
+            visitId,
+            userId);
+    return count == null ? 0 : count.intValue();
   }
 }

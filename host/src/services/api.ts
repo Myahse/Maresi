@@ -324,6 +324,10 @@ export function getOwnerVisitRequests() {
   return api.get<import("@/types").VisitRequest[]>(`/visit-requests/owner`);
 }
 
+export function getVisitUnreadSummary() {
+  return api.get<import("@/types").VisitUnreadSummary>(`/visit-requests/unread-summary`);
+}
+
 export function confirmVisitKey(id: string, code: string) {
   return api.post<import("@/types").VisitRequest>(`/visit-requests/${id}/key`, { code });
 }
