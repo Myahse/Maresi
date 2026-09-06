@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 
 export function ImageLightbox({
   src,
@@ -30,6 +31,10 @@ export function ImageLightbox({
     onIndexChange?.(wrapped);
   };
 
+  const { consumeSwipe, handlers: swipeHandlers } = useHorizontalSwipe((direction) => {
+    go(safeIndex + direction);
+  }, hasMultiple);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
@@ -50,11 +55,15 @@ export function ImageLightbox({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-3 sm:p-6"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-3 sm:p-6 touch-pan-y"
       role="dialog"
       aria-modal="true"
       aria-label={alt}
-      onClick={onClose}
+      onClick={() => {
+        if (consumeSwipe()) return;
+        onClose();
+      }}
+      {...swipeHandlers}
     >
       <button
         type="button"
@@ -93,12 +102,22 @@ export function ImageLightbox({
           </p>
         </>
       )}
-      <img
-        src={current}
-        alt={alt}
-        className="max-h-[92vh] max-w-[min(98vw,1400px)] rounded-lg object-contain shadow-2xl"
-        onClick={(event) => event.stopPropagation()}
-      />
+      <div className="w-full overflow-hidden pointer-events-none">
+        <div
+          className="flex w-full items-center transition-transform duration-300 ease-out"
+          style={{ transform: `translateX(-${safeIndex * 100}%)` }}
+        >
+          {photos.map((photo, idx) => (
+            <div key={`${photo}-${idx}`} className="flex min-w-full shrink-0 items-center justify-center">
+              <img
+                src={photo}
+                alt={alt}
+                className="max-h-[92vh] max-w-[min(98vw,1400px)] rounded-lg object-contain shadow-2xl"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>,
     document.body
   );

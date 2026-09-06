@@ -12,7 +12,7 @@ String formatPrice(int price) {
   return '${NumberFormat('#,###', 'fr_FR').format(price)} CFA';
 }
 
-/// Immo-style 200×200 card with bottom gradient overlay.
+/// Immo-style card: full-bleed photos, bottom fade, swipe between images.
 class PropertyCard extends StatelessWidget {
   const PropertyCard({
     super.key,
@@ -63,10 +63,136 @@ class PropertyCard extends StatelessWidget {
     };
   }
 
+  Widget _photoStack({
+    required BuildContext context,
+    required MaresiPalette palette,
+    required LocaleProvider locale,
+    required String title,
+    required String meta,
+    required bool showTypeChip,
+  }) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        _SwipeableCover(
+          images: property.images,
+          placeholder: _placeholder(palette),
+        ),
+        if (onFavoriteTap != null)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: GestureDetector(
+              onTap: onFavoriteTap,
+              child: Icon(
+                isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: isFavorite ? AppColors.favorite : palette.heartInactive,
+                size: 22,
+              ),
+            ),
+          ),
+        if (showTypeChip)
+          Positioned(
+            top: 8,
+            left: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                _typeLabel(context),
+                style: const TextStyle(color: Colors.black87, fontSize: 10, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        if (property.premiumPositioning)
+          Positioned(
+            top: showTypeChip ? 34 : 8,
+            left: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                locale.t('home.premium'),
+                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0x00000000),
+                  Color(0x99000000),
+                  Color(0xE6000000),
+                ],
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 36, 10, 10),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _titleWithStar(
+                    title,
+                    color: Colors.white,
+                    fontSize: compact ? 14 : 16,
+                    maxLines: compact ? 1 : 2,
+                  ),
+                  if (meta.isNotEmpty)
+                    Text(
+                      meta,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
+                    ),
+                  if (property.location.isNotEmpty)
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on, size: 12, color: Colors.white),
+                        const SizedBox(width: 2),
+                        Expanded(
+                          child: Text(
+                            property.location,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white, fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                  Text(
+                    formatPrice(property.price),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: compact ? 13 : 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildCompactCard(BuildContext context) {
     final palette = context.palette;
     final locale = context.watch<LocaleProvider>();
-    final imageUrl = property.images.isNotEmpty ? property.images.first : null;
     final title = property.title.isNotEmpty ? property.title : defaultTitle;
     final meta = _metaLine(context);
 
@@ -74,7 +200,7 @@ class PropertyCard extends StatelessWidget {
       padding: const EdgeInsets.only(right: 24),
       child: SizedBox(
         width: 200,
-        height: 200,
+        height: 250,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -82,93 +208,13 @@ class PropertyCard extends StatelessWidget {
             onTap: onTap,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (imageUrl != null)
-                    Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => _placeholder(palette))
-                  else
-                    _placeholder(palette),
-                  if (onFavoriteTap != null)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: GestureDetector(
-                        onTap: onFavoriteTap,
-                        child: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite ? AppColors.favorite : palette.heartInactive,
-                          size: 22,
-                        ),
-                      ),
-                    ),
-                  if (property.premiumPositioning)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF59E0B),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          locale.t('home.premium'),
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
-                        ),
-                      ),
-                    ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    height: 104,
-                    child: ColoredBox(
-                      color: const Color(0xB3000000),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _titleWithStar(
-                              title,
-                              color: Colors.white,
-                              fontSize: 14,
-                              maxLines: 1,
-                            ),
-                            if (meta.isNotEmpty)
-                              Text(
-                                meta,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Colors.white, fontSize: 11),
-                              ),
-                            if (property.location.isNotEmpty)
-                              Row(
-                                children: [
-                                  const Icon(Icons.location_on, size: 12, color: Colors.white),
-                                  const SizedBox(width: 2),
-                                  Expanded(
-                                    child: Text(
-                                      property.location,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(color: Colors.white, fontSize: 11),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            Text(
-                              formatPrice(property.price),
-                              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              child: _photoStack(
+                context: context,
+                palette: palette,
+                locale: locale,
+                title: title,
+                meta: meta,
+                showTypeChip: true,
               ),
             ),
           ),
@@ -179,103 +225,31 @@ class PropertyCard extends StatelessWidget {
 
   Widget _buildListCard(BuildContext context) {
     final palette = context.palette;
-    final imageUrl = property.images.isNotEmpty ? property.images.first : null;
+    final locale = context.watch<LocaleProvider>();
     final title = property.title.isNotEmpty ? property.title : defaultTitle;
     final meta = _metaLine(context);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Material(
-        color: palette.surface,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              border: Border.all(color: palette.menuBorder),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
-                  child: SizedBox(
-                    width: 120,
-                    height: 112,
-                    child: imageUrl != null
-                        ? Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => _placeholder(palette))
-                        : _placeholder(palette),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _titleWithStar(
-                                title,
-                                color: palette.text,
-                                fontSize: 15,
-                                maxLines: 2,
-                              ),
-                            ),
-                            if (onFavoriteTap != null)
-                              GestureDetector(
-                                onTap: onFavoriteTap,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 8),
-                                  child: Icon(
-                                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                                    color: isFavorite ? AppColors.favorite : palette.heartInactive,
-                                    size: 22,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        if (meta.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            meta,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 12, color: palette.textSecondary),
-                          ),
-                        ],
-                        if (property.location.isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Icon(Icons.location_on_outlined, size: 14, color: palette.textSecondary),
-                              const SizedBox(width: 2),
-                              Expanded(
-                                child: Text(
-                                  property.location,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: 13, color: palette.textSecondary),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        const SizedBox(height: 8),
-                        Text(
-                          formatPrice(property.price),
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.primary),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              height: 240,
+              width: double.infinity,
+              child: _photoStack(
+                context: context,
+                palette: palette,
+                locale: locale,
+                title: title,
+                meta: meta,
+                showTypeChip: true,
+              ),
             ),
           ),
         ),
@@ -312,6 +286,85 @@ class PropertyCard extends StatelessWidget {
     return ColoredBox(
       color: palette.pillBg,
       child: Center(child: Text(noImageLabel, style: TextStyle(color: palette.textLight, fontSize: 12))),
+    );
+  }
+}
+
+class _SwipeableCover extends StatefulWidget {
+  const _SwipeableCover({
+    required this.images,
+    required this.placeholder,
+  });
+
+  final List<String> images;
+  final Widget placeholder;
+
+  @override
+  State<_SwipeableCover> createState() => _SwipeableCoverState();
+}
+
+class _SwipeableCoverState extends State<_SwipeableCover> {
+  late final PageController _controller = PageController();
+  int _index = 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.images.isEmpty) return widget.placeholder;
+    if (widget.images.length == 1) {
+      return Image.network(
+        widget.images.first,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (context, error, stackTrace) => widget.placeholder,
+      );
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        PageView.builder(
+          controller: _controller,
+          itemCount: widget.images.length,
+          onPageChanged: (index) => setState(() => _index = index),
+          itemBuilder: (context, index) {
+            return Image.network(
+              widget.images[index],
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              errorBuilder: (context, error, stackTrace) => widget.placeholder,
+            );
+          },
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 118,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(widget.images.length, (index) {
+              final active = index == _index;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                height: 6,
+                width: active ? 16 : 6,
+                decoration: BoxDecoration(
+                  color: active ? Colors.white : Colors.white54,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
     );
   }
 }

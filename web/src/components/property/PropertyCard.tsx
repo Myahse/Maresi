@@ -5,6 +5,7 @@ import { Heart, MapPin, ChevronLeft, ChevronRight, BedDouble, Users } from "luci
 import type { Property } from "@/types";
 import { usePriceFormatter } from "@/context/CurrencyContext";
 import { PropertyRatingMark } from "@/components/rating/PropertyRatingMark";
+import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 import { cn } from "@/lib/utils";
 import { listingImageUrls } from "@/lib/media";
 import { displayPropertyType, isPropertyType, normalizeAmenities } from "@/lib/amenities";
@@ -38,118 +39,127 @@ export function PropertyCard({
   const photos = resolved.length > 0 ? resolved : [placeholder];
   const [imageIndex, setImageIndex] = useState(0);
   const hasMultiple = photos.length > 1;
+  const { consumeSwipe, handlers: swipeHandlers } = useHorizontalSwipe(
+    (direction) => setImageIndex((index) => (index + direction + photos.length) % photos.length),
+    hasMultiple
+  );
 
   const goToDetails = () => navigate(`/properties/${property.id}`);
+  const openDetailsUnlessSwipe = () => {
+    if (consumeSwipe()) return;
+    goToDetails();
+  };
   const amenityIds = normalizeAmenities(property.amenities);
 
   const cardInner = (
-    <>
-      <div className="relative group w-full overflow-hidden">
-        <div
-          className="flex w-full transition-transform duration-500 ease-in-out"
-          style={{ transform: `translateX(-${imageIndex * 100}%)` }}
-        >
-          {photos.map((photo, idx) => (
-            <div key={idx} className="min-w-full w-full shrink-0">
-              <img
-                src={photo}
-                alt={`${property.title} ${idx + 1}`}
-                className="w-full h-32 sm:h-52 md:h-56 object-cover bg-muted"
-                onError={(event) => {
-                  event.currentTarget.onerror = null;
-                  event.currentTarget.src = placeholder;
-                }}
-              />
-            </div>
-          ))}
-        </div>
-
-        {hasMultiple && (
-          <>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setImageIndex((i) => (i > 0 ? i - 1 : photos.length - 1));
+    <div className="relative group aspect-[4/5] w-full overflow-hidden touch-pan-y" {...swipeHandlers}>
+      <div
+        className="flex h-full w-full transition-transform duration-500 ease-in-out"
+        style={{ transform: `translateX(-${imageIndex * 100}%)` }}
+      >
+        {photos.map((photo, idx) => (
+          <div key={idx} className="min-w-full w-full h-full shrink-0">
+            <img
+              src={photo}
+              alt={`${property.title} ${idx + 1}`}
+              className="w-full h-full object-cover bg-muted"
+              draggable={false}
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = placeholder;
               }}
-              className="absolute left-1.5 sm:left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-1 sm:p-1.5 rounded-full sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-              aria-label="Previous"
-            >
-              <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setImageIndex((i) => (i + 1) % photos.length);
-              }}
-              className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-1 sm:p-1.5 rounded-full sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-              aria-label="Next"
-            >
-              <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </button>
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-              {photos.map((_, idx) => (
-                <div
-                  key={idx}
-                  className={cn(
-                    "h-1.5 rounded-full transition-all",
-                    idx === imageIndex ? "bg-white w-5" : "bg-white/60 w-1.5"
-                  )}
-                />
-              ))}
-            </div>
-          </>
-        )}
+            />
+          </div>
+        ))}
+      </div>
 
-        {onToggleFavorite && (
+      {hasMultiple && (
+        <>
           <button
             type="button"
-            className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 p-1.5 sm:p-2 rounded-full bg-black/30 hover:bg-black/40 backdrop-blur-sm transition-transform hover:scale-110"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              onToggleFavorite(property.id);
+              setImageIndex((i) => (i > 0 ? i - 1 : photos.length - 1));
             }}
-            aria-label={isFavorite ? "Remove favorite" : "Add favorite"}
+            className="absolute left-1.5 sm:left-2 top-[38%] -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 text-white p-1 sm:p-1.5 rounded-full sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+            aria-label="Previous"
           >
-            <Heart
-              className={cn(
-                "h-4 w-4 sm:h-5 sm:w-5 transition-colors",
-                isFavorite ? "fill-pink-500 text-pink-500" : "text-white"
-              )}
-            />
+            <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </button>
-        )}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setImageIndex((i) => (i + 1) % photos.length);
+            }}
+            className="absolute right-1.5 sm:right-2 top-[38%] -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 text-white p-1 sm:p-1.5 rounded-full sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+            aria-label="Next"
+          >
+            <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </button>
+        </>
+      )}
 
-        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-card/90 text-[10px] sm:text-xs font-semibold text-foreground capitalize">
-            {isPropertyType(property.property_type) || property.property_type
-              ? t(`propertyTypes.${displayPropertyType(property.property_type)}`)
-              : property.property_type}
+      {onToggleFavorite && (
+        <button
+          type="button"
+          className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 p-1.5 sm:p-2 rounded-full bg-black/30 hover:bg-black/40 backdrop-blur-sm transition-transform hover:scale-110"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleFavorite(property.id);
+          }}
+          aria-label={isFavorite ? "Remove favorite" : "Add favorite"}
+        >
+          <Heart
+            className={cn(
+              "h-4 w-4 sm:h-5 sm:w-5 transition-colors",
+              isFavorite ? "fill-pink-500 text-pink-500" : "text-white"
+            )}
+          />
+        </button>
+      )}
+
+      <span className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full bg-card/90 text-[10px] sm:text-xs font-semibold text-foreground capitalize">
+        {isPropertyType(property.property_type) || property.property_type
+          ? t(`propertyTypes.${displayPropertyType(property.property_type)}`)
+          : property.property_type}
+      </span>
+      {property.premium_positioning && (
+        <span className="absolute top-2 left-2 z-10 mt-6 px-2 py-0.5 rounded-full bg-amber-500 text-[10px] sm:text-xs font-bold text-white">
+          {t("properties.premium")}
         </span>
-        {property.premium_positioning && (
-          <span className="absolute top-2 left-2 mt-6 px-2 py-0.5 rounded-full bg-amber-500 text-[10px] sm:text-xs font-bold text-white">
-            {t("properties.premium")}
-          </span>
-        )}
-      </div>
+      )}
 
-      <div className="p-3 sm:p-4">
-        <h3 className="font-bold text-foreground text-sm sm:text-lg mb-1 flex items-start gap-1.5 sm:gap-2">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black via-black/70 to-transparent pt-16 pb-3 px-3 sm:pt-20 sm:pb-4 sm:px-4">
+        {hasMultiple && (
+          <div className="flex justify-center gap-1 mb-2">
+            {photos.map((_, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  "h-1.5 rounded-full transition-all",
+                  idx === imageIndex ? "bg-white w-5" : "bg-white/55 w-1.5"
+                )}
+              />
+            ))}
+          </div>
+        )}
+        <h3 className="font-bold text-white text-sm sm:text-lg mb-1 flex items-start gap-1.5 sm:gap-2">
           <PropertyRatingMark
             rating={property.average_rating}
             count={property.rating_count}
-            className="mt-0.5 text-xs sm:text-sm"
+            className="mt-0.5 text-xs sm:text-sm text-white"
           />
           <span className="line-clamp-1 sm:line-clamp-2">{property.title}</span>
         </h3>
-        <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mb-1.5 sm:mb-2">
+        <p className="text-xs sm:text-sm text-white/85 flex items-center gap-1 mb-1.5 sm:mb-2">
           <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
           <span className="truncate">{property.location}</span>
         </p>
-        <p className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-2">
+        <p className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-white/80 mb-1.5 sm:mb-2">
           {property.bedrooms != null && property.bedrooms > 0 && (
             <span className="inline-flex items-center gap-1">
               <BedDouble className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -164,28 +174,28 @@ export function PropertyCard({
           )}
         </p>
         {amenityIds.length > 0 && (
-          <div className="hidden sm:flex flex-wrap gap-1.5 mb-3">
+          <div className="hidden sm:flex flex-wrap gap-1.5 mb-2">
             {amenityIds.slice(0, 3).map((id) => (
               <span
                 key={id}
-                className="px-2 py-0.5 rounded-full bg-muted text-[11px] font-medium text-foreground"
+                className="px-2 py-0.5 rounded-full bg-white/15 text-[11px] font-medium text-white"
               >
                 {t(`amenities.${id}`)}
               </span>
             ))}
             {amenityIds.length > 3 && (
-              <span className="px-2 py-0.5 rounded-full bg-muted text-[11px] font-medium text-muted-foreground">
+              <span className="px-2 py-0.5 rounded-full bg-white/15 text-[11px] font-medium text-white/75">
                 +{amenityIds.length - 3}
               </span>
             )}
           </div>
         )}
-        <p className="text-brand font-bold text-base sm:text-lg">
+        <p className="text-white font-bold text-base sm:text-lg">
           {formatPrice(property.price)}
-          <span className="text-muted-foreground font-normal text-xs sm:text-sm"> {property.price_unit === "day" ? t("common.day") : t("common.night")}</span>
+          <span className="text-white/75 font-normal text-xs sm:text-sm"> {property.price_unit === "day" ? t("common.day") : t("common.night")}</span>
         </p>
       </div>
-    </>
+    </div>
   );
 
   if (compact) {
@@ -196,7 +206,7 @@ export function PropertyCard({
           selected ? "border-brand shadow-md" : "border-border",
           className
         )}
-        onClick={goToDetails}
+        onClick={openDetailsUnlessSwipe}
         role="link"
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && goToDetails()}
@@ -240,7 +250,7 @@ export function PropertyCard({
   }
 
   const cardClass = cn(
-    "bg-card rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-border",
+    "bg-muted rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-border",
     "cursor-pointer hover:shadow-xl hover:border-brand transition-all duration-300 hover:-translate-y-1",
     "w-[62vw] max-w-[240px] min-w-[196px] shrink-0 snap-start sm:w-72 sm:max-w-none sm:min-w-0 md:w-80 lg:w-[340px]",
     className
@@ -248,14 +258,20 @@ export function PropertyCard({
 
   if (rental) {
     return (
-      <article className={cardClass} onClick={goToDetails} role="link" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && goToDetails()}>
+      <article className={cardClass} onClick={openDetailsUnlessSwipe} role="link" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && goToDetails()}>
         {cardInner}
       </article>
     );
   }
 
   return (
-    <Link to={`/properties/${property.id}`} className={cardClass}>
+    <Link
+      to={`/properties/${property.id}`}
+      className={cardClass}
+      onClick={(event) => {
+        if (consumeSwipe()) event.preventDefault();
+      }}
+    >
       {cardInner}
     </Link>
   );

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ImageLightbox } from "@/components/media/ImageLightbox";
+import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 import { cn } from "@/lib/utils";
 
 export function ListingPhotoGallery({
@@ -18,9 +19,10 @@ export function ListingPhotoGallery({
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
   const stripRef = useRef<HTMLDivElement>(null);
-  const pointerStartX = useRef<number | null>(null);
-  const didSwipe = useRef(false);
   const hasMultiple = photos.length > 1;
+  const { consumeSwipe, handlers: swipeHandlers } = useHorizontalSwipe((direction) => {
+    setActive((current) => (current + direction + photos.length) % photos.length);
+  }, hasMultiple);
 
   useEffect(() => {
     setActive(0);
@@ -37,10 +39,7 @@ export function ListingPhotoGallery({
   };
 
   const openIfNotSwipe = () => {
-    if (didSwipe.current) {
-      didSwipe.current = false;
-      return;
-    }
+    if (consumeSwipe()) return;
     setOpen(true);
   };
 
@@ -48,24 +47,7 @@ export function ListingPhotoGallery({
     <div className="mb-6 min-w-0">
       <div
         className="group relative mb-3 aspect-video touch-pan-y overflow-hidden rounded-2xl border-2 border-border bg-muted shadow-sm sm:rounded-3xl"
-        onPointerDown={(event) => {
-          pointerStartX.current = event.clientX;
-          didSwipe.current = false;
-        }}
-        onPointerMove={(event) => {
-          if (pointerStartX.current == null) return;
-          if (Math.abs(event.clientX - pointerStartX.current) > 36) didSwipe.current = true;
-        }}
-        onPointerUp={(event) => {
-          const start = pointerStartX.current;
-          pointerStartX.current = null;
-          if (start == null || !hasMultiple || !didSwipe.current) return;
-          const dx = event.clientX - start;
-          if (Math.abs(dx) > 36) show(dx < 0 ? active + 1 : active - 1);
-        }}
-        onPointerCancel={() => {
-          pointerStartX.current = null;
-        }}
+        {...swipeHandlers}
       >
         <div
           className="flex h-full w-full transition-transform duration-300 ease-out"
