@@ -88,6 +88,30 @@ class PropertyCard extends StatelessWidget {
               size: 26,
             ),
           ),
+        Positioned(
+          left: 8,
+          bottom: 8,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0x99000000),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.star, size: 12, color: Color(0xFFFACC15)),
+                const SizedBox(width: 2),
+                Text(
+                  (property.ratingCount ?? 0) > 0 && property.averageRating != null
+                      ? property.averageRating!.toStringAsFixed(2)
+                      : '—',
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+        ),
         if (_guestFavorite)
           Positioned(
             top: 10,
@@ -111,8 +135,6 @@ class PropertyCard extends StatelessWidget {
 
   Widget _info(BuildContext context) {
     final palette = context.palette;
-    final rating = property.averageRating;
-    final count = property.ratingCount ?? 0;
     return Padding(
       padding: const EdgeInsets.fromLTRB(2, 8, 2, 0),
       child: Column(
@@ -125,23 +147,11 @@ class PropertyCard extends StatelessWidget {
             style: TextStyle(color: palette.text, fontSize: compact ? 14 : 16, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 2),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _priceLine(context),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: palette.textSecondary, fontSize: 13),
-                ),
-              ),
-              Icon(Icons.star, size: 13, color: palette.text),
-              const SizedBox(width: 2),
-              Text(
-                count > 0 && rating != null ? rating.toStringAsFixed(2) : '—',
-                style: TextStyle(color: palette.text, fontSize: 13, fontWeight: FontWeight.w600),
-              ),
-            ],
+          Text(
+            _priceLine(context),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: palette.textSecondary, fontSize: 13),
           ),
         ],
       ),

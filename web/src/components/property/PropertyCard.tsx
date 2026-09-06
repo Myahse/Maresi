@@ -154,20 +154,18 @@ export function PropertyCard({
         className="absolute top-1.5 right-1.5 z-10 p-1 sm:top-2.5 sm:right-2.5 sm:p-1.5"
         iconClassName="h-5 w-5 sm:h-6 sm:w-6 drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]"
       />
+
+      <span className="absolute bottom-2 left-2 z-10 inline-flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-white shadow-sm sm:bottom-2.5 sm:left-2.5 sm:text-xs">
+        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 sm:h-3.5 sm:w-3.5" />
+        {ratingCount > 0 ? rating.toFixed(2) : "—"}
+      </span>
     </div>
   );
 
   const infoBlock = (
     <div className="pt-1.5 px-0.5 sm:pt-2">
       <h3 className="font-semibold text-foreground text-xs sm:text-[15px] leading-snug line-clamp-1">{headline}</h3>
-      <p className="mt-0.5 text-[11px] sm:text-[13px] text-muted-foreground flex items-center gap-1.5 min-w-0">
-        <span className="truncate">{stayPrice}</span>
-        <span aria-hidden>·</span>
-        <span className="inline-flex items-center gap-0.5 shrink-0 tabular-nums text-foreground">
-          <Star className="h-3 w-3 fill-current" />
-          {ratingCount > 0 ? rating.toFixed(2) : "—"}
-        </span>
-      </p>
+      <p className="mt-0.5 text-[11px] sm:text-[13px] text-muted-foreground truncate">{stayPrice}</p>
     </div>
   );
 
@@ -206,12 +204,7 @@ export function PropertyCard({
             <MapPin className="h-3 w-3 shrink-0" />
             <span className="truncate">{property.location}</span>
           </p>
-          <p className="text-sm mt-1 text-muted-foreground">
-            {stayPrice}
-            <span className="text-foreground font-semibold"> · </span>
-            <Star className="inline h-3 w-3 fill-current align-[-1px]" />{" "}
-            {ratingCount > 0 ? rating.toFixed(2) : "—"}
-          </p>
+          <p className="text-sm mt-1 text-muted-foreground">{stayPrice}</p>
         </div>
         <FavoriteHeart
           liked={liked}
