@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getVisitRequest, signStayAgreement } from "@/services/api";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { VisitRequest } from "@/types";
@@ -85,7 +86,7 @@ export function StayAgreementPage() {
     <div className="font-jakarta min-h-screen bg-muted text-foreground py-5 sm:py-8 px-3 sm:px-4">
       <article className="max-w-3xl mx-auto bg-card text-card-foreground shadow-lg border-2 border-border rounded-2xl px-4 sm:px-12 py-7 sm:py-10">
         <header className="border-b-2 border-brand pb-6 mb-8 text-center">
-          <p className="text-xs tracking-[0.25em] uppercase text-brand font-semibold">Maresi</p>
+          <BrandLogo className="h-16 mx-auto object-center" />
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mt-2">{t("visits.agreementTitle")}</h1>
           <p className="text-sm text-muted-foreground mt-2">{t("visits.agreementDocRef", { id: visit.id.slice(0, 8) })}</p>
         </header>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 const MIN_DISPLAY_MS = 1200;
 const MAX_DISPLAY_MS = 2500;
@@ -74,17 +75,7 @@ export function AppSplash() {
       aria-label={t("splash.loading")}
     >
       <div className="splash-logo flex flex-col items-center gap-5">
-        <img
-          src="/logo-mark.svg"
-          alt=""
-          width={96}
-          height={96}
-          className="h-20 w-20 sm:h-24 sm:w-24 drop-shadow-md"
-          draggable={false}
-        />
-        <p className="text-3xl sm:text-4xl font-extrabold italic text-brand tracking-tight">
-          Maresi
-        </p>
+        <BrandLogo className="h-36 sm:h-44 object-center" alt="" />
         <div className="flex items-center gap-1.5 mt-2" aria-hidden>
           <span className="splash-dot h-2 w-2 rounded-full bg-brand" />
           <span className="splash-dot h-2 w-2 rounded-full bg-brand [animation-delay:150ms]" />

@@ -24,8 +24,7 @@ export function HomeHero() {
   return (
     <section className="px-4 pt-5 pb-6 sm:px-6 sm:pt-8 sm:pb-8 lg:pt-10 lg:pb-8">
       <div className="mx-auto max-w-xl lg:max-w-lg lg:text-center">
-        <p className="font-extrabold italic text-xl tracking-tight text-brand lg:hidden">Maresi</p>
-        <h1 className="text-[1.7rem] sm:text-3xl font-bold text-foreground leading-tight mt-3">
+        <h1 className="text-[1.7rem] sm:text-3xl font-bold text-foreground leading-tight">
           {t("landing.heroTitle")}
         </h1>
 

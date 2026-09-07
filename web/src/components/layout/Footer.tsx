@@ -4,6 +4,7 @@ import { MapPin, Phone, Mail } from "lucide-react";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { useAuth } from "@/hooks/useAuth";
 import { HOST_APP_URL } from "@/lib/hostApp";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 export function Footer() {
   const { t } = useTranslation();
@@ -20,7 +21,7 @@ export function Footer() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
               <div className="space-y-4">
-                <h3 className="font-extrabold italic text-xl text-white">Maresi</h3>
+                <BrandLogo variant="white" className="h-16" />
                 <p className="text-gray-200 text-sm leading-relaxed">{t("footer.tagline")}</p>
               </div>
 

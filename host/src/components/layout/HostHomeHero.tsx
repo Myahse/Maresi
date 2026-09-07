@@ -22,8 +22,7 @@ export function HostHomeHero({ query, onQueryChange, typeFilter, onTypeFilterCha
   return (
     <section className="bg-[#111111] text-white px-4 pt-5 pb-6 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        <p className="font-extrabold italic text-[22px] tracking-tight text-[#2DD4BF]">Maresi</p>
-        <h1 className="mt-7 text-[28px] leading-tight font-bold sm:text-3xl">{t("owner.homeHero.title")}</h1>
+        <h1 className="text-[28px] leading-tight font-bold sm:text-3xl">{t("owner.homeHero.title")}</h1>
         <label className="mt-5 flex items-center gap-3 rounded-full bg-white px-4 py-3.5 shadow-sm">
           <Search className="h-5 w-5 shrink-0 text-gray-400" />
           <input

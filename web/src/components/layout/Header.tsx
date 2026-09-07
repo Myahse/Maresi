@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { LocaleSettingsButton } from "@/components/layout/LocaleSettingsButton";
 import { Heart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,11 +42,8 @@ export function Header() {
       >
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 sm:h-[4.5rem] items-center justify-between gap-2 sm:gap-4">
-            <Link
-              to="/"
-              className="font-extrabold italic text-xl sm:text-2xl tracking-tight shrink-0 text-white"
-            >
-              Maresi
+            <Link to="/" className="shrink-0" aria-label="Maresi">
+              <BrandLogo variant="white" className="h-12 sm:h-14" />
             </Link>
 
             <nav className="flex items-center gap-6 min-w-0">

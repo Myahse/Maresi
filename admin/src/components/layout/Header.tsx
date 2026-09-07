@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
@@ -17,8 +18,8 @@ export function Header() {
     <>
       <header className="hidden lg:block fixed top-0 left-0 right-0 z-50 bg-brand shadow-md">
         <div className="max-w-8xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-          <Link to="/" className="font-extrabold italic text-xl text-white shrink-0">
-            Maresi Admin
+          <Link to="/" className="shrink-0" aria-label="Maresi Admin">
+            <BrandLogo variant="white" className="h-12" />
           </Link>
           {isAuthenticated && (
             <nav className="flex items-center gap-1 overflow-x-auto">

@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { isApprovedHost } from "@/lib/hostAccess";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { LocaleSettingsButton } from "@/components/layout/LocaleSettingsButton";
 import { useUnreadVisits } from "@/context/UnreadVisitsContext";
 import { UnreadBadge } from "@/components/ui/UnreadBadge";
@@ -25,8 +26,8 @@ export function Header() {
       <header className="hidden lg:block fixed top-0 left-0 right-0 z-50 bg-brand shadow-md">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-2">
-            <Link to="/owner" className="font-extrabold italic text-xl text-white">
-              Maresi Host
+            <Link to="/owner" className="shrink-0" aria-label="Maresi Host">
+              <BrandLogo variant="white" className="h-12" />
             </Link>
             <nav className="flex items-center gap-6">
               {isAuthenticated && (
