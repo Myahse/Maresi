@@ -16,6 +16,7 @@ import {
 } from "@/services/api";
 import { VisitRequestCard } from "@/components/visit/VisitRequestCard";
 import { actionErrorMessage } from "@/lib/offline";
+import { stayPhase } from "@/lib/stayPhase";
 import type { VisitRequest } from "@/types";
 
 export function OwnerVisitsPage() {
@@ -151,16 +152,23 @@ export function OwnerVisitsPage() {
   const extensionToConfirm = visits.filter((v) => v.extension_status === "payment_sent");
   const overstays = visits.filter((v) => v.overstay && !v.closed_at);
   const toClose = visits.filter((v) => v.can_close && !v.closed_at && !v.overstay);
-  const resolved = visits.filter(
-    (v) =>
-      v.status !== "pending" &&
-      v.status !== "payment_sent" &&
-      v.status !== "awaiting_key" &&
-      v.status !== "awaiting_host_agreement" &&
-      v.extension_status !== "pending" &&
-      v.extension_status !== "payment_sent" &&
-      !v.can_close
+  const actionIds = new Set(
+    [
+      ...pending,
+      ...awaitingHost,
+      ...awaitingKey,
+      ...toConfirm,
+      ...extensionPending,
+      ...extensionToConfirm,
+      ...overstays,
+      ...toClose,
+    ].map((v) => v.id)
   );
+  const rest = visits.filter((v) => !actionIds.has(v.id));
+  const activeStays = rest.filter((v) => stayPhase(v) === "active");
+  const upcomingStays = rest.filter((v) => stayPhase(v) === "upcoming");
+  const doneStays = rest.filter((v) => stayPhase(v) === "done");
+  const cancelledStays = rest.filter((v) => stayPhase(v) === "cancelled");
 
   const submitKey = async (id: string) => {
     setActingId(id);
@@ -597,11 +605,46 @@ export function OwnerVisitsPage() {
             </section>
           )}
 
-          {resolved.length > 0 && (
+          {activeStays.length > 0 && (
             <section className="space-y-4">
-              <h2 className="font-semibold text-foreground">{t("owner.pastRequests")}</h2>
-              {resolved.map((v) => (
-                <VisitRequestCard key={v.id} visit={v} showRequester />
+              <h2 className="font-semibold text-foreground">
+                {t("visits.stayPhaseSection.active")} ({activeStays.length})
+              </h2>
+              {activeStays.map((v) => (
+                <VisitRequestCard key={`active-${v.id}`} visit={v} showRequester />
+              ))}
+            </section>
+          )}
+
+          {upcomingStays.length > 0 && (
+            <section className="space-y-4">
+              <h2 className="font-semibold text-foreground">
+                {t("visits.stayPhaseSection.upcoming")} ({upcomingStays.length})
+              </h2>
+              {upcomingStays.map((v) => (
+                <VisitRequestCard key={`upcoming-${v.id}`} visit={v} showRequester />
+              ))}
+            </section>
+          )}
+
+          {doneStays.length > 0 && (
+            <section className="space-y-4">
+              <h2 className="font-semibold text-foreground">
+                {t("visits.stayPhaseSection.done")} ({doneStays.length})
+              </h2>
+              {doneStays.map((v) => (
+                <VisitRequestCard key={`done-${v.id}`} visit={v} showRequester />
+              ))}
+            </section>
+          )}
+
+          {cancelledStays.length > 0 && (
+            <section className="space-y-4">
+              <h2 className="font-semibold text-foreground">
+                {t("visits.stayPhaseSection.cancelled")} ({cancelledStays.length})
+              </h2>
+              {cancelledStays.map((v) => (
+                <VisitRequestCard key={`cancelled-${v.id}`} visit={v} showRequester />
               ))}
             </section>
           )}

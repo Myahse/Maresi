@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Calendar, Clock, Users, Phone, MapPin, MessageSquare, CreditCard, Mail } from "lucide-react";
 import type { VisitRequest, VisitRequestStatus } from "@/types";
 import { cn } from "@/lib/utils";
+import { stayPhaseKey } from "@/lib/stayPhase";
 import { AuthImage } from "@/components/visit/AuthImage";
 import { VisitChat } from "@/components/visit/VisitChat";
 
@@ -16,6 +17,14 @@ const STATUS_STYLES: Record<VisitRequestStatus, string> = {
   payment_sent: "bg-violet-100 text-violet-800 border-violet-200",
   confirmed: "bg-emerald-100 text-emerald-800 border-emerald-200",
   cancelled: "bg-muted text-foreground border-border",
+};
+
+const STAY_PHASE_STYLES = {
+  upcoming: "bg-sky-100 text-sky-800 border-sky-200",
+  active: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  overstay: "bg-amber-100 text-amber-900 border-amber-300",
+  done: "bg-slate-200 text-slate-800 border-slate-300",
+  cancelled: "bg-red-100 text-red-800 border-red-200",
 };
 
 interface VisitRequestCardProps {
@@ -41,6 +50,7 @@ function formatStay(date?: string, time?: string) {
 
 export function VisitRequestCard({ visit, showRequester, children }: VisitRequestCardProps) {
   const { t } = useTranslation();
+  const phase = stayPhaseKey(visit);
 
   return (
     <article className="rounded-2xl border-2 border-border bg-card overflow-hidden">
@@ -55,14 +65,24 @@ export function VisitRequestCard({ visit, showRequester, children }: VisitReques
               </p>
             )}
           </div>
-          <span
-            className={cn(
-              "text-xs font-bold uppercase px-3 py-1 rounded-full border",
-              STATUS_STYLES[visit.status]
-            )}
-          >
-            {t(`visits.status.${visit.status}`)}
-          </span>
+          <div className="flex flex-col items-end gap-1.5">
+            <span
+              className={cn(
+                "text-xs font-bold uppercase px-3 py-1 rounded-full border",
+                STAY_PHASE_STYLES[phase]
+              )}
+            >
+              {t("visits.stayLabel")}: {t(`visits.stayPhase.${phase}`)}
+            </span>
+            <span
+              className={cn(
+                "text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full border",
+                STATUS_STYLES[visit.status]
+              )}
+            >
+              {t(`visits.status.${visit.status}`)}
+            </span>
+          </div>
         </div>
 
         {showRequester && (

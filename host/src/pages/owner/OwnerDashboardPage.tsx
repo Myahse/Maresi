@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,9 @@ import { getProperties, deleteProperty, getOwnerVisitRequests, getMySubscription
 import { listingImageUrl } from "@/lib/media";
 import { shareListingPage } from "@/lib/listingShare";
 import { isApprovedHost } from "@/lib/hostAccess";
+import { displayPropertyType } from "@/lib/amenities";
 import { usePriceFormatter } from "@/context/CurrencyContext";
+import { HostHomeHero } from "@/components/layout/HostHomeHero";
 import type { OwnerSubscription, Property, VisitRequest } from "@/types";
 
 export function OwnerDashboardPage() {
@@ -24,6 +26,8 @@ export function OwnerDashboardPage() {
   const [error, setError] = useState("");
   const [shareNote, setShareNote] = useState("");
   const [publishingId, setPublishingId] = useState("");
+  const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
 
   const refreshVisits = useCallback(() => {
     return getOwnerVisitRequests()
@@ -62,6 +66,18 @@ export function OwnerDashboardPage() {
   }, [user, t]);
 
   const approved = isApprovedHost(user);
+
+  const visibleProperties = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return properties.filter((p) => {
+      const type = String(displayPropertyType(p.property_type || ""));
+      if (typeFilter && type !== typeFilter) return false;
+      if (!needle) return true;
+      return [p.title, p.location, p.property_type].some((value) =>
+        String(value || "").toLowerCase().includes(needle)
+      );
+    });
+  }, [properties, query, typeFilter]);
 
   const handleAdd = () => {
     navigate("/owner/new");
@@ -124,83 +140,33 @@ export function OwnerDashboardPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 sm:py-8 space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-xl sm:text-2xl font-bold">{t("owner.title")}</h1>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => navigate("/owner/account")}>
-            {t("account.title")}
-          </Button>
-          {approved ? (
-            <>
-              <Button
-                variant="outline"
-                className="flex-1 sm:flex-none"
-                onClick={() => navigate("/owner/subscription")}
-              >
-                {t("payments.walletNav")}
-              </Button>
-              <Button className="flex-1 sm:flex-none" onClick={handleAdd}>
-                {t("owner.addProperty")}
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => navigate("/owner/application")}>
-                {t("hostApply.title")}
-              </Button>
-              <Button className="flex-1 sm:flex-none" onClick={handleAdd}>
-                {t("owner.addDraft")}
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+    <div>
+      <HostHomeHero
+        query={query}
+        onQueryChange={setQuery}
+        typeFilter={typeFilter}
+        onTypeFilterChange={setTypeFilter}
+      />
+      <div className="container mx-auto px-4 py-6 sm:py-8 space-y-6">
       {!approved && (
-        <Card className="border-2 border-brand/30 bg-brand/5">
-          <CardContent className="pt-6 space-y-2">
-            <p className="font-semibold">
-              {user?.host_status === "rejected" ? t("hostApply.rejected") : t("hostApply.pending")}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {user?.host_status === "rejected" ? t("hostApply.fixHint") : t("hostApply.pendingHint")}
-            </p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Button variant="outline" onClick={() => navigate("/owner/application")}>
-                {t("hostApply.openRequest")}
-              </Button>
-              <Button className="bg-brand hover:bg-brand-dark" onClick={handleAdd}>
-                {t("hostApply.prepareDraft")}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-muted/50 px-4 py-3 text-sm">
+          <p className="text-muted-foreground">
+            {user?.host_status === "rejected" ? t("hostApply.rejectedShort") : t("hostApply.pendingShort")}
+          </p>
+          <button type="button" className="font-semibold text-brand" onClick={() => navigate("/owner/application")}>
+            {t("hostApply.openRequest")}
+          </button>
+        </div>
       )}
       {approved && (
-        <Card className="border-2 border-brand/20">
-          <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-            <CardTitle className="text-base">{t("payments.walletTitle")}</CardTitle>
-            <Button size="sm" className="rounded-full bg-brand hover:bg-brand-dark" onClick={() => navigate("/owner/subscription")}>
-              {t("payments.walletManage")}
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex items-end justify-between gap-4">
-              <span className="text-sm text-muted-foreground">{t("payments.walletBalance")}</span>
-              <span className="text-2xl font-bold text-brand">
-                {formatPrice(Number(wallet?.wallet_balance ?? 0))}
-              </span>
-            </div>
-            <div className="flex justify-between gap-4 text-sm">
-              <span className="text-muted-foreground">{t("payments.walletHeld")}</span>
-              <span className="font-semibold">{formatPrice(Number(wallet?.wallet_held ?? 0))}</span>
-            </div>
-            <div className="flex justify-between gap-4 text-sm">
-              <span className="text-muted-foreground">{t("payments.walletAvailable")}</span>
-              <span className="font-semibold">{formatPrice(Number(wallet?.wallet_available ?? 0))}</span>
-            </div>
-          </CardContent>
-        </Card>
+        <button
+          type="button"
+          onClick={() => navigate("/owner/subscription")}
+          className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left"
+        >
+          <span className="text-sm text-muted-foreground">{t("payments.walletAvailable")}</span>
+          <span className="text-lg font-bold text-brand">{formatPrice(Number(wallet?.wallet_available ?? 0))}</span>
+        </button>
       )}
       {error && <p className="text-destructive">{error}</p>}
       {shareNote && <p className="text-sm text-brand">{shareNote}</p>}
@@ -215,8 +181,11 @@ export function OwnerDashboardPage() {
           .
         </p>
       ) : (
+        visibleProperties.length === 0 ? (
+        <p className="text-muted-foreground">{t("owner.homeHero.noMatch")}</p>
+      ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {properties.map((p) => {
+          {visibleProperties.map((p) => {
             const cover = listingImageUrl(p.images?.[0]);
             return (
               <Card key={p.id} className="overflow-hidden">
@@ -278,6 +247,7 @@ export function OwnerDashboardPage() {
             );
           })}
         </div>
+      )
       )}
 
       {approved && (
@@ -299,6 +269,7 @@ export function OwnerDashboardPage() {
           )}
         </section>
       )}
+      </div>
     </div>
   );
 }

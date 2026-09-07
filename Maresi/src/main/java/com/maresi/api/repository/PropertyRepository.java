@@ -80,7 +80,8 @@ public class PropertyRepository {
       sql.append(NOT_IN_RESERVATION);
     }
     if (location != null && !location.isBlank()) {
-      sql.append(" AND p.location ILIKE ?");
+      sql.append(" AND (p.location ILIKE ? OR p.title ILIKE ?)");
+      params.add("%" + location + "%");
       params.add("%" + location + "%");
     }
     if (minPrice != null) {

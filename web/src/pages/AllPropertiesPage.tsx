@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getProperties } from "@/services/api";
 import { PropertyCard } from "@/components/property/PropertyCard";
@@ -7,24 +8,19 @@ import { PropertyCardSkeleton } from "@/components/property/PropertyCardSkeleton
 import { PropertiesMap } from "@/components/map/PropertiesMap";
 import { useUserLocation } from "@/context/LocationContext";
 import { sortListings } from "@/lib/listingRank";
+import { EMPTY_FILTERS, filtersFromSearch, filtersToSearch } from "@/lib/listingSearch";
 import { useNavInsetBottomClass } from "@/context/MobileChromeContext";
 import { cn } from "@/lib/utils";
 import type { Property } from "@/types";
 
-const defaultFilters: FilterValues = {
-  location: "",
-  minPrice: "",
-  maxPrice: "",
-  property_type: "",
-};
-
 export function AllPropertiesPage() {
   const { t } = useTranslation();
   const { coords } = useUserLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navInsetClass = useNavInsetBottomClass();
   const [properties, setProperties] = useState<Property[]>([]);
-  const [filters, setFilters] = useState<FilterValues>(defaultFilters);
-  const [appliedFilters, setAppliedFilters] = useState<FilterValues>(defaultFilters);
+  const [filters, setFilters] = useState<FilterValues>(() => filtersFromSearch(searchParams));
+  const [appliedFilters, setAppliedFilters] = useState<FilterValues>(() => filtersFromSearch(searchParams));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -41,6 +37,12 @@ export function AllPropertiesPage() {
     media.addEventListener("change", onChange);
     return () => media.removeEventListener("change", onChange);
   }, []);
+
+  useEffect(() => {
+    const next = filtersFromSearch(searchParams);
+    setFilters(next);
+    setAppliedFilters(next);
+  }, [searchParams]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,11 +83,16 @@ export function AllPropertiesPage() {
     const v = next ?? filters;
     setFilters(v);
     setAppliedFilters(v);
+    const path = filtersToSearch(v);
+    setSearchParams(new URLSearchParams(path.includes("?") ? path.slice(path.indexOf("?") + 1) : ""), {
+      replace: true,
+    });
   };
 
   const resetFilters = () => {
-    setFilters(defaultFilters);
-    setAppliedFilters(defaultFilters);
+    setFilters(EMPTY_FILTERS);
+    setAppliedFilters(EMPTY_FILTERS);
+    setSearchParams(new URLSearchParams(), { replace: true });
   };
 
   const desktopList = (

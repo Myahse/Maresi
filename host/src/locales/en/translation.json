@@ -653,7 +653,21 @@
     "stayClosed": "Stay closed",
     "guestHostNotes": "Host notes (hidden from the guest)",
     "guestNoNotes": "No host notes yet.",
-    "overstaySection": "Overstays to handle"
+    "overstaySection": "Overstays to handle",
+    "stayLabel": "Stay",
+    "stayPhase": {
+      "upcoming": "Upcoming",
+      "active": "Active",
+      "overstay": "Overstay",
+      "done": "Done",
+      "cancelled": "Cancelled"
+    },
+    "stayPhaseSection": {
+      "active": "Active stays",
+      "upcoming": "Upcoming stays",
+      "done": "Finished stays",
+      "cancelled": "Cancelled stays"
+    }
   },
   "payments": {
     "payReservation": "Pay my reservation",

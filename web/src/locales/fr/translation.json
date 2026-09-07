@@ -150,8 +150,15 @@
     "cookies": "Politique des cookies"
   },
   "landing": {
-    "heroTitle": "Trouvez votre prochaine résidence",
+    "heroTitle": "Trouvez votre prochain chez-vous",
     "heroSubtitle": "Parcourez appartements, maisons et studios. Les propriétaires publient facilement ; les clients découvrent et réservent des visites.",
+    "searchPlaceholder": "Ville, quartier, type de bien...",
+    "cats": {
+      "apartment": "Appartements",
+      "house": "Maisons",
+      "studio": "Studios",
+      "hotel": "Hôtels"
+    },
     "getStarted": "Commencer",
     "signIn": "Se connecter",
     "browseNow": "Voir les annonces",
@@ -428,7 +435,7 @@
   },
   "filters": {
     "location": "Lieu",
-    "locationPlaceholder": "Ville ou quartier",
+    "locationPlaceholder": "Cocody, studio, villa…",
     "type": "Type",
     "minPrice": "Prix min",
     "maxPrice": "Prix max",

@@ -15,6 +15,7 @@ import { AuthAttachment } from "@/components/visit/AuthAttachment";
 import { LocalFilePreview } from "@/components/visit/FilePreviewer";
 import { MessageReceipt } from "@/components/visit/MessageReceipt";
 import { cn } from "@/lib/utils";
+import { stayPhaseKey } from "@/lib/stayPhase";
 import type { RealtimeEvent, VisitMessage, VisitRequest } from "@/types";
 
 function formatStay(date?: string, time?: string) {
@@ -187,7 +188,11 @@ export function VisitChatPage({ backTo = "/owner/visits" }: { backTo?: string })
                 {visit.guests_count} {t("visits.guests")}
               </p>
             )}
-            <p className="uppercase tracking-wide text-white/80">{t(`visits.status.${visit.status}`)}</p>
+            <p className="uppercase tracking-wide text-white/80">
+              {t("visits.stayLabel")}: {t(`visits.stayPhase.${stayPhaseKey(visit)}`)}
+              {" · "}
+              {t(`visits.status.${visit.status}`)}
+            </p>
             {canClose && (
               <button
                 type="button"

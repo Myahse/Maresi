@@ -150,8 +150,15 @@
     "cookies": "Cookie policy"
   },
   "landing": {
-    "heroTitle": "Find your next residence",
+    "heroTitle": "Find your next home",
     "heroSubtitle": "Browse apartments, houses and studios. Property owners list with ease; clients discover and book visits.",
+    "searchPlaceholder": "City, neighborhood, property type...",
+    "cats": {
+      "apartment": "Apartments",
+      "house": "Houses",
+      "studio": "Studios",
+      "hotel": "Hotels"
+    },
     "getStarted": "Get started",
     "signIn": "Sign in",
     "browseNow": "Browse listings",
@@ -428,7 +435,7 @@
   },
   "filters": {
     "location": "Location",
-    "locationPlaceholder": "City or area",
+    "locationPlaceholder": "Cocody, studio, villa…",
     "type": "Type",
     "minPrice": "Min price",
     "maxPrice": "Max price",

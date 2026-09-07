@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/select";
 import { useUserLocation } from "@/context/LocationContext";
 import { reverseGeocode } from "@/lib/mapbox";
 import { PROPERTY_TYPES } from "@/lib/amenities";
+import { mergeListingQuery } from "@/lib/listingSearch";
 
 export interface FilterValues {
   location: string;
@@ -34,6 +35,10 @@ export function PropertyFilters({
   const { coords, status, requestAccess } = useUserLocation();
   const pendingNear = useRef(false);
   const [moreOpen, setMoreOpen] = useState(false);
+
+  const applySearch = (next?: FilterValues) => {
+    onApply(mergeListingQuery(next ?? values));
+  };
 
   const applyNearMe = async (from = coords) => {
     if (!from) return;
@@ -68,6 +73,12 @@ export function PropertyFilters({
             placeholder={t("filters.locationPlaceholder")}
             value={values.location}
             onChange={(e) => onChange({ ...values, location: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                applySearch();
+              }
+            }}
             className="flex-1 bg-card"
           />
           <Button
@@ -80,7 +91,7 @@ export function PropertyFilters({
           </Button>
           <Button
             type="button"
-            onClick={() => onApply()}
+            onClick={() => applySearch()}
             className="bg-brand hover:bg-brand-dark rounded-full font-semibold shrink-0"
           >
             {t("common.search")}
@@ -151,6 +162,12 @@ export function PropertyFilters({
             placeholder={t("filters.locationPlaceholder")}
             value={values.location}
             onChange={(e) => onChange({ ...values, location: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                applySearch();
+              }
+            }}
           />
           <Button
             type="button"
@@ -196,7 +213,7 @@ export function PropertyFilters({
           onChange={(e) => onChange({ ...values, maxPrice: e.target.value })}
         />
       </div>
-      <Button onClick={() => onApply()} className="bg-brand hover:bg-brand-dark rounded-full font-semibold">
+      <Button onClick={() => applySearch()} className="bg-brand hover:bg-brand-dark rounded-full font-semibold">
         {t("common.search")}
       </Button>
       <Button variant="outline" onClick={onReset} className="rounded-full border-2">

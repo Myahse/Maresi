@@ -653,7 +653,21 @@
     "stayClosed": "Séjour clos",
     "guestHostNotes": "Avis des propriétaires (invisible pour le client)",
     "guestNoNotes": "Aucun avis propriétaire pour l'instant.",
-    "overstaySection": "Dépassements à gérer"
+    "overstaySection": "Dépassements à gérer",
+    "stayLabel": "Séjour",
+    "stayPhase": {
+      "upcoming": "À venir",
+      "active": "En cours",
+      "overstay": "Dépassement",
+      "done": "Terminé",
+      "cancelled": "Annulé"
+    },
+    "stayPhaseSection": {
+      "active": "Séjours en cours",
+      "upcoming": "Séjours à venir",
+      "done": "Séjours terminés",
+      "cancelled": "Séjours annulés"
+    }
   },
   "payments": {
     "payReservation": "Payer ma réservation",
