@@ -23,7 +23,7 @@ export function Header() {
 
   return (
     <>
-      <header className="hidden lg:block fixed top-0 left-0 right-0 z-50 bg-brand shadow-md">
+      <header className="hidden lg:block fixed top-0 left-0 right-0 z-50 bg-brand-dark shadow-md">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-2">
             <Link to="/owner" className="shrink-0" aria-label="Maresi Host">

@@ -23,7 +23,7 @@ function applyClass(preference: ThemePreference) {
   const dark = preference === "dark" || (preference === "system" && systemPrefersDark());
   document.documentElement.classList.toggle("dark", dark);
   document.documentElement.style.colorScheme = dark ? "dark" : "light";
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#141a1a" : "#0D9488");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#123A63" : "#2878C8");
 }
 
 interface ThemeContextValue {

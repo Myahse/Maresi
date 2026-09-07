@@ -18,7 +18,7 @@ export default {
         brand: {
           DEFAULT: "hsl(var(--brand) / <alpha-value>)",
           dark: "hsl(var(--brand-dark) / <alpha-value>)",
-          light: "#14B8A6",
+          light: "#2878C8",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",

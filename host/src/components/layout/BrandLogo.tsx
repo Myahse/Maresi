@@ -4,11 +4,11 @@ import { useTheme } from "@/context/ThemeContext";
 interface BrandLogoProps {
   className?: string;
   alt?: string;
-  /** `white` for the teal navbar; otherwise follows light/dark theme. */
-  variant?: "auto" | "white" | "green";
+  /** `white` for the navy navbar; otherwise follows light/dark theme. */
+  variant?: "auto" | "white" | "color";
 }
 
-export function BrandLogo({ className, alt = "Maresi", variant = "auto" }: BrandLogoProps) {
+export function BrandLogo({ className, alt = "Maresi Propriétaires", variant = "auto" }: BrandLogoProps) {
   const { resolved } = useTheme();
   const useWhite = variant === "white" || (variant === "auto" && resolved === "dark");
 

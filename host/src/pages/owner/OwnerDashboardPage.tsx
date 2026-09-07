@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,7 @@ import { getProperties, deleteProperty, getOwnerVisitRequests, getMySubscription
 import { listingImageUrl } from "@/lib/media";
 import { shareListingPage } from "@/lib/listingShare";
 import { isApprovedHost } from "@/lib/hostAccess";
-import { displayPropertyType } from "@/lib/amenities";
 import { usePriceFormatter } from "@/context/CurrencyContext";
-import { HostHomeHero } from "@/components/layout/HostHomeHero";
 import type { OwnerSubscription, Property, VisitRequest } from "@/types";
 
 export function OwnerDashboardPage() {
@@ -26,8 +24,6 @@ export function OwnerDashboardPage() {
   const [error, setError] = useState("");
   const [shareNote, setShareNote] = useState("");
   const [publishingId, setPublishingId] = useState("");
-  const [query, setQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string | null>(null);
 
   const refreshVisits = useCallback(() => {
     return getOwnerVisitRequests()
@@ -66,18 +62,6 @@ export function OwnerDashboardPage() {
   }, [user, t]);
 
   const approved = isApprovedHost(user);
-
-  const visibleProperties = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return properties.filter((p) => {
-      const type = String(displayPropertyType(p.property_type || ""));
-      if (typeFilter && type !== typeFilter) return false;
-      if (!needle) return true;
-      return [p.title, p.location, p.property_type].some((value) =>
-        String(value || "").toLowerCase().includes(needle)
-      );
-    });
-  }, [properties, query, typeFilter]);
 
   const handleAdd = () => {
     navigate("/owner/new");
@@ -141,13 +125,13 @@ export function OwnerDashboardPage() {
 
   return (
     <div>
-      <HostHomeHero
-        query={query}
-        onQueryChange={setQuery}
-        typeFilter={typeFilter}
-        onTypeFilterChange={setTypeFilter}
-      />
       <div className="container mx-auto px-4 py-6 sm:py-8 space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">{t("owner.title")}</h1>
+        <Button className="rounded-full bg-brand hover:bg-brand-dark" onClick={handleAdd}>
+          {t(approved ? "owner.addProperty" : "owner.addDraft")}
+        </Button>
+      </div>
       {!approved && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-muted/50 px-4 py-3 text-sm">
           <p className="text-muted-foreground">
@@ -181,11 +165,8 @@ export function OwnerDashboardPage() {
           .
         </p>
       ) : (
-        visibleProperties.length === 0 ? (
-        <p className="text-muted-foreground">{t("owner.homeHero.noMatch")}</p>
-      ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {visibleProperties.map((p) => {
+          {properties.map((p) => {
             const cover = listingImageUrl(p.images?.[0]);
             return (
               <Card key={p.id} className="overflow-hidden">
@@ -247,7 +228,6 @@ export function OwnerDashboardPage() {
             );
           })}
         </div>
-      )
       )}
 
       {approved && (

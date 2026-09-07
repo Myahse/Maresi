@@ -9,14 +9,14 @@ mkdirSync(publicDir, { recursive: true });
 
 function brandSvg(size, radius, fontScale = 0.53) {
   return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" fill="none">
-  <rect width="${size}" height="${size}" rx="${radius}" fill="#0D9488"/>
+  <rect width="${size}" height="${size}" rx="${radius}" fill="#2878C8"/>
   <text x="${size / 2}" y="${size * 0.68}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="${size * fontScale}" font-weight="800" fill="#ffffff">M</text>
 </svg>`);
 }
 
 function maskableSvg(size) {
   return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" fill="none">
-  <rect width="${size}" height="${size}" fill="#0D9488"/>
+  <rect width="${size}" height="${size}" fill="#123A63"/>
   <text x="${size / 2}" y="${size * 0.68}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="${size * 0.42}" font-weight="800" fill="#ffffff">M</text>
 </svg>`);
 }
