@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { ClipboardList, LayoutDashboard, Users, Wallet } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 export function BottomNav() {
@@ -45,7 +44,6 @@ export function BottomNav() {
           />
           <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-2xl border border-border bg-card p-4 shadow-xl lg:hidden">
             <div className="flex items-center gap-2 pb-3 mb-3 border-b border-border">
-              <ThemeToggle />
               <LanguageSwitcher />
             </div>
             <Link

@@ -117,7 +117,10 @@
   },
   "theme": {
     "toDark": "Switch to dark mode",
-    "toLight": "Switch to light mode"
+    "toLight": "Switch to light mode",
+    "to_system": "Use device theme",
+    "to_light": "Switch to light mode",
+    "to_dark": "Switch to dark mode"
   },
   "notFound": {
     "title": "This page does not exist",

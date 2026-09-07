@@ -2,9 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { isApprovedHost } from "@/lib/hostAccess";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
-import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { LocaleSettingsButton } from "@/components/layout/LocaleSettingsButton";
 import { useUnreadVisits } from "@/context/UnreadVisitsContext";
 import { UnreadBadge } from "@/components/ui/UnreadBadge";
 
@@ -60,9 +58,7 @@ export function Header() {
               )}
             </nav>
             <div className="flex items-center gap-2">
-              <ThemeToggle inverted />
-              <CurrencyPicker inverted />
-              <LanguageSwitcher inverted />
+              <LocaleSettingsButton inverted />
               {isAuthenticated && (
                 <>
                   <Link to="/owner/account" className={navLinkClass}>

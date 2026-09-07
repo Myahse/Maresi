@@ -3,9 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { useScrollHeader } from "@/hooks/useScrollHeader";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
-import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { LocaleSettingsButton } from "@/components/layout/LocaleSettingsButton";
 import { Heart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HOST_APP_URL } from "@/lib/hostApp";
@@ -77,9 +75,7 @@ export function Header() {
             </nav>
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <ThemeToggle inverted />
-              <CurrencyPicker inverted />
-              <LanguageSwitcher inverted />
+              <LocaleSettingsButton inverted />
 
               {isAuthenticated ? (
                 <button

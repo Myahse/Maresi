@@ -3,9 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Building2, CalendarDays, Plus, User, Wallet } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
-import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { LocaleSettingsButton } from "@/components/layout/LocaleSettingsButton";
 import { cn } from "@/lib/utils";
 import { CLIENT_APP_URL, clientHostRegisterUrl } from "@/lib/clientApp";
 import { useUnreadVisits } from "@/context/UnreadVisitsContext";
@@ -36,9 +34,7 @@ export function BottomNav() {
           />
           <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-3 right-3 z-50 rounded-2xl border border-border bg-card p-4 shadow-xl lg:hidden">
             <div className="flex items-center gap-2 pb-3 mb-3 border-b border-border">
-              <ThemeToggle />
-              <CurrencyPicker />
-              <LanguageSwitcher />
+              <LocaleSettingsButton />
             </div>
             {isAuthenticated ? (
               <button

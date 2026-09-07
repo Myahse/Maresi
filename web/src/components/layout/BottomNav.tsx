@@ -7,9 +7,7 @@ import { useAuthModal } from "@/context/AuthModalContext";
 import { useMobileChrome } from "@/context/MobileChromeContext";
 import { useUnreadVisits } from "@/context/UnreadVisitsContext";
 import { UnreadBadge } from "@/components/ui/UnreadBadge";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
-import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { LocaleSettingsButton } from "@/components/layout/LocaleSettingsButton";
 import { cn } from "@/lib/utils";
 import { HOST_APP_URL } from "@/lib/hostApp";
 
@@ -103,9 +101,7 @@ export function BottomNav() {
           />
           <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-3 right-3 z-50 rounded-2xl border border-border bg-card p-4 shadow-xl lg:hidden">
             <div className="flex items-center gap-2 pb-3 mb-3 border-b border-border">
-              <ThemeToggle />
-              <CurrencyPicker />
-              <LanguageSwitcher />
+              <LocaleSettingsButton />
             </div>
             {isAuthenticated ? (
               <div className="flex flex-col gap-1">

@@ -8,7 +8,7 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("maresi-theme") || "system";
+          var t = localStorage.getItem("maresi-color-scheme") || "system";
           var dark =
             t === "dark" ||
             (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);

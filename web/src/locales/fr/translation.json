@@ -241,7 +241,10 @@
   },
   "theme": {
     "toDark": "Passer en mode sombre",
-    "toLight": "Passer en mode clair"
+    "toLight": "Passer en mode clair",
+    "to_system": "Suivre le thème de l'appareil",
+    "to_light": "Passer en mode clair",
+    "to_dark": "Passer en mode sombre"
   },
   "notFound": {
     "title": "Cette page n'existe pas",
@@ -518,10 +521,10 @@
       "notificationsHint": "Alertes push et messages de l'application.",
       "security": "Connexion et sécurité",
       "securityHint": "Mot de passe et accès au compte.",
-      "language": "Langue",
-      "languageHint": "Français ou anglais.",
+      "language": "Langue et devise",
+      "languageHint": "Français ou anglais, et devise d'affichage.",
       "system": "Système",
-      "systemHint": "Thème, devise et localisation.",
+      "systemHint": "Localisation.",
       "legal": "Informations légales",
       "legalHint": "Conditions, confidentialité et cookies.",
       "support": "Support client",
@@ -758,6 +761,10 @@
     "label": "Langue",
     "en": "English",
     "fr": "Français"
+  },
+  "localeSettings": {
+    "title": "Langue et devise",
+    "open": "Langue et devise"
   },
   "hostApply": {
     "title": "Je suis propriétaire",

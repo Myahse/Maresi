@@ -116,7 +116,10 @@
   },
   "theme": {
     "toDark": "Passer en mode sombre",
-    "toLight": "Passer en mode clair"
+    "toLight": "Passer en mode clair",
+    "to_system": "Suivre le thème de l'appareil",
+    "to_light": "Passer en mode clair",
+    "to_dark": "Passer en mode sombre"
   },
   "notFound": {
     "title": "Cette page n'existe pas",

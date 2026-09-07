@@ -17,11 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IdentityPhotoField } from "@/components/auth/IdentityPhotoField";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
-import { CurrencyPicker } from "@/components/layout/CurrencyPicker";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { LocaleSettingsButton } from "@/components/layout/LocaleSettingsButton";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "@/context/ThemeContext";
 import { useUserLocation } from "@/context/LocationContext";
 import {
   changeMyPassword,
@@ -394,7 +391,7 @@ export function AccountLanguagePage() {
     <Shell title={t("account.sections.language")} hint={t("account.sections.languageHint")}>
       <div className="rounded-2xl border bg-card p-4 flex items-center gap-3">
         <Globe className="h-5 w-5 text-brand" />
-        <LanguageSwitcher />
+        <LocaleSettingsButton />
       </div>
     </Shell>
   );
@@ -402,31 +399,9 @@ export function AccountLanguagePage() {
 
 export function AccountSystemPage() {
   const { t } = useTranslation();
-  const { preference, setPreference } = useTheme();
   const location = useUserLocation();
   return (
     <Shell title={t("account.sections.system")} hint={t("account.sections.systemHint")}>
-      <div className="rounded-2xl border bg-card p-4 space-y-4">
-        <p className="font-semibold">{t("account.theme")}</p>
-        <div className="flex flex-wrap gap-2">
-          {(["light", "dark", "system"] as const).map((value) => (
-            <Button
-              key={value}
-              type="button"
-              variant={preference === value ? "default" : "outline"}
-              className="rounded-full"
-              onClick={() => setPreference(value)}
-            >
-              {t(`account.theme_${value}`)}
-            </Button>
-          ))}
-          <ThemeToggle />
-        </div>
-      </div>
-      <div className="rounded-2xl border bg-card p-4 space-y-3">
-        <p className="font-semibold">{t("account.currency")}</p>
-        <CurrencyPicker />
-      </div>
       <div className="rounded-2xl border bg-card p-4 space-y-3">
         <p className="font-semibold">{t("location.title")}</p>
         <p className="text-sm text-muted-foreground">{t("location.body")}</p>

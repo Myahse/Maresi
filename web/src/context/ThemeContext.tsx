@@ -2,7 +2,8 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 
 export type ThemePreference = "light" | "dark" | "system";
 
-const STORAGE_KEY = "maresi-theme";
+const STORAGE_KEY = "maresi-color-scheme";
+const CYCLE: ThemePreference[] = ["system", "light", "dark"];
 
 function systemPrefersDark() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -21,6 +22,8 @@ function readStored(): ThemePreference {
 function applyClass(preference: ThemePreference) {
   const dark = preference === "dark" || (preference === "system" && systemPrefersDark());
   document.documentElement.classList.toggle("dark", dark);
+  document.documentElement.style.colorScheme = dark ? "dark" : "light";
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#141a1a" : "#0D9488");
 }
 
 interface ThemeContextValue {
@@ -64,11 +67,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     preference === "dark" || (preference === "system" && systemDark) ? "dark" : "light";
 
   const toggle = useCallback(() => {
-    setPreferenceState((prev) => {
-      const current = prev === "dark" || (prev === "system" && systemDark) ? "dark" : "light";
-      return current === "dark" ? "light" : "dark";
-    });
-  }, [systemDark]);
+    setPreferenceState((prev) => CYCLE[(CYCLE.indexOf(prev) + 1) % CYCLE.length]);
+  }, []);
 
   const value = useMemo(
     () => ({ preference, resolved, setPreference, toggle }),
