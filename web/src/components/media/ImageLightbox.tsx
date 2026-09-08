@@ -102,17 +102,17 @@ export function ImageLightbox({
           </p>
         </>
       )}
-      <div className="w-full overflow-hidden pointer-events-none">
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
         <div
-          className="flex w-full items-center transition-transform duration-300 ease-out"
-          style={{ transform: `translateX(-${safeIndex * 100}%)` }}
+          className="flex h-full w-full"
+          style={{ transform: `translate3d(-${safeIndex * 100}%,0,0)`, transition: "transform 300ms ease-out" }}
         >
           {photos.map((photo, idx) => (
-            <div key={`${photo}-${idx}`} className="flex min-w-full shrink-0 items-center justify-center">
+            <div key={`${photo}-${idx}`} className="flex h-full w-full shrink-0 grow-0 basis-full items-center justify-center p-3 sm:p-6">
               <img
                 src={photo}
                 alt={alt}
-                className="max-h-[92vh] max-w-[min(98vw,1400px)] rounded-lg object-contain shadow-2xl"
+                className="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
               />
             </div>
           ))}

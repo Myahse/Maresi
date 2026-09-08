@@ -46,25 +46,25 @@ export function ListingPhotoGallery({
   return (
     <div className="mb-6 min-w-0">
       <div
-        className="group relative mb-3 aspect-video touch-pan-y overflow-hidden rounded-2xl border-2 border-border bg-muted shadow-sm sm:rounded-3xl"
+        className="group relative mb-3 aspect-video max-h-[70svh] touch-pan-y overflow-hidden rounded-2xl border-2 border-border bg-muted shadow-sm sm:rounded-3xl"
         {...swipeHandlers}
       >
         <div
-          className="flex h-full w-full transition-transform duration-300 ease-out"
-          style={{ transform: `translateX(-${active * 100}%)` }}
+          className="absolute inset-0 flex"
+          style={{ transform: `translate3d(-${active * 100}%,0,0)`, transition: "transform 300ms ease-out" }}
         >
           {photos.map((photo, idx) => (
             <button
               key={`${photo}-${idx}`}
               type="button"
-              className="relative h-full min-w-full shrink-0"
+              className="relative h-full w-full shrink-0 grow-0 basis-full appearance-none border-0 bg-transparent p-0"
               onClick={openIfNotSwipe}
               aria-label={t("propertyDetails.enlargePhoto")}
             >
               <img
                 src={photo}
                 alt={`${title} ${idx + 1}`}
-                className="h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full max-w-none object-cover object-center"
                 draggable={false}
                 onError={(event) => {
                   event.currentTarget.onerror = null;
@@ -125,12 +125,12 @@ export function ListingPhotoGallery({
                 setOpen(true);
               }}
               className={cn(
-                "h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 bg-muted transition-colors",
+                "relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 bg-muted p-0 appearance-none transition-colors",
                 idx === active ? "border-brand ring-2 ring-brand/30" : "border-border"
               )}
               aria-label={t("propertyDetails.photoN", { n: idx + 1 })}
             >
-              <img src={img} alt="" className="h-full w-full object-cover" draggable={false} />
+              <img src={img} alt="" className="absolute inset-0 h-full w-full max-w-none object-cover object-center" draggable={false} />
             </button>
           ))}
         </div>

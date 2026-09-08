@@ -83,15 +83,15 @@ export function PropertyCard({
       {...swipeHandlers}
     >
       <div
-        className="flex h-full w-full transition-transform duration-500 ease-in-out"
-        style={{ transform: `translateX(-${imageIndex * 100}%)` }}
+        className="absolute inset-0 flex"
+        style={{ transform: `translate3d(-${imageIndex * 100}%,0,0)`, transition: "transform 500ms ease-in-out" }}
       >
         {photos.map((photo, idx) => (
-          <div key={idx} className="min-w-full w-full h-full shrink-0">
+          <div key={idx} className="relative h-full w-full shrink-0 grow-0 basis-full">
             <img
               src={photo}
               alt={`${property.title} ${idx + 1}`}
-              className="w-full h-full object-cover"
+              className="absolute inset-0 h-full w-full max-w-none object-cover object-center"
               draggable={false}
               onError={(event) => {
                 event.currentTarget.onerror = null;
