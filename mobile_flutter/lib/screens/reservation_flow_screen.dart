@@ -498,7 +498,7 @@ class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
                 ),
                 Expanded(
                   child: Text(
-                    '${locale.t('visits.agreementArticle', args: ['$n'])} — ${locale.t('visits.agreementArt$n')}',
+                    '${locale.t('visits.agreementArticle').replaceAll('{{n}}', '$n')} — ${locale.t('visits.agreementArt$n')}',
                     style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
                   ),
                 ),

@@ -760,7 +760,6 @@ class _RegistrationFlowScreenState extends State<RegistrationFlowScreen> {
           ),
         ),
         const SizedBox(height: 16),
-],
       ],
     );
   }

@@ -478,6 +478,27 @@ class MockApiService implements MaresiApi {
   }
 
   @override
+  Future<PaymentPreview> previewReservationPayment(String visitRequestId) async {
+    await _delay();
+    if (_sessionUser == null) throw Exception('Authentification requise');
+    final visit = _visitRequests.firstWhere(
+      (v) => v.id == visitRequestId,
+      orElse: () => throw Exception('Demande introuvable'),
+    );
+    final property = _findResidence(visit.propertyId);
+    final amount = property.price.toDouble();
+    return PaymentPreview(
+      stayAmount: amount,
+      operatorFee: 0,
+      operatorFeePercent: 0,
+      clientPaysOperatorFees: false,
+      total: amount,
+      propertyPrice: amount,
+      propertyTitle: property.title,
+    );
+  }
+
+  @override
   Future<Payment> startReservationPayment(String visitRequestId, {String? paymentMethod, String? phone}) async {
     await _delay();
     if (_sessionUser == null) throw Exception('Authentification requise');

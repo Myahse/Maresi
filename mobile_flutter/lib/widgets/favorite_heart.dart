@@ -25,10 +25,10 @@ class _FavoriteHeartState extends State<FavoriteHeart> with SingleTickerProvider
     duration: const Duration(milliseconds: 650),
   );
   late final Animation<double> _scale = TweenSequence<double>([
-    TweenSequenceItem(tween: Tween(begin: 1, end: 1.4).chain(CurveTween(curve: Curves.easeOut)), weight: 25),
-    TweenSequenceItem(tween: Tween(begin: 1.4, end: 0.9).chain(CurveTween(curve: Curves.easeIn)), weight: 20),
-    TweenSequenceItem(tween: Tween(begin: 0.9, end: 1.22).chain(CurveTween(curve: Curves.easeOut)), weight: 25),
-    TweenSequenceItem(tween: Tween(begin: 1.22, end: 1).chain(CurveTween(curve: Curves.easeIn)), weight: 30),
+    TweenSequenceItem(tween: Tween<double>(begin: 1, end: 1.4).chain(CurveTween(curve: Curves.easeOut)), weight: 25),
+    TweenSequenceItem(tween: Tween<double>(begin: 1.4, end: 0.9).chain(CurveTween(curve: Curves.easeIn)), weight: 20),
+    TweenSequenceItem(tween: Tween<double>(begin: 0.9, end: 1.22).chain(CurveTween(curve: Curves.easeOut)), weight: 25),
+    TweenSequenceItem(tween: Tween<double>(begin: 1.22, end: 1).chain(CurveTween(curve: Curves.easeIn)), weight: 30),
   ]).animate(_controller);
 
   @override
